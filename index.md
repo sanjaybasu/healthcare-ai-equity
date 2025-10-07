@@ -206,9 +206,9 @@ This is a living, open-source project. We welcome:
 - **Suggestions** for new topics or examples
 - **Real-world use cases** from your implementations
 
-**Repository:** [GitHub Link]  
+**Repository:** [[GitHub Link]  ](https://sanjaybasu.github.io/healthcare-ai-equity)
 **License:** MIT (Free for all uses)  
-**Contact:** [Your contact information]
+**Contact:** sanjay.basu@waymarkcare.com
 
 ---
 
@@ -222,7 +222,7 @@ If you use this textbook in your work, please cite:
   title = {Healthcare AI for Underserved Populations: A Practical Textbook},
   year = {2025},
   publisher = {GitHub Pages},
-  url = {https://[your-github-username].github.io/healthcare-ai-textbook}
+  url = {https://sanjaybasu.github.io/healthcare-ai-equity}
 }
 ```
 
@@ -230,7 +230,7 @@ If you use this textbook in your work, please cite:
 
 ## Acknowledgments
 
-This work builds on the research and implementation efforts of countless physicians, data scientists, community health workers, and patients who have contributed to making healthcare AI more equitable. We particularly acknowledge the communities most affected by health disparities, whose experiences and insights must guide the development of these technologies.
+This work builds on the research and implementation efforts of countless clinicians, data scientists, and patients who have contributed to making healthcare AI more equitable. We particularly acknowledge the communities most affected by health disparities, whose experiences and insights must guide the development of these technologies.
 
 ---
 
