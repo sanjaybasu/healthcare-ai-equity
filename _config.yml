@@ -1,9 +1,9 @@
 title: "Equitable Healthcare AI: From Algorithms to Clinical Impact"
 description: "A practical textbook for physician data scientists on developing, validating, and deploying fair AI systems"
 author: "Sanjay Basu, MD PhD"
-email: "your.email@institution.edu"
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://your-username.github.io/healthcare-ai-textbook" # Update with your actual URL
+email: "sanjay.basu@waymarkcare.com"
+baseurl: "" 
+url: "https://sanjaybasu.github.io/healthcare-ai-equity" 
 
 # Build settings
 theme: minima
@@ -62,20 +62,12 @@ mathjax:
   tags: "ams"
 
 # SEO
-twitter:
-  username: your_twitter_handle
-  card: summary_large_image
-
-logo: /assets/images/logo.png
 social:
   name: Sanjay Basu
   links:
-    - https://twitter.com/your_twitter_handle
-    - https://github.com/your-username
-
-# Analytics (optional - add your Google Analytics ID)
-google_analytics: UA-XXXXXXXXX-X
+    - https://www.linkedin.com/in/sanjay-basu-md-phd-3326541a4/
+    - https://github.com/sanjaybasu
 
 # Auto-update status
-last_auto_update: 2025-01-01
+last_auto_update: 2025-10-07
 update_frequency: weekly
