@@ -1,0 +1,81 @@
+title: "Equitable Healthcare AI: From Algorithms to Clinical Impact"
+description: "A practical textbook for physician data scientists on developing, validating, and deploying fair AI systems"
+author: "Sanjay Basu, MD PhD"
+email: "your.email@institution.edu"
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://your-username.github.io/healthcare-ai-textbook" # Update with your actual URL
+
+# Build settings
+theme: minima
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  math_engine: mathjax
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Navigation
+header_pages:
+  - index.md
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - .github/
+  - scripts/
+  - README.md
+  - .gitignore
+
+# Collections for chapters
+collections:
+  chapters:
+    output: true
+    permalink: /:name:output_ext
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "chapters"
+    values:
+      layout: "chapter"
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+# MathJax configuration
+mathjax:
+  enable: true
+  combo: "tex-mml-chtml"
+  tags: "ams"
+
+# SEO
+twitter:
+  username: your_twitter_handle
+  card: summary_large_image
+
+logo: /assets/images/logo.png
+social:
+  name: Sanjay Basu
+  links:
+    - https://twitter.com/your_twitter_handle
+    - https://github.com/your-username
+
+# Analytics (optional - add your Google Analytics ID)
+google_analytics: UA-XXXXXXXXX-X
+
+# Auto-update status
+last_auto_update: 2025-01-01
+update_frequency: weekly

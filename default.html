@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.excerpt | default: site.description | strip_html | normalize_whitespace | truncate: 160 | escape }}">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
+  
+  <!-- MathJax for equations -->
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  
+  <!-- Syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ "/assets/images/favicon.png" | relative_url }}">
+  
+  <!-- SEO -->
+  {% seo %}
+  
+  <!-- RSS Feed -->
+  <link type="application/atom+xml" rel="alternate" href="{{ "/feed.xml" | relative_url }}" title="{{ site.title }}" />
+</head>
+
+<body>
+  <div class="wrapper">
+    <!-- Header -->
+    <header class="site-header">
+      <div class="container">
+        <div class="site-title">
+          <a href="{{ "/" | relative_url }}">{{ site.title }}</a>
+        </div>
+        <nav class="site-nav">
+          <a href="{{ "/" | relative_url }}">Home</a>
+          <a href="{{ "/about" | relative_url }}">About</a>
+          <a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="page-content">
+      <div class="container">
+        {{ content }}
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>{{ site.title }}</h3>
+            <p>{{ site.description }}</p>
+          </div>
+          
+          <div class="footer-section">
+            <h3>Quick Links</h3>
+            <ul>
+              <li><a href="{{ "/" | relative_url }}">Table of Contents</a></li>
+              <li><a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}">GitHub Repository</a></li>
+              <li><a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}/issues">Report an Issue</a></li>
+            </ul>
+          </div>
+          
+          <div class="footer-section">
+            <h3>About</h3>
+            <p>By {{ site.author }}</p>
+            <p>Licensed under MIT</p>
+            <p>Last updated: {{ site.time | date: "%B %Y" }}</p>
+          </div>
+        </div>
+        
+        <div class="footer-bottom">
+          <p>
+            🔄 This textbook automatically updates weekly with the latest research |
+            ⭐ <a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}">Star on GitHub</a>
+          </p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Analytics (if configured) -->
+  {% if site.google_analytics %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ site.google_analytics }}');
+    </script>
+  {% endif %}
+</body>
+</html>

@@ -1,0 +1,111 @@
+name: Weekly Literature Update
+
+on:
+  schedule:
+    # Run every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update-chapters:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install anthropic requests biopython feedparser beautifulsoup4 python-dateutil
+      
+      - name: Run literature search and update
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PUBMED_API_KEY: ${{ secrets.PUBMED_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/update_literature.py
+      
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in chapters"
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+      
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore: weekly literature update
+            
+            Automated literature search and chapter updates for week of {{ date }}
+          branch: literature-update-${{ github.run_number }}
+          delete-branch: true
+          title: '📚 Weekly Literature Update - {{ date }}'
+          body: |
+            ## Automated Literature Update
+            
+            This PR contains automated updates from the weekly literature scan.
+            
+            ### Sources Scanned
+            - PubMed (recent publications)
+            - arXiv (ML/AI pre-prints)
+            - NeurIPS, ICML, AAAI proceedings
+            - Major journal alerts (Nature, Science, NEJM, JAMA)
+            
+            ### Chapters Updated
+            Changes have been identified in one or more chapters. Please review:
+            
+            - [ ] Review new citations for relevance
+            - [ ] Verify formatting and accuracy
+            - [ ] Check for duplicate content
+            - [ ] Ensure equity focus maintained
+            
+            ### Next Steps
+            1. Review the changes in each updated chapter
+            2. Approve and merge if quality standards met
+            3. Report any issues with the update process
+            
+            ---
+            
+            🤖 This PR was created automatically by the literature update workflow.
+          labels: |
+            automated
+            literature-update
+            needs-review
+          assignees: your-github-username
+          reviewers: your-github-username
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '❌ Weekly Literature Update Failed',
+              body: 'The automated literature update workflow failed. Please check the logs:\n\n' +
+                    `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['bug', 'automated', 'high-priority']
+            })

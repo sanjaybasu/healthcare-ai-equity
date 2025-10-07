@@ -1,0 +1,89 @@
+name: Weekly Literature Update
+
+on:
+  schedule:
+    # Run every Monday at 6 AM UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update_chapters:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run PubMed literature search
+        run: |
+          python scripts/search_pubmed.py --output-dir data/papers --days-back 7
+        env:
+          PUBMED_API_KEY: ${{ secrets.PUBMED_API_KEY }}
+      
+      - name: Search arXiv for preprints
+        run: |
+          python scripts/search_arxiv.py --output-dir data/papers --days-back 7
+      
+      - name: Monitor AI lab announcements
+        run: |
+          python scripts/monitor_ai_labs.py --output-dir data/announcements
+      
+      - name: Analyze papers with Claude
+        run: |
+          python scripts/analyze_papers.py --papers-dir data/papers --output-dir data/analysis
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      
+      - name: Update chapters with new findings
+        run: |
+          python scripts/update_chapters.py --analysis-dir data/analysis --chapters-dir chapters
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      
+      - name: Generate update summary
+        run: |
+          python scripts/generate_summary.py --analysis-dir data/analysis --output-file UPDATE_SUMMARY.md
+      
+      - name: Update timestamp
+        run: |
+          python scripts/update_timestamp.py
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Weekly automated literature update"
+          title: "Weekly Literature Update - ${{ github.run_id }}"
+          body-path: UPDATE_SUMMARY.md
+          branch: literature-update-${{ github.run_id }}
+          delete-branch: true
+          labels: |
+            automated
+            literature-update
+          reviewers: yourusername
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Literature Update Workflow Failed',
+              body: `The weekly literature update workflow failed. Please check the logs: ${context.payload.repository.html_url}/actions/runs/${context.runId}`,
+              labels: ['bug', 'automated']
+            })

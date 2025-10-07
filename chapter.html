@@ -1,0 +1,161 @@
+---
+layout: default
+---
+
+<article class="chapter">
+  <header class="chapter-header">
+    <h1>{{ page.title }}</h1>
+    {% if page.subtitle %}
+      <p class="subtitle">{{ page.subtitle }}</p>
+    {% endif %}
+    
+    <div class="chapter-meta">
+      {% if page.chapter_number %}
+        <span class="chapter-number">Chapter {{ page.chapter_number }}</span>
+      {% endif %}
+      {% if page.last_updated %}
+        <span class="last-updated">Last updated: {{ page.last_updated | date: "%B %d, %Y" }}</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Chapter navigation -->
+  <nav class="chapter-nav">
+    {% if page.prev_chapter %}
+      <a href="{{ page.prev_chapter | relative_url }}" class="nav-prev">
+        ← Previous Chapter
+      </a>
+    {% endif %}
+    
+    <a href="{{ "/" | relative_url }}" class="nav-home">
+      ↑ Table of Contents
+    </a>
+    
+    {% if page.next_chapter %}
+      <a href="{{ page.next_chapter | relative_url }}" class="nav-next">
+        Next Chapter →
+      </a>
+    {% endif %}
+  </nav>
+
+  <!-- Table of contents (auto-generated from headings) -->
+  {% if page.show_toc != false %}
+  <div class="chapter-toc">
+    <h2>In This Chapter</h2>
+    <div id="toc"></div>
+  </div>
+  {% endif %}
+
+  <!-- Main chapter content -->
+  <div class="chapter-content">
+    {{ content }}
+  </div>
+
+  <!-- Chapter footer -->
+  <footer class="chapter-footer">
+    <!-- Download options -->
+    <div class="download-options">
+      <h3>Download This Chapter</h3>
+      <p>
+        <a href="{{ page.url | replace: '.html', '.md' }}" download>
+          📄 Markdown
+        </a> |
+        <a href="{{ page.url | replace: '.html', '.pdf' }}" target="_blank">
+          📑 PDF (via print)
+        </a>
+      </p>
+    </div>
+
+    <!-- Citation -->
+    <div class="citation">
+      <h3>Cite This Chapter</h3>
+      <div class="citation-box">
+        <code>
+Basu, S. ({{ site.time | date: "%Y" }}). {{ page.title }}. 
+In <em>Healthcare AI for Underserved Populations: A Practical Textbook</em>. 
+Retrieved from {{ page.url | absolute_url }}
+        </code>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback">
+      <h3>Feedback</h3>
+      <p>
+        Found an error or have a suggestion? 
+        <a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}/issues/new?title=Chapter%20{{ page.chapter_number }}%20feedback" target="_blank">
+          Open an issue on GitHub
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Chapter navigation (bottom) -->
+  <nav class="chapter-nav chapter-nav-bottom">
+    {% if page.prev_chapter %}
+      <a href="{{ page.prev_chapter | relative_url }}" class="nav-prev">
+        ← Previous: {% if page.prev_chapter_title %}{{ page.prev_chapter_title }}{% else %}Previous Chapter{% endif %}
+      </a>
+    {% endif %}
+    
+    {% if page.next_chapter %}
+      <a href="{{ page.next_chapter | relative_url }}" class="nav-next">
+        Next: {% if page.next_chapter_title %}{{ page.next_chapter_title }}{% else %}Next Chapter{% endif %} →
+      </a>
+    {% endif %}
+  </nav>
+</article>
+
+<!-- Auto-generate table of contents from headings -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const content = document.querySelector('.chapter-content');
+    const toc = document.getElementById('toc');
+    
+    if (!content || !toc) return;
+    
+    const headings = content.querySelectorAll('h2, h3');
+    if (headings.length === 0) {
+      toc.parentElement.style.display = 'none';
+      return;
+    }
+    
+    const tocList = document.createElement('ul');
+    tocList.className = 'toc-list';
+    
+    headings.forEach((heading, index) => {
+      // Add ID if not present
+      if (!heading.id) {
+        heading.id = 'section-' + index;
+      }
+      
+      const li = document.createElement('li');
+      li.className = 'toc-' + heading.tagName.toLowerCase();
+      
+      const link = document.createElement('a');
+      link.href = '#' + heading.id;
+      link.textContent = heading.textContent;
+      
+      li.appendChild(link);
+      tocList.appendChild(li);
+    });
+    
+    toc.appendChild(tocList);
+  });
+</script>
+
+<!-- Smooth scrolling for anchor links -->
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+</script>
