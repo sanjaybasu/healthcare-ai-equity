@@ -300,6 +300,15 @@ Provide only the JSON response, no additional text."""
         
         logger.info(f"Found {len(chapters)} chapters")
         
+        # Validation checks
+        if not papers:
+            logger.warning("No papers to assess")
+            return {}
+        
+        if not chapters:
+            logger.error(f"No chapter files found in {chapters_dir}")
+            return {}
+        
         # Store assessments by chapter
         chapter_assessments: Dict[str, List[RelevanceAssessment]] = {
             ch['filename']: [] for ch in chapters
@@ -335,9 +344,10 @@ Provide only the JSON response, no additional text."""
                     completed += 1
                     continue
             
-            # Progress logging
-            progress = (completed / total_assessments) * 100
-            logger.info(f"Progress: {completed}/{total_assessments} ({progress:.1f}%)")
+            # Progress logging (safe division)
+            if total_assessments > 0:
+                progress = (completed / total_assessments) * 100
+                logger.info(f"Progress: {completed}/{total_assessments} ({progress:.1f}%)")
         
         # Summary
         total_relevant = sum(len(assessments) for assessments in chapter_assessments.values())
@@ -436,39 +446,82 @@ def main():
     
     args = parser.parse_args()
     
+    # Validate chapters directory exists
+    chapters_dir = Path(args.chapters_dir)
+    if not chapters_dir.exists():
+        logger.error(f"Chapters directory not found: {chapters_dir}")
+        logger.error("Please specify a valid chapters directory with --chapters-dir")
+        return 1
+    
+    # Check for chapter files
+    chapter_files = list(chapters_dir.glob("*.md"))
+    if not chapter_files:
+        logger.error(f"No markdown files found in {chapters_dir}")
+        logger.error("Please ensure chapter files exist in the specified directory")
+        return 1
+    
+    logger.info(f"Found {len(chapter_files)} chapter files")
+    
     # Load papers
     input_file = Path(args.input_dir) / 'papers.json'
     if not input_file.exists():
         logger.error(f"Input file not found: {input_file}")
-        return
+        logger.error("Please run search_literature.py first to generate papers.json")
+        return 1
     
     with open(input_file, 'r') as f:
         data = json.load(f)
         papers = data.get('papers', [])
+    
+    if not papers:
+        logger.error("No papers found in input file")
+        return 1
     
     logger.info(f"Loaded {len(papers)} papers")
     
     if args.test_mode:
         logger.info("Running in test mode (first paper and chapter only)")
         papers = papers[:1]
+        logger.info(f"Test paper: {papers[0]['title']}")
     
     # Initialize assessor
-    assessor = RelevanceAssessor()
+    try:
+        assessor = RelevanceAssessor()
+    except ValueError as e:
+        logger.error(f"Failed to initialize assessor: {e}")
+        logger.error("Please set ANTHROPIC_API_KEY environment variable")
+        return 1
     
     # Assess papers
-    chapters_dir = Path(args.chapters_dir)
-    assessments = assessor.assess_all_papers(
-        papers=papers,
-        chapters_dir=chapters_dir,
-        threshold=args.threshold
-    )
+    try:
+        assessments = assessor.assess_all_papers(
+            papers=papers,
+            chapters_dir=chapters_dir,
+            threshold=args.threshold
+        )
+    except Exception as e:
+        logger.error(f"Error during assessment: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+    
+    # Check if any assessments were made
+    if not assessments or all(len(v) == 0 for v in assessments.values()):
+        logger.warning("No relevant papers found meeting threshold criteria")
+        logger.warning(f"Consider lowering threshold (current: {args.threshold})")
     
     # Save results
-    output_file = Path(args.output_file)
-    assessor.save_assessments(assessments, papers, output_file)
+    try:
+        output_file = Path(args.output_file)
+        assessor.save_assessments(assessments, papers, output_file)
+    except Exception as e:
+        logger.error(f"Error saving assessments: {e}")
+        return 1
     
     logger.info("Relevance assessment complete")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main())
