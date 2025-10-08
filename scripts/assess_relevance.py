@@ -294,19 +294,21 @@ Provide only the JSON response, no additional text."""
         """
         logger.info(f"Assessing {len(papers)} papers against chapters in {chapters_dir}")
         
+        # Validation: check papers first
+        if not papers:
+            logger.warning("No papers to assess")
+            return {}
+        
         # Load all chapters
         chapter_files = sorted(chapters_dir.glob("*.md"))
         chapters = [self._load_chapter_metadata(f) for f in chapter_files]
         
         logger.info(f"Found {len(chapters)} chapters")
         
-        # Validation checks
-        if not papers:
-            logger.warning("No papers to assess")
-            return {}
-        
+        # Validation: check chapters before processing
         if not chapters:
-            logger.error(f"No chapter files found in {chapters_dir}")
+            logger.error(f"No chapter files (.md) found in {chapters_dir}")
+            logger.error("Please ensure your chapters directory contains markdown files")
             return {}
         
         # Store assessments by chapter
@@ -316,6 +318,8 @@ Provide only the JSON response, no additional text."""
         
         total_assessments = len(papers) * len(chapters)
         completed = 0
+        
+        logger.info(f"Starting assessment: {len(papers)} papers Ã {len(chapters)} chapters = {total_assessments} total assessments")
         
         # Assess each paper against each chapter
         for paper in papers:
@@ -329,7 +333,7 @@ Provide only the JSON response, no additional text."""
                     if assessment.relevance_score >= threshold:
                         chapter_assessments[chapter['filename']].append(assessment)
                         logger.info(
-                            f"  ✓ {chapter['filename']}: "
+                            f"  â {chapter['filename']}: "
                             f"score={assessment.relevance_score:.2f}, "
                             f"include={assessment.should_include}"
                         )
@@ -423,7 +427,7 @@ def main():
     parser.add_argument(
         '--chapters-dir',
         type=str,
-        default='chapters',
+        default='_chapters',
         help='Directory containing chapter files'
     )
     parser.add_argument(
