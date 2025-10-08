@@ -1,6 +1,5 @@
 ---
 layout: home
-title: Home
 ---
 
 # Equitable Healthcare AI: From Algorithms to Clinical Impact
