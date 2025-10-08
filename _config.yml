@@ -1,73 +1,36 @@
 title: "Equitable Healthcare AI: From Algorithms to Clinical Impact"
-description: "A practical textbook for physician data scientists on developing, validating, and deploying fair AI systems"
+description: "A Comprehensive, Self-Updating Technical and Practical Textbook"
 author: "Sanjay Basu, MD PhD"
 email: "sanjay.basu@waymarkcare.com"
-baseurl: "" 
-url: "https://sanjaybasu.github.io/healthcare-ai-equity" 
+baseurl: "/healthcare-ai-equity"
+url: "https://sanjaybasu.github.io"
 
-# Build settings
-theme: minima
 markdown: kramdown
+theme: minima
+
 kramdown:
   input: GFM
   syntax_highlighter: rouge
-  math_engine: mathjax
 
-# Plugins
-plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
-  - jekyll-sitemap
-
-# Navigation
-header_pages:
-  - index.md
-
-# Exclude from processing
-exclude:
-  - Gemfile
-  - Gemfile.lock
-  - node_modules
-  - vendor/bundle/
-  - vendor/cache/
-  - vendor/gems/
-  - vendor/ruby/
-  - .github/
-  - scripts/
-  - README.md
-  - .gitignore
-
-# Collections for chapters
 collections:
   chapters:
     output: true
-    permalink: /:name:output_ext
+    permalink: /chapters/:name/
 
-# Defaults
 defaults:
   - scope:
       path: ""
       type: "chapters"
     values:
-      layout: "chapter"
-  - scope:
-      path: ""
-    values:
-      layout: "default"
+      layout: "page"
 
-# MathJax configuration
-mathjax:
-  enable: true
-  combo: "tex-mml-chtml"
-  tags: "ams"
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
 
-# SEO
-social:
-  name: Sanjay Basu
-  links:
-    - https://www.linkedin.com/in/sanjay-basu-md-phd-3326541a4/
-    - https://github.com/sanjaybasu
-
-# Auto-update status
-last_auto_update: 2025-10-07
-update_frequency: weekly
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - scripts
