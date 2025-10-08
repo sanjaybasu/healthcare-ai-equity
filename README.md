@@ -1,11 +1,6 @@
-# Healthcare AI for Underserved Populations
+# Equitable Healthcare AI: From Algorithms to Clinical Impact
 
 A comprehensive, self-updating technical textbook on equitable healthcare AI development, deployment, and validation.
-
-[![Deploy to GitHub Pages](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/pages.yml/badge.svg)](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/pages.yml)
-[![Weekly Literature Update](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/weekly_update.yml/badge.svg)](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/weekly_update.yml)
-
-**Live Site:** [https://your-username.github.io/healthcare-ai-textbook](https://your-username.github.io/healthcare-ai-textbook)
 
 ## 🌟 Key Features
 
@@ -25,35 +20,6 @@ Most healthcare AI resources focus on superficial applications. This textbook go
 - Every implementation includes comprehensive fairness evaluation and bias detection
 - Focuses explicitly on serving underserved populations and addressing health disparities
 - Automatically updates with latest research from Nature, Science, NEJM, JAMA, NeurIPS, ICML
-
-## 🚀 Quick Start
-
-### For Readers
-
-Simply visit the [live site](https://your-username.github.io/healthcare-ai-textbook) to read the textbook.
-
-### For Contributors
-
-1. **Fork and Clone**
-   ```bash
-   git clone https://github.com/your-username/healthcare-ai-textbook.git
-   cd healthcare-ai-textbook
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   # Ruby/Jekyll dependencies
-   bundle install
-   
-   # Python dependencies for automation scripts
-   pip install anthropic biopython requests feedparser beautifulsoup4 python-dateutil
-   ```
-
-3. **Run Locally**
-   ```bash
-   bundle exec jekyll serve
-   # Visit http://localhost:4000
-   ```
 
 ## 🤖 Automated Update System
 
@@ -80,50 +46,6 @@ This textbook automatically updates weekly with the latest research discoveries.
 
 **Pre-prints:**
 - arXiv (cs.LG, cs.AI, stat.ML, cs.CY, q-bio)
-
-## ⚙️ Setup for Self-Hosting
-
-### 1. Repository Setup
-
-1. Fork this repository
-2. Enable GitHub Pages in Settings → Pages → Source: GitHub Actions
-
-### 2. Configure API Keys
-
-Add the following secrets in Settings → Secrets and variables → Actions:
-
-**Required Secrets:**
-
-- `ANTHROPIC_API_KEY` - Your Claude API key from https://console.anthropic.com/
-- `PUBMED_API_KEY` - Your PubMed API key from https://www.ncbi.nlm.nih.gov/account/
-
-**📖 See [SECURITY.md](SECURITY.md) for detailed instructions on:**
-- Obtaining API keys
-- Setting up GitHub Secrets securely
-- Local development with environment variables
-- Security best practices
-- Cost monitoring and rate limits
-
-**⚠️ NEVER commit API keys to your repository!**
-
-**Get API Keys:**
-
-- **Anthropic API:** https://console.anthropic.com/
-- **PubMed API:** https://www.ncbi.nlm.nih.gov/account/settings/
-
-### 3. Customize Configuration
-
-Edit `_config.yml`:
-
-```yaml
-title: "Your Textbook Title"
-author: "Your Name"
-url: "https://your-username.github.io/your-repo-name"
-```
-
-### 4. Deploy
-
-Push to main branch or manually trigger the "Deploy to GitHub Pages" workflow.
 
 ## 📝 Chapter Structure
 
@@ -179,19 +101,6 @@ Clinical decision support, precision medicine, population health, social determi
 ### Part VII: Emerging Methods (Chapters 26-30)
 LLMs, multimodal learning, continual learning, global health, research frontiers
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-**Ways to Contribute:**
-
-- 📝 Fix typos or clarify explanations
-- 💻 Improve code implementations
-- 📚 Suggest additional citations
-- 🐛 Report issues or errors
-- 💡 Propose new topics or chapters
-- 🔬 Share real-world deployment experiences
-
 ## 📄 License
 
 This work is licensed under the MIT License - see [LICENSE](LICENSE) file.
@@ -201,10 +110,10 @@ This work is licensed under the MIT License - see [LICENSE](LICENSE) file.
 ```bibtex
 @book{basu2025healthcare_ai,
   author = {Basu, Sanjay},
-  title = {Healthcare AI for Underserved Populations: A Practical Textbook},
+  title = {Equitable Healthcare AI: From Algorithms to Clinical Impact},
   year = {2025},
   publisher = {GitHub Pages},
-  url = {https://your-username.github.io/healthcare-ai-textbook}
+  url = {https://sanjaybasu.github.io/healthcare-ai-textbook}
 }
 ```
 
@@ -220,18 +129,7 @@ This textbook builds on the work of countless researchers, practitioners, and co
 ## 📧 Contact
 
 **Author:** Sanjay Basu, MD PhD  
-**Email:** your.email@institution.edu  
-**Twitter:** @your_handle  
-
-For issues and questions, please use [GitHub Issues](https://github.com/your-username/healthcare-ai-textbook/issues).
-
-## 🔗 Related Resources
-
-- [Anthropic Claude](https://www.anthropic.com/)
-- [PubMed](https://pubmed.ncbi.nlm.nih.gov/)
-- [arXiv](https://arxiv.org/)
-- [Fairlearn](https://fairlearn.org/)
-- [AI Fairness 360](https://aif360.mybluemix.net/)
+**Email:** sanjay.basu@waymarkcare.com
 
 ---
 
