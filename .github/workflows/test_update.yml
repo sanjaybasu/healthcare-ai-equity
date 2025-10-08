@@ -1,0 +1,45 @@
+name: Test Literature Update System
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/**'
+      - 'requirements.txt'
+  workflow_dispatch:
+
+jobs:
+  test-scripts:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      
+      - name: Run tests
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          pytest tests/ -v --cov=scripts --cov-report=term-missing
+      
+      - name: Test search functionality
+        env:
+          PUBMED_API_KEY: ${{ secrets.PUBMED_API_KEY }}
+        run: |
+          python scripts/search_literature.py --date-range 1 --dry-run true
+      
+      - name: Test relevance assessment
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python scripts/assess_relevance.py --test-mode true
