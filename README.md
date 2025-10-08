@@ -76,50 +76,6 @@ This textbook automatically updates weekly with the latest research discoveries.
 **Pre-prints:**
 - arXiv (cs.LG, cs.AI, stat.ML, cs.CY, q-bio)
 
-## ⚙️ Setup for Self-Hosting
-
-### 1. Repository Setup
-
-1. Fork this repository
-2. Enable GitHub Pages in Settings → Pages → Source: GitHub Actions
-
-### 2. Configure API Keys
-
-Add the following secrets in Settings → Secrets and variables → Actions:
-
-**Required Secrets:**
-
-- `ANTHROPIC_API_KEY` - Your Claude API key from https://console.anthropic.com/
-- `PUBMED_API_KEY` - Your PubMed API key from https://www.ncbi.nlm.nih.gov/account/
-
-**📖 See [SECURITY.md](SECURITY.md) for detailed instructions on:**
-- Obtaining API keys
-- Setting up GitHub Secrets securely
-- Local development with environment variables
-- Security best practices
-- Cost monitoring and rate limits
-
-**⚠️ NEVER commit API keys to your repository!**
-
-**Get API Keys:**
-
-- **Anthropic API:** https://console.anthropic.com/
-- **PubMed API:** https://www.ncbi.nlm.nih.gov/account/settings/
-
-### 3. Customize Configuration
-
-Edit `_config.yml`:
-
-```yaml
-title: "Your Textbook Title"
-author: "Your Name"
-url: "https://your-username.github.io/your-repo-name"
-```
-
-### 4. Deploy
-
-Push to main branch or manually trigger the "Deploy to GitHub Pages" workflow.
-
 ## 📝 Chapter Structure
 
 Each chapter follows a consistent, comprehensive structure:
