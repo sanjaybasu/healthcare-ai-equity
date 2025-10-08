@@ -26,6 +26,8 @@ This textbook was written by someone who's been exactly where you are. A physici
 
 **Equity as engineering, not afterthought:** Fairness isn't a final chapter you skip. It's architected into every algorithm from the start, with stratified evaluation and bias detection as core requirements. Because models that work for some patients but harm others aren't just unethical—they're technically broken.
 
+**Self-updating:** The online book contains its own algorithms to search new high-impact peer-reviewed or preprint publications and conference materials each week, then automatically update with human oversight to ensure the latest research insights are available to readers.
+
 **Does this sound like what you've been looking for?**
 
 If you're nodding yes, you're in the right place. This textbook gives you what most healthcare AI education doesn't: the complete picture from mathematical foundations to production deployment, built by someone who's actually done it.
