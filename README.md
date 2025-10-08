@@ -2,11 +2,6 @@
 
 A comprehensive, self-updating technical textbook on equitable healthcare AI development, deployment, and validation.
 
-[![Deploy to GitHub Pages](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/pages.yml/badge.svg)](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/pages.yml)
-[![Weekly Literature Update](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/weekly_update.yml/badge.svg)](https://github.com/your-username/healthcare-ai-textbook/actions/workflows/weekly_update.yml)
-
-**Live Site:** [https://your-username.github.io/healthcare-ai-textbook](https://your-username.github.io/healthcare-ai-textbook)
-
 ## 🌟 Key Features
 
 - **📚 Comprehensive Coverage:** 30 chapters spanning foundations to cutting-edge methods
@@ -30,7 +25,7 @@ Most healthcare AI resources focus on superficial applications. This textbook go
 
 ### For Readers
 
-Simply visit the [live site](https://your-username.github.io/healthcare-ai-textbook) to read the textbook.
+Simply visit the [live site](https://sanjaybasu.github.io/healthcare-ai-equity) to read the textbook.
 
 ### For Contributors
 
@@ -220,16 +215,8 @@ This textbook builds on the work of countless researchers, practitioners, and co
 ## 📧 Contact
 
 **Author:** Sanjay Basu, MD PhD  
-**Email:** your.email@institution.edu  
-**Twitter:** @your_handle  
+**Email:** sanjay.basu@waymarkcare.com
 
-For issues and questions, please use [GitHub Issues](https://github.com/your-username/healthcare-ai-textbook/issues).
-
-## 🔗 Related Resources
-
-- [Anthropic Claude](https://www.anthropic.com/)
-- [PubMed](https://pubmed.ncbi.nlm.nih.gov/)
-- [arXiv](https://arxiv.org/)
 - [Fairlearn](https://fairlearn.org/)
 - [AI Fairness 360](https://aif360.mybluemix.net/)
 
