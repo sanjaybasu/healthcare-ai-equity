@@ -1,0 +1,141 @@
+name: Healthcare AI Literature Monitor
+
+on:
+  schedule:
+    # Run every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  literature-monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests biopython scholarly arxiv feedparser beautifulsoup4
+        pip install openai anthropic  # For AI-powered analysis
+    
+    - name: Monitor PubMed
+      env:
+        NCBI_EMAIL: ${{ secrets.NCBI_EMAIL }}
+      run: |
+        python scripts/monitor_pubmed.py
+    
+    - name: Monitor arXiv
+      run: |
+        python scripts/monitor_arxiv.py
+    
+    - name: Monitor Conference Proceedings
+      run: |
+        python scripts/monitor_conferences.py
+    
+    - name: Analyze and Update Chapters
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python scripts/update_chapters.py
+    
+    - name: Generate Update Report
+      run: |
+        python scripts/generate_report.py
+    
+    - name: Commit changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || (git commit -m "📚 Automated literature update - $(date +'%Y-%m-%d')" && git push)
+    
+    - name: Create Pull Request for Major Updates
+      if: ${{ env.MAJOR_UPDATES == 'true' }}
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "📚 Major literature updates - $(date +'%Y-%m-%d')"
+        title: "Literature Update: New SOTA Methods Detected"
+        body: |
+          ## Automated Literature Update
+          
+          This PR contains updates from the weekly literature monitoring system.
+          
+          **Major Changes Detected:**
+          - New state-of-the-art methods
+          - Highly-cited papers (>100 citations)
+          - Breakthrough discoveries
+          
+          Please review before merging.
+        branch: literature-updates-${{ github.run_number }}
+        delete-branch: true
+
+  quality-check:
+    needs: literature-monitor
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install quality tools
+      run: |
+        pip install pylint mypy black isort
+        pip install markdown-link-check
+    
+    - name: Check code quality
+      run: |
+        python scripts/check_code_quality.py
+    
+    - name: Validate citations
+      run: |
+        python scripts/validate_citations.py
+    
+    - name: Check broken links
+      run: |
+        find _chapters -name "*.md" -exec markdown-link-check {} \;
+
+  deploy:
+    needs: quality-check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+        bundler-cache: true
+    
+    - name: Build Jekyll site
+      run: |
+        bundle exec jekyll build
+    
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
+        publish_branch: gh-pages
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'

@@ -4,7 +4,7 @@ title: "Equitable Healthcare AI: From Algorithms to Clinical Impact"
 ---
 
 # Equitable Healthcare AI: From Algorithms to Clinical Impact
-## A Practical Textbook for Physician Data Scientists
+## A Comprehensive, Self-Updating Technical and Practical Textbook
 
 <div style="padding: 20px; background-color: #f0f8ff; border-left: 4px solid #2c5aa0; margin: 20px 0;">
 <strong>🔄 Living Document:</strong> This textbook automatically updates weekly with the latest research from top journals (Nature, Science, NEJM AI, JAMA) and conferences (NeurIPS, ICML), ensuring you always have access to cutting-edge methods and discoveries.
@@ -16,9 +16,9 @@ title: "Equitable Healthcare AI: From Algorithms to Clinical Impact"
 
 There are many physician commentators on AI in healthcare. **This textbook is different.**
 
-Most healthcare AI discussions focus on prompting ChatGPT or superficial applications of commercial tools. **This book goes far beyond.** Written by a practicing physician-data scientist who has:
+Most healthcare AI discussions focus on prompting foundational LLMs or superficial applications of commercial tools. **This book goes far beyond.** Written by a practicing physician-data scientist who has:
 
-- **Built, validated, and deployed** production AI systems serving hundreds of thousands of real patients
+- **Built, validated, and deployed** production AI systems serving hundreds of thousands of patients
 - **Published extensively** in top-tier medical and AI venues
 - **Implemented actual algorithms** from recent state-of-the-art papers, not just theoretical discussions
 
@@ -107,8 +107,8 @@ DAGs, potential outcomes, instrumental variables, difference-in-differences, and
 **[Chapter 12: Federated Learning and Privacy-Preserving AI](chapter_12_federated_learning_privacy.html)**  
 Multi-site learning without centralizing data, differential privacy, secure aggregation, and maintaining equity in federated settings.
 
-**[Chapter 13: Transfer Learning and Domain Adaptation](chapter_13_transfer_learning.html)**  
-Adapting models across hospitals, demographics, and diseases while maintaining fairness; few-shot learning for rare conditions.
+**[Chapter 13: Bias Detection and Measurement](chapter_13_bias_detection.html)**  
+Bias testing frameworks in model development pipelines, including demographic parity, equalized odds, calibration, and predictive value parity.
 
 ### Part IV: Interpretability, Validation, and Trust
 
@@ -121,7 +121,7 @@ Internal, external, and prospective validation; temporal validation; fairness-aw
 **[Chapter 16: Uncertainty Quantification and Calibration](chapter_16_uncertainty_calibration.html)**  
 Bayesian approaches, conformal prediction, calibration across subgroups, and communicating uncertainty to clinicians.
 
-**[Chapter 17: Regulatory Considerations and FDA Pathways](chapter_17_regulatory_considerations.html)**  
+**[Chapter 17: Regulatory Considerations for Clinical AI](chapter_17_regulatory_considerations.html)**  
 Software as medical device, 510(k) pathways, predetermined change control plans, and incorporating equity into regulatory submissions.
 
 ### Part V: Deployment and Real-World Implementation
@@ -193,7 +193,7 @@ This textbook uses GitHub Actions to automatically:
 
 Major journals monitored: **Nature, Science, NEJM AI, JAMA, JMLR, JMIR**  
 Conferences tracked: **NeurIPS, ICML, AAAI, ACM CHIL, ML4H**  
-Industry sources: **OpenAI, Anthropic, Google Health, DeepMind**
+Industry sources: **OpenAI, Anthropic, Thinking Machines, DeepMind**
 
 ---
 
@@ -206,7 +206,6 @@ This is a living, open-source project. We welcome:
 - **Suggestions** for new topics or examples
 - **Real-world use cases** from your implementations
 
-**Repository:** [[GitHub Link]  ](https://sanjaybasu.github.io/healthcare-ai-equity)
 **License:** MIT (Free for all uses)  
 **Contact:** sanjay.basu@waymarkcare.com
 
@@ -219,7 +218,7 @@ If you use this textbook in your work, please cite:
 ```bibtex
 @book{basu2025healthcare_ai,
   author = {Basu, Sanjay},
-  title = {Healthcare AI for Underserved Populations: A Practical Textbook},
+  title = {Equitable Healthcare AI: From Algorithms to Clinical Impact},
   year = {2025},
   publisher = {GitHub Pages},
   url = {https://sanjaybasu.github.io/healthcare-ai-equity}
@@ -230,7 +229,7 @@ If you use this textbook in your work, please cite:
 
 ## Acknowledgments
 
-This work builds on the research and implementation efforts of countless clinicians, data scientists, and patients who have contributed to making healthcare AI more equitable. We particularly acknowledge the communities most affected by health disparities, whose experiences and insights must guide the development of these technologies.
+This work builds on the research and implementation efforts of countless physicians, data scientists, community health workers, and patients who have contributed to making healthcare AI more equitable. We particularly acknowledge the communities most affected by health disparities, whose experiences and insights must guide the development of these technologies.
 
 ---
 

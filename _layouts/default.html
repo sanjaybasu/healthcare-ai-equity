@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+  {% seo %}
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <a href="{{ '/chapters' | relative_url }}">Chapters</a>
+      <a href="https://github.com/sanjaybasu/healthcare-ai-equity">GitHub</a>
+    </div>
+  </nav>
+  
+  <main class="container">
+    {{ content }}
+  </main>
+  
+  <footer>
+    <p>&copy; 2025 {{ site.author }}. Licensed under MIT.</p>
+  </footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</body>
+</html>
