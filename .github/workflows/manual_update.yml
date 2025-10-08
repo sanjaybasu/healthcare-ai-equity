@@ -13,10 +13,6 @@ on:
           - '7'
           - '14'
           - '30'
-      specific_chapter:
-        description: 'Update specific chapter (leave empty for all)'
-        required: false
-        type: string
       dry_run:
         description: 'Dry run (no PR created)'
         required: true
@@ -46,14 +42,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
+      - name: Verify chapters directory
+        run: |
+          echo "Checking for chapters..."
+          ls -la _chapters/
+          echo "Chapter count: $(ls -1 _chapters/*.md | wc -l)"
+      
       - name: Run manual update
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PUBMED_API_KEY: ${{ secrets.PUBMED_API_KEY }}
         run: |
           python scripts/search_literature.py --date-range ${{ inputs.date_range }}
-          python scripts/assess_relevance.py
-          python scripts/update_chapters.py --dry-run ${{ inputs.dry_run }}
+          python scripts/assess_relevance.py --chapters-dir _chapters
+          python scripts/update_chapters.py --chapters-dir _chapters --dry-run ${{ inputs.dry_run }}
       
       - name: Display results
         run: |
