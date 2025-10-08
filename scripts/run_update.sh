@@ -49,7 +49,7 @@ if [ "$SKIP_ASSESS" = false ]; then
     echo "Step 2/3: Assessing paper relevance..."
     python scripts/assess_relevance.py \
         --input-dir data/literature \
-        --chapters-dir chapters \
+        --chapters-dir _chapters \
         --output-file data/relevant_papers.json \
         --threshold 0.5
     echo "✓ Assessment complete"
@@ -73,7 +73,7 @@ fi
 
 python scripts/update_chapters.py \
     --papers-file data/relevant_papers.json \
-    --chapters-dir chapters \
+    --chapters-dir _chapters \
     --dry-run "$DRY_RUN" \
     --summary-file data/update_summary.json
 
