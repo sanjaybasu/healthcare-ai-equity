@@ -173,8 +173,6 @@ This textbook builds on the work of countless researchers, practitioners, and co
 **Author:** Sanjay Basu, MD PhD  
 **Email:** sanjay.basu@waymarkcare.com
 
-- [Fairlearn](https://fairlearn.org/)
-- [AI Fairness 360](https://aif360.mybluemix.net/)
 
 ---
 
