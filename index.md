@@ -1,7 +1,9 @@
 ---
 layout: home
+title: "Healthcare AI for Equity"
+author: "Sanjay Basu, MD, PhD"
+description: "A comprehensive technical textbook for building equitable AI systems"
 ---
-
 
 
 ## You Already Know Most Healthcare AI Content Falls Short
