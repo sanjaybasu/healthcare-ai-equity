@@ -2,9 +2,7 @@
 layout: home
 ---
 
-# Equitable Healthcare AI: From Algorithms to Clinical Impact
 
----
 
 ## You Already Know Most Healthcare AI Content Falls Short
 
