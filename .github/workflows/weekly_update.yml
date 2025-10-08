@@ -2,9 +2,8 @@ name: Weekly Literature Update
 
 on:
   schedule:
-    # Run every Monday at 00:00 UTC (adjust to your timezone)
-    - cron: '0 0 * * 1'
-  workflow_dispatch:  # Allow manual triggering
+    - cron: '0 0 * * 1'  # Every Monday at midnight UTC
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for proper git operations
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up Python
@@ -39,6 +38,12 @@ jobs:
           git config --global user.name "Healthcare AI Bot"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
       
+      - name: Verify chapters directory
+        run: |
+          echo "Checking for chapters..."
+          ls -la _chapters/
+          echo "Chapter count: $(ls -1 _chapters/*.md | wc -l)"
+      
       - name: Search literature
         id: search
         env:
@@ -47,7 +52,7 @@ jobs:
         run: |
           python scripts/search_literature.py \
             --output-dir data/literature \
-            --date-range 7  # Last 7 days
+            --date-range 7
         continue-on-error: false
       
       - name: Assess relevance
@@ -57,7 +62,7 @@ jobs:
         run: |
           python scripts/assess_relevance.py \
             --input-dir data/literature \
-            --chapters-dir chapters \
+            --chapters-dir _chapters \
             --output-file data/relevant_papers.json
         continue-on-error: false
       
@@ -66,14 +71,14 @@ jobs:
         run: |
           python scripts/update_chapters.py \
             --papers-file data/relevant_papers.json \
-            --chapters-dir chapters \
+            --chapters-dir _chapters \
             --dry-run false
         continue-on-error: false
       
       - name: Check for changes
         id: changes
         run: |
-          if [[ -n $(git status --porcelain chapters/) ]]; then
+          if [[ -n $(git status --porcelain _chapters/) ]]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "Changes detected in chapters"
           else
@@ -100,28 +105,18 @@ jobs:
           body: |
             ## 📚 Automated Literature Update
             
-            This PR contains weekly updates to chapters based on new research:
+            This PR contains weekly updates to chapters based on new research.
             
             ### Search Results
             - **Date Range**: Last 7 days
             - **Sources**: PubMed, arXiv, monitored journals
             - **Workflow Run**: [${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             
-            ### Changes
-            This PR updates chapter content and citations based on relevance assessment.
-            
             ### Review Checklist
             - [ ] Review new citations for accuracy
             - [ ] Verify JMLR citation formatting
             - [ ] Check content integration quality
             - [ ] Ensure equity considerations maintained
-            - [ ] Verify code examples if updated
-            
-            ### Next Steps
-            1. Review changes in each affected chapter
-            2. Verify citations and content quality
-            3. Approve and merge if satisfactory
-            4. Close without merging if updates not needed
             
             ---
             *Automated by Healthcare AI Literature Bot*
@@ -146,8 +141,6 @@ jobs:
               The weekly literature update workflow failed.
               
               **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-              
-              **Time**: ${{ github.event.head_commit.timestamp }}
               
               Please investigate the workflow logs for details.`,
               labels: ['bug', 'automated', 'literature-update']
