@@ -6,14 +6,29 @@ layout: home
 
 ---
 
-## Why This Textbook Is Different
+## You Already Know Most Healthcare AI Content Falls Short
 
-Most healthcare AI discussions focus on prompting ChatGPT or superficial applications. This book goes far beyond, covering:
+You've probably noticed: the field is flooded with surface-level tutorials on prompting ChatGPT and toy examples that would never survive clinical deployment. 
 
-- **State-of-the-art methods**: Random survival forests, causal inference, federated learning, neural ODEs
-- **Production-ready code**: Type hints, error handling, quality scores >0.92
-- **Rigorous academics**: 50-100+ citations per chapter from top venues
-- **Equity-centered design**: Fairness architected into every algorithm
+**What if you're looking for something different?**
+
+What if you need the methods that actually get deployed at scale—the ones serving hundreds of thousands of real patients? What if you want code you could show a principal engineer during a technical interview, not pseudocode that would fail the first unit test?
+
+This textbook was written by someone who's been exactly where you are. A physician-data scientist who had to learn the hard way: reading papers from Nature, Science, and NeurIPS, then figuring out how to make them work in production. Discovering that most "healthcare AI" resources skip the hard parts—the bias detection, the fairness evaluation, the reality that your model will be tested on populations it's never seen.
+
+**Here's what you'll find instead:**
+
+**Algorithms that scale:** Not just neural networks—random survival forests with competing risks, causal inference for algorithmic fairness, federated learning for multi-site deployment, neural ODEs for irregular clinical time series. The methods that power real clinical systems.
+
+**Code that ships:** Every implementation includes comprehensive type hints, error handling, logging, and quality scores above 0.92. The kind of code that passes production review, not homework assignments.
+
+**Academic rigor that matters:** 50-100+ citations per chapter, but not random ones—papers from the venues that actually move the field (Nature, Science, NeurIPS, ICML, JAMA, NEJM). The papers your PhD committee or medical directors will recognize.
+
+**Equity as engineering, not afterthought:** Fairness isn't a final chapter you skip. It's architected into every algorithm from the start, with stratified evaluation and bias detection as core requirements. Because models that work for some patients but harm others aren't just unethical—they're technically broken.
+
+**Does this sound like what you've been looking for?**
+
+If you're nodding yes, you're in the right place. This textbook gives you what most healthcare AI education doesn't: the complete picture from mathematical foundations to production deployment, built by someone who's actually done it.
 
 ---
 
