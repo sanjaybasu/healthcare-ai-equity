@@ -3,8 +3,6 @@ layout: page
 title: Chapters
 ---
 
-# All Chapters
-
 ## Part I: Foundations and Context
 
 1. [Clinical Informatics Foundations for Equity-Centered AI](/healthcare-ai-equity/chapters/chapter-01-clinical-informatics/)
