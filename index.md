@@ -1,8 +1,8 @@
 ---
 layout: home
-title: "Healthcare AI for Equity"
+title: "Equitable Healthcare AI: From Algorithms to Clinical Impact"
 author: "Sanjay Basu, MD, PhD"
-description: "A comprehensive technical textbook for building equitable AI systems"
+description: "A Comprehensive, Self-Updating Technical and Practical Textbook"
 ---
 
 
