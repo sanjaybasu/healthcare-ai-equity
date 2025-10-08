@@ -2,6 +2,8 @@
 
 A comprehensive, self-updating technical textbook on equitable healthcare AI development, deployment, and validation.
 
+https://sanjaybasu.github.io/healthcare-ai-equity/
+
 ## 🌟 Key Features
 
 - **📚 Comprehensive Coverage:** 30 chapters spanning foundations to cutting-edge methods
