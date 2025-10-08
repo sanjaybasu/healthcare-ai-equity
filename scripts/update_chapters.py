@@ -339,7 +339,7 @@ class ChapterUpdater:
             if not self.dry_run:
                 with open(chapter_file, 'w', encoding='utf-8') as f:
                     f.write(updated_content)
-                logger.info(f"  ✓ Updated {chapter_file.name}")
+                logger.info(f"  â Updated {chapter_file.name}")
             else:
                 logger.info(f"  [DRY RUN] Would update {chapter_file.name}")
             
@@ -436,7 +436,7 @@ def main():
     parser.add_argument(
         '--chapters-dir',
         type=str,
-        default='chapters',
+        default='_chapters',
         help='Directory containing chapter files'
     )
     parser.add_argument(
