@@ -13,6 +13,22 @@ journals:
     impact_factor: 176.079
     focus: "Clinical research and practice"
     
+  nejm_ai:
+    pubmed_name: "NEJM AI"
+    impact_factor: "New journal (2024)"
+    focus: "Artificial intelligence in medicine and healthcare"
+    url: "https://ai.nejm.org/"
+    
+  nature:
+    pubmed_name: "Nature"
+    impact_factor: 64.8
+    focus: "Multidisciplinary science including biomedical AI"
+    
+  science:
+    pubmed_name: "Science (New York, N.Y.)"
+    impact_factor: 56.9
+    focus: "Multidisciplinary science including healthcare AI"
+       
   jama:
     pubmed_name: "JAMA"
     impact_factor: 120.768
