@@ -1,0 +1,365 @@
+# Conference Monitoring Configuration for Healthcare AI Equity Textbook
+# This file lists top-tier conferences to monitor for relevant publications
+
+conferences:
+  # Top AI/ML Conferences
+  neurips:
+    full_name: "Conference on Neural Information Processing Systems"
+    acronym: "NeurIPS"
+    focus: "Neural networks, machine learning, and AI"
+    tier: "A*"
+    typical_acceptance_rate: "21%"
+    frequency: "Annual (December)"
+    proceedings_url: "https://proceedings.neurips.cc/"
+    search_keywords:
+      - "healthcare"
+      - "medical"
+      - "clinical"
+      - "health equity"
+      - "fairness"
+      - "bias"
+    
+  icml:
+    full_name: "International Conference on Machine Learning"
+    acronym: "ICML"
+    focus: "Machine learning theory and applications"
+    tier: "A*"
+    typical_acceptance_rate: "22%"
+    frequency: "Annual (July)"
+    proceedings_url: "https://proceedings.mlr.press/"
+    search_keywords:
+      - "healthcare"
+      - "medical"
+      - "clinical"
+      - "health"
+      - "fairness"
+      
+  iclr:
+    full_name: "International Conference on Learning Representations"
+    acronym: "ICLR"
+    focus: "Deep learning and representation learning"
+    tier: "A*"
+    typical_acceptance_rate: "32%"
+    frequency: "Annual (May)"
+    proceedings_url: "https://openreview.net/"
+    search_keywords:
+      - "healthcare"
+      - "medical"
+      - "clinical"
+      
+  aaai:
+    full_name: "AAAI Conference on Artificial Intelligence"
+    acronym: "AAAI"
+    focus: "General AI research and applications"
+    tier: "A*"
+    typical_acceptance_rate: "20%"
+    frequency: "Annual (February)"
+    proceedings_url: "https://aaai.org/Library/conferences-library.php"
+    search_keywords:
+      - "healthcare"
+      - "medical"
+      - "health"
+      
+  # Fairness & Bias in AI
+  facct:
+    full_name: "ACM Conference on Fairness, Accountability, and Transparency"
+    acronym: "FAccT"
+    focus: "Fairness, accountability, transparency in AI"
+    tier: "A"
+    typical_acceptance_rate: "24%"
+    frequency: "Annual (June)"
+    proceedings_url: "https://dl.acm.org/conference/facct"
+    search_keywords:
+      - "healthcare"
+      - "medical"
+      - "health"
+      - "clinical"
+      
+  aies:
+    full_name: "AAAI/ACM Conference on AI, Ethics, and Society"
+    acronym: "AIES"
+    focus: "Ethical and societal aspects of AI"
+    tier: "A"
+    typical_acceptance_rate: "30%"
+    frequency: "Annual"
+    proceedings_url: "https://www.aies-conference.com/"
+    search_keywords:
+      - "healthcare"
+      - "medical"
+      - "health equity"
+      - "algorithmic bias"
+      
+  # Healthcare-Specific AI Conferences
+  chil:
+    full_name: "ACM Conference on Health, Inference, and Learning"
+    acronym: "CHIL"
+    focus: "Machine learning for healthcare"
+    tier: "A"
+    typical_acceptance_rate: "27%"
+    frequency: "Annual (April)"
+    proceedings_url: "https://www.chilconference.org/"
+    search_keywords:
+      - "equity"
+      - "disparities"
+      - "fairness"
+      - "bias"
+      - "underserved"
+      
+  ml4h:
+    full_name: "Machine Learning for Health"
+    acronym: "ML4H"
+    focus: "Machine learning applications in healthcare"
+    tier: "B"
+    typical_acceptance_rate: "35%"
+    frequency: "Annual (December, with NeurIPS)"
+    proceedings_url: "https://ml4health.github.io/"
+    search_keywords:
+      - "equity"
+      - "fairness"
+      - "disparities"
+      
+  mlhc:
+    full_name: "Machine Learning for Healthcare Conference"
+    acronym: "MLHC"
+    focus: "Clinical machine learning and healthcare AI"
+    tier: "B"
+    typical_acceptance_rate: "28%"
+    frequency: "Annual (August)"
+    proceedings_url: "https://www.mlforhc.org/"
+    search_keywords:
+      - "equity"
+      - "fairness"
+      - "bias"
+      
+  # Medical Informatics
+  amia:
+    full_name: "American Medical Informatics Association Annual Symposium"
+    acronym: "AMIA"
+    focus: "Health informatics and clinical decision support"
+    tier: "A"
+    typical_acceptance_rate: "38%"
+    frequency: "Annual (November)"
+    proceedings_url: "https://amia.org/education-events/amia-annual-symposium"
+    search_keywords:
+      - "machine learning"
+      - "artificial intelligence"
+      - "predictive model"
+      - "equity"
+      
+  medinfo:
+    full_name: "World Congress on Medical and Health Informatics"
+    acronym: "MEDINFO"
+    focus: "Medical informatics and health IT"
+    tier: "A"
+    typical_acceptance_rate: "40%"
+    frequency: "Biennial"
+    proceedings_url: "https://www.imia-medinfo.org/wp/"
+    search_keywords:
+      - "machine learning"
+      - "AI"
+      - "equity"
+      
+  # Computer Vision & Medical Imaging
+  miccai:
+    full_name: "Medical Image Computing and Computer Assisted Intervention"
+    acronym: "MICCAI"
+    focus: "Medical image analysis and computer-assisted intervention"
+    tier: "A"
+    typical_acceptance_rate: "32%"
+    frequency: "Annual (October)"
+    proceedings_url: "https://www.miccai.org/"
+    search_keywords:
+      - "equity"
+      - "fairness"
+      - "bias"
+      - "disparities"
+      
+  cvpr:
+    full_name: "IEEE/CVF Conference on Computer Vision and Pattern Recognition"
+    acronym: "CVPR"
+    focus: "Computer vision (including medical applications)"
+    tier: "A*"
+    typical_acceptance_rate: "29%"
+    frequency: "Annual (June)"
+    proceedings_url: "https://cvpr.thecvf.com/"
+    search_keywords:
+      - "medical"
+      - "healthcare"
+      - "clinical"
+      - "diagnosis"
+      
+  # Natural Language Processing
+  acl:
+    full_name: "Annual Meeting of the Association for Computational Linguistics"
+    acronym: "ACL"
+    focus: "Natural language processing"
+    tier: "A*"
+    typical_acceptance_rate: "25%"
+    frequency: "Annual (July)"
+    proceedings_url: "https://aclanthology.org/"
+    search_keywords:
+      - "medical"
+      - "clinical"
+      - "health"
+      - "biomedical"
+      
+  emnlp:
+    full_name: "Conference on Empirical Methods in Natural Language Processing"
+    acronym: "EMNLP"
+    focus: "Empirical NLP methods"
+    tier: "A*"
+    typical_acceptance_rate: "26%"
+    frequency: "Annual (December)"
+    proceedings_url: "https://aclanthology.org/"
+    search_keywords:
+      - "medical"
+      - "clinical"
+      - "biomedical"
+      
+  # Data Mining & Big Data
+  kdd:
+    full_name: "ACM SIGKDD Conference on Knowledge Discovery and Data Mining"
+    acronym: "KDD"
+    focus: "Data mining and knowledge discovery"
+    tier: "A*"
+    typical_acceptance_rate: "15%"
+    frequency: "Annual (August)"
+    proceedings_url: "https://www.kdd.org/"
+    search_keywords:
+      - "healthcare"
+      - "medical"
+      - "health"
+      
+  # Biomedical Informatics & Bioinformatics
+  ismb:
+    full_name: "Intelligent Systems for Molecular Biology"
+    acronym: "ISMB"
+    focus: "Computational biology and bioinformatics"
+    tier: "A"
+    typical_acceptance_rate: "20%"
+    frequency: "Annual (July)"
+    proceedings_url: "https://www.iscb.org/ismb"
+    search_keywords:
+      - "machine learning"
+      - "deep learning"
+      - "clinical"
+      
+  recomb:
+    full_name: "Research in Computational Molecular Biology"
+    acronym: "RECOMB"
+    focus: "Computational biology and genomics"
+    tier: "A"
+    typical_acceptance_rate: "18%"
+    frequency: "Annual (May)"
+    proceedings_url: "https://www.recomb.org/"
+    search_keywords:
+      - "machine learning"
+      - "AI"
+
+# Workshop & Symposium Series (Often co-located with major conferences)
+workshops:
+  fairness_ml:
+    - "Fairness in Machine Learning (NeurIPS workshop)"
+    - "AI for Social Good (major conferences)"
+    - "Trustworthy ML (ICLR workshop)"
+    
+  healthcare_ai:
+    - "Clinical NLP (various conferences)"
+    - "AI for Healthcare (AAAI symposium)"
+    - "Digital Biomarkers (various venues)"
+    
+  health_equity:
+    - "Health Equity and AI (emerging)"
+    - "AI for Global Health (various)"
+
+# Priority tiers for monitoring
+monitoring_priority:
+  tier_1_must_monitor: # Check immediately after conference
+    - neurips
+    - icml
+    - iclr
+    - chil
+    - facct
+    - miccai
+    
+  tier_2_high_priority: # Check within 1 week
+    - aaai
+    - ml4h
+    - mlhc
+    - amia
+    - cvpr
+    - acl
+    
+  tier_3_medium_priority: # Check within 2 weeks
+    - kdd
+    - emnlp
+    - aies
+    - medinfo
+    - ismb
+
+# Typical conference schedule (for planning automation)
+conference_calendar:
+  january:
+    - "AAAI submission deadline"
+  february:
+    - "AAAI Conference"
+  march:
+    - "ICLR Conference"
+  april:
+    - "CHIL Conference"
+  may:
+    - "ICLR Conference"
+    - "ICML submission deadline"
+  june:
+    - "FAccT Conference"
+    - "CVPR Conference"
+  july:
+    - "ICML Conference"
+    - "ACL Conference"
+  august:
+    - "MLHC Conference"
+    - "KDD Conference"
+  september:
+    - "NeurIPS submission deadline"
+  october:
+    - "MICCAI Conference"
+  november:
+    - "AMIA Symposium"
+  december:
+    - "NeurIPS Conference"
+    - "EMNLP Conference"
+    - "ML4H Workshop"
+
+# Search strategies for different conference types
+search_strategies:
+  ai_ml_conferences:
+    primary_keywords:
+      - "healthcare"
+      - "medical"
+      - "clinical"
+    secondary_keywords:
+      - "health equity"
+      - "disparities"
+      - "fairness"
+      - "bias"
+      
+  healthcare_conferences:
+    primary_keywords:
+      - "machine learning"
+      - "deep learning"
+      - "artificial intelligence"
+    secondary_keywords:
+      - "equity"
+      - "fairness"
+      - "disparities"
+      - "underserved"
+      
+  fairness_conferences:
+    primary_keywords:
+      - "healthcare"
+      - "medical"
+      - "health"
+    secondary_keywords:
+      - "algorithmic bias"
+      - "disparities"
+      - "equity"

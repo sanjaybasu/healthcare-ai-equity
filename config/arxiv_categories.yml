@@ -1,0 +1,309 @@
+# arXiv Category Monitoring Configuration for Healthcare AI Equity Textbook
+# This file specifies which arXiv categories to monitor for relevant preprints
+
+# Primary Categories (Core Focus)
+categories:
+  - "cs.LG"   # Machine Learning
+  - "cs.AI"   # Artificial Intelligence
+  - "stat.ML" # Machine Learning (Statistics)
+  - "cs.CY"   # Computers and Society
+  - "q-bio.QM" # Quantitative Methods (Biology)
+
+# Secondary Categories (Related)
+secondary_categories:
+  - "cs.CV"   # Computer Vision and Pattern Recognition
+  - "cs.CL"   # Computation and Language (NLP)
+  - "cs.HC"   # Human-Computer Interaction
+  - "stat.AP" # Applications (Statistics)
+  - "q-bio.NC" # Neurons and Cognition
+  - "q-bio.GN" # Genomics
+  - "q-bio.TO" # Tissues and Organs
+  - "physics.med-ph" # Medical Physics
+
+# Category Descriptions
+category_info:
+  cs_lg:
+    code: "cs.LG"
+    name: "Machine Learning"
+    description: "Core ML algorithms, theory, and applications"
+    relevance: "Primary source for healthcare ML methods"
+    typical_papers_per_week: 400
+    
+  cs_ai:
+    code: "cs.AI"
+    name: "Artificial Intelligence"
+    description: "General AI including reasoning, knowledge representation"
+    relevance: "Clinical decision support, diagnostic systems"
+    typical_papers_per_week: 150
+    
+  stat_ml:
+    code: "stat.ML"
+    name: "Machine Learning (Statistics)"
+    description: "Statistical ML theory and methodology"
+    relevance: "Statistical rigor in healthcare applications"
+    typical_papers_per_week: 80
+    
+  cs_cy:
+    code: "cs.CY"
+    name: "Computers and Society"
+    description: "Social impact of computing including ethics, fairness"
+    relevance: "Health equity, algorithmic bias, social determinants"
+    typical_papers_per_week: 50
+    
+  q_bio_qm:
+    code: "q-bio.QM"
+    name: "Quantitative Methods"
+    description: "Computational methods in biology and medicine"
+    relevance: "Biomedical applications, clinical modeling"
+    typical_papers_per_week: 30
+    
+  cs_cv:
+    code: "cs.CV"
+    name: "Computer Vision and Pattern Recognition"
+    description: "Image analysis and computer vision"
+    relevance: "Medical imaging, radiology AI, pathology"
+    typical_papers_per_week: 500
+    
+  cs_cl:
+    code: "cs.CL"
+    name: "Computation and Language"
+    description: "Natural language processing"
+    relevance: "Clinical notes, EHR mining, medical NLP"
+    typical_papers_per_week: 200
+    
+  cs_hc:
+    code: "cs.HC"
+    name: "Human-Computer Interaction"
+    description: "User interfaces and interaction design"
+    relevance: "Clinical workflows, usability, human-AI collaboration"
+    typical_papers_per_week: 40
+    
+  stat_ap:
+    code: "stat.AP"
+    name: "Applications (Statistics)"
+    description: "Statistical applications in various domains"
+    relevance: "Clinical trials, epidemiology, healthcare statistics"
+    typical_papers_per_week: 60
+    
+  physics_med_ph:
+    code: "physics.med-ph"
+    name: "Medical Physics"
+    description: "Physics applications in medicine"
+    relevance: "Imaging physics, radiation therapy, diagnostics"
+    typical_papers_per_week: 20
+
+# Search Keywords by Category
+category_keywords:
+  cs_lg:
+    required: # Papers must mention at least one
+      - "healthcare"
+      - "medical"
+      - "clinical"
+      - "patient"
+      - "diagnosis"
+      - "treatment"
+      - "disease"
+      - "health"
+    
+    equity_focused: # Prioritize papers with these terms
+      - "health equity"
+      - "health disparities"
+      - "fairness"
+      - "bias"
+      - "underserved"
+      - "vulnerable populations"
+      - "algorithmic fairness"
+      - "demographic parity"
+    
+  cs_cy:
+    required:
+      - "healthcare"
+      - "medical"
+      - "health"
+      - "clinical"
+    
+    equity_focused:
+      - "equity"
+      - "disparities"
+      - "fairness"
+      - "justice"
+      - "bias"
+      - "discrimination"
+      
+  cs_cv:
+    required:
+      - "medical imaging"
+      - "radiology"
+      - "pathology"
+      - "CT"
+      - "MRI"
+      - "X-ray"
+      - "ultrasound"
+      - "histopathology"
+    
+    equity_focused:
+      - "bias"
+      - "fairness"
+      - "disparities"
+      - "underrepresented"
+      
+  cs_cl:
+    required:
+      - "clinical notes"
+      - "electronic health record"
+      - "EHR"
+      - "medical text"
+      - "clinical text"
+      - "biomedical"
+    
+    equity_focused:
+      - "bias"
+      - "fairness"
+      - "health equity"
+
+# Monitoring Strategies
+monitoring_strategies:
+  high_volume_categories: # cs.LG, cs.CV, cs.CL
+    strategy: "Keyword filtering + relevance scoring"
+    min_relevance_score: 0.7
+    max_papers_per_week: 50
+    
+  medium_volume_categories: # cs.AI, stat.ML, stat.AP
+    strategy: "Keyword filtering"
+    min_relevance_score: 0.5
+    max_papers_per_week: 20
+    
+  low_volume_categories: # cs.CY, q-bio.QM, physics.med-ph
+    strategy: "Review all papers"
+    min_relevance_score: 0.3
+    max_papers_per_week: 10
+
+# Query Construction
+query_templates:
+  basic_healthcare:
+    categories: ["cs.LG", "cs.AI", "stat.ML"]
+    keywords:
+      all: "healthcare OR medical OR clinical"
+      
+  equity_focused:
+    categories: ["cs.LG", "cs.AI", "cs.CY"]
+    keywords:
+      all: "(healthcare OR medical OR health) AND (equity OR fairness OR bias OR disparities)"
+      
+  medical_imaging:
+    categories: ["cs.CV"]
+    keywords:
+      all: "medical imaging OR radiology OR pathology OR CT OR MRI"
+      
+  clinical_nlp:
+    categories: ["cs.CL"]
+    keywords:
+      all: "clinical OR EHR OR 'electronic health record' OR 'medical text'"
+      
+  biomedical:
+    categories: ["q-bio.QM", "q-bio.GN", "q-bio.TO"]
+    keywords:
+      all: "machine learning OR deep learning OR AI"
+
+# Paper Quality Heuristics (for prioritization)
+quality_indicators:
+  positive_signals:
+    - author_from_top_institution: true
+    - has_code_repository: true
+    - multiple_authors: true
+    - detailed_methods: true
+    - validation_on_real_data: true
+    - addresses_limitations: true
+    
+  negative_signals:
+    - poor_writing_quality: true
+    - no_validation: true
+    - unrealistic_claims: true
+    - no_comparison_to_baseline: true
+
+# Special Focus Areas (for textbook relevance)
+special_focus:
+  foundational_methods:
+    categories: ["cs.LG", "stat.ML"]
+    topics:
+      - "supervised learning"
+      - "unsupervised learning"
+      - "semi-supervised learning"
+      - "transfer learning"
+      - "meta-learning"
+      - "few-shot learning"
+      
+  fairness_and_bias:
+    categories: ["cs.LG", "cs.CY", "cs.AI"]
+    topics:
+      - "algorithmic fairness"
+      - "bias detection"
+      - "bias mitigation"
+      - "demographic parity"
+      - "equalized odds"
+      - "calibration"
+      
+  interpretability:
+    categories: ["cs.LG", "cs.AI"]
+    topics:
+      - "interpretability"
+      - "explainability"
+      - "attention mechanisms"
+      - "saliency maps"
+      - "SHAP"
+      - "LIME"
+      
+  privacy_and_federated:
+    categories: ["cs.LG", "cs.CR"]
+    topics:
+      - "federated learning"
+      - "differential privacy"
+      - "privacy-preserving"
+      - "secure computation"
+      
+  causal_inference:
+    categories: ["cs.LG", "stat.ML"]
+    topics:
+      - "causal inference"
+      - "causal discovery"
+      - "treatment effects"
+      - "counterfactual"
+      
+  time_series:
+    categories: ["cs.LG", "stat.ML"]
+    topics:
+      - "time series"
+      - "longitudinal data"
+      - "recurrent neural network"
+      - "temporal"
+      
+  survival_analysis:
+    categories: ["cs.LG", "stat.ML", "stat.AP"]
+    topics:
+      - "survival analysis"
+      - "time-to-event"
+      - "censored data"
+      - "hazard"
+
+# arXiv API Configuration
+api_config:
+  base_url: "http://export.arxiv.org/api/query"
+  rate_limit: 3  # seconds between requests
+  max_results_per_query: 100
+  sort_by: "submittedDate"
+  sort_order: "descending"
+
+# Notification Settings (for future implementation)
+notifications:
+  high_priority_keywords: # Immediate notification
+    - "health equity"
+    - "algorithmic bias"
+    - "fairness in healthcare"
+    
+  high_impact_authors: # Track specific authors
+    - "List to be populated with prominent researchers"
+    
+  collaboration_opportunities: # Papers that might need author contact
+    - mentions_datasets: true
+    - open_source_code: true
+    - seeks_clinical_validation: true

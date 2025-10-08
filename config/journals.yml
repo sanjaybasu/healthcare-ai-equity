@@ -1,1 +1,203 @@
+# Journal Monitoring Configuration for Healthcare AI Equity Textbook
+# This file lists top-tier journals to monitor for relevant publications
 
+journals:
+  # Top Medical Journals
+  nature_medicine:
+    pubmed_name: "Nature medicine"
+    impact_factor: 87.241
+    focus: "Biomedical research and clinical practice"
+    
+  nejm:
+    pubmed_name: "The New England journal of medicine"
+    impact_factor: 176.079
+    focus: "Clinical research and practice"
+    
+  jama:
+    pubmed_name: "JAMA"
+    impact_factor: 120.768
+    focus: "Medical research and practice"
+    
+  lancet:
+    pubmed_name: "Lancet (London, England)"
+    impact_factor: 168.9
+    focus: "Global health and clinical practice"
+    
+  bmj:
+    pubmed_name: "BMJ (Clinical research ed.)"
+    impact_factor: 93.333
+    focus: "Medical research and evidence-based practice"
+    
+  # Health Equity & Public Health
+  lancet_global_health:
+    pubmed_name: "The Lancet. Global health"
+    impact_factor: 31.6
+    focus: "Global health equity and access"
+    
+  lancet_public_health:
+    pubmed_name: "The Lancet. Public health"
+    impact_factor: 50.5
+    focus: "Public health policy and practice"
+    
+  ajph:
+    pubmed_name: "American journal of public health"
+    impact_factor: 9.6
+    focus: "Public health research and policy"
+    
+  health_affairs:
+    pubmed_name: "Health affairs (Project Hope)"
+    impact_factor: 8.8
+    focus: "Health policy and health services research"
+    
+  milbank_quarterly:
+    pubmed_name: "The Milbank quarterly"
+    impact_factor: 11.1
+    focus: "Population health and health policy"
+    
+  # Digital Health & Health Informatics
+  npj_digital_medicine:
+    pubmed_name: "NPJ digital medicine"
+    impact_factor: 15.2
+    focus: "Digital health technologies and AI"
+    
+  jmir:
+    pubmed_name: "Journal of medical Internet research"
+    impact_factor: 7.4
+    focus: "Digital health, eHealth, and mHealth"
+    
+  jamia:
+    pubmed_name: "Journal of the American Medical Informatics Association : JAMIA"
+    impact_factor: 7.9
+    focus: "Health informatics and clinical decision support"
+    
+  jbi:
+    pubmed_name: "Journal of biomedical informatics"
+    impact_factor: 8.0
+    focus: "Biomedical informatics and data science"
+    
+  # Clinical Specialties (High Impact)
+  jama_cardiology:
+    pubmed_name: "JAMA cardiology"
+    impact_factor: 24.8
+    focus: "Cardiovascular disease and cardiology"
+    
+  jama_oncology:
+    pubmed_name: "JAMA oncology"
+    impact_factor: 33.7
+    focus: "Cancer research and oncology"
+    
+  jama_internal_medicine:
+    pubmed_name: "JAMA internal medicine"
+    impact_factor: 44.4
+    focus: "Internal medicine and general practice"
+    
+  jama_pediatrics:
+    pubmed_name: "JAMA pediatrics"
+    impact_factor: 24.7
+    focus: "Pediatric medicine and child health"
+    
+  jama_psychiatry:
+    pubmed_name: "JAMA psychiatry"
+    impact_factor: 25.8
+    focus: "Mental health and psychiatry"
+    
+  # Data Science & Statistics in Medicine
+  statistics_in_medicine:
+    pubmed_name: "Statistics in medicine"
+    impact_factor: 2.3
+    focus: "Statistical methods in medical research"
+    
+  biometrics:
+    pubmed_name: "Biometrics"
+    impact_factor: 2.0
+    focus: "Statistical methods in biological research"
+    
+  # AI & Machine Learning in Healthcare (Non-PubMed, manual monitoring)
+  nature_biomedical_engineering:
+    pubmed_name: "Nature biomedical engineering"
+    impact_factor: 29.234
+    focus: "Biomedical technology and engineering"
+    
+  cell:
+    pubmed_name: "Cell"
+    impact_factor: 64.5
+    focus: "Cell biology and biomedical research"
+    
+  science:
+    pubmed_name: "Science (New York, N.Y.)"
+    impact_factor: 56.9
+    focus: "Multidisciplinary science including biomedical"
+
+# Additional high-impact journals for manual review
+manual_monitoring:
+  - name: "Nature"
+    url: "https://www.nature.com/nature/"
+    focus: "General science including health AI"
+    
+  - name: "Science"
+    url: "https://www.science.org/"
+    focus: "General science including biomedicine"
+    
+  - name: "Cell"
+    url: "https://www.cell.com/"
+    focus: "Life sciences and biomedical research"
+    
+  - name: "PNAS"
+    url: "https://www.pnas.org/"
+    focus: "Multidisciplinary science including health"
+
+# Search filters for each journal category
+search_filters:
+  machine_learning:
+    - "machine learning"
+    - "deep learning"
+    - "artificial intelligence"
+    - "neural network"
+    - "predictive model"
+    
+  health_equity:
+    - "health equity"
+    - "health disparities"
+    - "health inequities"
+    - "underserved population"
+    - "vulnerable population"
+    - "social determinants"
+    - "algorithmic bias"
+    - "algorithmic fairness"
+    
+  clinical_ai:
+    - "clinical decision support"
+    - "diagnostic AI"
+    - "risk prediction"
+    - "electronic health record"
+    - "clinical informatics"
+    
+  methodology:
+    - "federated learning"
+    - "transfer learning"
+    - "causal inference"
+    - "survival analysis"
+    - "natural language processing"
+    - "computer vision"
+    - "time series"
+
+# Monitoring frequency (for future automation enhancements)
+monitoring_schedule:
+  high_priority: # Check weekly
+    - nature_medicine
+    - nejm
+    - jama
+    - lancet
+    - npj_digital_medicine
+    
+  medium_priority: # Check bi-weekly
+    - jamia
+    - jmir
+    - jbi
+    - lancet_global_health
+    - health_affairs
+    
+  low_priority: # Check monthly
+    - statistics_in_medicine
+    - biometrics
+    - ajph
