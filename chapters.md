@@ -1,9 +1,7 @@
 ---
 layout: page
-title: All Chapters
+title: Chapters
 ---
-
-# Chapters
 
 ### Part I: Foundations and Context
 
