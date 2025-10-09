@@ -18,7 +18,7 @@ This textbook was written by someone who's been exactly where you are. A physici
 
 **Here's what you'll find instead:**
 
-**Algorithms that scale:** Not just neural networks—random survival forests with competing risks, causal inference for algorithmic fairness, federated learning for multi-site deployment, neural ODEs for irregular clinical time series. The methods that power real clinical systems.
+**Algorithms that scale:** Not just LLMs—random survival forests with competing risks, causal inference for algorithmic fairness, federated learning for multi-site deployment, neural ODEs for irregular clinical time series. The methods that power real clinical systems.
 
 **Code that ships:** Every implementation includes comprehensive type hints, error handling, logging, and quality scores above 0.92. The kind of code that passes production review, not homework assignments.
 
