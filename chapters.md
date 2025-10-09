@@ -3,56 +3,78 @@ layout: page
 title: All Chapters
 ---
 
-# Complete Chapter Listing
+# Chapters
 
-## Part I: Foundations and Context
+### Part I: Foundations and Context
 
-**1.** [Clinical Informatics Foundations for Equity-Centered AI]({{ site.baseurl }}/chapters/chapter_01_clinical_informatics/)  
-**2.** [Mathematical Foundations with Health Equity Applications]({{ site.baseurl }}/chapters/chapter_02_mathematical_foundations/)  
-**3.** [Healthcare Data Engineering for Equity]({{ site.baseurl }}/chapters/chapter_03_healthcare_data_engineering/)
+**[Chapter 1: Clinical Informatics Foundations for Equity-Centered AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-01-clinical-informatics/)**  
 
-## Part II: Core Machine Learning Methods
+**[Chapter 2: Mathematical Foundations with Health Equity Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-02-mathematical-foundations/))**  
 
-**4.** [Machine Learning Fundamentals with Fairness]({{ site.baseurl }}/chapters/chapter_04_machine_learning_fundamentals/)  
-**5.** [Deep Learning for Healthcare Applications]({{ site.baseurl }}/chapters/chapter_05_deep_learning_healthcare/)  
-**6.** [Natural Language Processing for Clinical Text]({{ site.baseurl }}/chapters/chapter_06_clinical_nlp/)  
-**7.** [Computer Vision for Medical Imaging with Fairness]({{ site.baseurl }}/chapters/chapter_07_medical_imaging/)  
-**8.** [Time Series Analysis for Clinical Data]({{ site.baseurl }}/chapters/chapter_08_clinical_time_series/)
+**[Chapter 3: Healthcare Data Engineering for Equity]((https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/))**  
 
-## Part III: Advanced Methods for Healthcare AI
+### Part II: Core Machine Learning Methods
 
-**9.** [Advanced Clinical NLP and Information Retrieval]({{ site.baseurl }}/chapters/chapter_09_advanced_clinical_nlp/)  
-**10.** [Survival Analysis and Time-to-Event Modeling]({{ site.baseurl }}/chapters/chapter_10_survival_analysis/)  
-**11.** [Causal Inference for Healthcare AI]({{ site.baseurl }}/chapters/chapter_11_causal_inference/)  
-**12.** [Federated Learning and Privacy-Preserving AI]({{ site.baseurl }}/chapters/chapter_12_federated_learning_privacy/)  
-**13.** [Bias Detection and Mitigation in Healthcare AI]({{ site.baseurl }}/chapters/chapter_13_bias_detection/)
+**[Chapter 4: Machine Learning Fundamentals with Fairness](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-04-machine-learning-fundamentals/)**  
 
-## Part IV: Interpretability, Validation, and Trust
+**[Chapter 5: Deep Learning for Healthcare Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-05-deep-learning-healthcare/)**  
 
-**14.** [Interpretability and Explainability]({{ site.baseurl }}/chapters/chapter_14_interpretability_explainability/)  
-**15.** [Validation Strategies for Clinical AI]({{ site.baseurl }}/chapters/chapter_15_validation_strategies/)  
-**16.** [Uncertainty Quantification and Calibration]({{ site.baseurl }}/chapters/chapter_16_uncertainty_calibration/)  
-**17.** [Regulatory Considerations and FDA Pathways]({{ site.baseurl }}/chapters/chapter_17_regulatory_considerations/)
+**[Chapter 6: Natural Language Processing for Clinical Text](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-06-clinical-nlp/)**  
 
-## Part V: Deployment and Real-World Implementation
+**[Chapter 7: Computer Vision for Medical Imaging with Fairness](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-07-medical-imaging/)**  
 
-**18.** [Implementation Science for Healthcare AI]({{ site.baseurl }}/chapters/chapter_18_implementation_science/)  
-**19.** [Human-AI Collaboration in Clinical Settings]({{ site.baseurl }}/chapters/chapter_19_human_ai_collaboration/)  
-**20.** [Post-Deployment Monitoring and Maintenance]({{ site.baseurl }}/chapters/chapter_20_monitoring_maintenance/)  
-**21.** [Health Equity Metrics and Evaluation Frameworks]({{ site.baseurl }}/chapters/chapter_21_health_equity_metrics/)
+**[Chapter 8: Time Series Analysis for Clinical Data](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-08-clinical-time-series/)**  
 
-## Part VI: Specialized Applications
+### Part III: Advanced Methods for Healthcare AI
 
-**22.** [Clinical Decision Support Systems]({{ site.baseurl }}/chapters/chapter_22_clinical_decision_support/)  
-**23.** [Precision Medicine and Genomic AI]({{ site.baseurl }}/chapters/chapter_23_precision_medicine_genomics/)  
-**24.** [Population Health Management and Screening]({{ site.baseurl }}/chapters/chapter_24_population_health_screening/)  
-**25.** [Social Determinants of Health Integration]({{ site.baseurl }}/chapters/chapter_25_sdoh_integration/)
+**[Chapter 9: Advanced Clinical NLP and Information Retrieval](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-09-advanced-clinical-nlp/)**  
 
-## Part VII: Emerging Methods and Future Directions
+**[Chapter 10: Survival Analysis and Time-to-Event Modeling](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-10-survival-analysis/)**  
 
-**26.** [Large Language Models in Healthcare]({{ site.baseurl }}/chapters/chapter_26_llms_in_healthcare/)  
-**27.** [Multi-Modal Learning for Clinical AI]({{ site.baseurl }}/chapters/chapter_27_multimodal_learning/)  
-**28.** [Continual Learning and Model Updating]({{ site.baseurl }}/chapters/chapter_28_continual_learning/)  
-**29.** [AI for Global Health and Resource-Limited Settings]({{ site.baseurl }}/chapters/chapter_29_global_health_ai/)  
-**30.** [Research Frontiers in Equity-Centered Health AI]({{ site.baseurl }}/chapters/chapter_30_research_frontiers_equity/)
+**[Chapter 11: Causal Inference for Healthcare AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-11-causal-inference/)**  
 
+**[Chapter 12: Federated Learning and Privacy-Preserving AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-12-federated-learning-privacy/)**  
+
+**[Chapter 13: Bias Detection and Mitigation in Healthcare AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-13-bias-detection/)**  
+
+### Part IV: Interpretability, Validation, and Trust
+
+**[Chapter 14: Interpretability and Explainability](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-14-interpretability-explainability/)**  
+
+**[Chapter 15: Validation Strategies for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-15-validation-strategies/)**  
+
+**[Chapter 16: Uncertainty Quantification and Calibration](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-16-uncertainty-calibration/)**  
+
+**[Chapter 17: Regulatory Considerations and FDA Pathways](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-17-regulatory-considerations/)**  
+
+### Part V: Deployment and Real-World Implementation
+
+**[Chapter 18: Implementation Science for Healthcare AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-18-implementation-science/)**  
+
+**[Chapter 19: Human-AI Collaboration in Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-19-human-ai-collaboration/)**  
+
+**[Chapter 20: Post-Deployment Monitoring and Maintenance](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-20-monitoring-maintenance/)**  
+
+**[Chapter 21: Health Equity Metrics and Evaluation Frameworks](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-21-health-equity-metrics/)**  
+
+### Part VI: Specialized Applications
+
+**[Chapter 22: Clinical Decision Support Systems](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-22-clinical-decision-support/)**  
+
+**[Chapter 23: Precision Medicine and Genomic AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
+
+**[Chapter 24: Population Health Management and Screening](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-24-population-health-screening/)**  
+
+**[Chapter 25: Social Determinants of Health Integration](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-25-sdoh-integration/)**  
+
+### Part VII: Emerging Methods and Future Directions
+
+**[Chapter 26: Large Language Models in Healthcare](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-26-llms-in-healthcare/)**  
+
+**[Chapter 27: Multi-Modal Learning for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-27-multimodal-learning/)**  
+
+**[Chapter 28: Continual Learning and Model Updating](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-28-continual-learning/)**  
+
+**[Chapter 29: AI for Global Health and Resource-Limited Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-29-global-health-ai/)**  
+
+**[Chapter 30: Research Frontiers in Equity-Centered Health AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-30-research-frontiers-equity/)**  
