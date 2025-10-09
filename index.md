@@ -36,7 +36,7 @@ Why traditional healthcare AI has failed underserved populations, and the framew
 **[Chapter 2: Mathematical Foundations with Health Equity Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-02-mathematical-foundations/))**  
 Linear algebra, probability theory, optimization, and information theory—grounded in health equity applications, not abstract theory.
 
-**[Chapter 3: Healthcare Data Engineering for Equity]((https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/))**  
+**[Chapter 3: Healthcare Data Engineering for Equity](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/)**  
 Working with EHRs, handling systematic missingness, FHIR standards, data quality assessment, and building equitable data pipelines.
 
 ### Part II: Core Machine Learning Methods
