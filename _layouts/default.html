@@ -37,15 +37,8 @@
   
   <!-- Main Content -->
   <main class="container">
-    {% if page.title and page.chapter_number %}
-    <header class="page-header">
-      <p class="chapter-label">Chapter {{ page.chapter_number }}</p>
-      <h1 class="page-title">{{ page.title }}</h1>
-      {% if page.description %}
-      <p class="page-description">{{ page.description }}</p>
-      {% endif %}
-    </header>
-    {% endif %}
+    <!-- REMOVED: Title header that was causing duplicate -->
+    <!-- Chapters now display title from their markdown content only -->
     
     <article class="content">
       {{ content }}
