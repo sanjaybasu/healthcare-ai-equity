@@ -1,61 +1,550 @@
+/* ============================================
+   Healthcare AI Equity Textbook - Main Styles
+   ============================================ */
+
+/* CSS Variables */
 :root {
   --primary: #2c5282;
+  --primary-dark: #1a365d;
   --secondary: #4a90a4;
+  --accent: #38b2ac;
   --text: #2d3748;
+  --text-light: #4a5568;
   --bg: #ffffff;
+  --bg-gray: #f7fafc;
   --code-bg: #f7fafc;
   --border: #e2e8f0;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --success: #48bb78;
+  --warning: #ed8936;
+  --error: #f56565;
+  
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.6;
   color: var(--text);
   background: var(--bg);
   margin: 0;
+  padding: 0;
 }
 
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--primary);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 2rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: var(--spacing-sm);
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+}
+
+a {
+  color: var(--secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Container */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--spacing-lg);
 }
 
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-md);
+  }
+}
+
+/* Navigation */
 nav {
   background: var(--primary);
   color: white;
-  padding: 1rem 0;
+  padding: var(--spacing-md) 0;
+  box-shadow: 0 2px 4px var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+nav .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
 }
 
 nav a {
   color: white;
-  margin: 0 1rem;
+  margin: 0 var(--spacing-md);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+nav a:hover {
+  opacity: 0.8;
   text-decoration: none;
 }
 
-h1, h2, h3 { color: var(--primary); }
-h2 { border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+nav .nav-home {
+  font-size: 1.2rem;
+}
 
+.nav-links {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  nav .container {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* Page Header */
+.page-header {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 3px solid var(--border);
+}
+
+.chapter-label {
+  color: var(--secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm);
+}
+
+.page-title {
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.page-description {
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+/* Content Area */
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+article.chapter-content {
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+/* Code Blocks */
 code {
+  font-family: var(--font-mono);
   background: var(--code-bg);
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
+  font-size: 0.9em;
+  color: var(--text);
 }
 
 pre {
   background: var(--code-bg);
-  padding: 1rem;
+  padding: var(--spacing-md);
   border-radius: 5px;
   overflow-x: auto;
   border-left: 4px solid var(--secondary);
+  position: relative;
+  margin: var(--spacing-md) 0;
 }
 
-a { color: var(--secondary); }
-a:hover { text-decoration: underline; }
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
 
-footer {
+/* Copy code button */
+.copy-code-button {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  padding: 0.25rem 0.5rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.copy-code-button:hover {
+  opacity: 1;
+}
+
+/* Math Styling */
+.MathJax_Display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: var(--spacing-md) 0;
+  margin: var(--spacing-md) 0;
+}
+
+.MathJax {
+  outline: 0;
+  font-size: 1.1em !important;
+}
+
+code.has-jax {
+  font: inherit;
+  font-size: 100%;
+  background: inherit;
+  border: inherit;
+  color: inherit;
+  padding: 0;
+}
+
+/* Ensure math in display mode is centered and has proper spacing */
+div.MathJax_Display {
   text-align: center;
-  padding: 2rem;
-  background: var(--code-bg);
-  margin-top: 4rem;
+  margin: 1.5em 0;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--spacing-lg) 0;
+  font-size: 0.95rem;
+}
+
+th, td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+th {
+  background: var(--bg-gray);
+  font-weight: 600;
+  color: var(--primary);
+}
+
+tr:nth-child(even) {
+  background: var(--bg-gray);
+}
+
+/* Lists */
+ul, ol {
+  margin-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+li {
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid var(--accent);
+  padding-left: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+/* Table of Contents */
+.table-of-contents {
+  background: var(--bg-gray);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.table-of-contents h2 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  border: none;
+  padding: 0;
+}
+
+.table-of-contents ul {
+  list-style: none;
+  margin-left: 0;
+}
+
+.table-of-contents li {
+  margin-bottom: var(--spacing-sm);
+}
+
+.table-of-contents li.h3 {
+  margin-left: var(--spacing-md);
+  font-size: 0.95rem;
+}
+
+.table-of-contents a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.table-of-contents a:hover {
+  color: var(--secondary);
+}
+
+/* Chapter Navigation */
+.chapter-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 2px solid var(--border);
+  gap: var(--spacing-md);
+}
+
+.chapter-nav a {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-gray);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.chapter-nav a:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .chapter-nav {
+    flex-direction: column;
+  }
+  
+  .chapter-nav a {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Alerts/Callouts */
+.alert {
+  padding: var(--spacing-md);
+  border-radius: 5px;
+  margin: var(--spacing-md) 0;
+  border-left: 4px solid;
+}
+
+.alert-info {
+  background: #e6f7ff;
+  border-color: var(--secondary);
+  color: #003a5d;
+}
+
+.alert-warning {
+  background: #fff3cd;
+  border-color: var(--warning);
+  color: #856404;
+}
+
+.alert-success {
+  background: #d4edda;
+  border-color: var(--success);
+  color: #155724;
+}
+
+.alert-error {
+  background: #f8d7da;
+  border-color: var(--error);
+  color: #721c24;
+}
+
+/* Footer */
+footer {
+  background: var(--bg-gray);
+  border-top: 1px solid var(--border);
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-lg) 0;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+footer p {
+  margin-bottom: var(--spacing-sm);
+}
+
+footer a {
+  color: var(--text-light);
+}
+
+footer a:hover {
+  color: var(--primary);
+}
+
+/* Loading States */
+.MathJax_Preview {
+  color: #888;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.MathJax_Error {
+  color: var(--error);
+  font-style: italic;
+}
+
+/* Responsive Images */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+  margin: var(--spacing-md) 0;
+}
+
+/* Print Styles */
+@media print {
+  nav, footer, .chapter-nav, .copy-code-button {
+    display: none;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+  
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  
+  pre {
+    page-break-inside: avoid;
+  }
+  
+  a {
+    text-decoration: underline;
+  }
+  
+  .MathJax_Display {
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.75rem;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+  }
+  
+  .MathJax_Display {
+    font-size: 90%;
+  }
+  
+  pre {
+    font-size: 0.85rem;
+  }
+}
+
+/* Accessibility */
+:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  top: 0;
 }
