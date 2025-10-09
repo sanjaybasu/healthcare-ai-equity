@@ -1,4 +1,4 @@
-# Contributing to Healthcare AI for Underserved Populations
+# Contributing to Equitable Healthcare AI
 
 Thank you for your interest in contributing to this textbook! We welcome contributions from researchers, practitioners, students, and community members.
 
@@ -306,29 +306,12 @@ If disagreements arise:
 - Discussions: For general questions
 - Email: For sensitive matters
 
-## 🎓 Recognition
-
-Contributors will be acknowledged:
-
-- In chapter acknowledgments (for substantial contributions)
-- In repository contributors list
-- In annual thank-you posts
-- With co-authorship credit (for major contributions)
-
 ## 📅 Release Process
 
 - **Weekly:** Automated literature updates (reviewed before merge)
 - **Monthly:** Content improvements and bug fixes
 - **Quarterly:** Major feature additions
 - **Annually:** Comprehensive review and updates
-
-## 📚 Resources for Contributors
-
-**Learn More About:**
-- Healthcare AI: Read existing chapters
-- Fairness in ML: [Fairlearn](https://fairlearn.org/), [AIF360](https://aif360.mybluemix.net/)
-- Health Equity: [CDC Health Equity](https://www.cdc.gov/healthequity/)
-- Jekyll: [Jekyll Documentation](https://jekyllrb.com/docs/)
 
 ## ⚖️ Legal
 
