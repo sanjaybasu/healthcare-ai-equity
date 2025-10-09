@@ -5,43 +5,7 @@ title: Home
 
 # Equitable Healthcare AI: From Algorithms to Clinical Impact
 
-## A Practical Textbook for Physician Data Scientists
-
-### Why This Textbook Is Different
-
-There are many physician commentators on AI in healthcare. **This textbook is different.**
-
-Most healthcare AI discussions focus on prompting ChatGPT or superficial applications of commercial tools. This book goes far beyond. Written by a practicing physician-data scientist who has:
-
-- **Built, validated, and deployed** production AI systems serving hundreds of thousands of real patients
-- **Published extensively** in top-tier medical and AI venues  
-- **Implemented actual algorithms** from recent state-of-the-art papers, not just theoretical discussions
-
-### What You'll Find Here
-
-**State-of-the-art methods across the full AI landscape:**
-
-- **Beyond LLMs:** While foundation models matter, we cover the complete spectrum—random survival forests with competing risks, causal inference for algorithmic fairness, federated learning for privacy-preserving multi-site models, neural ODEs for irregularly-sampled clinical time series
-- **Production-ready code:** Every implementation includes comprehensive type hints, error handling, logging, and quality scores >0.92
-- **Rigorous academic treatment:** 50-100+ citations per chapter from highly-cited papers in top venues (Nature, Science, NeurIPS, ICML, JAMA, NEJM)
-- **Equity-centered design:** Fairness isn't an afterthought—it's architected into every algorithm, with stratified evaluation and bias detection as core requirements
-
-**Unique focus on serving underserved populations:**
-
-- Systematic approaches to bias detection and mitigation
-- Methods for handling missing data patterns that reflect structural inequities
-- Algorithms that work in resource-limited settings
-- Frameworks for community-engaged AI development
-- Techniques for multilingual, low-literacy, and limited-digital-access contexts
-
-**Self-updating infrastructure:**
-
-- Automated weekly literature monitoring
-- Integration of breakthrough discoveries within days of publication
-- Links to latest pre-prints, code repositories, and Hugging Face models
-- Continuous improvement without manual intervention
-
----
+#### Sanjay Basu, MD, PhD
 
 ## How to Use This Textbook
 
