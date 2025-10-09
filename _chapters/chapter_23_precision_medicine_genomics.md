@@ -1,6 +1,6 @@
 ---
 layout: chapter
-title: "Chapter 23: Treatment Recommendation and Clinical Decision Support"
+title: "Chapter 23: Precision Medicine and Genomic AI"
 chapter_number: 23
 part_number: 6
 prev_chapter: /chapters/chapter-22-clinical-decision-support/
@@ -60,7 +60,7 @@ For treatment recommendations, we must account for uncertainty in CATE estimates
 Effective treatment recommendations must incorporate patient preferences and values, which often vary across populations and cultures. Utility theory provides a mathematical framework for quantifying how patients value different health outcomes. For patient $i$ with covariates $X_i$, we define a utility function $U_i(h)$ that maps health states $h$ to real numbers representing preference. Under treatment $t$, patient $i$ experiences outcome $Y_i(t)$ with associated health state $h_i(t)$. The optimal treatment maximizes expected utility:
 
 $$
-t^* = \arg\max_{t \in \mathcal{T}} \mathbb{E}[U_i(h_i(t)) | X_i]
+t^{*} = \arg\max_{t \in \mathcal{T}} \mathbb{E}[U_i(h_i(t)) | X_i]
 $$
 
 In clinical contexts, health states are typically multidimensional, encompassing survival, quality of life, symptom burden, functional status, and treatment side effects. Quality-adjusted life years (QALYs) provide one approach to aggregate these dimensions, defining $U_i(h) = L_i \cdot Q_i$ where $L_i$ is life years and $Q_i \in [0,1]$ is quality of life. However, the QALY framework embeds assumptions about temporal additivity and constant proportional trade-offs that may not reflect individual preferences. More flexible approaches use multi-attribute utility functions:
@@ -101,13 +101,13 @@ The constraint-based approach instead treats some objectives as hard constraints
 From an equity perspective, several optimization formulations explicitly promote fairness. The maximin approach seeks to maximize the minimum outcome across groups:
 
 $$
-t^* = \arg\max_t \min_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]
+t^{*} = \arg\max_t \min_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]
 $$
 
 This prioritizes improvements for the worst-off group but may sacrifice overall efficacy. The Nash social welfare approach instead maximizes the product of group outcomes:
 
 $$
-t^* = \arg\max_t \prod_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]
+t^{*} = \arg\max_t \prod_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]
 $$
 
 providing a balance between efficiency and equity. Disparate impact constraints require that treatment effects do not differ substantially across groups:
@@ -173,13 +173,13 @@ Treatment selection systems recommend which among multiple treatment options is 
 For single treatment selection, we estimate the CATE for each available treatment $\tau_t(x) = \mathbb{E}[Y_i(t) - Y_i(0) | X_i=x]$ and recommend:
 
 $$
-t^*(x) = \arg\max_{t \in \mathcal{T}} \hat{\tau}_t(x)
+t^{*}(x) = \arg\max_{t \in \mathcal{T}} \hat{\tau}_t(x)
 $$
 
 However, this greedy approach ignores uncertainty in CATE estimates. A more robust approach uses Thompson sampling where we randomly sample from the posterior distribution of treatment effects and recommend the treatment with the highest sampled effect:
 
 $$
-t^*(x) \sim P(t = \arg\max_{t'} \tilde{\tau}_{t'}(x))
+t^{*}(x) \sim P(t = \arg\max_{t'} \tilde{\tau}_{t'}(x))
 $$
 
 where $\tilde{\tau}_t(x) \sim P(\tau_t(x) | \mathcal{D})$ is sampled from the posterior given data $\mathcal{D}$. This naturally incorporates exploration: treatments with uncertain effects have higher probability of being recommended, allowing the system to learn from experience.
@@ -187,7 +187,7 @@ where $\tilde{\tau}_t(x) \sim P(\tau_t(x) | \mathcal{D})$ is sampled from the po
 For treatment combinations, we must consider interactions between therapies. Let $t = (t_1, \ldots, t_J)$ be a vector indicating which treatments are administered. The outcome with combination treatment may exhibit synergistic effects:
 
 $$
-Y_i(\mathbf{t}) = \mu_0(X_i) + \sum_{j=1}^J \tau_j(X_i) t_j + \sum_{j<k} \tau_{jk}(X_i) t_j t_k + \ldots
+Y_i(\mathbf{t}) = \mu_0(X_i) + \sum_{j=1}^{J} \tau_j(X_i)\, t_j + \sum_{1 \le j < k \le J} \tau_{jk}(X_i)\, t_j t_k + \cdots
 $$
 
 where $\tau_j(X_i)$ are main effects and $\tau_{jk}(X_i)$ are pairwise interaction effects. Estimating higher-order interactions requires substantial sample sizes. In practice, we often assume limited interactions and use regularization to select sparse models.
@@ -298,10 +298,10 @@ ensuring that a recommendation means the same thing for all groups.
 For treatment recommendations specifically, we should focus on outcome fairness: do recommended treatments lead to equitable outcomes? This requires that expected outcomes conditional on covariates are similar across groups:
 
 $$
-\mathbb{E}[Y_i(t^*(X_i)) | X_i, G_i=g_1] \approx \mathbb{E}[Y_i(t^*(X_i)) | X_i, G_i=g_2]
+\mathbb{E}[Y_i(t^{*}(X_i)) | X_i, G_i=g_1] \approx \mathbb{E}[Y_i(t^{*}(X_i)) | X_i, G_i=g_2]
 $$
 
-for recommended treatments $t^*(X_i)$. Note that this differs from requiring equal outcomes unconditionally, which would ignore that patients present with different clinical needs. Instead, we require that among patients with similar clinical presentations, recommended treatments lead to similar expected benefits regardless of group membership.
+for recommended treatments $t^{*}(X_i)$. Note that this differs from requiring equal outcomes unconditionally, which would ignore that patients present with different clinical needs. Instead, we require that among patients with similar clinical presentations, recommended treatments lead to similar expected benefits regardless of group membership.
 
 Calibration within groups is also critical. A recommendation system is calibrated if the predicted benefit of treatment matches the realized benefit:
 
