@@ -66,106 +66,106 @@ This textbook is designed for **healthcare data scientists**, **physician-scient
 
 ### Part I: Foundations and Context
 
-**[Chapter 1: Clinical Informatics Foundations for Equity-Centered AI](/chapters/chapter-01-clinical-informatics/)**  
+**[Chapter 1: Clinical Informatics Foundations for Equity-Centered AI]({{ site.baseurl }}/chapters/chapter_01_clinical_informatics/)**  
 Why traditional healthcare AI has failed underserved populations, and the framework we'll use throughout this book to build systems that work equitably.
 
-**[Chapter 2: Mathematical Foundations with Health Equity Applications](/chapters/chapter-02-mathematical-foundations/)**  
+**[Chapter 2: Mathematical Foundations with Health Equity Applications]({{ site.baseurl }}/chapters/chapter_02_mathematical_foundations/)**  
 Linear algebra, probability theory, optimization, and information theory—grounded in health equity applications, not abstract theory.
 
-**[Chapter 3: Healthcare Data Engineering for Equity](/chapters/chapter-03-healthcare-data-engineering/)**  
+**[Chapter 3: Healthcare Data Engineering for Equity]({{ site.baseurl }}/chapters/chapter_03_healthcare_data_engineering/)**  
 Working with EHRs, handling systematic missingness, FHIR standards, data quality assessment, and building equitable data pipelines.
 
 ### Part II: Core Machine Learning Methods
 
-**[Chapter 4: Machine Learning Fundamentals with Fairness](/chapters/chapter-04-machine-learning-fundamentals/)**  
+**[Chapter 4: Machine Learning Fundamentals with Fairness]({{ site.baseurl }}/chapters/chapter_04_machine_learning_fundamentals/)**  
 Logistic regression, decision trees, random forests, and gradient boosting with equity-aware training and comprehensive fairness evaluation.
 
-**[Chapter 5: Deep Learning for Healthcare Applications](/chapters/chapter-05-deep-learning-healthcare/)**  
+**[Chapter 5: Deep Learning for Healthcare Applications]({{ site.baseurl }}/chapters/chapter_05_deep_learning_healthcare/)**  
 Neural architectures for tabular data, temporal models (RNNs, LSTMs, Transformers), and fairness in deep learning with production implementations.
 
-**[Chapter 6: Natural Language Processing for Clinical Text](/chapters/chapter-06-clinical-nlp/)**  
+**[Chapter 6: Natural Language Processing for Clinical Text]({{ site.baseurl }}/chapters/chapter_06_clinical_nlp/)**  
 Clinical NER, relation extraction, bias in clinical language, and adapting foundation models for equitable healthcare NLP.
 
-**[Chapter 7: Computer Vision for Medical Imaging with Fairness](/chapters/chapter-07-medical-imaging/)**  
+**[Chapter 7: Computer Vision for Medical Imaging with Fairness]({{ site.baseurl }}/chapters/chapter_07_medical_imaging/)**  
 CNNs for radiology and pathology, segmentation, detection pipelines, and ensuring fairness across diverse patient populations and imaging equipment.
 
-**[Chapter 8: Time Series Analysis for Clinical Data](/chapters/chapter-08-clinical-time-series/)**  
+**[Chapter 8: Time Series Analysis for Clinical Data]({{ site.baseurl }}/chapters/chapter_08_clinical_time_series/)**  
 Handling irregular sampling, missing data patterns, forecasting physiological signals, and equity in longitudinal modeling.
 
 ### Part III: Advanced Methods for Healthcare AI
 
-**[Chapter 9: Advanced Clinical NLP and Information Retrieval](/chapters/chapter-09-advanced-clinical-nlp/)**  
+**[Chapter 9: Advanced Clinical NLP and Information Retrieval]({{ site.baseurl }}/chapters/chapter_09_advanced_clinical_nlp/)**  
 Medical knowledge graphs, clinical question answering, evidence retrieval, and integrating structured/unstructured data equitably.
 
-**[Chapter 10: Survival Analysis and Time-to-Event Modeling](/chapters/chapter-10-survival-analysis/)**  
+**[Chapter 10: Survival Analysis and Time-to-Event Modeling]({{ site.baseurl }}/chapters/chapter_10_survival_analysis/)**  
 Cox models, competing risks, random survival forests, and fairness in predicting time-to-event outcomes across populations.
 
-**[Chapter 11: Causal Inference for Healthcare AI](/chapters/chapter-11-causal-inference/)**  
+**[Chapter 11: Causal Inference for Healthcare AI]({{ site.baseurl }}/chapters/chapter_11_causal_inference/)**  
 DAGs, potential outcomes, instrumental variables, difference-in-differences, and using causal methods to ensure algorithmic fairness.
 
-**[Chapter 12: Federated Learning and Privacy-Preserving AI](/chapters/chapter-12-federated-learning-privacy/)**  
+**[Chapter 12: Federated Learning and Privacy-Preserving AI]({{ site.baseurl }}/chapters/chapter_12_federated_learning_privacy/)**  
 Multi-site learning without centralizing data, differential privacy, secure aggregation, and maintaining equity in federated settings.
 
-**[Chapter 13: Transfer Learning and Domain Adaptation](/chapters/chapter-13-transfer-learning/)**  
-Adapting models across hospitals, demographics, and diseases while maintaining fairness; few-shot learning for rare conditions.
+**[Chapter 13: Bias Detection and Mitigation in Healthcare AI]({{ site.baseurl }}/chapters/chapter_13_bias_detection/)**  
+Systematic approaches to detecting and mitigating bias throughout the ML lifecycle, with focus on intersectional fairness.
 
 ### Part IV: Interpretability, Validation, and Trust
 
-**[Chapter 14: Interpretability and Explainability](/chapters/chapter-14-interpretability-explainability/)**  
+**[Chapter 14: Interpretability and Explainability]({{ site.baseurl }}/chapters/chapter_14_interpretability_explainability/)**  
 SHAP, LIME, attention mechanisms, counterfactual explanations, and ensuring interpretability serves equity rather than obscuring bias.
 
-**[Chapter 15: Validation Strategies for Clinical AI](/chapters/chapter-15-validation-strategies/)**  
+**[Chapter 15: Validation Strategies for Clinical AI]({{ site.baseurl }}/chapters/chapter_15_validation_strategies/)**  
 Internal, external, and prospective validation; temporal validation; fairness-aware evaluation; and comprehensive performance assessment.
 
-**[Chapter 16: Uncertainty Quantification and Calibration](/chapters/chapter-16-uncertainty-calibration/)**  
+**[Chapter 16: Uncertainty Quantification and Calibration]({{ site.baseurl }}/chapters/chapter_16_uncertainty_calibration/)**  
 Bayesian approaches, conformal prediction, calibration across subgroups, and communicating uncertainty to clinicians.
 
-**[Chapter 17: Regulatory Considerations and FDA Pathways](/chapters/chapter-17-regulatory-considerations/)**  
+**[Chapter 17: Regulatory Considerations and FDA Pathways]({{ site.baseurl }}/chapters/chapter_17_regulatory_considerations/)**  
 Software as medical device, 510(k) pathways, predetermined change control plans, and incorporating equity into regulatory submissions.
 
 ### Part V: Deployment and Real-World Implementation
 
-**[Chapter 18: Implementation Science for Healthcare AI](/chapters/chapter-18-implementation-science/)**  
+**[Chapter 18: Implementation Science for Healthcare AI]({{ site.baseurl }}/chapters/chapter_18_implementation_science/)**  
 Stakeholder engagement, workflow integration, clinician training, monitoring deployed systems, and ensuring equitable implementation.
 
-**[Chapter 19: Human-AI Collaboration in Clinical Settings](/chapters/chapter-19-human-ai-collaboration/)**  
+**[Chapter 19: Human-AI Collaboration in Clinical Settings]({{ site.baseurl }}/chapters/chapter_19_human_ai_collaboration/)**  
 Decision support systems, cognitive load, automation bias, appropriate reliance, and designing for equitable human-AI partnerships.
 
-**[Chapter 20: Post-Deployment Monitoring and Maintenance](/chapters/chapter-20-monitoring-maintenance/)**  
+**[Chapter 20: Post-Deployment Monitoring and Maintenance]({{ site.baseurl }}/chapters/chapter_20_monitoring_maintenance/)**  
 Performance monitoring, distribution shift detection, fairness surveillance, model updating, and responding to emerging disparities.
 
-**[Chapter 21: Health Equity Metrics and Evaluation Frameworks](/chapters/chapter-21-health-equity-metrics/)**  
+**[Chapter 21: Health Equity Metrics and Evaluation Frameworks]({{ site.baseurl }}/chapters/chapter_21_health_equity_metrics/)**  
 Comprehensive fairness metrics, intersectional evaluation, impact assessment frameworks, and measuring what matters for equity.
 
 ### Part VI: Specialized Applications
 
-**[Chapter 22: Clinical Decision Support Systems](/chapters/chapter-22-clinical-decision-support/)**  
+**[Chapter 22: Clinical Decision Support Systems]({{ site.baseurl }}/chapters/chapter_22_clinical_decision_support/)**  
 Diagnostic support, treatment recommendations, alerts and warnings, and ensuring CDS systems reduce rather than exacerbate disparities.
 
-**[Chapter 23: Precision Medicine and Genomic AI](/chapters/chapter-23-precision-medicine-genomics/)**  
+**[Chapter 23: Precision Medicine and Genomic AI]({{ site.baseurl }}/chapters/chapter_23_precision_medicine_genomics/)**  
 Pharmacogenomics, polygenic risk scores, multi-omic integration, and addressing genomic data equity gaps.
 
-**[Chapter 24: Population Health Management and Screening](/chapters/chapter-24-population-health-screening/)**  
+**[Chapter 24: Population Health Management and Screening]({{ site.baseurl }}/chapters/chapter_24_population_health_screening/)**  
 Risk stratification, care management targeting, screening strategies, and ensuring population health AI serves those with greatest need.
 
-**[Chapter 25: Social Determinants of Health Integration](/chapters/chapter-25-sdoh-integration/)**  
+**[Chapter 25: Social Determinants of Health Integration]({{ site.baseurl }}/chapters/chapter_25_sdoh_integration/)**  
 Linking clinical and community data, neighborhood effects, environmental exposures, and modeling social determinants without deficit framing.
 
 ### Part VII: Emerging Methods and Future Directions
 
-**[Chapter 26: Large Language Models in Healthcare](/chapters/chapter-26-llms-in-healthcare/)**  
+**[Chapter 26: Large Language Models in Healthcare]({{ site.baseurl }}/chapters/chapter_26_llms_in_healthcare/)**  
 Clinical documentation, patient education at appropriate literacy levels, medical Q&A, bias in foundation models, and safe LLM deployment.
 
-**[Chapter 27: Multi-Modal Learning for Clinical AI](/chapters/chapter-27-multimodal-learning/)**  
+**[Chapter 27: Multi-Modal Learning for Clinical AI]({{ site.baseurl }}/chapters/chapter_27_multimodal_learning/)**  
 Combining imaging, text, time series, and structured data; fusion architectures; handling missing modalities equitably.
 
-**[Chapter 28: Continual Learning and Model Updating](/chapters/chapter-28-continual-learning/)**  
+**[Chapter 28: Continual Learning and Model Updating]({{ site.baseurl }}/chapters/chapter_28_continual_learning/)**  
 Catastrophic forgetting, distribution shift, fairness-preserving model updates, and governance for evolving clinical AI systems.
 
-**[Chapter 29: AI for Global Health and Resource-Limited Settings](/chapters/chapter-29-global-health-ai/)**  
+**[Chapter 29: AI for Global Health and Resource-Limited Settings]({{ site.baseurl }}/chapters/chapter_29_global_health_ai/)**  
 Offline-capable systems, low-resource imaging, task-shifting, and AI that works where health needs are greatest.
 
-**[Chapter 30: Research Frontiers in Equity-Centered Health AI](/chapters/chapter-30-research-frontiers-equity/)**  
+**[Chapter 30: Research Frontiers in Equity-Centered Health AI]({{ site.baseurl }}/chapters/chapter_30_research_frontiers_equity/)**  
 Algorithmic reparations, environmental justice, learning from limited data, intersectional fairness, and the future of equitable health AI.
 
 ---
