@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 7: Computer Vision for Medical Imaging with Fairness"
 chapter_number: 7
+part_number: 2
+prev_chapter: /chapters/chapter-06-clinical-nlp/
+next_chapter: /chapters/chapter-08-clinical-time-series/
 ---
-
 # Chapter 7: Computer Vision for Medical Imaging with Fairness
 
 ## Learning Objectives
@@ -79,17 +81,16 @@ import pydicom
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class AdaptiveNormalizer:
     """
     Adaptive intensity normalization for medical images.
-    
+
     Provides multiple normalization strategies appropriate for different
     imaging modalities and acquisition conditions. Maintains metadata
     about normalization applied to enable inverse transforms and
     fairness auditing.
     """
-    
+
     def __init__(
         self,
         method: str = 'adaptive_histogram',
@@ -99,7 +100,7 @@ class AdaptiveNormalizer:
     ):
         """
         Initialize adaptive normalizer.
-        
+
         Args:
             method: Normalization method ('adaptive_histogram', 'percentile',
                    'zscore', 'robust_zscore')
@@ -112,14 +113,14 @@ class AdaptiveNormalizer:
         self.clip_limit = clip_limit
         self.preserve_range = preserve_range
         self.log_transform = log_transform
-        
+
         self.normalization_stats = {}
-        
+
         logger.info(
             f"Initialized {method} normalizer "
             f"(clip={clip_limit}, preserve_range={preserve_range})"
         )
-    
+
     def normalize(
         self,
         image: np.ndarray,
@@ -128,12 +129,12 @@ class AdaptiveNormalizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Normalize medical image with metadata tracking.
-        
+
         Args:
             image: Input image array
             mask: Optional binary mask indicating valid regions
             metadata: Optional dict with acquisition metadata
-            
+
         Returns:
             Tuple of (normalized image, normalization metadata)
         """
@@ -141,25 +142,25 @@ class AdaptiveNormalizer:
             raise ValueError(
                 f"Expected 2D or 3D image, got shape {image.shape}"
             )
-        
+
         # Extract region of interest if mask provided
         if mask is not None:
             roi_pixels = image[mask > 0]
         else:
             roi_pixels = image.flatten()
-        
+
         # Remove invalid values
         roi_pixels = roi_pixels[np.isfinite(roi_pixels)]
-        
+
         if len(roi_pixels) == 0:
             logger.warning("No valid pixels found in image")
             return image, {'method': 'identity', 'error': 'no_valid_pixels'}
-        
+
         # Apply log transform for wide dynamic range
         if self.log_transform:
             image = self._safe_log_transform(image)
             roi_pixels = self._safe_log_transform(roi_pixels)
-        
+
         # Compute normalization based on method
         if self.method == 'adaptive_histogram':
             normalized, stats = self._adaptive_histogram_eq(
@@ -179,20 +180,20 @@ class AdaptiveNormalizer:
             )
         else:
             raise ValueError(f"Unknown normalization method: {self.method}")
-        
+
         # Add acquisition metadata if provided
         if metadata is not None:
             stats.update({
                 'acquisition_metadata': metadata
             })
-        
+
         return normalized, stats
-    
+
     def _safe_log_transform(self, x: np.ndarray) -> np.ndarray:
         """Apply log transform with handling for non-positive values."""
         x_shifted = x - x.min() + 1.0
         return np.log(x_shifted)
-    
+
     def _adaptive_histogram_eq(
         self,
         image: np.ndarray,
@@ -201,18 +202,18 @@ class AdaptiveNormalizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Adaptive histogram equalization with local contrast enhancement.
-        
+
         This approach enhances local contrast while adapting to the
         global intensity distribution, making it robust to varying
         acquisition parameters.
         """
         # Compute optimal number of bins based on dynamic range
         n_bins = min(256, int(np.sqrt(len(np.unique(roi_pixels)))))
-        
+
         if image.ndim == 2:
             # 2D adaptive histogram equalization
             from skimage import exposure
-            
+
             normalized = exposure.equalize_adapthist(
                 image,
                 clip_limit=self.clip_limit,
@@ -227,7 +228,7 @@ class AdaptiveNormalizer:
                     clip_limit=self.clip_limit,
                     nbins=n_bins
                 )
-        
+
         stats = {
             'method': 'adaptive_histogram',
             'clip_limit': self.clip_limit,
@@ -235,9 +236,9 @@ class AdaptiveNormalizer:
             'original_range': (float(roi_pixels.min()), float(roi_pixels.max())),
             'normalized_range': (float(normalized.min()), float(normalized.max()))
         }
-        
+
         return normalized, stats
-    
+
     def _percentile_normalize(
         self,
         image: np.ndarray,
@@ -245,27 +246,27 @@ class AdaptiveNormalizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Percentile-based normalization robust to outliers.
-        
+
         Uses 1st and 99th percentiles for clipping followed by
         normalization to [0, 1] range.
         """
         p1, p99 = np.percentile(roi_pixels, [1, 99])
-        
+
         normalized = np.clip(image, p1, p99)
         normalized = (normalized - p1) / (p99 - p1 + 1e-8)
-        
+
         if self.preserve_range:
             normalized = normalized * (p99 - p1) + p1
-        
+
         stats = {
             'method': 'percentile',
             'p1': float(p1),
             'p99': float(p99),
             'preserve_range': self.preserve_range
         }
-        
+
         return normalized, stats
-    
+
     def _zscore_normalize(
         self,
         image: np.ndarray,
@@ -274,17 +275,17 @@ class AdaptiveNormalizer:
         """Standard z-score normalization."""
         mean = roi_pixels.mean()
         std = roi_pixels.std()
-        
+
         normalized = (image - mean) / (std + 1e-8)
-        
+
         stats = {
             'method': 'zscore',
             'mean': float(mean),
             'std': float(std)
         }
-        
+
         return normalized, stats
-    
+
     def _robust_zscore_normalize(
         self,
         image: np.ndarray,
@@ -292,27 +293,27 @@ class AdaptiveNormalizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Robust z-score using median and MAD.
-        
+
         More robust to outliers than standard z-score, important
         for images with artifacts or extreme values.
         """
         median = np.median(roi_pixels)
         mad = np.median(np.abs(roi_pixels - median))
-        
+
         # Convert MAD to standard deviation equivalent
         mad_std = 1.4826 * mad
-        
+
         normalized = (image - median) / (mad_std + 1e-8)
-        
+
         stats = {
             'method': 'robust_zscore',
             'median': float(median),
             'mad': float(mad),
             'mad_std': float(mad_std)
         }
-        
+
         return normalized, stats
-    
+
     def denormalize(
         self,
         normalized_image: np.ndarray,
@@ -320,12 +321,12 @@ class AdaptiveNormalizer:
     ) -> np.ndarray:
         """
         Reverse normalization using stored statistics.
-        
+
         Important for interpreting model outputs in original
         intensity space and for clinical validation.
         """
         method = normalization_stats['method']
-        
+
         if method == 'percentile':
             if self.preserve_range:
                 p1 = normalization_stats['p1']
@@ -335,44 +336,43 @@ class AdaptiveNormalizer:
                 p1 = normalization_stats['p1']
                 p99 = normalization_stats['p99']
                 return normalized_image * (p99 - p1) + p1
-                
+
         elif method == 'zscore':
             mean = normalization_stats['mean']
             std = normalization_stats['std']
             return normalized_image * std + mean
-            
+
         elif method == 'robust_zscore':
             median = normalization_stats['median']
             mad_std = normalization_stats['mad_std']
             return normalized_image * mad_std + median
-            
+
         else:
             logger.warning(
                 f"Denormalization not implemented for {method}"
             )
             return normalized_image
 
-
 class MultiSiteNormalizer:
     """
     Normalization that accounts for systematic site-level differences.
-    
+
     Learns site-specific normalization parameters during training and
     applies appropriate transform based on site identifier. Enables
     training on multi-site data while maintaining fairness.
     """
-    
+
     def __init__(self, base_method: str = 'robust_zscore'):
         """
         Initialize multi-site normalizer.
-        
+
         Args:
             base_method: Base normalization method to use
         """
         self.base_method = base_method
         self.site_normalizers = {}
         self.global_normalizer = AdaptiveNormalizer(method=base_method)
-        
+
     def fit_site(
         self,
         site_id: str,
@@ -381,43 +381,43 @@ class MultiSiteNormalizer:
     ) -> None:
         """
         Learn normalization parameters for a specific site.
-        
+
         Args:
             site_id: Unique identifier for acquisition site
             images: Array of images from this site
             masks: Optional masks for each image
         """
         normalizer = AdaptiveNormalizer(method=self.base_method)
-        
+
         # Compute pooled statistics across all images from site
         all_roi_pixels = []
-        
+
         for i, image in enumerate(images):
             mask = masks[i] if masks is not None else None
-            
+
             if mask is not None:
                 roi = image[mask > 0]
             else:
                 roi = image.flatten()
-            
+
             roi = roi[np.isfinite(roi)]
             all_roi_pixels.append(roi)
-        
+
         all_roi_pixels = np.concatenate(all_roi_pixels)
-        
+
         # Fit normalizer on pooled data
         _, stats = normalizer.normalize(
             images[0],
             metadata={'site_id': site_id, 'n_images': len(images)}
         )
-        
+
         self.site_normalizers[site_id] = (normalizer, stats, all_roi_pixels)
-        
+
         logger.info(
             f"Learned normalization for site {site_id} "
             f"({len(images)} images, {len(all_roi_pixels)} pixels)"
         )
-    
+
     def normalize(
         self,
         image: np.ndarray,
@@ -426,12 +426,12 @@ class MultiSiteNormalizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Normalize image using site-specific or global parameters.
-        
+
         Args:
             image: Input image
             site_id: Site identifier (uses global if None or unknown)
             mask: Optional ROI mask
-            
+
         Returns:
             Normalized image and metadata
         """
@@ -441,9 +441,8 @@ class MultiSiteNormalizer:
         else:
             normalizer = self.global_normalizer
             logger.debug("Using global normalization")
-        
-        return normalizer.normalize(image, mask=mask)
 
+        return normalizer.normalize(image, mask=mask)
 
 def compute_fairness_metrics_for_normalization(
     images_by_group: Dict[str, np.ndarray],
@@ -452,34 +451,34 @@ def compute_fairness_metrics_for_normalization(
 ) -> Dict:
     """
     Evaluate normalization fairness across demographic groups.
-    
+
     Assesses whether normalization affects different groups differently
     in ways that could impact downstream model performance.
-    
+
     Args:
         images_by_group: Dict mapping group labels to image arrays
         normalizer: Normalizer to evaluate
         masks_by_group: Optional masks for each group
-        
+
     Returns:
         Dictionary of fairness metrics across groups
     """
     results = {}
-    
+
     for group_name, images in images_by_group.items():
         masks = masks_by_group.get(group_name) if masks_by_group else None
-        
+
         group_stats = []
         for i, image in enumerate(images):
             mask = masks[i] if masks is not None else None
             _, stats = normalizer.normalize(image, mask=mask)
             group_stats.append(stats)
-        
+
         # Compute aggregate statistics for group
         if 'mean' in group_stats[0]:
             means = [s['mean'] for s in group_stats]
             stds = [s['std'] for s in group_stats]
-            
+
             results[group_name] = {
                 'mean_of_means': np.mean(means),
                 'std_of_means': np.std(means),
@@ -490,7 +489,7 @@ def compute_fairness_metrics_for_normalization(
         elif 'p1' in group_stats[0]:
             p1s = [s['p1'] for s in group_stats]
             p99s = [s['p99'] for s in group_stats]
-            
+
             results[group_name] = {
                 'mean_p1': np.mean(p1s),
                 'std_p1': np.std(p1s),
@@ -498,23 +497,23 @@ def compute_fairness_metrics_for_normalization(
                 'std_p99': np.std(p99s),
                 'n_images': len(images)
             }
-    
+
     # Compute disparity metrics across groups
     if len(results) > 1:
         group_names = list(results.keys())
-        
+
         # For methods with mean/std
         if 'mean_of_means' in results[group_names[0]]:
             means = [results[g]['mean_of_means'] for g in group_names]
             stds = [results[g]['mean_of_stds'] for g in group_names]
-            
+
             results['disparity_metrics'] = {
                 'mean_range': max(means) - min(means),
                 'mean_coefficient_of_variation': np.std(means) / (np.mean(means) + 1e-8),
                 'std_range': max(stds) - min(stds),
                 'std_coefficient_of_variation': np.std(stds) / (np.mean(stds) + 1e-8)
             }
-    
+
     return results
 ```
 
@@ -542,15 +541,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class AnatomicalStandardizer:
     """
     Standardize medical images to consistent anatomical reference frame.
-    
+
     Handles systematic anatomical variation across age, sex, and ancestry
     while preserving pathological features and diagnostic information.
     """
-    
+
     def __init__(
         self,
         target_shape: Tuple[int, ...],
@@ -560,7 +558,7 @@ class AnatomicalStandardizer:
     ):
         """
         Initialize anatomical standardizer.
-        
+
         Args:
             target_shape: Desired output shape
             target_spacing: Target voxel spacing in mm
@@ -571,9 +569,9 @@ class AnatomicalStandardizer:
         self.target_spacing = target_spacing
         self.preserve_aspect_ratio = preserve_aspect_ratio
         self.align_to_template = align_to_template
-        
+
         self.templates = {}  # Population-specific templates
-        
+
     def register_template(
         self,
         template_id: str,
@@ -582,7 +580,7 @@ class AnatomicalStandardizer:
     ) -> None:
         """
         Register an anatomical template for specific population.
-        
+
         Args:
             template_id: Identifier (e.g., 'adult_male', 'pediatric_female')
             template_image: Template image array
@@ -592,12 +590,12 @@ class AnatomicalStandardizer:
             'image': template_image,
             'metadata': metadata or {}
         }
-        
+
         logger.info(
             f"Registered anatomical template: {template_id} "
             f"(shape {template_image.shape})"
         )
-    
+
     def standardize(
         self,
         image: np.ndarray,
@@ -607,13 +605,13 @@ class AnatomicalStandardizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Standardize image to consistent anatomical frame.
-        
+
         Args:
             image: Input image
             spacing: Current voxel spacing in mm
             template_id: Which template to use for alignment
             landmarks: Optional anatomical landmarks for alignment
-            
+
         Returns:
             Standardized image and transformation metadata
         """
@@ -621,14 +619,14 @@ class AnatomicalStandardizer:
             'original_shape': image.shape,
             'original_spacing': spacing
         }
-        
+
         # Resample to target spacing if needed
         if spacing is not None and self.target_spacing is not None:
             image, resample_params = self._resample_to_spacing(
                 image, spacing, self.target_spacing
             )
             transform_params['resample'] = resample_params
-        
+
         # Resize to target shape
         if self.preserve_aspect_ratio:
             image, resize_params = self._resize_preserve_aspect(
@@ -639,7 +637,7 @@ class AnatomicalStandardizer:
                 image, self.target_shape
             )
         transform_params['resize'] = resize_params
-        
+
         # Align to anatomical template if requested
         if self.align_to_template and template_id is not None:
             if template_id not in self.templates:
@@ -653,11 +651,11 @@ class AnatomicalStandardizer:
                     landmarks
                 )
                 transform_params['alignment'] = alignment_params
-        
+
         transform_params['final_shape'] = image.shape
-        
+
         return image, transform_params
-    
+
     def _resample_to_spacing(
         self,
         image: np.ndarray,
@@ -667,16 +665,16 @@ class AnatomicalStandardizer:
         """Resample image to target voxel spacing."""
         current_spacing = np.array(current_spacing)
         target_spacing = np.array(target_spacing)
-        
+
         # Compute scaling factors
         scale_factors = current_spacing / target_spacing
-        
+
         # Compute output shape
         output_shape = tuple(
             int(np.round(s * f))
             for s, f in zip(image.shape, scale_factors)
         )
-        
+
         # Resample using appropriate interpolation
         resampled = ndimage.zoom(
             image,
@@ -685,14 +683,14 @@ class AnatomicalStandardizer:
             mode='constant',
             cval=image.min()
         )
-        
+
         params = {
             'scale_factors': scale_factors.tolist(),
             'output_shape': output_shape
         }
-        
+
         return resampled, params
-    
+
     def _resize_preserve_aspect(
         self,
         image: np.ndarray,
@@ -700,21 +698,21 @@ class AnatomicalStandardizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Resize while preserving aspect ratio through padding/cropping.
-        
+
         Critical for maintaining anatomical proportions across patients
         of different sizes and ages.
         """
         current_shape = np.array(image.shape)
         target_shape = np.array(target_shape)
-        
+
         # Compute scale factor to fit within target while preserving aspect
         scale_factor = np.min(target_shape / current_shape)
-        
+
         # Compute intermediate shape after scaling
         scaled_shape = tuple(
             int(np.round(s * scale_factor)) for s in current_shape
         )
-        
+
         # Resize to scaled shape
         if len(image.shape) == 2:
             resized = transform.resize(
@@ -740,21 +738,21 @@ class AnatomicalStandardizer:
                     preserve_range=True,
                     anti_aliasing=True
                 )
-        
+
         # Pad or crop to exact target shape
         if len(target_shape) == 2:
             output = self._pad_or_crop_2d(resized, target_shape)
         else:
             output = self._pad_or_crop_3d(resized, target_shape)
-        
+
         params = {
             'scale_factor': float(scale_factor),
             'scaled_shape': scaled_shape,
             'preserved_aspect_ratio': True
         }
-        
+
         return output, params
-    
+
     def _resize_direct(
         self,
         image: np.ndarray,
@@ -770,13 +768,13 @@ class AnatomicalStandardizer:
             preserve_range=True,
             anti_aliasing=True
         )
-        
+
         params = {
             'preserved_aspect_ratio': False
         }
-        
+
         return resized, params
-    
+
     def _pad_or_crop_2d(
         self,
         image: np.ndarray,
@@ -784,27 +782,27 @@ class AnatomicalStandardizer:
     ) -> np.ndarray:
         """Pad or crop 2D image to exact target shape."""
         current_shape = image.shape
-        
+
         output = np.full(target_shape, image.min(), dtype=image.dtype)
-        
+
         # Compute region to copy
         start_h = max(0, (target_shape[0] - current_shape[0]) // 2)
         start_w = max(0, (target_shape[1] - current_shape[1]) // 2)
-        
+
         end_h = start_h + min(current_shape[0], target_shape[0])
         end_w = start_w + min(current_shape[1], target_shape[1])
-        
+
         crop_start_h = max(0, (current_shape[0] - target_shape[0]) // 2)
         crop_start_w = max(0, (current_shape[1] - target_shape[1]) // 2)
-        
+
         crop_end_h = crop_start_h + (end_h - start_h)
         crop_end_w = crop_start_w + (end_w - start_w)
-        
+
         output[start_h:end_h, start_w:end_w] = \
             image[crop_start_h:crop_end_h, crop_start_w:crop_end_w]
-        
+
         return output
-    
+
     def _pad_or_crop_3d(
         self,
         image: np.ndarray,
@@ -813,15 +811,15 @@ class AnatomicalStandardizer:
         """Pad or crop 3D image to exact target shape."""
         # Similar logic as 2D but for 3 dimensions
         current_shape = image.shape
-        
+
         output = np.full(target_shape, image.min(), dtype=image.dtype)
-        
+
         starts = [max(0, (t - c) // 2) for t, c in zip(target_shape, current_shape)]
         ends = [s + min(c, t) for s, c, t in zip(starts, current_shape, target_shape)]
-        
+
         crop_starts = [max(0, (c - t) // 2) for c, t in zip(current_shape, target_shape)]
         crop_ends = [cs + (e - s) for cs, e, s in zip(crop_starts, ends, starts)]
-        
+
         output[
             starts[0]:ends[0],
             starts[1]:ends[1],
@@ -831,9 +829,9 @@ class AnatomicalStandardizer:
             crop_starts[1]:crop_ends[1],
             crop_starts[2]:crop_ends[2]
         ]
-        
+
         return output
-    
+
     def _align_to_template(
         self,
         image: np.ndarray,
@@ -842,7 +840,7 @@ class AnatomicalStandardizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Align image to anatomical template using registration.
-        
+
         Uses landmark-based alignment if provided, otherwise
         intensity-based registration.
         """
@@ -856,9 +854,9 @@ class AnatomicalStandardizer:
             aligned, params = self._intensity_registration(
                 image, template
             )
-        
+
         return aligned, params
-    
+
     def _landmark_registration(
         self,
         image: np.ndarray,
@@ -867,21 +865,21 @@ class AnatomicalStandardizer:
     ) -> Tuple[np.ndarray, Dict]:
         """
         Register using anatomical landmarks.
-        
+
         More robust than intensity-based for images with artifacts
         or systematically different intensity distributions.
         """
         # Simplified landmark-based affine registration
         # Production code would use robust estimation
-        
+
         # For now, return image with transformation metadata
         params = {
             'method': 'landmark',
             'n_landmarks': len(landmarks)
         }
-        
+
         return image, params
-    
+
     def _intensity_registration(
         self,
         image: np.ndarray,
@@ -890,12 +888,12 @@ class AnatomicalStandardizer:
         """Intensity-based rigid registration."""
         # Simplified registration
         # Production code would use proper registration library
-        
+
         params = {
             'method': 'intensity',
             'registration_metric': 'mutual_information'
         }
-        
+
         return image, params
 ```
 
@@ -927,18 +925,17 @@ import torch
 
 logger = logging.getLogger(__name__)
 
-
 class PhysicsInformedAugmenter:
     """
     Medical image augmentation that simulates realistic acquisition variations.
-    
+
     Includes modality-specific augmentations for:
     - Radiography: noise, scatter, exposure variation
     - CT: beam hardening, metal artifacts
     - MRI: motion, intensity inhomogeneity, Gibbs ringing
     - Ultrasound: speckle noise, shadowing, attenuation
     """
-    
+
     def __init__(
         self,
         modality: str,
@@ -947,7 +944,7 @@ class PhysicsInformedAugmenter:
     ):
         """
         Initialize physics-informed augmenter.
-        
+
         Args:
             modality: Imaging modality ('xray', 'ct', 'mri', 'ultrasound')
             augmentation_strength: 'mild', 'moderate', or 'aggressive'
@@ -956,7 +953,7 @@ class PhysicsInformedAugmenter:
         self.modality = modality.lower()
         self.augmentation_strength = augmentation_strength
         self.ensure_fairness = ensure_fairness
-        
+
         # Define strength levels
         strength_scales = {
             'mild': 0.3,
@@ -964,15 +961,15 @@ class PhysicsInformedAugmenter:
             'aggressive': 0.9
         }
         self.strength_scale = strength_scales[augmentation_strength]
-        
+
         # Track augmentation statistics if ensuring fairness
         self.augmentation_stats = {} if ensure_fairness else None
-        
+
         logger.info(
             f"Initialized {modality} augmenter "
             f"(strength={augmentation_strength})"
         )
-    
+
     def augment(
         self,
         image: np.ndarray,
@@ -981,18 +978,18 @@ class PhysicsInformedAugmenter:
     ) -> np.ndarray:
         """
         Apply physics-informed augmentation to medical image.
-        
+
         Args:
             image: Input image array
             group_id: Optional demographic group for fairness tracking
             seed: Random seed for reproducibility
-            
+
         Returns:
             Augmented image
         """
         if seed is not None:
             np.random.seed(seed)
-        
+
         # Apply modality-specific augmentations
         if self.modality == 'xray':
             augmented = self._augment_xray(image)
@@ -1005,17 +1002,17 @@ class PhysicsInformedAugmenter:
         else:
             logger.warning(f"Unknown modality {self.modality}, no augmentation")
             augmented = image
-        
+
         # Track augmentation if ensuring fairness
         if self.ensure_fairness and group_id is not None:
             self._track_augmentation(augmented, group_id)
-        
+
         return augmented
-    
+
     def _augment_xray(self, image: np.ndarray) -> np.ndarray:
         """
         Augment X-ray image with realistic acquisition variations.
-        
+
         Simulates variations in:
         - Exposure (kVp, mAs)
         - Scatter radiation
@@ -1023,7 +1020,7 @@ class PhysicsInformedAugmenter:
         - Grid artifacts
         """
         augmented = image.copy()
-        
+
         # Exposure variation (simulates different kVp/mAs settings)
         if np.random.rand() < 0.7:
             exposure_factor = np.random.uniform(
@@ -1031,21 +1028,21 @@ class PhysicsInformedAugmenter:
                 1.0 + 0.3 * self.strength_scale
             )
             augmented = augmented * exposure_factor
-        
+
         # Scatter simulation (adds low-frequency background)
         if np.random.rand() < 0.5:
             scatter_intensity = self.strength_scale * 0.2
             kernel_size = int(min(image.shape) * 0.1)
             kernel_size = kernel_size if kernel_size % 2 == 1 else kernel_size + 1
-            
+
             scatter_map = ndimage.gaussian_filter(
                 np.random.randn(*image.shape),
                 sigma=kernel_size / 3
             )
             scatter_map = scatter_map / np.abs(scatter_map).max()
-            
+
             augmented = augmented + scatter_intensity * image.mean() * scatter_map
-        
+
         # Detector noise (Poisson + Gaussian)
         if np.random.rand() < 0.8:
             # Poisson noise (signal-dependent)
@@ -1053,32 +1050,32 @@ class PhysicsInformedAugmenter:
             poisson_noise = np.random.poisson(
                 np.maximum(augmented / noise_scale, 0)
             ) * noise_scale - augmented
-            
+
             # Gaussian noise (electronic)
             gaussian_noise = np.random.normal(
                 0,
                 image.std() * 0.05 * self.strength_scale,
                 image.shape
             )
-            
+
             augmented = augmented + 0.7 * poisson_noise + 0.3 * gaussian_noise
-        
+
         # Grid artifacts (anti-scatter grid)
         if np.random.rand() < 0.3:
             grid_period = np.random.randint(20, 40)
             grid_amplitude = image.mean() * 0.05 * self.strength_scale
-            
+
             x = np.arange(image.shape[1])
             grid_pattern = grid_amplitude * np.sin(2 * np.pi * x / grid_period)
-            
+
             augmented = augmented + grid_pattern[np.newaxis, :]
-        
+
         return augmented
-    
+
     def _augment_ct(self, image: np.ndarray) -> np.ndarray:
         """
         Augment CT image with realistic artifacts.
-        
+
         Simulates:
         - Beam hardening
         - Metal artifacts
@@ -1086,24 +1083,24 @@ class PhysicsInformedAugmenter:
         - Ring artifacts
         """
         augmented = image.copy()
-        
+
         # Beam hardening (cupping artifact)
         if np.random.rand() < 0.5:
             center = np.array(image.shape) / 2
             y, x = np.ogrid[:image.shape[0], :image.shape[1]]
-            
+
             distances = np.sqrt((x - center[1])**2 + (y - center[0])**2)
             max_distance = np.sqrt(center[0]**2 + center[1]**2)
-            
+
             cupping_strength = self.strength_scale * 0.15
             cupping = 1.0 - cupping_strength * (distances / max_distance)**2
-            
+
             augmented = augmented * cupping
-        
+
         # Metal artifacts (streak artifacts)
         if np.random.rand() < 0.3:
             num_streaks = np.random.randint(2, 6)
-            
+
             for _ in range(num_streaks):
                 angle = np.random.uniform(0, np.pi)
                 width = np.random.randint(1, 3)
@@ -1111,35 +1108,35 @@ class PhysicsInformedAugmenter:
                     -100 * self.strength_scale,
                     100 * self.strength_scale
                 )
-                
+
                 # Create streak
                 streak = np.zeros_like(image)
                 center = np.array(image.shape) / 2
                 length = int(max(image.shape) * 0.8)
-                
+
                 for i in range(-length // 2, length // 2):
                     x = int(center[1] + i * np.cos(angle))
                     y = int(center[0] + i * np.sin(angle))
-                    
+
                     if 0 <= y < image.shape[0] and 0 <= x < image.shape[1]:
                         streak[
                             max(0, y-width):min(image.shape[0], y+width+1),
                             max(0, x-width):min(image.shape[1], x+width+1)
                         ] = intensity
-                
+
                 augmented = augmented + streak
-        
+
         # Photon starvation noise
         if np.random.rand() < 0.6:
             noise_std = image.std() * 0.1 * self.strength_scale
             augmented = augmented + np.random.normal(0, noise_std, image.shape)
-        
+
         return augmented
-    
+
     def _augment_mri(self, image: np.ndarray) -> np.ndarray:
         """
         Augment MRI image with realistic artifacts.
-        
+
         Simulates:
         - Intensity inhomogeneity (bias field)
         - Motion artifacts
@@ -1147,32 +1144,32 @@ class PhysicsInformedAugmenter:
         - RF interference
         """
         augmented = image.copy()
-        
+
         # Bias field (intensity inhomogeneity)
         if np.random.rand() < 0.7:
             # Generate smooth bias field
             low_res_shape = tuple(s // 4 for s in image.shape)
             bias_field = np.random.randn(*low_res_shape)
-            
+
             # Upsample to full resolution
             bias_field = ndimage.zoom(
                 bias_field,
                 tuple(s / lr for s, lr in zip(image.shape, low_res_shape)),
                 order=3
             )
-            
+
             # Normalize and scale
             bias_field = (bias_field - bias_field.mean()) / bias_field.std()
             bias_strength = self.strength_scale * 0.3
             bias_field = np.exp(bias_strength * bias_field)
-            
+
             augmented = augmented * bias_field
-        
+
         # Motion artifacts
         if np.random.rand() < 0.4:
             # Simulate motion as phase shifts in k-space
             num_motion_events = np.random.randint(1, 4)
-            
+
             for _ in range(num_motion_events):
                 # Simple motion simulation
                 shift = np.random.randint(-5, 6, size=2)
@@ -1182,45 +1179,45 @@ class PhysicsInformedAugmenter:
                     mode='constant',
                     cval=image.mean()
                 )
-                
+
                 blend_weight = 0.3 * self.strength_scale
                 augmented = (1 - blend_weight) * augmented + \
                            blend_weight * motion_artifact
-        
+
         # Gibbs ringing
         if np.random.rand() < 0.5:
             # Apply truncation in k-space
             fft = np.fft.fft2(augmented)
             fft_shifted = np.fft.fftshift(fft)
-            
+
             # Truncate high frequencies
             truncation_factor = 1.0 - 0.2 * self.strength_scale
             mask_size = tuple(int(s * truncation_factor) for s in image.shape)
-            
+
             mask = np.zeros_like(fft_shifted)
             start = tuple((s - ms) // 2 for s, ms in zip(image.shape, mask_size))
             end = tuple(st + ms for st, ms in zip(start, mask_size))
-            
+
             mask[start[0]:end[0], start[1]:end[1]] = 1
-            
+
             fft_truncated = fft_shifted * mask
             augmented = np.real(np.fft.ifft2(np.fft.ifftshift(fft_truncated)))
-        
+
         # Rician noise
         if np.random.rand() < 0.6:
             noise_std = image.std() * 0.05 * self.strength_scale
             noise_real = np.random.normal(0, noise_std, image.shape)
             noise_imag = np.random.normal(0, noise_std, image.shape)
-            
+
             # Rician distribution
             augmented = np.sqrt((augmented + noise_real)**2 + noise_imag**2)
-        
+
         return augmented
-    
+
     def _augment_ultrasound(self, image: np.ndarray) -> np.ndarray:
         """
         Augment ultrasound image with realistic artifacts.
-        
+
         Simulates:
         - Speckle noise
         - Attenuation
@@ -1228,34 +1225,34 @@ class PhysicsInformedAugmenter:
         - Enhancement
         """
         augmented = image.copy()
-        
+
         # Speckle noise (multiplicative)
         if np.random.rand() < 0.8:
             speckle_std = self.strength_scale * 0.3
             speckle = np.random.normal(1.0, speckle_std, image.shape)
             augmented = augmented * speckle
-        
+
         # Attenuation (depth-dependent signal loss)
         if np.random.rand() < 0.7:
             depth_axis = 0  # Assume depth is first axis
             attenuation_coef = self.strength_scale * 0.02
-            
+
             depth_profile = np.exp(
                 -attenuation_coef * np.arange(image.shape[depth_axis])
             )
-            
+
             # Broadcast to full image shape
             attenuation_map = depth_profile.reshape(-1, 1)
             if len(image.shape) == 3:
                 attenuation_map = attenuation_map.reshape(-1, 1, 1)
-            
+
             augmented = augmented * attenuation_map
-        
+
         # Shadowing (reduced signal behind strongly attenuating structures)
         if np.random.rand() < 0.4:
             # Create random shadow regions
             num_shadows = np.random.randint(1, 4)
-            
+
             for _ in range(num_shadows):
                 shadow_start = np.random.randint(0, image.shape[0] // 2)
                 shadow_width = np.random.randint(
@@ -1266,12 +1263,12 @@ class PhysicsInformedAugmenter:
                     shadow_width,
                     image.shape[1] - shadow_width
                 )
-                
+
                 shadow_mask = np.zeros(image.shape[1])
                 shadow_mask[
                     shadow_center - shadow_width:shadow_center + shadow_width
                 ] = 1
-                
+
                 # Apply shadow with depth-dependent effect
                 shadow_strength = 0.5 * self.strength_scale
                 for d in range(shadow_start, image.shape[0]):
@@ -1279,9 +1276,9 @@ class PhysicsInformedAugmenter:
                     augmented[d] = augmented[d] * (
                         1 - shadow_strength * depth_factor * shadow_mask
                     )
-        
+
         return augmented
-    
+
     def _track_augmentation(
         self,
         augmented_image: np.ndarray,
@@ -1294,7 +1291,7 @@ class PhysicsInformedAugmenter:
                 'mean_intensity': [],
                 'std_intensity': []
             }
-        
+
         self.augmentation_stats[group_id]['count'] += 1
         self.augmentation_stats[group_id]['mean_intensity'].append(
             float(augmented_image.mean())
@@ -1302,14 +1299,14 @@ class PhysicsInformedAugmenter:
         self.augmentation_stats[group_id]['std_intensity'].append(
             float(augmented_image.std())
         )
-    
+
     def get_fairness_report(self) -> Dict:
         """Generate report on augmentation fairness across groups."""
         if not self.ensure_fairness or not self.augmentation_stats:
             return {}
-        
+
         report = {}
-        
+
         for group_id, stats in self.augmentation_stats.items():
             report[group_id] = {
                 'n_augmented': stats['count'],
@@ -1318,33 +1315,32 @@ class PhysicsInformedAugmenter:
                 'std_intensity_avg': np.mean(stats['std_intensity']),
                 'std_intensity_std': np.std(stats['std_intensity'])
             }
-        
+
         # Compute disparity metrics
         if len(report) > 1:
             groups = list(report.keys())
-            
+
             mean_avgs = [report[g]['mean_intensity_avg'] for g in groups]
             std_avgs = [report[g]['std_intensity_avg'] for g in groups]
-            
+
             report['disparity'] = {
                 'mean_intensity_range': max(mean_avgs) - min(mean_avgs),
                 'std_intensity_range': max(std_avgs) - min(std_avgs),
                 'mean_intensity_cv': np.std(mean_avgs) / np.mean(mean_avgs),
                 'std_intensity_cv': np.std(std_avgs) / np.mean(std_avgs)
             }
-        
-        return report
 
+        return report
 
 class GeometricAugmenter:
     """
     Geometric augmentation for medical images with anatomical constraints.
-    
+
     Unlike natural images, medical images have anatomical constraints that
     must be respected. Not all rotations, flips, and deformations are
     anatomically plausible.
     """
-    
+
     def __init__(
         self,
         rotation_range: float = 10.0,
@@ -1356,7 +1352,7 @@ class GeometricAugmenter:
     ):
         """
         Initialize geometric augmenter.
-        
+
         Args:
             rotation_range: Maximum rotation in degrees
             translation_range: Maximum translation as fraction of image size
@@ -1371,7 +1367,7 @@ class GeometricAugmenter:
         self.allow_horizontal_flip = allow_horizontal_flip
         self.allow_vertical_flip = allow_vertical_flip
         self.elastic_deformation = elastic_deformation
-    
+
     def augment(
         self,
         image: np.ndarray,
@@ -1380,21 +1376,21 @@ class GeometricAugmenter:
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         """
         Apply geometric augmentation to image and optional mask.
-        
+
         Args:
             image: Input image
             mask: Optional segmentation mask to transform consistently
             seed: Random seed
-            
+
         Returns:
             Tuple of (augmented image, augmented mask)
         """
         if seed is not None:
             np.random.seed(seed)
-        
+
         augmented_image = image.copy()
         augmented_mask = mask.copy() if mask is not None else None
-        
+
         # Rotation
         if self.rotation_range > 0:
             angle = np.random.uniform(-self.rotation_range, self.rotation_range)
@@ -1405,7 +1401,7 @@ class GeometricAugmenter:
                 mode='constant',
                 cval=image.min()
             )
-            
+
             if augmented_mask is not None:
                 augmented_mask = ndimage.rotate(
                     augmented_mask,
@@ -1415,7 +1411,7 @@ class GeometricAugmenter:
                     mode='constant',
                     cval=0
                 )
-        
+
         # Translation
         if self.translation_range > 0:
             max_shift = tuple(
@@ -1424,14 +1420,14 @@ class GeometricAugmenter:
             shifts = tuple(
                 np.random.randint(-ms, ms + 1) for ms in max_shift
             )
-            
+
             augmented_image = ndimage.shift(
                 augmented_image,
                 shifts,
                 mode='constant',
                 cval=image.min()
             )
-            
+
             if augmented_mask is not None:
                 augmented_mask = ndimage.shift(
                     augmented_mask,
@@ -1440,11 +1436,11 @@ class GeometricAugmenter:
                     mode='constant',
                     cval=0
                 )
-        
+
         # Scaling
         if self.scaling_range != (1.0, 1.0):
             scale = np.random.uniform(*self.scaling_range)
-            
+
             # Zoom and then crop/pad back to original size
             zoomed = ndimage.zoom(
                 augmented_image,
@@ -1453,14 +1449,14 @@ class GeometricAugmenter:
                 mode='constant',
                 cval=image.min()
             )
-            
+
             # Crop or pad to original size
             augmented_image = self._crop_or_pad_to_shape(
                 zoomed,
                 image.shape,
                 fill_value=image.min()
             )
-            
+
             if augmented_mask is not None:
                 zoomed_mask = ndimage.zoom(
                     augmented_mask,
@@ -1474,19 +1470,19 @@ class GeometricAugmenter:
                     mask.shape,
                     fill_value=0
                 )
-        
+
         # Horizontal flip
         if self.allow_horizontal_flip and np.random.rand() < 0.5:
             augmented_image = np.flip(augmented_image, axis=1)
             if augmented_mask is not None:
                 augmented_mask = np.flip(augmented_mask, axis=1)
-        
+
         # Vertical flip
         if self.allow_vertical_flip and np.random.rand() < 0.5:
             augmented_image = np.flip(augmented_image, axis=0)
             if augmented_mask is not None:
                 augmented_mask = np.flip(augmented_mask, axis=0)
-        
+
         # Elastic deformation
         if self.elastic_deformation and np.random.rand() < 0.5:
             augmented_image = self._elastic_transform(augmented_image)
@@ -1495,9 +1491,9 @@ class GeometricAugmenter:
                     augmented_mask,
                     order=0
                 )
-        
+
         return augmented_image, augmented_mask
-    
+
     def _crop_or_pad_to_shape(
         self,
         array: np.ndarray,
@@ -1506,14 +1502,14 @@ class GeometricAugmenter:
     ) -> np.ndarray:
         """Crop or pad array to target shape."""
         output = np.full(target_shape, fill_value, dtype=array.dtype)
-        
+
         # Compute slices for centering
         starts = [max(0, (t - c) // 2) for t, c in zip(target_shape, array.shape)]
         ends = [s + min(c, t) for s, c, t in zip(starts, array.shape, target_shape)]
-        
+
         crop_starts = [max(0, (c - t) // 2) for c, t in zip(array.shape, target_shape)]
         crop_ends = [cs + (e - s) for cs, e, s in zip(crop_starts, ends, starts)]
-        
+
         if len(target_shape) == 2:
             output[starts[0]:ends[0], starts[1]:ends[1]] = \
                 array[crop_starts[0]:crop_ends[0], crop_starts[1]:crop_ends[1]]
@@ -1527,9 +1523,9 @@ class GeometricAugmenter:
                 crop_starts[1]:crop_ends[1],
                 crop_starts[2]:crop_ends[2]
             ]
-        
+
         return output
-    
+
     def _elastic_transform(
         self,
         image: np.ndarray,
@@ -1539,22 +1535,22 @@ class GeometricAugmenter:
     ) -> np.ndarray:
         """
         Apply elastic deformation to simulate anatomical variation.
-        
+
         Models realistic soft tissue deformation.
         """
         shape = image.shape
-        
+
         # Generate random displacement fields
         dx = ndimage.gaussian_filter(
             np.random.randn(*shape),
             sigma
         ) * alpha
-        
+
         dy = ndimage.gaussian_filter(
             np.random.randn(*shape),
             sigma
         ) * alpha
-        
+
         # Create coordinate arrays
         if len(shape) == 2:
             y, x = np.meshgrid(
@@ -1575,7 +1571,7 @@ class GeometricAugmenter:
                 sigma
             ) * alpha
             indices = (z + dz, y + dy, x + dx)
-        
+
         # Apply transformation
         transformed = ndimage.map_coordinates(
             image,
@@ -1584,7 +1580,7 @@ class GeometricAugmenter:
             mode='constant',
             cval=image.min() if order > 0 else 0
         )
-        
+
         return transformed
 ```
 
@@ -1615,18 +1611,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class FairUNet(nn.Module):
     """
     U-Net for medical image segmentation with fairness monitoring.
-    
+
     Includes:
     - Standard U-Net architecture with skip connections
     - Group-aware batch normalization for handling site differences
     - Fairness-constrained loss functions
     - Comprehensive evaluation across demographic strata
     """
-    
+
     def __init__(
         self,
         in_channels: int = 1,
@@ -1638,7 +1633,7 @@ class FairUNet(nn.Module):
     ):
         """
         Initialize Fair U-Net.
-        
+
         Args:
             in_channels: Number of input channels
             out_channels: Number of output segmentation classes
@@ -1648,17 +1643,17 @@ class FairUNet(nn.Module):
             dropout_rate: Dropout rate for regularization
         """
         super(FairUNet, self).__init__()
-        
+
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.base_channels = base_channels
         self.depth = depth
         self.dropout_rate = dropout_rate
-        
+
         # Encoder path
         self.encoder_blocks = nn.ModuleList()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        
+
         in_ch = in_channels
         for i in range(depth):
             out_ch = base_channels * (2 ** i)
@@ -1670,7 +1665,7 @@ class FairUNet(nn.Module):
                 )
             )
             in_ch = out_ch
-        
+
         # Bottleneck
         bottleneck_ch = base_channels * (2 ** depth)
         self.bottleneck = self._make_encoder_block(
@@ -1678,15 +1673,15 @@ class FairUNet(nn.Module):
             bottleneck_ch,
             use_group_norm
         )
-        
+
         # Decoder path
         self.decoder_blocks = nn.ModuleList()
         self.upconv_blocks = nn.ModuleList()
-        
+
         for i in range(depth):
             in_ch = bottleneck_ch if i == 0 else base_channels * (2 ** (depth - i + 1))
             out_ch = base_channels * (2 ** (depth - i - 1))
-            
+
             self.upconv_blocks.append(
                 nn.ConvTranspose2d(
                     in_ch,
@@ -1695,7 +1690,7 @@ class FairUNet(nn.Module):
                     stride=2
                 )
             )
-            
+
             self.decoder_blocks.append(
                 self._make_decoder_block(
                     out_ch * 2,  # Concatenated with skip connection
@@ -1703,23 +1698,23 @@ class FairUNet(nn.Module):
                     use_group_norm
                 )
             )
-        
+
         # Final convolution
         self.final_conv = nn.Conv2d(
             base_channels,
             out_channels,
             kernel_size=1
         )
-        
+
         # Dropout
         self.dropout = nn.Dropout2d(dropout_rate)
-        
+
         logger.info(
             f"Initialized Fair U-Net: "
             f"depth={depth}, base_ch={base_channels}, "
             f"in_ch={in_channels}, out_ch={out_channels}"
         )
-    
+
     def _make_encoder_block(
         self,
         in_channels: int,
@@ -1733,7 +1728,7 @@ class FairUNet(nn.Module):
         else:
             norm1 = nn.BatchNorm2d(out_channels)
             norm2 = nn.BatchNorm2d(out_channels)
-        
+
         return nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
             norm1,
@@ -1742,7 +1737,7 @@ class FairUNet(nn.Module):
             norm2,
             nn.ReLU(inplace=True)
         )
-    
+
     def _make_decoder_block(
         self,
         in_channels: int,
@@ -1751,7 +1746,7 @@ class FairUNet(nn.Module):
     ) -> nn.Module:
         """Create decoder block with two convolutions."""
         return self._make_encoder_block(in_channels, out_channels, use_group_norm)
-    
+
     def forward(
         self,
         x: torch.Tensor,
@@ -1759,35 +1754,35 @@ class FairUNet(nn.Module):
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, List[torch.Tensor]]]:
         """
         Forward pass through U-Net.
-        
+
         Args:
             x: Input tensor of shape (batch, in_channels, height, width)
             return_features: Whether to return intermediate features
-            
+
         Returns:
             Segmentation logits (and optionally feature maps)
         """
         # Encoder path with skip connections
         skip_connections = []
-        
+
         for encoder_block in self.encoder_blocks:
             x = encoder_block(x)
             skip_connections.append(x)
             x = self.pool(x)
             x = self.dropout(x)
-        
+
         # Bottleneck
         x = self.bottleneck(x)
-        
+
         # Decoder path
         for i, (upconv, decoder_block) in enumerate(
             zip(self.upconv_blocks, self.decoder_blocks)
         ):
             x = upconv(x)
-            
+
             # Get corresponding skip connection
             skip = skip_connections[-(i + 1)]
-            
+
             # Handle size mismatch due to odd dimensions
             if x.shape != skip.shape:
                 x = F.interpolate(
@@ -1796,32 +1791,31 @@ class FairUNet(nn.Module):
                     mode='bilinear',
                     align_corners=True
                 )
-            
+
             # Concatenate skip connection
             x = torch.cat([x, skip], dim=1)
-            
+
             # Decoder block
             x = decoder_block(x)
             x = self.dropout(x)
-        
+
         # Final convolution
         logits = self.final_conv(x)
-        
+
         if return_features:
             return logits, skip_connections
         else:
             return logits
 
-
 class FairnessAwareSegmentationLoss(nn.Module):
     """
     Loss function for fair medical image segmentation.
-    
+
     Combines standard segmentation loss (Dice + Cross Entropy) with
     fairness regularization that penalizes performance disparities
     across protected groups.
     """
-    
+
     def __init__(
         self,
         num_classes: int,
@@ -1830,22 +1824,22 @@ class FairnessAwareSegmentationLoss(nn.Module):
     ):
         """
         Initialize fairness-aware segmentation loss.
-        
+
         Args:
             num_classes: Number of segmentation classes
             fairness_weight: Weight for fairness regularization term
             class_weights: Optional class weights for imbalanced data
         """
         super(FairnessAwareSegmentationLoss, self).__init__()
-        
+
         self.num_classes = num_classes
         self.fairness_weight = fairness_weight
-        
+
         if class_weights is not None:
             self.register_buffer('class_weights', class_weights)
         else:
             self.class_weights = None
-    
+
     def forward(
         self,
         predictions: torch.Tensor,
@@ -1854,29 +1848,29 @@ class FairnessAwareSegmentationLoss(nn.Module):
     ) -> Tuple[torch.Tensor, Dict[str, float]]:
         """
         Compute fairness-aware segmentation loss.
-        
+
         Args:
             predictions: Model predictions (batch, classes, height, width)
             targets: Ground truth (batch, height, width)
             group_ids: Optional group identifiers (batch,)
-            
+
         Returns:
             Total loss and dictionary of loss components
         """
         # Standard segmentation loss
         dice_loss = self._dice_loss(predictions, targets)
         ce_loss = self._cross_entropy_loss(predictions, targets)
-        
+
         seg_loss = 0.5 * dice_loss + 0.5 * ce_loss
-        
+
         loss_dict = {
             'dice_loss': dice_loss.item(),
             'ce_loss': ce_loss.item(),
             'seg_loss': seg_loss.item()
         }
-        
+
         total_loss = seg_loss
-        
+
         # Add fairness regularization if group IDs provided
         if group_ids is not None and self.fairness_weight > 0:
             fairness_loss = self._fairness_regularization(
@@ -1884,14 +1878,14 @@ class FairnessAwareSegmentationLoss(nn.Module):
                 targets,
                 group_ids
             )
-            
+
             total_loss = total_loss + self.fairness_weight * fairness_loss
             loss_dict['fairness_loss'] = fairness_loss.item()
-        
+
         loss_dict['total_loss'] = total_loss.item()
-        
+
         return total_loss, loss_dict
-    
+
     def _dice_loss(
         self,
         predictions: torch.Tensor,
@@ -1900,31 +1894,31 @@ class FairnessAwareSegmentationLoss(nn.Module):
     ) -> torch.Tensor:
         """
         Compute Dice loss.
-        
+
         Dice coefficient is 2*|A ∩ B| / (|A| + |B|)
         Dice loss is 1 - Dice coefficient
         """
         # Convert predictions to probabilities
         probs = F.softmax(predictions, dim=1)
-        
+
         # One-hot encode targets
         targets_one_hot = F.one_hot(
             targets.long(),
             num_classes=self.num_classes
         ).permute(0, 3, 1, 2).float()
-        
+
         # Compute Dice for each class
         dice_scores = []
         for c in range(self.num_classes):
             pred_c = probs[:, c, :, :]
             target_c = targets_one_hot[:, c, :, :]
-            
+
             intersection = (pred_c * target_c).sum()
             union = pred_c.sum() + target_c.sum()
-            
+
             dice = (2.0 * intersection + smooth) / (union + smooth)
             dice_scores.append(dice)
-        
+
         # Average across classes (optionally weighted)
         if self.class_weights is not None:
             dice_loss = 1 - sum(
@@ -1932,9 +1926,9 @@ class FairnessAwareSegmentationLoss(nn.Module):
             ) / self.class_weights.sum()
         else:
             dice_loss = 1 - sum(dice_scores) / len(dice_scores)
-        
+
         return dice_loss
-    
+
     def _cross_entropy_loss(
         self,
         predictions: torch.Tensor,
@@ -1947,7 +1941,7 @@ class FairnessAwareSegmentationLoss(nn.Module):
             weight=self.class_weights,
             reduction='mean'
         )
-    
+
     def _fairness_regularization(
         self,
         predictions: torch.Tensor,
@@ -1956,51 +1950,50 @@ class FairnessAwareSegmentationLoss(nn.Module):
     ) -> torch.Tensor:
         """
         Compute fairness regularization term.
-        
+
         Penalizes variance in Dice scores across demographic groups.
         """
         unique_groups = group_ids.unique()
-        
+
         group_dice_scores = []
-        
+
         for group in unique_groups:
             group_mask = group_ids == group
-            
+
             if group_mask.sum() == 0:
                 continue
-            
+
             group_preds = predictions[group_mask]
             group_targets = targets[group_mask]
-            
+
             # Compute Dice for this group
             probs = F.softmax(group_preds, dim=1)
             targets_one_hot = F.one_hot(
                 group_targets.long(),
                 num_classes=self.num_classes
             ).permute(0, 3, 1, 2).float()
-            
+
             dice = 0
             for c in range(self.num_classes):
                 pred_c = probs[:, c, :, :]
                 target_c = targets_one_hot[:, c, :, :]
-                
+
                 intersection = (pred_c * target_c).sum()
                 union = pred_c.sum() + target_c.sum()
-                
+
                 dice += (2.0 * intersection + 1e-6) / (union + 1e-6)
-            
+
             dice /= self.num_classes
             group_dice_scores.append(dice)
-        
+
         if len(group_dice_scores) < 2:
             return torch.tensor(0.0, device=predictions.device)
-        
+
         # Compute variance of Dice scores across groups
         group_dice_tensor = torch.stack(group_dice_scores)
         fairness_loss = group_dice_tensor.var()
-        
-        return fairness_loss
 
+        return fairness_loss
 
 def evaluate_segmentation_fairness(
     model: nn.Module,
@@ -2010,53 +2003,53 @@ def evaluate_segmentation_fairness(
 ) -> Dict:
     """
     Evaluate segmentation model fairness across demographic groups.
-    
+
     Args:
         model: Trained segmentation model
         dataloader: DataLoader with demographic metadata
         group_variable: Name of grouping variable to stratify by
         device: Device for computation
-        
+
     Returns:
         Dictionary of fairness metrics stratified by group
     """
     model.eval()
     model.to(device)
-    
+
     group_metrics = {}
-    
+
     with torch.no_grad():
         for batch in dataloader:
             images = batch['image'].to(device)
             masks = batch['mask'].to(device)
             metadata = batch['metadata']
-            
+
             # Get predictions
             logits = model(images)
             predictions = torch.argmax(logits, dim=1)
-            
+
             # Group by demographic variable
             for i in range(len(images)):
                 group = metadata[group_variable][i]
-                
+
                 if group not in group_metrics:
                     group_metrics[group] = {
                         'dice_scores': [],
                         'iou_scores': [],
                         'n_examples': 0
                     }
-                
+
                 pred = predictions[i].cpu().numpy()
                 target = masks[i].cpu().numpy()
-                
+
                 # Compute metrics
                 dice = compute_dice(pred, target)
                 iou = compute_iou(pred, target)
-                
+
                 group_metrics[group]['dice_scores'].append(dice)
                 group_metrics[group]['iou_scores'].append(iou)
                 group_metrics[group]['n_examples'] += 1
-    
+
     # Aggregate metrics per group
     results = {}
     for group, metrics in group_metrics.items():
@@ -2067,28 +2060,26 @@ def evaluate_segmentation_fairness(
             'iou_mean': np.mean(metrics['iou_scores']),
             'iou_std': np.std(metrics['iou_scores'])
         }
-    
+
     # Compute disparity metrics
     if len(results) > 1:
         groups = list(results.keys())
         dice_means = [results[g]['dice_mean'] for g in groups]
         iou_means = [results[g]['iou_mean'] for g in groups]
-        
+
         results['disparity'] = {
             'dice_range': max(dice_means) - min(dice_means),
             'dice_ratio': max(dice_means) / (min(dice_means) + 1e-8),
             'iou_range': max(iou_means) - min(iou_means),
             'iou_ratio': max(iou_means) / (min(iou_means) + 1e-8)
         }
-    
-    return results
 
+    return results
 
 def compute_dice(pred: np.ndarray, target: np.ndarray) -> float:
     """Compute Dice coefficient between prediction and target."""
     intersection = np.logical_and(pred, target).sum()
     return (2.0 * intersection) / (pred.sum() + target.sum() + 1e-8)
-
 
 def compute_iou(pred: np.ndarray, target: np.ndarray) -> float:
     """Compute Intersection over Union."""
@@ -2123,16 +2114,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class FairMultiTaskClassifier(nn.Module):
     """
     Multi-task classifier with fairness constraints.
-    
+
     Learns diagnostic task while preventing the feature representation
     from encoding protected demographic attributes that could lead to
     biased predictions.
     """
-    
+
     def __init__(
         self,
         backbone: str = 'resnet50',
@@ -2144,7 +2134,7 @@ class FairMultiTaskClassifier(nn.Module):
     ):
         """
         Initialize fair multi-task classifier.
-        
+
         Args:
             backbone: Feature extraction backbone
             num_classes: Number of diagnostic classes
@@ -2154,11 +2144,11 @@ class FairMultiTaskClassifier(nn.Module):
             pretrained: Use ImageNet pre-trained weights
         """
         super(FairMultiTaskClassifier, self).__init__()
-        
+
         self.num_classes = num_classes
         self.num_groups = num_groups
         self.use_adversarial = use_adversarial
-        
+
         # Feature extractor
         if backbone == 'resnet50':
             from torchvision import models
@@ -2176,7 +2166,7 @@ class FairMultiTaskClassifier(nn.Module):
             feature_dim = 1280
         else:
             raise ValueError(f"Unknown backbone: {backbone}")
-        
+
         # Diagnostic classifier
         self.diagnostic_classifier = nn.Sequential(
             nn.Linear(feature_dim, hidden_dim),
@@ -2184,7 +2174,7 @@ class FairMultiTaskClassifier(nn.Module):
             nn.Dropout(0.5),
             nn.Linear(hidden_dim, num_classes)
         )
-        
+
         # Adversarial demographic predictor (if using adversarial debiasing)
         if use_adversarial:
             self.demographic_predictor = nn.Sequential(
@@ -2193,16 +2183,16 @@ class FairMultiTaskClassifier(nn.Module):
                 nn.Dropout(0.5),
                 nn.Linear(hidden_dim, num_groups)
             )
-            
+
             # Gradient reversal layer
             self.gradient_reversal = GradientReversalLayer()
-        
+
         logger.info(
             f"Initialized Fair Multi-Task Classifier: "
             f"backbone={backbone}, classes={num_classes}, "
             f"groups={num_groups}, adversarial={use_adversarial}"
         )
-    
+
     def forward(
         self,
         x: torch.Tensor,
@@ -2210,71 +2200,68 @@ class FairMultiTaskClassifier(nn.Module):
     ) -> Dict[str, torch.Tensor]:
         """
         Forward pass through multi-task classifier.
-        
+
         Args:
             x: Input images (batch, channels, height, width)
             alpha: Gradient reversal strength for adversarial training
-            
+
         Returns:
             Dictionary with diagnostic and demographic predictions
         """
         # Extract features
         features = self.feature_extractor(x)
         features = features.view(features.size(0), -1)
-        
+
         # Diagnostic prediction
         diagnostic_logits = self.diagnostic_classifier(features)
-        
+
         outputs = {
             'diagnostic_logits': diagnostic_logits,
             'features': features
         }
-        
+
         # Demographic prediction with gradient reversal
         if self.use_adversarial:
             reversed_features = self.gradient_reversal(features, alpha)
             demographic_logits = self.demographic_predictor(reversed_features)
             outputs['demographic_logits'] = demographic_logits
-        
-        return outputs
 
+        return outputs
 
 class GradientReversalLayer(torch.autograd.Function):
     """
     Gradient reversal layer for adversarial training.
-    
+
     During forward pass, acts as identity. During backward pass,
     reverses gradients, enabling adversarial debiasing where we
     optimize features to be predictive of diagnosis but NOT
     predictive of demographic group.
     """
-    
+
     @staticmethod
     def forward(ctx, x, alpha):
         ctx.alpha = alpha
         return x.view_as(x)
-    
+
     @staticmethod
     def backward(ctx, grad_output):
         output = grad_output.neg() * ctx.alpha
         return output, None
 
-
 def gradient_reversal_layer(x, alpha=1.0):
     """Functional interface to gradient reversal layer."""
     return GradientReversalLayer.apply(x, alpha)
 
-
 class FairMultiTaskLoss(nn.Module):
     """
     Loss function for fair multi-task learning.
-    
+
     Balances diagnostic accuracy with fairness objectives including:
     - Demographic parity (equalizing positive rates across groups)
     - Equalized odds (equalizing TPR and FPR across groups)
     - Calibration fairness (equalizing calibration across groups)
     """
-    
+
     def __init__(
         self,
         fairness_criterion: str = 'demographic_parity',
@@ -2283,21 +2270,21 @@ class FairMultiTaskLoss(nn.Module):
     ):
         """
         Initialize fair multi-task loss.
-        
+
         Args:
             fairness_criterion: 'demographic_parity', 'equalized_odds', or 'calibration'
             fairness_weight: Weight for fairness regularization
             adversarial_weight: Weight for adversarial demographic prediction
         """
         super(FairMultiTaskLoss, self).__init__()
-        
+
         self.fairness_criterion = fairness_criterion
         self.fairness_weight = fairness_weight
         self.adversarial_weight = adversarial_weight
-        
+
         self.diagnostic_loss_fn = nn.CrossEntropyLoss()
         self.demographic_loss_fn = nn.CrossEntropyLoss()
-    
+
     def forward(
         self,
         outputs: Dict[str, torch.Tensor],
@@ -2306,12 +2293,12 @@ class FairMultiTaskLoss(nn.Module):
     ) -> Tuple[torch.Tensor, Dict[str, float]]:
         """
         Compute fair multi-task loss.
-        
+
         Args:
             outputs: Model outputs dictionary
             diagnostic_labels: Ground truth diagnostic labels
             demographic_labels: Ground truth demographic group labels
-            
+
         Returns:
             Total loss and dictionary of loss components
         """
@@ -2320,23 +2307,23 @@ class FairMultiTaskLoss(nn.Module):
             outputs['diagnostic_logits'],
             diagnostic_labels
         )
-        
+
         loss_dict = {
             'diagnostic_loss': diagnostic_loss.item()
         }
-        
+
         total_loss = diagnostic_loss
-        
+
         # Adversarial demographic prediction loss
         if 'demographic_logits' in outputs and self.adversarial_weight > 0:
             demographic_loss = self.demographic_loss_fn(
                 outputs['demographic_logits'],
                 demographic_labels
             )
-            
+
             total_loss = total_loss + self.adversarial_weight * demographic_loss
             loss_dict['demographic_loss'] = demographic_loss.item()
-        
+
         # Fairness regularization
         if self.fairness_weight > 0:
             fairness_loss = self._compute_fairness_loss(
@@ -2344,14 +2331,14 @@ class FairMultiTaskLoss(nn.Module):
                 diagnostic_labels,
                 demographic_labels
             )
-            
+
             total_loss = total_loss + self.fairness_weight * fairness_loss
             loss_dict['fairness_loss'] = fairness_loss.item()
-        
+
         loss_dict['total_loss'] = total_loss.item()
-        
+
         return total_loss, loss_dict
-    
+
     def _compute_fairness_loss(
         self,
         logits: torch.Tensor,
@@ -2367,7 +2354,7 @@ class FairMultiTaskLoss(nn.Module):
             return self._calibration_fairness_loss(logits, diagnostic_labels, demographic_labels)
         else:
             return torch.tensor(0.0, device=logits.device)
-    
+
     def _demographic_parity_loss(
         self,
         logits: torch.Tensor,
@@ -2375,30 +2362,30 @@ class FairMultiTaskLoss(nn.Module):
     ) -> torch.Tensor:
         """
         Enforce demographic parity: P(Ŷ=1|A=0) ≈ P(Ŷ=1|A=1)
-        
+
         Penalizes difference in positive prediction rates across groups.
         """
         probs = F.softmax(logits, dim=1)[:, 1]  # Probability of positive class
-        
+
         unique_groups = demographic_labels.unique()
-        
+
         if len(unique_groups) < 2:
             return torch.tensor(0.0, device=logits.device)
-        
+
         group_pos_rates = []
         for group in unique_groups:
             group_mask = demographic_labels == group
             if group_mask.sum() > 0:
                 group_pos_rate = probs[group_mask].mean()
                 group_pos_rates.append(group_pos_rate)
-        
+
         if len(group_pos_rates) < 2:
             return torch.tensor(0.0, device=logits.device)
-        
+
         # Variance of positive rates across groups
         group_pos_rates = torch.stack(group_pos_rates)
         return group_pos_rates.var()
-    
+
     def _equalized_odds_loss(
         self,
         logits: torch.Tensor,
@@ -2407,52 +2394,52 @@ class FairMultiTaskLoss(nn.Module):
     ) -> torch.Tensor:
         """
         Enforce equalized odds: TPR and FPR equal across groups.
-        
+
         More stringent than demographic parity, requires both
         true positive and false positive rates to be equalized.
         """
         probs = F.softmax(logits, dim=1)[:, 1]
         predictions = (probs > 0.5).float()
-        
+
         unique_groups = demographic_labels.unique()
-        
+
         if len(unique_groups) < 2:
             return torch.tensor(0.0, device=logits.device)
-        
+
         group_tprs = []
         group_fprs = []
-        
+
         for group in unique_groups:
             group_mask = demographic_labels == group
-            
+
             if group_mask.sum() == 0:
                 continue
-            
+
             group_preds = predictions[group_mask]
             group_labels = diagnostic_labels[group_mask]
-            
+
             # True positives
             tp = ((group_preds == 1) & (group_labels == 1)).float().sum()
             fn = ((group_preds == 0) & (group_labels == 1)).float().sum()
             tpr = tp / (tp + fn + 1e-8)
-            
+
             # False positives
             fp = ((group_preds == 1) & (group_labels == 0)).float().sum()
             tn = ((group_preds == 0) & (group_labels == 0)).float().sum()
             fpr = fp / (fp + tn + 1e-8)
-            
+
             group_tprs.append(tpr)
             group_fprs.append(fpr)
-        
+
         if len(group_tprs) < 2:
             return torch.tensor(0.0, device=logits.device)
-        
+
         group_tprs = torch.stack(group_tprs)
         group_fprs = torch.stack(group_fprs)
-        
+
         # Penalize variance in both TPR and FPR
         return group_tprs.var() + group_fprs.var()
-    
+
     def _calibration_fairness_loss(
         self,
         logits: torch.Tensor,
@@ -2461,50 +2448,50 @@ class FairMultiTaskLoss(nn.Module):
     ) -> torch.Tensor:
         """
         Enforce calibration fairness across groups.
-        
+
         Ensures that predicted probabilities are well-calibrated
         for all demographic groups.
         """
         probs = F.softmax(logits, dim=1)[:, 1]
-        
+
         unique_groups = demographic_labels.unique()
-        
+
         if len(unique_groups) < 2:
             return torch.tensor(0.0, device=logits.device)
-        
+
         group_calibration_errors = []
-        
+
         for group in unique_groups:
             group_mask = demographic_labels == group
-            
+
             if group_mask.sum() < 10:  # Need sufficient samples
                 continue
-            
+
             group_probs = probs[group_mask]
             group_labels = diagnostic_labels[group_mask].float()
-            
+
             # Compute calibration error in bins
             n_bins = 10
             bin_boundaries = torch.linspace(0, 1, n_bins + 1, device=probs.device)
-            
+
             bin_errors = []
             for i in range(n_bins):
                 bin_mask = (group_probs >= bin_boundaries[i]) & \
                           (group_probs < bin_boundaries[i + 1])
-                
+
                 if bin_mask.sum() > 0:
                     bin_mean_prob = group_probs[bin_mask].mean()
                     bin_mean_label = group_labels[bin_mask].mean()
                     bin_error = (bin_mean_prob - bin_mean_label).abs()
                     bin_errors.append(bin_error)
-            
+
             if bin_errors:
                 group_calibration_error = torch.stack(bin_errors).mean()
                 group_calibration_errors.append(group_calibration_error)
-        
+
         if len(group_calibration_errors) < 2:
             return torch.tensor(0.0, device=logits.device)
-        
+
         # Penalize variance in calibration error across groups
         group_calibration_errors = torch.stack(group_calibration_errors)
         return group_calibration_errors.var()

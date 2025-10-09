@@ -2,9 +2,10 @@
 layout: chapter
 title: "Chapter 17: Regulatory Considerations for Clinical AI"
 chapter_number: 17
+part_number: 4
+prev_chapter: /chapters/chapter-16-uncertainty-calibration/
+next_chapter: /chapters/chapter-18-implementation-science/
 ---
-
-
 # Chapter 17: Regulatory Considerations for Clinical AI
 
 ## Learning Objectives
@@ -96,13 +97,11 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class DeviceRiskClass(Enum):
     """FDA device risk classification."""
     CLASS_I = "Class I"
     CLASS_II = "Class II"
     CLASS_III = "Class III"
-
 
 class RegulatoryPathway(Enum):
     """Available FDA regulatory pathways."""
@@ -111,12 +110,11 @@ class RegulatoryPathway(Enum):
     DE_NOVO = "De Novo"
     EXEMPT = "Exempt (Clinical Decision Support)"
 
-
 @dataclass
 class IntendedUsePopulation:
     """
     Specification of intended use population with equity considerations.
-    
+
     Attributes:
         population_description: Detailed description of intended patient population
         age_range: Age range (min, max) in years, None for no restriction
@@ -141,53 +139,52 @@ class IntendedUsePopulation:
     performance_subgroups: Dict[str, str] = field(default_factory=dict)
     validation_populations: str = ""
     representation_notes: str = ""
-    
+
     def validate(self) -> List[str]:
         """
         Validate completeness of intended use specification.
-        
+
         Returns:
             List of validation warnings
         """
         warnings = []
-        
+
         if not self.population_description:
             warnings.append("Population description is empty")
-        
+
         if not self.clinical_settings:
             warnings.append("No clinical settings specified")
-        
+
         if not self.included_demographics:
             warnings.append(
                 "No demographics specified - should explicitly state which "
                 "demographic groups were included in validation"
             )
-        
+
         if not self.validation_populations:
             warnings.append(
                 "Validation populations not described - should detail "
                 "characteristics of populations used for testing"
             )
-        
+
         if not self.representation_notes:
             warnings.append(
                 "No representation analysis provided - should explain how "
                 "validation populations represent intended use population"
             )
-        
+
         if self.performance_subgroups and not self.included_demographics:
             warnings.append(
                 "Performance subgroups specified but demographics not documented"
             )
-        
-        return warnings
 
+        return warnings
 
 @dataclass
 class PerformanceCharacteristic:
     """
     Performance metric with stratification by subgroups.
-    
+
     Attributes:
         metric_name: Name of performance metric (e.g., "Sensitivity", "AUC-ROC")
         overall_value: Overall performance value
@@ -208,48 +205,47 @@ class PerformanceCharacteristic:
     meets_specification: bool = True
     specification_threshold: Optional[float] = None
     clinical_significance: str = ""
-    
+
     def assess_equity(self, max_disparity: float = 0.1) -> Tuple[bool, str]:
         """
         Assess whether performance disparities across subgroups exceed threshold.
-        
+
         Args:
             max_disparity: Maximum acceptable performance disparity
-            
+
         Returns:
             Tuple of (passes equity assessment, detailed message)
         """
         if not self.subgroup_performance:
             return False, "No subgroup performance data available for equity assessment"
-        
+
         values = [perf[0] for perf in self.subgroup_performance.values()]
         min_value = min(values)
         max_value = max(values)
         disparity = max_value - min_value
-        
+
         passes = disparity <= max_disparity
-        
+
         message = f"Performance disparity: {disparity:.3f} (range: {min_value:.3f} to {max_value:.3f})"
         if passes:
             message += f"\nMeets equity threshold of {max_disparity:.3f}"
         else:
             message += f"\nEXCEEDS equity threshold of {max_disparity:.3f}"
-            
+
             # Identify underperforming groups
             underperforming = [
                 group for group, (val, _, _) in self.subgroup_performance.items()
                 if val < min_value + max_disparity
             ]
             message += f"\nUnderperforming groups: {', '.join(underperforming)}"
-        
-        return passes, message
 
+        return passes, message
 
 @dataclass
 class RiskAnalysis:
     """
     Risk analysis documenting potential harms and mitigation strategies.
-    
+
     Attributes:
         risk_description: Description of potential risk
         affected_populations: Populations potentially affected by this risk
@@ -271,12 +267,11 @@ class RiskAnalysis:
     monitoring_plan: str = ""
     equity_considerations: str = ""
 
-
 @dataclass
 class PremarketSubmission:
     """
     Complete 510(k) premarket submission package.
-    
+
     Attributes:
         device_name: Trade name of the device
         manufacturer: Manufacturer information
@@ -314,16 +309,16 @@ class PremarketSubmission:
     labeling_draft: str = ""
     post_market_surveillance_plan: str = ""
     submission_date: datetime = field(default_factory=datetime.now)
-    
+
     def generate_document(self, output_path: Path) -> None:
         """
         Generate formatted regulatory submission document.
-        
+
         Args:
             output_path: Path for output document
         """
         sections = []
-        
+
         # Header
         sections.append("=" * 80)
         sections.append("510(K) PREMARKET NOTIFICATION")
@@ -334,41 +329,41 @@ class PremarketSubmission:
         sections.append(f"Regulatory Pathway: {self.regulatory_pathway.value}")
         sections.append(f"Submission Date: {self.submission_date.strftime('%Y-%m-%d')}")
         sections.append("")
-        
+
         # Intended use
         sections.append("INTENDED USE")
         sections.append("-" * 80)
         sections.append(self.intended_use)
         sections.append("")
-        
+
         # Intended use population
         sections.append("INTENDED USE POPULATION")
         sections.append("-" * 80)
         sections.append(self.intended_use_population.population_description)
         sections.append("")
-        
+
         if self.intended_use_population.clinical_settings:
             sections.append("Clinical Settings:")
             for setting in self.intended_use_population.clinical_settings:
                 sections.append(f"  - {setting}")
             sections.append("")
-        
+
         if self.intended_use_population.included_demographics:
             sections.append("Demographic Groups Included in Validation:")
             for category, groups in self.intended_use_population.included_demographics.items():
                 sections.append(f"  {category}: {', '.join(groups)}")
             sections.append("")
-        
+
         if self.intended_use_population.validation_populations:
             sections.append("Validation Population Characteristics:")
             sections.append(self.intended_use_population.validation_populations)
             sections.append("")
-        
+
         if self.intended_use_population.representation_notes:
             sections.append("Representativeness Analysis:")
             sections.append(self.intended_use_population.representation_notes)
             sections.append("")
-        
+
         # Indications for use
         if self.indications_for_use:
             sections.append("INDICATIONS FOR USE")
@@ -376,94 +371,94 @@ class PremarketSubmission:
             for indication in self.indications_for_use:
                 sections.append(f"  - {indication}")
             sections.append("")
-        
+
         # Predicate device
         if self.predicate_device:
             sections.append("PREDICATE DEVICE")
             sections.append("-" * 80)
             sections.append(self.predicate_device)
             sections.append("")
-        
+
         # Performance characteristics
         sections.append("PERFORMANCE CHARACTERISTICS")
         sections.append("-" * 80)
-        
+
         for perf in self.performance_characteristics:
             sections.append(f"\n{perf.metric_name}:")
             sections.append(f"  Overall: {perf.overall_value:.3f} "
                           f"(95% CI: {perf.confidence_interval[0]:.3f}-{perf.confidence_interval[1]:.3f})")
             sections.append(f"  Sample Size: {perf.n_samples:,}")
-            
+
             if perf.specification_threshold is not None:
                 status = "MEETS" if perf.meets_specification else "DOES NOT MEET"
                 sections.append(f"  Specification: {status} threshold of {perf.specification_threshold:.3f}")
-            
+
             if perf.subgroup_performance:
                 sections.append("  \n  Performance by Demographic Subgroup:")
                 for subgroup, (value, ci, n) in perf.subgroup_performance.items():
                     sections.append(f"    {subgroup}: {value:.3f} (95% CI: {ci[0]:.3f}-{ci[1]:.3f}, n={n:,})")
-                
+
                 passes_equity, equity_msg = perf.assess_equity()
                 sections.append(f"\n  Equity Assessment: {equity_msg}")
-            
+
             if perf.setting_performance:
                 sections.append("  \n  Performance by Clinical Setting:")
                 for setting, (value, ci, n) in perf.setting_performance.items():
                     sections.append(f"    {setting}: {value:.3f} (95% CI: {ci[0]:.3f}-{ci[1]:.3f}, n={n:,})")
-            
+
             if perf.clinical_significance:
                 sections.append(f"\n  Clinical Significance: {perf.clinical_significance}")
-            
+
             sections.append("")
-        
+
         # Training and validation data
         sections.append("TRAINING DATA")
         sections.append("-" * 80)
         sections.append(self.training_data_description)
         sections.append("")
-        
+
         sections.append("VALIDATION DATA")
         sections.append("-" * 80)
         sections.append(self.validation_data_description)
         sections.append("")
-        
+
         # Clinical validation
         if self.clinical_validation_summary:
             sections.append("CLINICAL VALIDATION")
             sections.append("-" * 80)
             sections.append(self.clinical_validation_summary)
             sections.append("")
-        
+
         # Risk analysis
         sections.append("RISK ANALYSIS")
         sections.append("-" * 80)
-        
+
         for i, risk in enumerate(self.risk_analyses, 1):
             sections.append(f"\nRisk #{i}: {risk.risk_description}")
             sections.append(f"  Severity: {risk.severity}")
             sections.append(f"  Probability: {risk.probability}")
             sections.append(f"  Affected Populations: {', '.join(risk.affected_populations)}")
-            
+
             if risk.mitigation_strategies:
                 sections.append("  Mitigation Strategies:")
                 for strategy in risk.mitigation_strategies:
                     sections.append(f"    - {strategy}")
-            
+
             if risk.residual_risk_level:
                 sections.append(f"  Residual Risk Level: {risk.residual_risk_level}")
-            
+
             if risk.equity_considerations:
                 sections.append(f"  Equity Considerations: {risk.equity_considerations}")
-        
+
         sections.append("")
-        
+
         # Equity assessment
         if self.equity_assessment:
             sections.append("EQUITY AND FAIRNESS ASSESSMENT")
             sections.append("-" * 80)
             sections.append(self.equity_assessment)
             sections.append("")
-        
+
         # Limitations and warnings
         if self.limitations_and_warnings:
             sections.append("LIMITATIONS AND WARNINGS")
@@ -471,62 +466,62 @@ class PremarketSubmission:
             for limitation in self.limitations_and_warnings:
                 sections.append(f"  - {limitation}")
             sections.append("")
-        
+
         # Post-market surveillance
         if self.post_market_surveillance_plan:
             sections.append("POST-MARKET SURVEILLANCE PLAN")
             sections.append("-" * 80)
             sections.append(self.post_market_surveillance_plan)
             sections.append("")
-        
+
         # Write to file
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w') as f:
             f.write('\n'.join(sections))
-        
+
         logger.info(f"Generated regulatory submission document: {output_path}")
-    
+
     def validate_submission(self) -> Tuple[bool, List[str]]:
         """
         Validate completeness of regulatory submission.
-        
+
         Returns:
             Tuple of (is valid, list of validation issues)
         """
         issues = []
-        
+
         # Check required fields
         if not self.intended_use:
             issues.append("Intended use statement is missing")
-        
+
         if not self.indications_for_use:
             issues.append("Indications for use not specified")
-        
+
         if not self.performance_characteristics:
             issues.append("No performance characteristics provided")
-        
+
         if not self.risk_analyses:
             issues.append("Risk analysis not provided")
-        
+
         if not self.training_data_description:
             issues.append("Training data not described")
-        
+
         if not self.validation_data_description:
             issues.append("Validation data not described")
-        
+
         if not self.equity_assessment:
             issues.append(
                 "No equity assessment provided - should explicitly evaluate "
                 "fairness across demographic groups and care settings"
             )
-        
+
         if not self.post_market_surveillance_plan:
             issues.append("Post-market surveillance plan not provided")
-        
+
         # Check intended use population
         population_warnings = self.intended_use_population.validate()
         issues.extend(population_warnings)
-        
+
         # Check that performance characteristics include subgroup analysis
         has_subgroup_analysis = any(
             perf.subgroup_performance for perf in self.performance_characteristics
@@ -536,7 +531,7 @@ class PremarketSubmission:
                 "No subgroup performance analysis provided - should stratify "
                 "performance by demographic groups"
             )
-        
+
         # Check that risk analysis includes equity considerations
         has_equity_risks = any(
             risk.equity_considerations for risk in self.risk_analyses
@@ -546,16 +541,15 @@ class PremarketSubmission:
                 "Risk analyses do not include equity considerations - should "
                 "evaluate differential risks across populations"
             )
-        
+
         is_valid = len(issues) == 0
         return is_valid, issues
-
 
 class PremarketSubmissionBuilder:
     """
     Builder class for constructing regulatory submissions step by step.
     """
-    
+
     def __init__(self, device_name: str, manufacturer: str):
         """Initialize submission builder."""
         self.device_name = device_name
@@ -574,9 +568,9 @@ class PremarketSubmissionBuilder:
         self.equity_assessment = ""
         self.clinical_validation = ""
         self.surveillance_plan = ""
-    
+
     def set_device_classification(
-        self, 
+        self,
         device_class: DeviceRiskClass,
         regulatory_pathway: RegulatoryPathway
     ) -> 'PremarketSubmissionBuilder':
@@ -584,73 +578,73 @@ class PremarketSubmissionBuilder:
         self.device_class = device_class
         self.regulatory_pathway = regulatory_pathway
         return self
-    
+
     def set_intended_use(self, intended_use: str) -> 'PremarketSubmissionBuilder':
         """Set intended use statement."""
         self.intended_use = intended_use
         return self
-    
+
     def set_intended_use_population(
-        self, 
+        self,
         population: IntendedUsePopulation
     ) -> 'PremarketSubmissionBuilder':
         """Set intended use population with detailed specification."""
         self.intended_use_population = population
         return self
-    
+
     def add_indication(self, indication: str) -> 'PremarketSubmissionBuilder':
         """Add clinical indication."""
         self.indications.append(indication)
         return self
-    
+
     def add_performance_characteristic(
-        self, 
+        self,
         characteristic: PerformanceCharacteristic
     ) -> 'PremarketSubmissionBuilder':
         """Add performance characteristic."""
         self.performance_chars.append(characteristic)
         return self
-    
+
     def add_risk_analysis(self, risk: RiskAnalysis) -> 'PremarketSubmissionBuilder':
         """Add risk analysis."""
         self.risks.append(risk)
         return self
-    
+
     def set_training_data_description(self, description: str) -> 'PremarketSubmissionBuilder':
         """Set training data description."""
         self.training_data_desc = description
         return self
-    
+
     def set_validation_data_description(self, description: str) -> 'PremarketSubmissionBuilder':
         """Set validation data description."""
         self.validation_data_desc = description
         return self
-    
+
     def add_limitation(self, limitation: str) -> 'PremarketSubmissionBuilder':
         """Add known limitation."""
         self.limitations.append(limitation)
         return self
-    
+
     def set_equity_assessment(self, assessment: str) -> 'PremarketSubmissionBuilder':
         """Set comprehensive equity assessment."""
         self.equity_assessment = assessment
         return self
-    
+
     def set_clinical_validation_summary(self, summary: str) -> 'PremarketSubmissionBuilder':
         """Set clinical validation summary."""
         self.clinical_validation = summary
         return self
-    
+
     def set_post_market_surveillance_plan(self, plan: str) -> 'PremarketSubmissionBuilder':
         """Set post-market surveillance plan."""
         self.surveillance_plan = plan
         return self
-    
+
     def build(self) -> PremarketSubmission:
         """Build the complete submission package."""
         if self.intended_use_population is None:
             raise ValueError("Intended use population must be specified")
-        
+
         return PremarketSubmission(
             device_name=self.device_name,
             manufacturer=self.manufacturer,
@@ -670,14 +664,13 @@ class PremarketSubmissionBuilder:
             post_market_surveillance_plan=self.surveillance_plan
         )
 
-
 def create_example_submission() -> PremarketSubmission:
     """
     Create example 510(k) submission for diabetic retinopathy screening AI.
-    
+
     This example demonstrates comprehensive regulatory documentation with
     explicit attention to health equity throughout.
-    
+
     Returns:
         Complete PremarketSubmission object
     """
@@ -761,18 +754,18 @@ def create_example_submission() -> PremarketSubmission:
             "diabetes population, ensuring estimates generalize to underserved patients."
         )
     )
-    
+
     # Build submission
     builder = PremarketSubmissionBuilder(
         device_name="AI Diabetic Retinopathy Screening System",
         manufacturer="Equity-Focused Medical AI Corporation"
     )
-    
+
     builder.set_device_classification(
         device_class=DeviceRiskClass.CLASS_II,
         regulatory_pathway=RegulatoryPathway.FIVE_TEN_K
     )
-    
+
     builder.set_intended_use(
         "The AI Diabetic Retinopathy Screening System is indicated for automated "
         "detection of referable diabetic retinopathy in adults with diabetes. The "
@@ -785,13 +778,13 @@ def create_example_submission() -> PremarketSubmission:
         "diabetes management. The device is not intended to replace comprehensive "
         "eye examination by an eye care professional."
     )
-    
+
     builder.set_intended_use_population(population)
-    
+
     builder.add_indication(
         "Screening for referable diabetic retinopathy in adults with diabetes"
     )
-    
+
     # Performance characteristics
     # Overall sensitivity
     builder.add_performance_characteristic(
@@ -825,7 +818,7 @@ def create_example_submission() -> PremarketSubmission:
             )
         )
     )
-    
+
     # Specificity
     builder.add_performance_characteristic(
         PerformanceCharacteristic(
@@ -857,7 +850,7 @@ def create_example_submission() -> PremarketSubmission:
             )
         )
     )
-    
+
     # AUC-ROC
     builder.add_performance_characteristic(
         PerformanceCharacteristic(
@@ -888,7 +881,7 @@ def create_example_submission() -> PremarketSubmission:
             )
         )
     )
-    
+
     # Training data description
     builder.set_training_data_description(
         "Training dataset consisted of 128,175 color fundus photographs from 34,286 "
@@ -912,8 +905,8 @@ def create_example_submission() -> PremarketSubmission:
         "demographic groups after stratification by care setting type (quality "
         "variation primarily reflects setting rather than patient demographics)."
     )
-    
-    # Validation data description  
+
+    # Validation data description
     builder.set_validation_data_description(
         "Independent validation dataset described in Intended Use Population section. "
         "Validation sites were completely separate from training sites to assess "
@@ -931,7 +924,7 @@ def create_example_submission() -> PremarketSubmission:
         "populations. This approach ensures validation reflects real-world deployment "
         "contexts including those most likely to serve health equity populations."
     )
-    
+
     # Clinical validation summary
     builder.set_clinical_validation_summary(
         "Clinical validation study was a prospective, multi-site trial designed to "
@@ -964,7 +957,7 @@ def create_example_submission() -> PremarketSubmission:
         "of 0.021 for sensitivity and 0.023 for specificity, well within pre-specified "
         "equity criteria of maximum 0.05 disparity."
     )
-    
+
     # Risk analyses
     builder.add_risk_analysis(
         RiskAnalysis(
@@ -1012,7 +1005,7 @@ def create_example_submission() -> PremarketSubmission:
             )
         )
     )
-    
+
     builder.add_risk_analysis(
         RiskAnalysis(
             risk_description=(
@@ -1053,7 +1046,7 @@ def create_example_submission() -> PremarketSubmission:
             )
         )
     )
-    
+
     builder.add_risk_analysis(
         RiskAnalysis(
             risk_description=(
@@ -1093,7 +1086,7 @@ def create_example_submission() -> PremarketSubmission:
             )
         )
     )
-    
+
     builder.add_risk_analysis(
         RiskAnalysis(
             risk_description=(
@@ -1139,38 +1132,38 @@ def create_example_submission() -> PremarketSubmission:
             )
         )
     )
-    
+
     # Limitations
     builder.add_limitation(
         "System is designed for screening patients without known diabetic retinopathy "
         "and should not be used for monitoring patients with previously diagnosed disease"
     )
-    
+
     builder.add_limitation(
         "System analyzes only two 45-degree color fundus photographs per eye and may "
         "miss pathology visible only on additional imaging modalities or field positions"
     )
-    
+
     builder.add_limitation(
         "System performance was validated on images from Canon, Topcon, and Zeiss "
         "fundus cameras; performance with other camera types is not established"
     )
-    
+
     builder.add_limitation(
         "System was not validated in patients under age 18; performance in pediatric "
         "populations is unknown"
     )
-    
+
     builder.add_limitation(
         "Validation study excluded patients with media opacity preventing adequate fundus "
         "visualization; system should not be used when image quality is insufficient"
     )
-    
+
     builder.add_limitation(
         "System is not intended to replace comprehensive eye examination and should be "
         "used as part of diabetes care consistent with clinical practice guidelines"
     )
-    
+
     # Equity assessment
     builder.set_equity_assessment(
         "DEMOGRAPHIC REPRESENTATION IN DEVELOPMENT AND VALIDATION\n\n"
@@ -1272,7 +1265,7 @@ def create_example_submission() -> PremarketSubmission:
         "acceptable thresholds. Systematic post-market monitoring will ensure equitable "
         "performance is maintained during real-world deployment."
     )
-    
+
     # Post-market surveillance plan
     builder.set_post_market_surveillance_plan(
         "POST-MARKET SURVEILLANCE OBJECTIVES\n\n"
@@ -1395,18 +1388,17 @@ def create_example_submission() -> PremarketSubmission:
         "contexts to enhance system robustness. Regular review meetings evaluate surveillance "
         "effectiveness and identify opportunities to strengthen equity monitoring."
     )
-    
-    return builder.build()
 
+    return builder.build()
 
 # Example usage
 if __name__ == "__main__":
     # Create example submission
     submission = create_example_submission()
-    
+
     # Validate submission
     is_valid, issues = submission.validate_submission()
-    
+
     print("Submission Validation:")
     print(f"Valid: {is_valid}")
     if issues:
@@ -1415,7 +1407,7 @@ if __name__ == "__main__":
             print(f"  - {issue}")
     else:
         print("No validation issues found.")
-    
+
     # Generate documentation
     output_path = Path("regulatory_submission.txt")
     submission.generate_document(output_path)
@@ -1473,14 +1465,13 @@ import json
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class PatientDemographics:
     """
     Structured demographics extracted from FHIR Patient resource.
-    
+
     Tracks whether each field was available to enable missing data analysis.
-    
+
     Attributes:
         patient_id: FHIR patient ID
         age: Patient age in years
@@ -1509,11 +1500,11 @@ class PatientDemographics:
     has_preferred_language: bool = False
     has_zip_code: bool = False
     has_insurance_type: bool = False
-    
+
     def completeness_score(self) -> float:
         """
         Calculate demographic data completeness for this patient.
-        
+
         Returns:
             Proportion of demographic fields that are documented (0-1)
         """
@@ -1526,12 +1517,11 @@ class PatientDemographics:
         ]
         return sum(fields_checked) / len(fields_checked)
 
-
 @dataclass
 class PredictionRequest:
     """
     Request for AI prediction including patient data and context.
-    
+
     Attributes:
         patient_id: FHIR patient ID
         demographics: Patient demographics
@@ -1547,12 +1537,11 @@ class PredictionRequest:
     prediction_timestamp: datetime
     requesting_user: Optional[str] = None
 
-
 @dataclass
 class PredictionResponse:
     """
     AI prediction with comprehensive documentation for equity monitoring.
-    
+
     Attributes:
         patient_id: FHIR patient ID
         prediction: Primary prediction output
@@ -1576,12 +1565,11 @@ class PredictionResponse:
     monitoring_flags: List[str] = field(default_factory=list)
     explanation: str = ""
 
-
 @dataclass
 class PerformanceMetrics:
     """
     Performance metrics for monitoring deployed AI system.
-    
+
     Attributes:
         period_start: Start of monitoring period
         period_end: End of monitoring period
@@ -1601,20 +1589,19 @@ class PerformanceMetrics:
     missing_demographics_rate: Dict[str, float] = field(default_factory=dict)
     demographic_completeness: float = 0.0
 
-
 class FHIRPatientExtractor:
     """
     Extract patient demographics from FHIR resources with equity focus.
-    
+
     This class handles retrieving patient data via FHIR API and extracting
     demographic information while carefully tracking data completeness to
     enable equity monitoring despite missing demographics.
     """
-    
+
     def __init__(self, fhir_base_url: str, client_id: Optional[str] = None):
         """
         Initialize FHIR client for patient data extraction.
-        
+
         Args:
             fhir_base_url: Base URL for FHIR server
             client_id: Client ID for authentication if required
@@ -1625,39 +1612,39 @@ class FHIRPatientExtractor:
         }
         self.client = client.FHIRClient(settings=settings)
         logger.info(f"Initialized FHIR client for {fhir_base_url}")
-    
+
     def extract_demographics(self, patient_id: str) -> PatientDemographics:
         """
         Extract demographic information from FHIR Patient resource.
-        
+
         This implementation follows US Core FHIR profiles for demographics
         and carefully tracks which fields are actually present vs. missing.
-        
+
         Args:
             patient_id: FHIR patient ID
-            
+
         Returns:
             PatientDemographics with completeness tracking
         """
         try:
             # Retrieve patient resource
             patient_resource = patient.Patient.read(patient_id, self.client.server)
-            
+
             demographics = PatientDemographics(patient_id=patient_id)
-            
+
             # Extract birth date and calculate age
             if patient_resource.birthDate:
                 birth_date = patient_resource.birthDate.date
                 today = datetime.today().date()
                 demographics.age = (
-                    today.year - birth_date.year - 
+                    today.year - birth_date.year -
                     ((today.month, today.day) < (birth_date.month, birth_date.day))
                 )
-            
+
             # Extract administrative sex
             if patient_resource.gender:
                 demographics.sex = patient_resource.gender
-            
+
             # Extract race from US Core extensions
             if patient_resource.extension:
                 for ext in patient_resource.extension:
@@ -1677,7 +1664,7 @@ class FHIRPatientExtractor:
                                         demographics.ethnicity = sub_ext.valueCoding.display
                                         demographics.has_ethnicity = True
                                         break
-            
+
             # Extract preferred language
             if patient_resource.communication:
                 for comm in patient_resource.communication:
@@ -1686,7 +1673,7 @@ class FHIRPatientExtractor:
                             demographics.preferred_language = comm.language.coding[0].code
                             demographics.has_preferred_language = True
                             break
-            
+
             # Extract address information
             if patient_resource.address:
                 for addr in patient_resource.address:
@@ -1694,33 +1681,33 @@ class FHIRPatientExtractor:
                         demographics.zip_code = addr.postalCode
                         demographics.has_zip_code = True
                         break
-            
+
             # Note: Insurance information typically requires separate Coverage resource query
             # Implementation would query for Coverage resources where beneficiary = patient_id
-            
+
             completeness = demographics.completeness_score()
             logger.info(
                 f"Extracted demographics for patient {patient_id}: "
                 f"completeness={completeness:.2f}"
             )
-            
+
             return demographics
-            
+
         except Exception as e:
             logger.error(f"Error extracting demographics for patient {patient_id}: {str(e)}")
             # Return demographics object with patient_id but no data
             return PatientDemographics(patient_id=patient_id)
-    
+
     def check_demographic_completeness(
         self,
         patient_ids: List[str]
     ) -> Dict[str, float]:
         """
         Analyze demographic data completeness across cohort.
-        
+
         Args:
             patient_ids: List of patient IDs to analyze
-            
+
         Returns:
             Dictionary of completeness rates by demographic field
         """
@@ -1731,38 +1718,37 @@ class FHIRPatientExtractor:
             'zip_code': 0.0,
             'insurance_type': 0.0
         }
-        
+
         n_patients = len(patient_ids)
-        
+
         for patient_id in patient_ids:
             demographics = self.extract_demographics(patient_id)
-            
+
             completeness['race'] += float(demographics.has_race)
             completeness['ethnicity'] += float(demographics.has_ethnicity)
             completeness['preferred_language'] += float(demographics.has_preferred_language)
             completeness['zip_code'] += float(demographics.has_zip_code)
             completeness['insurance_type'] += float(demographics.has_insurance_type)
-        
+
         # Convert counts to rates
         for key in completeness:
             completeness[key] /= n_patients
-        
+
         logger.info(f"Demographic completeness analysis across {n_patients} patients:")
         for field, rate in completeness.items():
             logger.info(f"  {field}: {rate:.1%}")
-        
-        return completeness
 
+        return completeness
 
 class EquityAwareDeploymentMonitor:
     """
     Monitoring system for deployed AI with comprehensive equity tracking.
-    
+
     This class implements continuous monitoring of deployed AI systems with
     stratified performance analysis, missing demographic handling, and
     automated alerting for equity concerns.
     """
-    
+
     def __init__(
         self,
         model_name: str,
@@ -1771,7 +1757,7 @@ class EquityAwareDeploymentMonitor:
     ):
         """
         Initialize deployment monitoring system.
-        
+
         Args:
             model_name: Name of deployed model
             model_version: Version identifier
@@ -1779,7 +1765,7 @@ class EquityAwareDeploymentMonitor:
         """
         self.model_name = model_name
         self.model_version = model_version
-        
+
         # Default alert thresholds
         self.alert_thresholds = alert_thresholds or {
             'min_sensitivity': 0.85,
@@ -1788,13 +1774,13 @@ class EquityAwareDeploymentMonitor:
             'min_calibration': 0.95,
             'max_calibration': 1.05
         }
-        
+
         # Storage for predictions and outcomes
         self.predictions_log: List[Dict[str, Any]] = []
         self.outcomes_log: List[Dict[str, Any]] = []
-        
+
         logger.info(f"Initialized monitoring for {model_name} v{model_version}")
-    
+
     def log_prediction(
         self,
         prediction_request: PredictionRequest,
@@ -1802,7 +1788,7 @@ class EquityAwareDeploymentMonitor:
     ) -> None:
         """
         Log prediction for monitoring and audit trail.
-        
+
         Args:
             prediction_request: Original prediction request
             prediction_response: Model's prediction response
@@ -1824,10 +1810,10 @@ class EquityAwareDeploymentMonitor:
                 'has_ethnicity': prediction_request.demographics.has_ethnicity
             }
         }
-        
+
         self.predictions_log.append(log_entry)
         logger.debug(f"Logged prediction for patient {prediction_request.patient_id}")
-    
+
     def log_outcome(
         self,
         patient_id: str,
@@ -1836,7 +1822,7 @@ class EquityAwareDeploymentMonitor:
     ) -> None:
         """
         Log ground truth outcome for performance monitoring.
-        
+
         Args:
             patient_id: Patient ID
             outcome: Ground truth outcome
@@ -1847,10 +1833,10 @@ class EquityAwareDeploymentMonitor:
             'outcome': outcome,
             'outcome_timestamp': outcome_timestamp.isoformat()
         }
-        
+
         self.outcomes_log.append(outcome_entry)
         logger.debug(f"Logged outcome for patient {patient_id}")
-    
+
     def compute_performance(
         self,
         period_start: datetime,
@@ -1858,71 +1844,71 @@ class EquityAwareDeploymentMonitor:
     ) -> PerformanceMetrics:
         """
         Compute performance metrics for specified time period.
-        
+
         Args:
             period_start: Start of monitoring period
             period_end: End of monitoring period
-            
+
         Returns:
             PerformanceMetrics with stratified analysis
         """
         # Filter predictions and outcomes to period
         predictions_df = pd.DataFrame(self.predictions_log)
         outcomes_df = pd.DataFrame(self.outcomes_log)
-        
+
         predictions_df['timestamp'] = pd.to_datetime(predictions_df['timestamp'])
         outcomes_df['outcome_timestamp'] = pd.to_datetime(outcomes_df['outcome_timestamp'])
-        
+
         period_predictions = predictions_df[
             (predictions_df['timestamp'] >= period_start) &
             (predictions_df['timestamp'] <= period_end)
         ]
-        
+
         # Join with outcomes
         merged = period_predictions.merge(
             outcomes_df[['patient_id', 'outcome']],
             on='patient_id',
             how='left'
         )
-        
+
         n_predictions = len(merged)
         n_with_outcomes = merged['outcome'].notna().sum()
-        
+
         # Compute overall metrics
         complete_cases = merged[merged['outcome'].notna()].copy()
-        
+
         if len(complete_cases) > 0:
             y_true = complete_cases['outcome'].values
             y_pred = complete_cases['prediction'].values
             y_prob = complete_cases['probability'].values
-            
+
             from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
-            
+
             overall_metrics = {
                 'accuracy': accuracy_score(y_true, y_pred),
                 'auc_roc': roc_auc_score(y_true, y_prob) if y_prob.mean() > 0 else None
             }
-            
+
             # Compute sensitivity and specificity
             tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
             overall_metrics['sensitivity'] = tp / (tp + fn) if (tp + fn) > 0 else None
             overall_metrics['specificity'] = tn / (tn + fp) if (tn + fp) > 0 else None
         else:
             overall_metrics = {}
-        
+
         # Compute subgroup metrics where demographics are available
         subgroup_metrics = {}
-        
+
         for demo_field in ['race', 'ethnicity', 'sex']:
             subgroup_metrics[demo_field] = {}
-            
+
             # Only analyze where demographic is documented
             has_demo = complete_cases[
                 complete_cases['demographics'].apply(
                     lambda x: x.get(f'has_{demo_field}', False)
                 )
             ]
-            
+
             if len(has_demo) > 0:
                 for group_value in has_demo['demographics'].apply(
                     lambda x: x.get(demo_field)
@@ -1933,21 +1919,21 @@ class EquityAwareDeploymentMonitor:
                                 lambda x: x.get(demo_field) == group_value
                             )
                         ]
-                        
+
                         if len(group_data) >= 30:  # Minimum sample size
                             y_true_group = group_data['outcome'].values
                             y_pred_group = group_data['prediction'].values
-                            
+
                             tn, fp, fn, tp = confusion_matrix(
                                 y_true_group, y_pred_group
                             ).ravel()
-                            
+
                             subgroup_metrics[demo_field][group_value] = {
                                 'n': len(group_data),
                                 'sensitivity': tp / (tp + fn) if (tp + fn) > 0 else None,
                                 'specificity': tn / (tn + fp) if (tn + fp) > 0 else None
                             }
-        
+
         # Analyze missing demographics
         missing_demographics_rate = {
             'race': 1 - period_predictions['demographics'].apply(
@@ -1957,9 +1943,9 @@ class EquityAwareDeploymentMonitor:
                 lambda x: x.get('has_ethnicity', False)
             ).mean()
         }
-        
+
         avg_completeness = period_predictions['demographic_completeness'].mean()
-        
+
         metrics = PerformanceMetrics(
             period_start=period_start,
             period_end=period_end,
@@ -1970,26 +1956,26 @@ class EquityAwareDeploymentMonitor:
             missing_demographics_rate=missing_demographics_rate,
             demographic_completeness=avg_completeness
         )
-        
+
         logger.info(
             f"Computed performance metrics for period {period_start} to {period_end}: "
             f"{n_predictions} predictions, {n_with_outcomes} with outcomes"
         )
-        
+
         return metrics
-    
+
     def check_alerts(self, metrics: PerformanceMetrics) -> List[str]:
         """
         Check performance metrics against alert thresholds.
-        
+
         Args:
             metrics: Performance metrics to evaluate
-            
+
         Returns:
             List of alert messages for issues detected
         """
         alerts = []
-        
+
         # Check overall performance
         if 'sensitivity' in metrics.overall_metrics:
             sens = metrics.overall_metrics['sensitivity']
@@ -1998,7 +1984,7 @@ class EquityAwareDeploymentMonitor:
                     f"Overall sensitivity ({sens:.3f}) below threshold "
                     f"({self.alert_thresholds['min_sensitivity']:.3f})"
                 )
-        
+
         if 'specificity' in metrics.overall_metrics:
             spec = metrics.overall_metrics['specificity']
             if spec < self.alert_thresholds['min_specificity']:
@@ -2006,7 +1992,7 @@ class EquityAwareDeploymentMonitor:
                     f"Overall specificity ({spec:.3f}) below threshold "
                     f"({self.alert_thresholds['min_specificity']:.3f})"
                 )
-        
+
         # Check for performance disparities
         for demo_field, subgroups in metrics.subgroup_metrics.items():
             if len(subgroups) > 1:
@@ -2021,7 +2007,7 @@ class EquityAwareDeploymentMonitor:
                             f"Sensitivity disparity across {demo_field} ({disparity:.3f}) "
                             f"exceeds threshold ({self.alert_thresholds['max_disparity']:.3f})"
                         )
-        
+
         # Check missing demographics rates
         for demo_field, missing_rate in metrics.missing_demographics_rate.items():
             if missing_rate > 0.4:  # More than 40% missing
@@ -2029,12 +2015,12 @@ class EquityAwareDeploymentMonitor:
                     f"High missing rate for {demo_field} ({missing_rate:.1%}), "
                     f"limiting equity monitoring capability"
                 )
-        
+
         if alerts:
             logger.warning(f"Detected {len(alerts)} performance alerts")
             for alert in alerts:
                 logger.warning(f"  ALERT: {alert}")
-        
+
         return alerts
 ```
 

@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 25: Social Determinants of Health Integration"
 chapter_number: 25
+part_number: 6
+prev_chapter: /chapters/chapter-24-population-health-screening/
+next_chapter: /chapters/chapter-26-llms-in-healthcare/
 ---
-
 # Chapter 25: Social Determinants of Health Integration
 
 ## Learning Objectives
@@ -45,17 +47,25 @@ Mathematical representation of these frameworks requires specifying directed acy
 
 Let $Z$ represent structural determinants (policy environment, macroeconomic conditions), $S$ represent social position (income, education, occupation), $M$ represent intermediate mechanisms (stress, health behaviors, environmental exposures), and $Y$ represent health outcomes. The structural equations might be:
 
-$$S = f_S(Z, U_S)$$
+$$
+S = f_S(Z, U_S)
+$$
 
-$$M = f_M(Z, S, U_M)$$
+$$
+M = f_M(Z, S, U_M)
+$$
 
-$$Y = f_Y(Z, S, M, U_Y)$$
+$$
+Y = f_Y(Z, S, M, U_Y)
+$$
 
-where $$U_S$$, $$U_M$$, and $$U_Y$$ represent unmeasured factors affecting each variable. This model encodes that structural determinants directly affect social position, both structural determinants and social position affect intermediate mechanisms, and all three affect health outcomes through potentially nonlinear functions $f$.
+where $U_S$, $U_M$, and $U_Y$ represent unmeasured factors affecting each variable. This model encodes that structural determinants directly affect social position, both structural determinants and social position affect intermediate mechanisms, and all three affect health outcomes through potentially nonlinear functions $f$.
 
 The total effect of structural determinants on health decomposes into direct effects and indirect effects mediated through social position and intermediate mechanisms:
 
-$$\text{Total Effect} = \frac{\partial Y}{\partial Z} + \frac{\partial Y}{\partial S}\frac{\partial S}{\partial Z} + \frac{\partial Y}{\partial M}\left(\frac{\partial M}{\partial Z} + \frac{\partial M}{\partial S}\frac{\partial S}{\partial Z}\right)$$
+$$
+\text{Total Effect} = \frac{\partial Y}{\partial Z} + \frac{\partial Y}{\partial S}\frac{\partial S}{\partial Z} + \frac{\partial Y}{\partial M}\left(\frac{\partial M}{\partial Z} + \frac{\partial M}{\partial S}\frac{\partial S}{\partial Z}\right)
+$$
 
 Estimating these causal effects from observational data requires addressing confounding, measurement error, and selection bias—challenges we address through causal inference methods later in this chapter.
 
@@ -456,28 +466,34 @@ Several challenges complicate causal inference for social determinants:
 
 Mediation analysis decomposes total effects into direct effects and indirect effects operating through specific pathways (VanderWeele, 2015). For social determinants, mediation analysis can elucidate mechanisms through which structural factors affect health.
 
-Consider the causal diagram: Structural determinant $Z$ → Social position $S$ → Intermediate mechanism $M$ → Health outcome $Y$, with possible direct effects $$Z \rightarrow Y$$ and $$S \rightarrow Y$$ bypassing mediators.
+Consider the causal diagram: Structural determinant $Z$ → Social position $S$ → Intermediate mechanism $M$ → Health outcome $Y$, with possible direct effects $Z \rightarrow Y$ and $S \rightarrow Y$ bypassing mediators.
 
 The total effect of $Z$ on $Y$ decomposes as:
 
-$$TE = NDE + NIE$$
+$$
+TE = NDE + NIE
+$$
 
 where $NDE$ is the natural direct effect (effect not mediated by $S$ or $M$) and $NIE$ is the natural indirect effect (effect mediated through $S$ and $M$).
 
 Under sequential ignorability assumptions—no unmeasured confounding of treatment-outcome, treatment-mediator, and mediator-outcome relationships—these effects can be identified using regression-based approaches:
 
-$$NDE = E[Y(z=1, M(z=0))] - E[Y(z=0, M(z=0))]$$
+$$
+NDE = E[Y(z=1, M(z=0))] - E[Y(z=0, M(z=0))]
+$$
 
-$$NIE = E[Y(z=1, M(z=1))] - E[Y(z=1, M(z=0))]$$
+$$
+NIE = E[Y(z=1, M(z=1))] - E[Y(z=1, M(z=0))]
+$$
 
-where $$Y(z, M(z'))$$ denotes the potential outcome under treatment $z$ and mediator value it would take under treatment $z'$.
+where $Y(z, M(z'))$ denotes the potential outcome under treatment $z$ and mediator value it would take under treatment $z'$.
 
 Estimation typically proceeds through two regression models:
 
 1. **Outcome model**: Regress $Y$ on $Z$, $M$, and confounders
 2. **Mediator model**: Regress $M$ on $Z$ and confounders
 
-Combining these models and integrating over the mediator distribution yields effect estimates. The proportion mediated is $$PM = NIE / TE$$.
+Combining these models and integrating over the mediator distribution yields effect estimates. The proportion mediated is $PM = NIE / TE$.
 
 For example, to understand how neighborhood poverty affects cardiovascular disease risk through food environment, one would estimate:
 
@@ -494,14 +510,20 @@ Structural equation modeling (SEM) provides a comprehensive framework for testin
 A structural equation model consists of two components:
 
 **Measurement model**: Relates observed variables to latent constructs
-$$X = \Lambda_X \xi + \delta$$
 
-where $X$ is a vector of observed indicators, $$\xi$$ is a vector of latent exogenous variables, $$\Lambda_X$$ is a matrix of factor loadings, and $$\delta$$ is measurement error.
+$$
+X = \Lambda_X \xi + \delta
+$$
+
+where $X$ is a vector of observed indicators, $\xi$ is a vector of latent exogenous variables, $\Lambda_X$ is a matrix of factor loadings, and $\delta$ is measurement error.
 
 **Structural model**: Specifies causal relationships among latent variables
-$$\eta = B\eta + \Gamma\xi + \zeta$$
 
-where $$\eta$$ is a vector of latent endogenous variables, $B$ captures effects among endogenous variables, $$\Gamma$$ captures effects of exogenous on endogenous variables, and $$\zeta$$ is structural error.
+$$
+\eta = B\eta + \Gamma\xi + \zeta
+$$
+
+where $\eta$ is a vector of latent endogenous variables, $B$ captures effects among endogenous variables, $\Gamma$ captures effects of exogenous on endogenous variables, and $\zeta$ is structural error.
 
 For social determinants, latent variables might include constructs like "neighborhood disadvantage" (measured by census indicators), "chronic stress" (measured by cortisol, blood pressure, self-reports), and "health resilience" (measured by recovery time, adaptation capacity). Structural paths would specify how neighborhood disadvantage affects chronic stress, which in turn affects health outcomes, with possible moderating effects of resilience.
 
@@ -531,12 +553,18 @@ For social determinants, natural experiments and policy changes provide potentia
 The two-stage least squares (2SLS) estimator proceeds:
 
 **First stage**: Regress treatment on instrument and covariates
-$$D_i = \alpha_0 + \alpha_1 Z_i + \alpha_2' X_i + \epsilon_i$$
+
+$$
+D_i = \alpha_0 + \alpha_1 Z_i + \alpha_2' X_i + \epsilon_i
+$$
 
 **Second stage**: Regress outcome on predicted treatment and covariates
-$$Y_i = \beta_0 + \beta_1 \hat{D}_i + \beta_2' X_i + u_i$$
 
-The 2SLS estimate of $$\beta_1$$ is consistent for the local average treatment effect (LATE)—the causal effect for compliers whose treatment status is affected by the instrument.
+$$
+Y_i = \beta_0 + \beta_1 \hat{D}_i + \beta_2' X_i + u_i
+$$
+
+The 2SLS estimate of $\beta_1$ is consistent for the local average treatment effect (LATE)—the causal effect for compliers whose treatment status is affected by the instrument.
 
 Weak instruments (small first-stage F-statistic) lead to biased and inconsistent estimates. F-statistics above 10 are considered adequate, though higher thresholds (F > 100) are recommended for robust inference (Stock et al., 2002).
 
@@ -552,15 +580,19 @@ For social determinants, examples include:
 
 The RD estimate compares outcomes just above versus just below the threshold:
 
-$$\tau_{RD} = \lim_{x \downarrow c} E[Y|X=x] - \lim_{x \uparrow c} E[Y|X=x]$$
+$$
+\tau_{RD} = \lim_{x \downarrow c} E[Y|X=x] - \lim_{x \uparrow c} E[Y|X=x]
+$$
 
 where $c$ is the cutoff value of running variable $X$.
 
 Estimation typically uses local linear regression within a bandwidth around the cutoff:
 
-$$Y_i = \alpha + \tau D_i + \beta(X_i - c) + \gamma D_i(X_i - c) + \epsilon_i$$
+$$
+Y_i = \alpha + \tau D_i + \beta(X_i - c) + \gamma D_i(X_i - c) + \epsilon_i
+$$
 
-where $$D_i$$ indicates above-threshold status. The estimate $$\hat{\tau}$$ identifies the causal effect at the threshold under continuity assumptions.
+where $D_i$ indicates above-threshold status. The estimate $\hat{\tau}$ identifies the causal effect at the threshold under continuity assumptions.
 
 Validity requires that other factors do not change discontinuously at the threshold and that individuals cannot precisely manipulate their position relative to the threshold. Falsification tests examine whether baseline covariates show discontinuities (they should not) and density tests check for bunching at the threshold.
 
@@ -570,9 +602,11 @@ Difference-in-differences (DiD) designs compare changes over time in treated ver
 
 For policy evaluations affecting social determinants:
 
-$$Y_{it} = \alpha + \beta \text{Treat}_i + \gamma \text{Post}_t + \delta(\text{Treat}_i \times \text{Post}_t) + \epsilon_{it}$$
+$$
+Y_{it} = \alpha + \beta \text{Treat}_i + \gamma \text{Post}_t + \delta(\text{Treat}_i \times \text{Post}_t) + \epsilon_{it}
+$$
 
-where $$\text{Treat}_i$$ indicates treatment group, $$\text{Post}_t$$ indicates post-policy period, and $$\delta$$ is the DiD estimate.
+where $\text{Treat}_i$ indicates treatment group, $\text{Post}_t$ indicates post-policy period, and $\delta$ is the DiD estimate.
 
 The key assumption is parallel trends—treated and control groups would have followed parallel trajectories absent treatment. This is untestable but can be evaluated by:
 
@@ -638,7 +672,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class SDOHDomain(Enum):
     """Enumeration of SDOH domains."""
     ECONOMIC_STABILITY = "economic_stability"
@@ -650,7 +683,6 @@ class SDOHDomain(Enum):
     HOUSING = "housing"
     ENVIRONMENT = "environment"
     SAFETY = "safety"
-
 
 @dataclass
 class Patient:
@@ -679,7 +711,6 @@ class Patient:
             raise ValueError("Patient ID is required")
         if not isinstance(self.date_of_birth, datetime):
             raise ValueError("Date of birth must be datetime object")
-
 
 class PrivacyPreservingRecordLinkage:
     """
@@ -719,7 +750,7 @@ class PrivacyPreservingRecordLinkage:
 
         # Concatenate and normalize identifiers
         id_string = "_".join([
-            str(v).lower().strip() 
+            str(v).lower().strip()
             for v in identifiers.values() if v
         ])
 
@@ -742,11 +773,11 @@ class PrivacyPreservingRecordLinkage:
         if len(text) < self.ngram_length:
             return [text]
         return [
-            text[i:i+self.ngram_length] 
+            text[i:i+self.ngram_length]
             for i in range(len(text) - self.ngram_length + 1)
         ]
 
-    def compute_similarity(self, bloom1: np.ndarray, 
+    def compute_similarity(self, bloom1: np.ndarray,
                           bloom2: np.ndarray) -> float:
         """
         Compute Dice coefficient similarity between Bloom filters.
@@ -818,7 +849,6 @@ class PrivacyPreservingRecordLinkage:
         logger.info(f"Found {len(matches_df)} potential matches above threshold")
 
         return matches_df
-
 
 class ExternalDataIntegration:
     """
@@ -992,7 +1022,6 @@ class ExternalDataIntegration:
 
         return exposures_df
 
-
 class SDOHScreening:
     """
     Implements validated SDOH screening instruments and manages
@@ -1018,8 +1047,8 @@ class SDOHScreening:
                     'text': 'What is your total household income in the last year?',
                     'type': 'categorical',
                     'options': [
-                        '<$$10,000', '$$10,000-$$20,000', '$$20,000-$30,000',
-                        '$$30,000-$$50,000', '$$50,000-$$75,000', '>$75,000',
+                        '<$10,000', '$10,000-$20,000', '$20,000-$30,000',
+                        '$30,000-$50,000', '$50,000-$75,000', '>$75,000',
                         'Prefer not to answer'
                     ],
                     'domain': SDOHDomain.ECONOMIC_STABILITY
@@ -1210,7 +1239,6 @@ class SDOHScreening:
         logger.info("Completed imputation")
         return screening_data
 
-
 class CompositeVulnerabilityIndex:
     """
     Constructs composite measures of social vulnerability from
@@ -1331,7 +1359,6 @@ class CompositeVulnerabilityIndex:
         }).sort_values('loading', key=abs, ascending=False)
 
         return loadings_df
-
 
 class CausalInferenceSDOH:
     """
@@ -1604,7 +1631,6 @@ class CausalInferenceSDOH:
 
         return results
 
-
 class SDOHRiskStratification:
     """
     Implements risk stratification and intervention targeting
@@ -1836,7 +1862,6 @@ class SDOHRiskStratification:
 
         return interventions
 
-
 def example_workflow() -> None:
     """
     Demonstrate complete SDOH integration workflow from data linkage
@@ -1894,7 +1919,7 @@ def example_workflow() -> None:
     retailers = pd.DataFrame({
         'name': [f"Store{i}" for i in range(50)],
         'type': np.random.choice(['supermarket', 'convenience'], 50),
-        'geometry': [Point(-122.4 + np.random.randn()*0.05, 
+        'geometry': [Point(-122.4 + np.random.randn()*0.05,
                           37.7 + np.random.randn()*0.05) for _ in range(50)]
     })
     retailers_gdf = gpd.GeoDataFrame(retailers, crs='EPSG:4326')
@@ -1908,7 +1933,7 @@ def example_workflow() -> None:
         'monitor_id': range(20),
         'pm25': np.random.uniform(5, 20, 20),
         'ozone': np.random.uniform(0.03, 0.08, 20),
-        'geometry': [Point(-122.4 + np.random.randn()*0.1, 
+        'geometry': [Point(-122.4 + np.random.randn()*0.1,
                           37.7 + np.random.randn()*0.1) for _ in range(20)]
     })
     pollution_gdf = gpd.GeoDataFrame(pollution_data, crs='EPSG:4326')
@@ -1928,8 +1953,8 @@ def example_workflow() -> None:
     for patient in patients[:100]:  # Screen subset
         # Generate mock responses
         responses = {
-            'income': np.random.choice(['<$$10,000', '$$10,000-$$20,000', '$$20,000-$30,000',
-                                       '$$30,000-$$50,000', '$$50,000-$$75,000', '>$75,000']),
+            'income': np.random.choice(['<$10,000', '$10,000-$20,000', '$20,000-$30,000',
+                                       '$30,000-$50,000', '$50,000-$75,000', '>$75,000']),
             'employment': np.random.choice(['Employed full-time', 'Employed part-time',
                                            'Unemployed seeking work', 'Retired']),
             'education': np.random.choice(['Less than high school', 'High school or GED',
@@ -2061,7 +2086,6 @@ def example_workflow() -> None:
     logger.info("\n" + "=" * 80)
     logger.info("WORKFLOW COMPLETE")
     logger.info("=" * 80)
-
 
 if __name__ == "__main__":
     example_workflow()

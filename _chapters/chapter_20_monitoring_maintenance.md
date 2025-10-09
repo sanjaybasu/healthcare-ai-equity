@@ -2,9 +2,10 @@
 layout: chapter
 title: "Chapter 20: Post-Deployment Monitoring and Maintenance"
 chapter_number: 20
+part_number: 5
+prev_chapter: /chapters/chapter-19-human-ai-collaboration/
+next_chapter: /chapters/chapter-21-health-equity-metrics/
 ---
-
-
 # Chapter 20: Ethical Frameworks for Healthcare AI Development
 
 ## Learning Objectives
@@ -235,7 +236,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class StakeholderCategory(Enum):
     """Categories of stakeholders who may be affected by healthcare AI systems."""
     PATIENTS_TARGET = "patients_targeted_by_intervention"
@@ -246,7 +246,6 @@ class StakeholderCategory(Enum):
     COMMUNITY = "broader_community"
     RESEARCHERS = "researchers_developers"
 
-
 class BenefitCategory(Enum):
     """Categories of potential benefits from healthcare AI."""
     HEALTH_OUTCOMES = "improved_health_outcomes"
@@ -256,7 +255,6 @@ class BenefitCategory(Enum):
     PATIENT_ENGAGEMENT = "enhanced_patient_engagement"
     EQUITY_IMPROVEMENT = "reduced_health_disparities"
     KNOWLEDGE_GENERATION = "scientific_knowledge"
-
 
 class RiskCategory(Enum):
     """Categories of potential risks and harms from healthcare AI."""
@@ -269,12 +267,11 @@ class RiskCategory(Enum):
     TRUST_EROSION = "reduced_trust_in_healthcare"
     MISUSE_HARM = "inappropriate_use_beyond_intended_scope"
 
-
 @dataclass
 class StakeholderGroup:
     """
     Representation of a stakeholder group with relevant characteristics.
-    
+
     Attributes:
         category: High-level stakeholder category
         name: Specific name for this stakeholder group
@@ -291,7 +288,7 @@ class StakeholderGroup:
     size: Optional[int] = None
     power_position: str = "neutral"  # "high", "medium", "low"
     vulnerability_factors: List[str] = field(default_factory=list)
-    
+
     def __post_init__(self):
         """Validate stakeholder group specification."""
         if self.power_position not in ["high", "medium", "low", "neutral"]:
@@ -300,12 +297,11 @@ class StakeholderGroup:
                 f"got {self.power_position}"
             )
 
-
 @dataclass
 class Benefit:
     """
     Representation of a potential benefit from the AI system.
-    
+
     Attributes:
         category: Type of benefit
         description: Detailed description of the benefit
@@ -324,23 +320,22 @@ class Benefit:
     evidence_quality: str = "unknown"  # "high", "medium", "low", "unknown"
     time_horizon: str = "medium_term"  # "immediate", "short_term", "medium_term", "long_term"
     distributional_notes: str = ""
-    
+
     def __post_init__(self):
         """Validate benefit specification."""
         valid_evidence = ["high", "medium", "low", "unknown"]
         if self.evidence_quality not in valid_evidence:
             raise ValueError(f"Evidence quality must be one of {valid_evidence}")
-        
+
         valid_horizons = ["immediate", "short_term", "medium_term", "long_term"]
         if self.time_horizon not in valid_horizons:
             raise ValueError(f"Time horizon must be one of {valid_horizons}")
-
 
 @dataclass
 class Risk:
     """
     Representation of a potential risk or harm from the AI system.
-    
+
     Attributes:
         category: Type of risk
         description: Detailed description of the risk
@@ -361,23 +356,22 @@ class Risk:
     evidence_quality: str = "unknown"
     reversibility: str = "unknown"  # "fully_reversible", "partially_reversible", "irreversible", "unknown"
     distributional_notes: str = ""
-    
+
     def __post_init__(self):
         """Validate risk specification."""
         if self.probability is not None:
             if not 0 <= self.probability <= 1:
                 raise ValueError("Probability must be between 0 and 1")
-        
+
         valid_reversibility = ["fully_reversible", "partially_reversible", "irreversible", "unknown"]
         if self.reversibility not in valid_reversibility:
             raise ValueError(f"Reversibility must be one of {valid_reversibility}")
-
 
 @dataclass
 class DistributionalAnalysisResult:
     """
     Results of distributional analysis for a benefit or risk.
-    
+
     Tracks how benefits/risks differ across demographic groups and other
     stratification variables of interest for equity assessment.
     """
@@ -390,17 +384,16 @@ class DistributionalAnalysisResult:
     clinical_significance_assessment: str = ""
     equity_implications: str = ""
 
-
 class BenefitRiskAnalyzer:
     """
-    Framework for conducting comprehensive benefit-risk analysis with 
+    Framework for conducting comprehensive benefit-risk analysis with
     distributional considerations for healthcare AI systems.
-    
+
     This class provides methods for identifying stakeholders, enumerating
     benefits and risks, quantifying and comparing across populations, and
     synthesizing findings with explicit attention to ethical trade-offs.
     """
-    
+
     def __init__(
         self,
         system_name: str,
@@ -409,7 +402,7 @@ class BenefitRiskAnalyzer:
     ):
         """
         Initialize benefit-risk analyzer.
-        
+
         Args:
             system_name: Name of the AI system being analyzed
             system_description: Detailed description of system capabilities
@@ -418,38 +411,38 @@ class BenefitRiskAnalyzer:
         self.system_name = system_name
         self.system_description = system_description
         self.deployment_context = deployment_context
-        
+
         self.stakeholders: List[StakeholderGroup] = []
         self.benefits: List[Benefit] = []
         self.risks: List[Risk] = []
         self.distributional_analyses: List[DistributionalAnalysisResult] = []
-        
+
         self.analysis_metadata = {
             'analyzers': [],
             'analysis_date': pd.Timestamp.now().isoformat(),
             'analysis_version': '1.0'
         }
-        
+
         logger.info(f"Initialized benefit-risk analyzer for {system_name}")
-    
+
     def add_stakeholder(self, stakeholder: StakeholderGroup) -> None:
         """
         Add a stakeholder group to the analysis.
-        
+
         Args:
             stakeholder: StakeholderGroup specification
         """
         # Check for duplicate stakeholder names
         if any(s.name == stakeholder.name for s in self.stakeholders):
             raise ValueError(f"Stakeholder named '{stakeholder.name}' already exists")
-        
+
         self.stakeholders.append(stakeholder)
         logger.info(f"Added stakeholder group: {stakeholder.name}")
-    
+
     def add_benefit(self, benefit: Benefit) -> None:
         """
         Add a potential benefit to the analysis.
-        
+
         Args:
             benefit: Benefit specification
         """
@@ -460,14 +453,14 @@ class BenefitRiskAnalyzer:
             raise ValueError(
                 f"Benefit references nonexistent stakeholders: {invalid}"
             )
-        
+
         self.benefits.append(benefit)
         logger.info(f"Added benefit: {benefit.category.value}")
-    
+
     def add_risk(self, risk: Risk) -> None:
         """
         Add a potential risk to the analysis.
-        
+
         Args:
             risk: Risk specification
         """
@@ -478,10 +471,10 @@ class BenefitRiskAnalyzer:
             raise ValueError(
                 f"Risk references nonexistent stakeholders: {invalid}"
             )
-        
+
         self.risks.append(risk)
         logger.info(f"Added risk: {risk.category.value}")
-    
+
     def analyze_distribution_of_benefit(
         self,
         benefit_metric: pd.Series,
@@ -491,61 +484,61 @@ class BenefitRiskAnalyzer:
     ) -> DistributionalAnalysisResult:
         """
         Analyze how a quantified benefit is distributed across strata.
-        
+
         Args:
             benefit_metric: Numeric benefit measurements for individuals
             stratification_variable: Group membership for stratification
             benefit_name: Descriptive name for this benefit
             higher_is_better: Whether larger values indicate greater benefit
-            
+
         Returns:
             DistributionalAnalysisResult with stratified estimates and disparity metrics
         """
         if len(benefit_metric) != len(stratification_variable):
             raise ValueError("Benefit metric and stratification variable must have same length")
-        
+
         df = pd.DataFrame({
             'benefit': benefit_metric,
             'stratum': stratification_variable
         }).dropna()
-        
+
         # Calculate stratum-specific estimates
         stratum_estimates = {}
         stratum_uncertainties = {}
-        
+
         for stratum in df['stratum'].unique():
             stratum_data = df[df['stratum'] == stratum]['benefit']
             mean = stratum_data.mean()
             se = stratum_data.sem()
             ci_lower = mean - 1.96 * se
             ci_upper = mean + 1.96 * se
-            
+
             stratum_estimates[str(stratum)] = mean
             stratum_uncertainties[str(stratum)] = (ci_lower, ci_upper)
-        
+
         # Calculate disparity metrics
         disparity_metrics = {}
-        
+
         # Range: difference between highest and lowest stratum means
         disparity_metrics['range'] = max(stratum_estimates.values()) - min(stratum_estimates.values())
-        
+
         # Coefficient of variation: standard deviation of stratum means divided by overall mean
         stratum_means = list(stratum_estimates.values())
         disparity_metrics['coefficient_of_variation'] = np.std(stratum_means) / np.mean(stratum_means)
-        
+
         # Ratio: highest to lowest stratum mean
         disparity_metrics['max_to_min_ratio'] = max(stratum_estimates.values()) / min(stratum_estimates.values())
-        
+
         # Statistical significance of differences using ANOVA
         groups = [df[df['stratum'] == s]['benefit'].values for s in df['stratum'].unique()]
         f_stat, p_value = stats.f_oneway(*groups)
-        
+
         statistical_significance = {
             'f_statistic': f_stat,
             'p_value': p_value,
             'significant_at_0.05': p_value < 0.05
         }
-        
+
         # Assess clinical significance
         relative_disparity = disparity_metrics['range'] / np.mean(stratum_means)
         if relative_disparity < 0.1:
@@ -554,12 +547,12 @@ class BenefitRiskAnalyzer:
             clinical_sig = "Moderate disparity (10-25% of mean), merits clinical attention"
         else:
             clinical_sig = "Large disparity (> 25% of mean), likely clinically significant"
-        
+
         # Assess equity implications
         sorted_strata = sorted(stratum_estimates.items(), key=lambda x: x[1], reverse=higher_is_better)
         worst_performing = sorted_strata[-1][0]
         best_performing = sorted_strata[0][0]
-        
+
         equity_implications = (
             f"The benefit '{benefit_name}' is distributed unequally across strata. "
             f"Group '{best_performing}' receives the highest benefit while group '{worst_performing}' "
@@ -567,7 +560,7 @@ class BenefitRiskAnalyzer:
             f"Statistical testing {'confirms' if p_value < 0.05 else 'does not confirm'} that differences are "
             f"unlikely to be due to chance alone."
         )
-        
+
         result = DistributionalAnalysisResult(
             benefit_or_risk=benefit_name,
             stratification_variable=stratification_variable.name,
@@ -578,12 +571,12 @@ class BenefitRiskAnalyzer:
             clinical_significance_assessment=clinical_sig,
             equity_implications=equity_implications
         )
-        
+
         self.distributional_analyses.append(result)
         logger.info(f"Completed distributional analysis for {benefit_name}")
-        
+
         return result
-    
+
     def analyze_distribution_of_risk(
         self,
         risk_metric: pd.Series,
@@ -593,17 +586,17 @@ class BenefitRiskAnalyzer:
     ) -> DistributionalAnalysisResult:
         """
         Analyze how a quantified risk is distributed across strata.
-        
+
         Uses same methodology as benefit analysis but with interpretation
         adjusted for risk context where higher values typically indicate
         greater harm.
-        
+
         Args:
             risk_metric: Numeric risk measurements for individuals
             stratification_variable: Group membership for stratification
             risk_name: Descriptive name for this risk
             higher_is_worse: Whether larger values indicate greater risk
-            
+
         Returns:
             DistributionalAnalysisResult with stratified estimates and disparity metrics
         """
@@ -614,7 +607,7 @@ class BenefitRiskAnalyzer:
             benefit_name=risk_name,
             higher_is_better=not higher_is_worse
         )
-    
+
     def visualize_distributional_analysis(
         self,
         result: DistributionalAnalysisResult,
@@ -622,19 +615,19 @@ class BenefitRiskAnalyzer:
     ) -> plt.Figure:
         """
         Create visualization of distributional analysis results.
-        
+
         Args:
             result: DistributionalAnalysisResult to visualize
             save_path: Optional path to save figure
-            
+
         Returns:
             Matplotlib figure object
         """
         fig, ax = plt.subplots(figsize=(10, 6))
-        
+
         strata = list(result.stratum_estimates.keys())
         estimates = [result.stratum_estimates[s] for s in strata]
-        
+
         # Extract confidence intervals if available
         if result.stratum_uncertainties:
             lower = [result.stratum_uncertainties[s][0] for s in strata]
@@ -642,41 +635,41 @@ class BenefitRiskAnalyzer:
             errors = np.array([estimates]) - np.array([lower]), np.array([upper]) - np.array([estimates])
         else:
             errors = None
-        
+
         # Create bar plot with error bars
         x_pos = np.arange(len(strata))
         bars = ax.bar(x_pos, estimates, yerr=errors, capsize=5, alpha=0.7, color='steelblue')
-        
+
         # Highlight strata with highest and lowest values
         max_idx = estimates.index(max(estimates))
         min_idx = estimates.index(min(estimates))
         bars[max_idx].set_color('darkgreen')
         bars[min_idx].set_color('darkred')
-        
+
         ax.set_xlabel(result.stratification_variable, fontsize=12)
         ax.set_ylabel(f'{result.benefit_or_risk} (mean with 95% CI)', fontsize=12)
-        ax.set_title(f'Distribution of {result.benefit_or_risk} by {result.stratification_variable}', 
+        ax.set_title(f'Distribution of {result.benefit_or_risk} by {result.stratification_variable}',
                      fontsize=14, fontweight='bold')
         ax.set_xticks(x_pos)
         ax.set_xticklabels(strata, rotation=45, ha='right')
-        
+
         # Add reference line at overall mean
         overall_mean = np.mean(estimates)
         ax.axhline(y=overall_mean, color='gray', linestyle='--', alpha=0.5, label='Overall mean')
         ax.legend()
-        
+
         plt.tight_layout()
-        
+
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             logger.info(f"Saved distributional analysis figure to {save_path}")
-        
+
         return fig
-    
+
     def generate_summary_report(self) -> str:
         """
         Generate comprehensive summary report of benefit-risk analysis.
-        
+
         Returns:
             Formatted text report suitable for documentation or presentation
         """
@@ -685,19 +678,19 @@ class BenefitRiskAnalyzer:
         lines.append(f"BENEFIT-RISK ANALYSIS: {self.system_name}")
         lines.append("=" * 80)
         lines.append("")
-        
+
         lines.append("SYSTEM DESCRIPTION:")
         lines.append(self.system_description)
         lines.append("")
-        
+
         lines.append("DEPLOYMENT CONTEXT:")
         lines.append(self.deployment_context)
         lines.append("")
-        
+
         # Stakeholder summary
         lines.append("IDENTIFIED STAKEHOLDERS:")
         lines.append("")
-        
+
         for stakeholder in self.stakeholders:
             lines.append(f"  {stakeholder.name} ({stakeholder.category.value})")
             lines.append(f"    {stakeholder.description}")
@@ -707,11 +700,11 @@ class BenefitRiskAnalyzer:
             if stakeholder.size:
                 lines.append(f"    Approximate size: {stakeholder.size:,} individuals")
             lines.append("")
-        
+
         # Benefits summary
         lines.append("POTENTIAL BENEFITS:")
         lines.append("")
-        
+
         for benefit in self.benefits:
             lines.append(f"  {benefit.category.value}")
             lines.append(f"    {benefit.description}")
@@ -723,11 +716,11 @@ class BenefitRiskAnalyzer:
             if benefit.distributional_notes:
                 lines.append(f"    Distribution: {benefit.distributional_notes}")
             lines.append("")
-        
+
         # Risks summary
         lines.append("POTENTIAL RISKS:")
         lines.append("")
-        
+
         for risk in self.risks:
             lines.append(f"  {risk.category.value}")
             lines.append(f"    {risk.description}")
@@ -741,12 +734,12 @@ class BenefitRiskAnalyzer:
             if risk.distributional_notes:
                 lines.append(f"    Distribution: {risk.distributional_notes}")
             lines.append("")
-        
+
         # Distributional analyses summary
         if self.distributional_analyses:
             lines.append("DISTRIBUTIONAL ANALYSES:")
             lines.append("")
-            
+
             for analysis in self.distributional_analyses:
                 lines.append(f"  {analysis.benefit_or_risk} by {analysis.stratification_variable}")
                 lines.append(f"    {analysis.clinical_significance_assessment}")
@@ -760,7 +753,7 @@ class BenefitRiskAnalyzer:
                     else:
                         lines.append(f"      {stratum}: {estimate:.3f}")
                 lines.append("")
-        
+
         # Overall assessment
         lines.append("OVERALL ASSESSMENT:")
         lines.append("")
@@ -778,15 +771,15 @@ class BenefitRiskAnalyzer:
         lines.append("by technical analysis alone. This report provides the empirical foundation for")
         lines.append("informed ethical deliberation.")
         lines.append("")
-        
+
         lines.append("=" * 80)
-        
+
         return '\n'.join(lines)
-    
+
     def export_to_structured_format(self) -> Dict[str, Any]:
         """
         Export analysis results in structured format for further processing.
-        
+
         Returns:
             Dictionary containing all analysis components in structured form
         """
@@ -849,12 +842,11 @@ class BenefitRiskAnalyzer:
             ]
         }
 
-
 def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
     """
     Example demonstrating comprehensive benefit-risk analysis for a
     clinical risk prediction system.
-    
+
     Returns:
         Completed BenefitRiskAnalyzer with example analysis
     """
@@ -876,7 +868,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "which may be inconsistent across providers."
         )
     )
-    
+
     # Add stakeholders
     analyzer.add_stakeholder(StakeholderGroup(
         category=StakeholderCategory.PATIENTS_TARGET,
@@ -902,7 +894,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "Prior experiences of discrimination in healthcare"
         ]
     ))
-    
+
     analyzer.add_stakeholder(StakeholderGroup(
         category=StakeholderCategory.PATIENTS_NONTARGET,
         name="Lower-risk patients not receiving intervention",
@@ -921,7 +913,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "Reduced access to preventive interventions due to capacity constraints"
         ]
     ))
-    
+
     analyzer.add_stakeholder(StakeholderGroup(
         category=StakeholderCategory.CLINICIANS,
         name="Primary care providers and care managers",
@@ -939,7 +931,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "Limited training in interpreting algorithmic risk predictions"
         ]
     ))
-    
+
     analyzer.add_stakeholder(StakeholderGroup(
         category=StakeholderCategory.HEALTHCARE_ORG,
         name="Federally qualified health center",
@@ -954,7 +946,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "Reputational risk if system performs poorly"
         ]
     ))
-    
+
     # Add benefits
     analyzer.add_benefit(Benefit(
         category=BenefitCategory.HEALTH_OUTCOMES,
@@ -973,7 +965,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "Patients with false-negative predictions miss out on benefits."
         )
     ))
-    
+
     analyzer.add_benefit(Benefit(
         category=BenefitCategory.COST_REDUCTION,
         description=(
@@ -993,7 +985,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "and to health system. Distribution depends on insurance coverage."
         )
     ))
-    
+
     analyzer.add_benefit(Benefit(
         category=BenefitCategory.EFFICIENCY_GAINS,
         description=(
@@ -1012,7 +1004,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "Benefits primarily to health system rather than patients."
         )
     ))
-    
+
     # Add risks
     analyzer.add_risk(Risk(
         category=RiskCategory.FALSE_NEGATIVE_HARM,
@@ -1033,7 +1025,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "systems. This means harms are concentrated among most vulnerable."
         )
     ))
-    
+
     analyzer.add_risk(Risk(
         category=RiskCategory.FALSE_POSITIVE_HARM,
         description=(
@@ -1053,7 +1045,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "excess intervention likely causes minimal harm."
         )
     ))
-    
+
     analyzer.add_risk(Risk(
         category=RiskCategory.DIGNITARY_HARM,
         description=(
@@ -1071,7 +1063,7 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "model inputs could mitigate but also raises privacy concerns."
         )
     ))
-    
+
     analyzer.add_risk(Risk(
         category=RiskCategory.STRUCTURAL_HARM,
         description=(
@@ -1092,40 +1084,39 @@ def example_benefit_risk_analysis() -> BenefitRiskAnalyzer:
             "and changeable."
         )
     ))
-    
+
     # Simulate distributional analysis of false negative rates by language
     # In practice, this would use real validation data
     np.random.seed(42)
     n_patients = 1000
     languages = np.random.choice(['English', 'Spanish', 'Other'], n_patients, p=[0.6, 0.3, 0.1])
-    
+
     # Simulate higher false negative rates for Spanish speakers
     false_neg_rates = np.zeros(n_patients)
     false_neg_rates[languages == 'English'] = np.random.beta(2, 15, sum(languages == 'English'))
     false_neg_rates[languages == 'Spanish'] = np.random.beta(3, 12, sum(languages == 'Spanish'))
     false_neg_rates[languages == 'Other'] = np.random.beta(4, 10, sum(languages == 'Other'))
-    
+
     result = analyzer.analyze_distribution_of_risk(
         risk_metric=pd.Series(false_neg_rates),
         stratification_variable=pd.Series(languages),
         risk_name="False Negative Rate",
         higher_is_worse=True
     )
-    
-    return analyzer
 
+    return analyzer
 
 # Example usage
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    
+
     # Run example analysis
     analyzer = example_benefit_risk_analysis()
-    
+
     # Generate and print report
     report = analyzer.generate_summary_report()
     print(report)
-    
+
     # Create visualization
     if analyzer.distributional_analyses:
         fig = analyzer.visualize_distributional_analysis(
@@ -1249,7 +1240,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class DevelopmentStage(Enum):
     """Stages in AI development lifecycle with associated ethical gates."""
     PROBLEM_DEFINITION = "problem_definition_justification"
@@ -1258,7 +1248,6 @@ class DevelopmentStage(Enum):
     VALIDATION = "validation_equity_assessment"
     DEPLOYMENT_PLANNING = "deployment_planning_impact_assessment"
     ONGOING_MONITORING = "ongoing_monitoring_reassessment"
-
 
 class EthicalPrinciple(Enum):
     """Ethical principles for analysis."""
@@ -1269,12 +1258,11 @@ class EthicalPrinciple(Enum):
     CAPABILITIES = "capabilities_approach"
     STRUCTURAL_JUSTICE = "structural_justice"
 
-
 @dataclass
 class StakeholderPerspective:
     """
     Representation of a stakeholder perspective on ethical question.
-    
+
     Attributes:
         stakeholder_name: Name or description of stakeholder
         stakeholder_category: Category of stakeholder
@@ -1292,12 +1280,11 @@ class StakeholderPerspective:
     preferred_options: List[str] = field(default_factory=list)
     red_lines: List[str] = field(default_factory=list)
 
-
 @dataclass
 class EthicalOption:
     """
     Representation of a possible approach or decision option.
-    
+
     Attributes:
         option_name: Brief name for this option
         description: Detailed description of what this option entails
@@ -1319,12 +1306,11 @@ class EthicalOption:
     feasibility: str = "unknown"
     precedent_effects: str = ""
 
-
 @dataclass
 class DeliberationDecision:
     """
     Documentation of deliberation outcome and rationale.
-    
+
     Attributes:
         decision_summary: Brief summary of decision reached
         selected_option: Which option was selected
@@ -1347,17 +1333,17 @@ class DeliberationDecision:
     revision_triggers: List[str]
     decision_makers: List[str]
     decision_date: datetime
-    
+
 
 class EthicalDeliberationFramework:
     """
     Comprehensive framework for ethical deliberation throughout AI development.
-    
+
     This class provides structured protocols for ethical assessment at
     defined gates in the development lifecycle, with tools for documenting
     deliberation processes and decisions.
     """
-    
+
     def __init__(
         self,
         project_name: str,
@@ -1366,7 +1352,7 @@ class EthicalDeliberationFramework:
     ):
         """
         Initialize deliberation framework for an AI development project.
-        
+
         Args:
             project_name: Name of the AI system being developed
             project_description: Description of system and its purpose
@@ -1375,19 +1361,19 @@ class EthicalDeliberationFramework:
         self.project_name = project_name
         self.project_description = project_description
         self.lead_organization = lead_organization
-        
+
         self.gate_assessments: Dict[DevelopmentStage, Dict[str, Any]] = {}
         self.stakeholder_perspectives: List[StakeholderPerspective] = []
         self.deliberation_sessions: List[Dict[str, Any]] = []
         self.decisions: List[DeliberationDecision] = []
-        
+
         self.framework_metadata = {
             'created_date': datetime.now().isoformat(),
             'version': '1.0'
         }
-        
+
         logger.info(f"Initialized ethical deliberation framework for {project_name}")
-    
+
     def initiate_gate_assessment(
         self,
         stage: DevelopmentStage,
@@ -1396,18 +1382,18 @@ class EthicalDeliberationFramework:
     ) -> Dict[str, Any]:
         """
         Begin ethical assessment for a development stage gate.
-        
+
         Args:
             stage: Development stage being assessed
             ethical_questions: Key ethical questions for this gate
             lead_reviewer: Person leading the ethics assessment
-            
+
         Returns:
             Assessment structure for population during deliberation
         """
         if stage in self.gate_assessments:
             logger.warning(f"Gate assessment for {stage.value} already exists, creating new version")
-        
+
         assessment = {
             'stage': stage.value,
             'initiated_date': datetime.now().isoformat(),
@@ -1420,12 +1406,12 @@ class EthicalDeliberationFramework:
             'status': 'in_progress',
             'gate_passed': False
         }
-        
+
         self.gate_assessments[stage] = assessment
         logger.info(f"Initiated gate assessment for {stage.value}")
-        
+
         return assessment
-    
+
     def add_stakeholder_perspective(
         self,
         stage: DevelopmentStage,
@@ -1433,14 +1419,14 @@ class EthicalDeliberationFramework:
     ) -> None:
         """
         Add stakeholder perspective to gate assessment.
-        
+
         Args:
             stage: Development stage this perspective relates to
             perspective: StakeholderPerspective object
         """
         if stage not in self.gate_assessments:
             raise ValueError(f"No assessment initiated for stage {stage.value}")
-        
+
         self.gate_assessments[stage]['stakeholder_perspectives'].append({
             'stakeholder_name': perspective.stakeholder_name,
             'stakeholder_category': perspective.stakeholder_category,
@@ -1450,12 +1436,12 @@ class EthicalDeliberationFramework:
             'preferred_options': perspective.preferred_options,
             'red_lines': perspective.red_lines
         })
-        
+
         # Also add to overall list
         self.stakeholder_perspectives.append(perspective)
-        
+
         logger.info(f"Added perspective from {perspective.stakeholder_name} for {stage.value}")
-    
+
     def add_option(
         self,
         stage: DevelopmentStage,
@@ -1463,14 +1449,14 @@ class EthicalDeliberationFramework:
     ) -> None:
         """
         Add option for consideration in gate assessment.
-        
+
         Args:
             stage: Development stage this option relates to
             option: EthicalOption object
         """
         if stage not in self.gate_assessments:
             raise ValueError(f"No assessment initiated for stage {stage.value}")
-        
+
         self.gate_assessments[stage]['options_considered'].append({
             'option_name': option.option_name,
             'description': option.description,
@@ -1482,9 +1468,9 @@ class EthicalDeliberationFramework:
             'feasibility': option.feasibility,
             'precedent_effects': option.precedent_effects
         })
-        
+
         logger.info(f"Added option '{option.option_name}' for {stage.value}")
-    
+
     def apply_ethical_framework(
         self,
         stage: DevelopmentStage,
@@ -1494,7 +1480,7 @@ class EthicalDeliberationFramework:
     ) -> None:
         """
         Apply ethical principle to analyze an option.
-        
+
         Args:
             stage: Development stage
             option_name: Name of option being analyzed
@@ -1503,23 +1489,23 @@ class EthicalDeliberationFramework:
         """
         if stage not in self.gate_assessments:
             raise ValueError(f"No assessment initiated for stage {stage.value}")
-        
+
         # Find the option
         options = self.gate_assessments[stage]['options_considered']
         matching_options = [o for o in options if o['option_name'] == option_name]
-        
+
         if not matching_options:
             raise ValueError(f"No option named '{option_name}' found for stage {stage.value}")
-        
+
         # Add ethical analysis
         option = matching_options[0]
         if 'ethical_analysis' not in option:
             option['ethical_analysis'] = {}
-        
+
         option['ethical_analysis'][principle.value] = analysis
-        
+
         logger.info(f"Applied {principle.value} analysis to option '{option_name}'")
-    
+
     def record_deliberation_session(
         self,
         stage: DevelopmentStage,
@@ -1531,7 +1517,7 @@ class EthicalDeliberationFramework:
     ) -> None:
         """
         Document a deliberation session.
-        
+
         Args:
             stage: Development stage being deliberated
             session_date: Date of deliberation session
@@ -1548,10 +1534,10 @@ class EthicalDeliberationFramework:
             'consensus_points': consensus_points,
             'disagreement_points': disagreement_points
         }
-        
+
         self.deliberation_sessions.append(session_record)
         logger.info(f"Recorded deliberation session for {stage.value}")
-    
+
     def record_decision(
         self,
         stage: DevelopmentStage,
@@ -1560,7 +1546,7 @@ class EthicalDeliberationFramework:
     ) -> None:
         """
         Record decision from gate assessment.
-        
+
         Args:
             stage: Development stage where decision was made
             decision: DeliberationDecision object documenting the decision
@@ -1568,7 +1554,7 @@ class EthicalDeliberationFramework:
         """
         if stage not in self.gate_assessments:
             raise ValueError(f"No assessment initiated for stage {stage.value}")
-        
+
         decision_record = {
             'decision_summary': decision.decision_summary,
             'selected_option': decision.selected_option,
@@ -1581,43 +1567,43 @@ class EthicalDeliberationFramework:
             'decision_makers': decision.decision_makers,
             'decision_date': decision.decision_date.isoformat()
         }
-        
+
         self.gate_assessments[stage]['decision'] = decision_record
         self.gate_assessments[stage]['status'] = 'complete'
         self.gate_assessments[stage]['gate_passed'] = gate_passed
         self.gate_assessments[stage]['completion_date'] = datetime.now().isoformat()
-        
+
         self.decisions.append(decision)
-        
+
         logger.info(
             f"Recorded decision for {stage.value}: "
             f"{'PASS' if gate_passed else 'REVISE REQUIRED'}"
         )
-    
+
     def generate_gate_assessment_report(
         self,
         stage: DevelopmentStage
     ) -> str:
         """
         Generate comprehensive report for a gate assessment.
-        
+
         Args:
             stage: Development stage to report on
-            
+
         Returns:
             Formatted text report
         """
         if stage not in self.gate_assessments:
             raise ValueError(f"No assessment exists for stage {stage.value}")
-        
+
         assessment = self.gate_assessments[stage]
-        
+
         lines = []
         lines.append("=" * 80)
         lines.append(f"ETHICAL GATE ASSESSMENT: {stage.value.upper()}")
         lines.append("=" * 80)
         lines.append("")
-        
+
         lines.append(f"Project: {self.project_name}")
         lines.append(f"Lead Organization: {self.lead_organization}")
         lines.append(f"Assessment Lead: {assessment['lead_reviewer']}")
@@ -1626,16 +1612,16 @@ class EthicalDeliberationFramework:
             lines.append(f"Assessment Completed: {assessment['completion_date']}")
             lines.append(f"Gate Status: {'PASSED' if assessment['gate_passed'] else 'REVISE REQUIRED'}")
         lines.append("")
-        
+
         lines.append("ETHICAL QUESTIONS FOR THIS GATE:")
         for i, question in enumerate(assessment['ethical_questions'], 1):
             lines.append(f"  {i}. {question}")
         lines.append("")
-        
+
         if assessment['stakeholder_perspectives']:
             lines.append("STAKEHOLDER PERSPECTIVES:")
             lines.append("")
-            
+
             for perspective in assessment['stakeholder_perspectives']:
                 lines.append(f"  {perspective['stakeholder_name']} ({perspective['stakeholder_category']})")
                 lines.append(f"    Perspective: {perspective['perspective']}")
@@ -1647,33 +1633,33 @@ class EthicalDeliberationFramework:
                 if perspective['red_lines']:
                     lines.append(f"    Red Lines: {'; '.join(perspective['red_lines'])}")
                 lines.append("")
-        
+
         if assessment['options_considered']:
             lines.append("OPTIONS CONSIDERED:")
             lines.append("")
-            
+
             for option in assessment['options_considered']:
                 lines.append(f"  Option: {option['option_name']}")
                 lines.append(f"    Description: {option['description']}")
                 lines.append(f"    Feasibility: {option['feasibility']}")
-                
+
                 if option['benefits']:
                     lines.append("    Benefits:")
                     for benefit in option['benefits']:
                         lines.append(f"      - {benefit}")
-                
+
                 if option['risks']:
                     lines.append("    Risks:")
                     for risk in option['risks']:
                         lines.append(f"      - {risk}")
-                
+
                 if option.get('ethical_analysis'):
                     lines.append("    Ethical Analysis:")
                     for principle, analysis in option['ethical_analysis'].items():
                         lines.append(f"      {principle}: {analysis}")
-                
+
                 lines.append("")
-        
+
         if assessment['decision']:
             decision = assessment['decision']
             lines.append("DECISION:")
@@ -1682,39 +1668,39 @@ class EthicalDeliberationFramework:
             lines.append(f"  Decision Summary: {decision['decision_summary']}")
             lines.append(f"  Rationale: {decision['rationale']}")
             lines.append("")
-            
+
             lines.append("  Ethical Justification:")
             for principle, justification in decision['ethical_justification'].items():
                 lines.append(f"    {principle}: {justification}")
             lines.append("")
-            
+
             if decision['dissenting_views']:
                 lines.append("  Dissenting Views:")
                 for view in decision['dissenting_views']:
                     lines.append(f"    - {view}")
                 lines.append(f"  Response to Dissent: {decision['response_to_dissent']}")
                 lines.append("")
-            
+
             if decision['uncertainties']:
                 lines.append("  Remaining Uncertainties:")
                 for uncertainty in decision['uncertainties']:
                     lines.append(f"    - {uncertainty}")
                 lines.append("")
-            
+
             if decision['revision_triggers']:
                 lines.append("  Triggers for Revisiting Decision:")
                 for trigger in decision['revision_triggers']:
                     lines.append(f"    - {trigger}")
                 lines.append("")
-        
+
         lines.append("=" * 80)
-        
+
         return '\n'.join(lines)
-    
+
     def export_to_json(self, filepath: str) -> None:
         """
         Export complete deliberation framework to JSON for archival.
-        
+
         Args:
             filepath: Path where JSON file should be written
         """
@@ -1724,7 +1710,7 @@ class EthicalDeliberationFramework:
             'lead_organization': self.lead_organization,
             'framework_metadata': self.framework_metadata,
             'gate_assessments': {
-                stage.value: assessment 
+                stage.value: assessment
                 for stage, assessment in self.gate_assessments.items()
             },
             'deliberation_sessions': self.deliberation_sessions,
@@ -1744,18 +1730,17 @@ class EthicalDeliberationFramework:
                 for d in self.decisions
             ]
         }
-        
+
         with open(filepath, 'w') as f:
             json.dump(export_data, f, indent=2)
-        
-        logger.info(f"Exported deliberation framework to {filepath}")
 
+        logger.info(f"Exported deliberation framework to {filepath}")
 
 # Example usage demonstrating the deliberation framework
 def example_ethical_deliberation() -> EthicalDeliberationFramework:
     """
     Example demonstrating ethical deliberation framework for an AI project.
-    
+
     Returns:
         Populated EthicalDeliberationFramework
     """
@@ -1770,7 +1755,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
         ),
         lead_organization="Urban Safety Net Hospital System"
     )
-    
+
     # Problem definition stage
     framework.initiate_gate_assessment(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
@@ -1781,7 +1766,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
         ],
         lead_reviewer="Dr. Ethics Lead"
     )
-    
+
     # Add stakeholder perspectives
     framework.add_stakeholder_perspective(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
@@ -1804,7 +1789,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
             red_lines=["Development without community input", "Opaque decision-making"]
         )
     )
-    
+
     framework.add_stakeholder_perspective(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
         perspective=StakeholderPerspective(
@@ -1826,7 +1811,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
             red_lines=["Fully automated allocation without clinical oversight"]
         )
     )
-    
+
     # Add options for consideration
     framework.add_option(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
@@ -1859,7 +1844,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
             )
         )
     )
-    
+
     framework.add_option(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
         option=EthicalOption(
@@ -1887,7 +1872,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
             precedent_effects="Signals reluctance to use AI for equity-sensitive decisions"
         )
     )
-    
+
     # Apply ethical frameworks to options
     framework.apply_ethical_framework(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
@@ -1901,7 +1886,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
             "versus direct interventions on social determinants."
         )
     )
-    
+
     framework.apply_ethical_framework(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
         option_name="Use existing risk stratification without AI",
@@ -1912,7 +1897,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
             "inconsistent allocation and potential for implicit bias in clinical judgment."
         )
     )
-    
+
     # Record deliberation session
     framework.record_deliberation_session(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
@@ -1945,7 +1930,7 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
             "What performance threshold is adequate for different populations"
         ]
     )
-    
+
     # Record decision
     framework.record_decision(
         stage=DevelopmentStage.PROBLEM_DEFINITION,
@@ -2009,20 +1994,19 @@ def example_ethical_deliberation() -> EthicalDeliberationFramework:
         ),
         gate_passed=True
     )
-    
-    return framework
 
+    return framework
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    
+
     # Run example
     framework = example_ethical_deliberation()
-    
+
     # Generate and print report
     report = framework.generate_gate_assessment_report(DevelopmentStage.PROBLEM_DEFINITION)
     print(report)
-    
+
     # Export to JSON
     framework.export_to_json('ethical_deliberation_example.json')
 ```

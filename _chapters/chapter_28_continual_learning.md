@@ -2,10 +2,10 @@
 layout: chapter
 title: "Chapter 28: Continual Learning and Model Updating"
 chapter_number: 28
+part_number: 7
+prev_chapter: /chapters/chapter-27-multimodal-learning/
+next_chapter: /chapters/chapter-29-global-health-ai/
 ---
-
-
-
 # Chapter 28: Continual Learning and Model Updating
 
 ## Learning Objectives
@@ -41,25 +41,31 @@ Catastrophic forgetting, also termed catastrophic interference, describes the te
 
 ### Mathematical Foundations
 
-Consider a neural network with parameters $$\theta$$ trained sequentially on a series of tasks $$T_1, T_2, \ldots, T_n$$. For each task $$T_i$$, we have a dataset $$\mathcal{D}_i = \{(x_j^{(i)}, y_j^{(i)})\}_{j=1}^{N_i}$$ and a loss function $$\mathcal{L}_i(\theta)$$$. In traditional supervised learning, we would train on task$$T_i$ by minimizing:
+Consider a neural network with parameters $\theta$ trained sequentially on a series of tasks $T_1, T_2, \ldots, T_n$. For each task $T_i$, we have a dataset $\mathcal{D}_i = \{(x_j^{(i)}, y_j^{(i)})\}_{j=1}^{N_i}$ and a loss function $\mathcal{L}_i(\theta)$. In traditional supervised learning, we would train on task$T_i$ by minimizing:
 
-$$\theta_i^* = \arg\min_{\theta} \mathcal{L}_i(\theta) = \arg\min_{\theta} \frac{1}{N_i} \sum_{j=1}^{N_i} \ell(f_\theta(x_j^{(i)}), y_j^{(i)})$$
+$$
+\theta_i^* = \arg\min_{\theta} \mathcal{L}_i(\theta) = \arg\min_{\theta} \frac{1}{N_i} \sum_{j=1}^{N_i} \ell(f_\theta(x_j^{(i)}), y_j^{(i)})
+$$
 
-where $$\ell$$ is a loss function such as cross-entropy for classification or mean squared error for regression, and $$f_\theta$$ represents the neural network function parameterized by $$\theta$$.
+where $\ell$ is a loss function such as cross-entropy for classification or mean squared error for regression, and $f_\theta$ represents the neural network function parameterized by $\theta$.
 
-When we subsequently train on task $$T_{i+1}$$, standard stochastic gradient descent updates the parameters according to:
+When we subsequently train on task $T_{i+1}$, standard stochastic gradient descent updates the parameters according to:
 
-$$\theta \leftarrow \theta - \eta \nabla_\theta \mathcal{L}_{i+1}(\theta)$$
+$$
+\theta \leftarrow \theta - \eta \nabla_\theta \mathcal{L}_{i+1}(\theta)
+$$
 
-where $$\eta$$ is the learning rate. The problem is that these updates are computed solely based on the loss for task $$T_{i+1}$$, with no explicit constraint to preserve performance on tasks $$T_1, \ldots, T_i$$. Because neural networks use distributed representations where the same parameters influence predictions across multiple tasks, updates optimized for $$T_{i+1}$$ can dramatically increase loss on previous tasks.
+where $\eta$ is the learning rate. The problem is that these updates are computed solely based on the loss for task $T_{i+1}$, with no explicit constraint to preserve performance on tasks $T_1, \ldots, T_i$. Because neural networks use distributed representations where the same parameters influence predictions across multiple tasks, updates optimized for $T_{i+1}$ can dramatically increase loss on previous tasks.
 
-To quantify catastrophic forgetting, we measure the performance change on previous tasks after learning new tasks. Let $$A_i(j)$$ denote the accuracy on task $$T_j$$ after training on tasks $$T_1, \ldots, T_i$$. The average forgetting after learning task $$T_n$$ is:
+To quantify catastrophic forgetting, we measure the performance change on previous tasks after learning new tasks. Let $A_i(j)$ denote the accuracy on task $T_j$ after training on tasks $T_1, \ldots, T_i$. The average forgetting after learning task $T_n$ is:
 
-$$\mathcal{F}_n = \frac{1}{n-1} \sum_{i=1}^{n-1} \left( \max_{j \in \{i, \ldots, n-1\}} A_j(i) - A_n(i) \right)$$
+$$
+\mathcal{F}_n = \frac{1}{n-1} \sum_{i=1}^{n-1} \left( \max_{j \in \{i, \ldots, n-1\}} A_j(i) - A_n(i) \right)
+$$
 
-This metric captures the maximum accuracy achieved on each task before learning subsequent tasks, minus the final accuracy after learning all tasks. High values of $$\mathcal{F}_n$$ indicate severe catastrophic forgetting.
+This metric captures the maximum accuracy achieved on each task before learning subsequent tasks, minus the final accuracy after learning all tasks. High values of $\mathcal{F}_n$ indicate severe catastrophic forgetting.
 
-The severity of catastrophic forgetting depends on several factors. Task similarity plays a crucial role: if tasks share common structure or representations, learning new tasks may benefit rather than harm performance on previous tasks through positive transfer. The degree of overlap in the optimal parameter configurations also matters: if $$\theta_i^*$$ and $$\theta_j^*$$ are similar for tasks $i$ and $j$, forgetting is less likely. Network capacity influences forgetting: larger networks with more parameters have greater ability to dedicate different subsets of parameters to different tasks, reducing interference. Finally, the learning rate and number of training epochs on new tasks affect the extent of parameter updates and thus the degree of forgetting.
+The severity of catastrophic forgetting depends on several factors. Task similarity plays a crucial role: if tasks share common structure or representations, learning new tasks may benefit rather than harm performance on previous tasks through positive transfer. The degree of overlap in the optimal parameter configurations also matters: if $\theta_i^*$ and $\theta_j^*$ are similar for tasks $i$ and $j$, forgetting is less likely. Network capacity influences forgetting: larger networks with more parameters have greater ability to dedicate different subsets of parameters to different tasks, reducing interference. Finally, the learning rate and number of training epochs on new tasks affect the extent of parameter updates and thus the degree of forgetting.
 
 ### Catastrophic Forgetting in Healthcare
 
@@ -73,21 +79,27 @@ Furthermore, the temporal dynamics of healthcare access mean that some populatio
 
 Several theoretical frameworks help explain why neural networks exhibit catastrophic forgetting. The neural tangent kernel (NTK) theory provides one perspective. For infinitely wide neural networks in the lazy training regime, the network function evolves according to a kernel gradient descent in function space:
 
-$$\frac{\partial f_\theta(x)}{\partial t} = -\eta \Theta(x, x') \nabla_{f(x')} \mathcal{L}$$
+$$
+\frac{\partial f_\theta(x)}{\partial t} = -\eta \Theta(x, x') \nabla_{f(x')} \mathcal{L}
+$$
 
-where $$\Theta(x, x')$$ is the neural tangent kernel defined as:
+where $\Theta(x, x')$ is the neural tangent kernel defined as:
 
-$$\Theta(x, x') = \mathbb{E}_{\theta \sim \mathcal{P}_0} \left[ \nabla_\theta f_\theta(x)^T \nabla_\theta f_\theta(x') \right]$$
+$$
+\Theta(x, x') = \mathbb{E}_{\theta \sim \mathcal{P}_0} \left[ \nabla_\theta f_\theta(x)^T \nabla_\theta f_\theta(x') \right]
+$$
 
-and $$\mathcal{P}_0$$ is the initialization distribution. In this regime, the network function at initialization plus its linear approximation around initialization parameters describes the network's evolution during training. When training on a new task, the gradient updates are computed based only on the new task's loss landscape, leading to changes in the function that can be destructive for previous tasks unless the neural tangent kernels for different tasks have specific structure that preserves previous performance.
+and $\mathcal{P}_0$ is the initialization distribution. In this regime, the network function at initialization plus its linear approximation around initialization parameters describes the network's evolution during training. When training on a new task, the gradient updates are computed based only on the new task's loss landscape, leading to changes in the function that can be destructive for previous tasks unless the neural tangent kernels for different tasks have specific structure that preserves previous performance.
 
 An alternative perspective comes from mode connectivity and loss landscape analysis. Neural networks often have multiple local minima that achieve good performance on a given task. These minima are connected by low-loss paths or tunnels in parameter space, forming a complex loss landscape with multiple basins of attraction. When training on a new task, gradient descent moves the parameters toward minima for the new task, potentially crossing high-loss regions for previous tasks. If the minima for different tasks are in disconnected regions of parameter space, catastrophic forgetting is inevitable with standard sequential training.
 
-Bayesian perspectives on continual learning model parameter uncertainty and update the posterior distribution over parameters as new data arrives. Let $$p(\theta | \mathcal{D}_1)$$ be the posterior after training on task 1. When task 2 data arrives, we should update:
+Bayesian perspectives on continual learning model parameter uncertainty and update the posterior distribution over parameters as new data arrives. Let $p(\theta | \mathcal{D}_1)$ be the posterior after training on task 1. When task 2 data arrives, we should update:
 
-$$p(\theta | \mathcal{D}_1, \mathcal{D}_2) \propto p(\mathcal{D}_2 | \theta) p(\theta | \mathcal{D}_1)$$
+$$
+p(\theta | \mathcal{D}_1, \mathcal{D}_2) \propto p(\mathcal{D}_2 | \theta) p(\theta | \mathcal{D}_1)
+$$
 
-This formulation naturally incorporates knowledge from previous tasks through the prior $$p(\theta | \mathcal{D}_1)$$. However, computing and maintaining exact posteriors is intractable for high-dimensional neural network parameter spaces, leading to the development of approximate Bayesian continual learning methods that we discuss in subsequent sections.
+This formulation naturally incorporates knowledge from previous tasks through the prior $p(\theta | \mathcal{D}_1)$. However, computing and maintaining exact posteriors is intractable for high-dimensional neural network parameter spaces, leading to the development of approximate Bayesian continual learning methods that we discuss in subsequent sections.
 
 ## Regularization-Based Continual Learning
 
@@ -95,31 +107,41 @@ Regularization-based approaches to continual learning add penalty terms to the l
 
 ### Elastic Weight Consolidation
 
-Elastic Weight Consolidation (EWC), introduced by Kirkpatrick and colleagues in 2017, provides a principled Bayesian approach to identifying important parameters. EWC approximates the posterior distribution over parameters after learning previous tasks as a Gaussian centered at the optimal parameters $$\theta_A^*$$ for those tasks:
+Elastic Weight Consolidation (EWC), introduced by Kirkpatrick and colleagues in 2017, provides a principled Bayesian approach to identifying important parameters. EWC approximates the posterior distribution over parameters after learning previous tasks as a Gaussian centered at the optimal parameters $\theta_A^*$ for those tasks:
 
-$$p(\theta | \mathcal{D}_A) \approx \mathcal{N}(\theta; \theta_A^*, F_A^{-1})$$
+$$
+p(\theta | \mathcal{D}_A) \approx \mathcal{N}(\theta; \theta_A^*, F_A^{-1})
+$$
 
-where $$F_A$$ is the Fisher information matrix evaluated at $$\theta_A^*$$:
+where $F_A$ is the Fisher information matrix evaluated at $\theta_A^*$:
 
-$$F_A = \mathbb{E}_{x \sim \mathcal{D}_A} \left[ \nabla_\theta \log p(y|x, \theta_A^*) \nabla_\theta \log p(y|x, \theta_A^*)^T \right]$$
+$$
+F_A = \mathbb{E}_{x \sim \mathcal{D}_A} \left[ \nabla_\theta \log p(y|x, \theta_A^*) \nabla_\theta \log p(y|x, \theta_A^*)^T \right]
+$$
 
 The Fisher information matrix captures how sensitive the log-likelihood is to changes in each parameter. Parameters with high Fisher information are those for which small changes cause large changes in the likelihood, indicating these parameters are important for the task.
 
 When learning a new task $B$, EWC adds a regularization term that penalizes changes to parameters weighted by their Fisher information:
 
-$$\mathcal{L}_{EWC}(\theta) = \mathcal{L}_B(\theta) + \frac{\lambda}{2} \sum_i F_i (\theta_i - \theta_{A,i}^*)^2$$
+$$
+\mathcal{L}_{EWC}(\theta) = \mathcal{L}_B(\theta) + \frac{\lambda}{2} \sum_i F_i (\theta_i - \theta_{A,i}^*)^2
+$$
 
-where $$\lambda$$ controls the relative importance of the regularization term. Parameters with high Fisher information are strongly constrained to remain close to their values after training on previous tasks, while parameters with low Fisher information can change freely to accommodate the new task.
+where $\lambda$ controls the relative importance of the regularization term. Parameters with high Fisher information are strongly constrained to remain close to their values after training on previous tasks, while parameters with low Fisher information can change freely to accommodate the new task.
 
 The Fisher information matrix is typically intractable to compute exactly for large neural networks, as it requires computing second derivatives of the log-likelihood. EWC uses an efficient diagonal approximation:
 
-$$F_i \approx \frac{1}{N} \sum_{n=1}^{N} \left( \frac{\partial \log p(y_n | x_n, \theta)}{\partial \theta_i} \right)^2 \bigg|_{\theta = \theta_A^*}$$
+$$
+F_i \approx \frac{1}{N} \sum_{n=1}^{N} \left( \frac{\partial \log p(y_n | x_n, \theta)}{\partial \theta_i} \right)^2 \bigg|_{\theta = \theta_A^*}
+$$
 
 This diagonal approximation assumes independence between parameters, which is clearly an approximation for neural networks where parameters interact through nonlinear activations. Nevertheless, empirical results show this approximation provides effective regularization in practice.
 
-For continual learning across multiple tasks $$T_1, T_2, \ldots, T_n$$, we can accumulate Fisher information matrices across tasks. After learning task $$T_k$$, we compute $$F_k$$ and store it along with $$\theta_k^*$$. When learning task $$T_{k+1}$$, the loss becomes:
+For continual learning across multiple tasks $T_1, T_2, \ldots, T_n$, we can accumulate Fisher information matrices across tasks. After learning task $T_k$, we compute $F_k$ and store it along with $\theta_k^*$. When learning task $T_{k+1}$, the loss becomes:
 
-$$\mathcal{L}(\theta) = \mathcal{L}_{k+1}(\theta) + \sum_{j=1}^{k} \frac{\lambda_j}{2} \sum_i F_{j,i} (\theta_i - \theta_{j,i}^*)^2$$
+$$
+\mathcal{L}(\theta) = \mathcal{L}_{k+1}(\theta) + \sum_{j=1}^{k} \frac{\lambda_j}{2} \sum_i F_{j,i} (\theta_i - \theta_{j,i}^*)^2
+$$
 
 This formulation can lead to memory issues as we must store Fisher information matrices and optimal parameters for all previous tasks. Online EWC addresses this by maintaining a single cumulative Fisher information matrix that is updated as new tasks arrive, sacrificing some theoretical rigor for practical scalability.
 
@@ -127,29 +149,37 @@ This formulation can lead to memory issues as we must store Fisher information m
 
 Synaptic Intelligence (SI), proposed by Zenke, Poole, and Ganguli in 2017, takes a different approach to identifying important parameters. Rather than using Fisher information computed at the end of training on each task, SI tracks the importance of each parameter throughout the learning trajectory by accumulating path integrals of gradients.
 
-The contribution of parameter $$\theta_i$$ to reducing the loss on task $k$ over the learning trajectory is:
+The contribution of parameter $\theta_i$ to reducing the loss on task $k$ over the learning trajectory is:
 
-$$\omega_i^{(k)} = \sum_{t} -g_i^{(k)}(t) \Delta \theta_i(t)$$
+$$
+\omega_i^{(k)} = \sum_{t} -g_i^{(k)}(t) \Delta \theta_i(t)
+$$
 
-where $$g_i^{(k)}(t)$$ is the gradient of the loss for task $k$ with respect to parameter $i$ at time step $t$, and $$\Delta \theta_i(t) = \theta_i(t+1) - \theta_i(t)$$ is the parameter change at that time step. This quantity measures how much each parameter contributed to loss reduction: parameters that move in the direction of the negative gradient contribute positively to $$\omega_i^{(k)}$$.
+where $g_i^{(k)}(t)$ is the gradient of the loss for task $k$ with respect to parameter $i$ at time step $t$, and $\Delta \theta_i(t) = \theta_i(t+1) - \theta_i(t)$ is the parameter change at that time step. This quantity measures how much each parameter contributed to loss reduction: parameters that move in the direction of the negative gradient contribute positively to $\omega_i^{(k)}$.
 
 To prevent numerical issues and ensure scale invariance, SI normalizes these contributions by the total parameter change:
 
-$$\Omega_i^{(k)} = \frac{\omega_i^{(k)}}{(\Delta \theta_i^{(k)})^2 + \xi}$$
+$$
+\Omega_i^{(k)} = \frac{\omega_i^{(k)}}{(\Delta \theta_i^{(k)})^2 + \xi}
+$$
 
-where $$\Delta \theta_i^{(k)} = \theta_i^{(k+1)} - \theta_i^{(k)}$$ is the total change in parameter $i$ during training on task $k$, and $$\xi$$ is a small damping parameter for numerical stability.
+where $\Delta \theta_i^{(k)} = \theta_i^{(k+1)} - \theta_i^{(k)}$ is the total change in parameter $i$ during training on task $k$, and $\xi$ is a small damping parameter for numerical stability.
 
-When learning task $$k+1$$, SI adds a quadratic penalty on parameter changes weighted by these importance measures:
+When learning task $k+1$, SI adds a quadratic penalty on parameter changes weighted by these importance measures:
 
-$$\mathcal{L}_{SI}(\theta) = \mathcal{L}_{k+1}(\theta) + c \sum_{j=1}^{k} \sum_i \Omega_i^{(j)} (\theta_i - \theta_i^{(j)})^2$$
+$$
+\mathcal{L}_{SI}(\theta) = \mathcal{L}_{k+1}(\theta) + c \sum_{j=1}^{k} \sum_i \Omega_i^{(j)} (\theta_i - \theta_i^{(j)})^2
+$$
 
 Similar to EWC, this encourages parameters that were important for previous tasks to change minimally when learning new tasks. Unlike EWC, SI computes importance based on the actual contribution of parameters during training rather than curvature of the loss surface at the final parameters, potentially providing a more direct measure of parameter importance.
 
 ### Memory Aware Synapses
 
-Memory Aware Synapses (MAS), introduced by Aljundi and colleagues in 2018, estimates parameter importance based on the sensitivity of the learned function output to parameter changes rather than sensitivity of the loss. The importance of parameter $$\theta_i$$ is defined as:
+Memory Aware Synapses (MAS), introduced by Aljundi and colleagues in 2018, estimates parameter importance based on the sensitivity of the learned function output to parameter changes rather than sensitivity of the loss. The importance of parameter $\theta_i$ is defined as:
 
-$$\Omega_i = \frac{1}{N} \sum_{n=1}^{N} \left\| \frac{\partial f_\theta(x_n)}{\partial \theta_i} \right\|^2$$
+$$
+\Omega_i = \frac{1}{N} \sum_{n=1}^{N} \left\| \frac{\partial f_\theta(x_n)}{\partial \theta_i} \right\|^2
+$$
 
 This measures how much the network's output changes when parameter $i$ changes, averaged over the data distribution. Parameters that strongly influence the output are deemed important and should be preserved during subsequent learning.
 
@@ -157,7 +187,7 @@ A key advantage of MAS is that it does not require task labels during continual 
 
 ### Practical Considerations for Healthcare
 
-When applying regularization-based continual learning in healthcare, several practical considerations arise. First, the choice of regularization strength $$\lambda$$ critically affects the stability-plasticity tradeoff. High values of $$\lambda$$ strongly preserve previous knowledge but limit the model's ability to adapt to new patterns. Low values allow greater plasticity but risk catastrophic forgetting. In healthcare, this tradeoff has direct implications for patient safety: too much stability may prevent the model from learning important new clinical patterns, while too much plasticity may cause the model to forget rare but critical diagnoses.
+When applying regularization-based continual learning in healthcare, several practical considerations arise. First, the choice of regularization strength $\lambda$ critically affects the stability-plasticity tradeoff. High values of $\lambda$ strongly preserve previous knowledge but limit the model's ability to adapt to new patterns. Low values allow greater plasticity but risk catastrophic forgetting. In healthcare, this tradeoff has direct implications for patient safety: too much stability may prevent the model from learning important new clinical patterns, while too much plasticity may cause the model to forget rare but critical diagnoses.
 
 Second, computational costs must be considered. Computing Fisher information matrices, path integrals of gradients, or output sensitivities all add overhead to the training process. For large models commonly used in medical imaging or clinical NLP, these computations can be substantial. Efficient approximations, such as diagonal Fisher information matrices or sampling-based estimation, become necessary for practical deployment.
 
@@ -171,21 +201,25 @@ Replay-based approaches to continual learning maintain a memory buffer containin
 
 ### Experience Replay
 
-Experience Replay, widely used in reinforcement learning and adapted for continual supervised learning, maintains a memory buffer $$\mathcal{M}$$ containing $(x, y)$ pairs from previous tasks. When learning from new data $$\mathcal{D}_{new}$$, the model is trained on batches that combine new samples with samples randomly drawn from $$\mathcal{M}$$:
+Experience Replay, widely used in reinforcement learning and adapted for continual supervised learning, maintains a memory buffer $\mathcal{M}$ containing $(x, y)$ pairs from previous tasks. When learning from new data $\mathcal{D}_{new}$, the model is trained on batches that combine new samples with samples randomly drawn from $\mathcal{M}$:
 
-$$\mathcal{L}_{replay}(\theta) = \mathbb{E}_{(x,y) \sim \mathcal{D}_{new}} [\ell(f_\theta(x), y)] + \alpha \mathbb{E}_{(x,y) \sim \mathcal{M}} [\ell(f_\theta(x), y)]$$
+$$
+\mathcal{L}_{replay}(\theta) = \mathbb{E}_{(x,y) \sim \mathcal{D}_{new}} [\ell(f_\theta(x), y)] + \alpha \mathbb{E}_{(x,y) \sim \mathcal{M}} [\ell(f_\theta(x), y)]
+$$
 
-where $$\alpha$$ controls the relative weight of replayed samples. This approach ensures that the model maintains exposure to previous data distributions throughout training on new tasks, preventing the parameter updates from being driven solely by the new task.
+where $\alpha$ controls the relative weight of replayed samples. This approach ensures that the model maintains exposure to previous data distributions throughout training on new tasks, preventing the parameter updates from being driven solely by the new task.
 
 The critical design decision in experience replay is the memory management strategy: how to select which samples to store when memory capacity is limited, and how to update the memory as new tasks arrive. Several strategies exist:
 
-**Reservoir Sampling:** Maintains a uniform sample over all observed data by probabilistically replacing older samples. When a new sample arrives, it is added to the memory with probability $$\frac{|\mathcal{M}|}{n}$$ where $n$ is the total number of samples seen, and if added, it randomly replaces an existing sample. This ensures each historical sample has equal probability of being in memory regardless of when it was observed.
+**Reservoir Sampling:** Maintains a uniform sample over all observed data by probabilistically replacing older samples. When a new sample arrives, it is added to the memory with probability $\frac{|\mathcal{M}|}{n}$ where $n$ is the total number of samples seen, and if added, it randomly replaces an existing sample. This ensures each historical sample has equal probability of being in memory regardless of when it was observed.
 
-**Herding:** Selects samples that best represent the feature distribution of each class or task. For a given class $c$, herding maintains a memory set $$\mathcal{M}_c$$ such that the mean feature representation of samples in $$\mathcal{M}_c$$$is close to the mean feature representation of all samples of class$$c$:
+**Herding:** Selects samples that best represent the feature distribution of each class or task. For a given class $c$, herding maintains a memory set $\mathcal{M}_c$ such that the mean feature representation of samples in $\mathcal{M}_c$is close to the mean feature representation of all samples of class$c$:
 
-$$\mathcal{M}_c = \arg\min_{\mathcal{S} \subseteq \mathcal{D}_c, |\mathcal{S}| = m} \left\| \frac{1}{|\mathcal{D}_c|} \sum_{x \in \mathcal{D}_c} \phi(x) - \frac{1}{m} \sum_{x \in \mathcal{S}} \phi(x) \right\|^2$$
+$$
+\mathcal{M}_c = \arg\min_{\mathcal{S} \subseteq \mathcal{D}_c, |\mathcal{S}| = m} \left\| \frac{1}{|\mathcal{D}_c|} \sum_{x \in \mathcal{D}_c} \phi(x) - \frac{1}{m} \sum_{x \in \mathcal{S}} \phi(x) \right\|^2
+$$
 
-where $$\phi(x)$$ represents the feature embedding of sample $x$ (typically the penultimate layer activations of the neural network), and $m$ is the memory budget per class.
+where $\phi(x)$ represents the feature embedding of sample $x$ (typically the penultimate layer activations of the neural network), and $m$ is the memory budget per class.
 
 **Ring Buffer:** Simply stores the most recent samples in a first-in-first-out manner. While this approach does not maintain a representative sample of the entire historical distribution, it can be effective when the data distribution changes gradually and recent samples are most relevant.
 
@@ -195,26 +229,30 @@ where $$\phi(x)$$ represents the feature embedding of sample $x$ (typically the 
 
 More sophisticated replay methods select memory samples based on their utility for preserving model performance. Gradient Episodic Memory (GEM), introduced by Lopez-Paz and Ranzato, formulates continual learning as a constrained optimization problem. When learning task $t$, GEM ensures that gradient updates do not increase the loss on previous tasks:
 
-$$\begin{aligned}
+$\begin{aligned}
 \min_{\theta} \quad & \mathcal{L}_t(\theta) \\
 \text{subject to} \quad & \mathcal{L}_k(\theta) \leq \mathcal{L}_k(\theta_{t-1}) \quad \forall k < t
-\end{aligned}$$
+\end{aligned}$
 
-In practice, this is enforced by checking whether the gradient on the current task $$g_t = \nabla_\theta \mathcal{L}_t(\theta)$$ increases any previous task loss. If so, the gradient is projected to the nearest direction that does not increase previous task losses:
+In practice, this is enforced by checking whether the gradient on the current task $g_t = \nabla_\theta \mathcal{L}_t(\theta)$ increases any previous task loss. If so, the gradient is projected to the nearest direction that does not increase previous task losses:
 
-$$g_t' = \arg\min_{g} \|g - g_t\|^2 \text{ subject to } g^T g_k \leq 0 \quad \forall k < t$$
+$$
+g_t' = \arg\min_{g} \|g - g_t\|^2 \text{ subject to } g^T g_k \leq 0 \quad \forall k < t
+$$
 
-where $$g_k = \nabla_\theta \mathcal{L}_k(\theta)$$$is the gradient on task$$k$ computed using samples from memory. This projection can be efficiently computed using quadratic programming.
+where $g_k = \nabla_\theta \mathcal{L}_k(\theta)$is the gradient on task$k$ computed using samples from memory. This projection can be efficiently computed using quadratic programming.
 
 Averaged GEM (A-GEM) provides a more scalable variant by enforcing only that the gradient does not increase the average loss across previous tasks rather than enforcing constraints for each task individually. This reduces the computational complexity from quadratic to linear in the number of tasks.
 
 ### Generative Replay
 
-Generative replay addresses memory constraints by training a generative model to produce synthetic samples representative of previous data distributions rather than storing actual data samples. When learning task $t$, a generative model $$G_t$$ (such as a variational autoencoder or generative adversarial network) is trained alongside the main model to generate samples resembling task $t$ data. When learning subsequent tasks, synthetic samples from $$G_t$$ are used for replay instead of actual stored samples.
+Generative replay addresses memory constraints by training a generative model to produce synthetic samples representative of previous data distributions rather than storing actual data samples. When learning task $t$, a generative model $G_t$ (such as a variational autoencoder or generative adversarial network) is trained alongside the main model to generate samples resembling task $t$ data. When learning subsequent tasks, synthetic samples from $G_t$ are used for replay instead of actual stored samples.
 
 The loss function for generative replay combines the current task loss with a replay loss on generated samples:
 
-$$\mathcal{L}_{gen}(\theta) = \mathbb{E}_{(x,y) \sim \mathcal{D}_{new}} [\ell(f_\theta(x), y)] + \sum_{k=1}^{t-1} \mathbb{E}_{x \sim G_k} [\ell(f_\theta(x), f_{\theta_{k}}(x))]$$
+$$
+\mathcal{L}_{gen}(\theta) = \mathbb{E}_{(x,y) \sim \mathcal{D}_{new}} [\ell(f_\theta(x), y)] + \sum_{k=1}^{t-1} \mathbb{E}_{x \sim G_k} [\ell(f_\theta(x), f_{\theta_{k}}(x))]
+$$
 
 Note that for generated samples, the labels come from the model's own predictions at the end of training on task $k$. This is necessary because the generator only produces input features, not labels. The model effectively trains to match its previous predictions on synthetic data from old tasks while learning new patterns from new task data.
 
@@ -232,9 +270,11 @@ Several strategies can promote fairness in replay:
 
 **Fairness-Preserving Herding:** Extends herding to consider demographic group representations alongside class distributions. The objective becomes minimizing the distance between the feature distribution of each class-demographic group combination in memory versus the original data:
 
-$$\mathcal{M} = \arg\min_{\mathcal{S}} \sum_{c,d} w_{c,d} \left\| \mu_{c,d}^{\mathcal{D}} - \mu_{c,d}^{\mathcal{S}} \right\|^2$$
+$$
+\mathcal{M} = \arg\min_{\mathcal{S}} \sum_{c,d} w_{c,d} \left\| \mu_{c,d}^{\mathcal{D}} - \mu_{c,d}^{\mathcal{S}} \right\|^2
+$$
 
-where $$\mu_{c,d}^{\mathcal{D}}$$ and $$\mu_{c,d}^{\mathcal{S}}$$$are mean feature representations for class$$c$$and demographic group$$d$$in the full dataset and memory set respectively, and$$w_{c,d}$ are weights emphasizing rare class-demographic combinations.
+where $\mu_{c,d}^{\mathcal{D}}$ and $\mu_{c,d}^{\mathcal{S}}$are mean feature representations for class$c$and demographic group$d$in the full dataset and memory set respectively, and$w_{c,d}$ are weights emphasizing rare class-demographic combinations.
 
 **Multi-Objective Replay:** Formulates replay sample selection as a multi-objective optimization problem balancing overall accuracy preservation with fairness metric preservation across groups. Pareto optimization techniques can identify memory sets that provide reasonable tradeoffs across these potentially competing objectives.
 
@@ -248,13 +288,15 @@ Architecture-based approaches to continual learning allocate dedicated model cap
 
 Progressive Neural Networks, introduced by Rusu and colleagues in 2016, create a separate neural network column for each task while retaining lateral connections from previous columns to enable transfer learning. When learning task $t$, a new column of layers is instantiated with random initialization. Each layer in the new column receives input not only from the previous layer in its own column but also from corresponding layers in all previous columns through lateral connections.
 
-Formally, the activation $$h_i^{(t)}$$ at layer $i$ for task $t$ is:
+Formally, the activation $h_i^{(t)}$ at layer $i$ for task $t$ is:
 
-$$h_i^{(t)} = \sigma\left(W_i^{(t)} h_{i-1}^{(t)} + \sum_{k=1}^{t-1} U_i^{(k \rightarrow t)} h_{i-1}^{(k)}\right)$$
+$$
+h_i^{(t)} = \sigma\left(W_i^{(t)} h_{i-1}^{(t)} + \sum_{k=1}^{t-1} U_i^{(k \rightarrow t)} h_{i-1}^{(k)}\right)
+$$
 
-where $$W_i^{(t)}$$ are the within-column weights for task $t$, $$U_i^{(k \rightarrow t)}$$$are lateral connection weights from column$$k$$to column$$t$$, and$$\sigma$ is a nonlinearity. The lateral connections allow new tasks to leverage features learned for previous tasks while the dedicated columns ensure that learning new tasks does not modify parameters used by previous tasks.
+where $W_i^{(t)}$ are the within-column weights for task $t$, $U_i^{(k \rightarrow t)}$are lateral connection weights from column$k$to column$t$, and$\sigma$ is a nonlinearity. The lateral connections allow new tasks to leverage features learned for previous tasks while the dedicated columns ensure that learning new tasks does not modify parameters used by previous tasks.
 
-Progressive networks completely eliminate catastrophic forgetting since parameters for old tasks are frozen after training. However, they suffer from unbounded growth in model size and parameters as more tasks are learned. For a network with $L$ layers and $n$ units per layer, learning $T$ tasks requires $$O(T^2 L n^2)$$ total parameters due to the lateral connections from all previous columns to each new column.
+Progressive networks completely eliminate catastrophic forgetting since parameters for old tasks are frozen after training. However, they suffer from unbounded growth in model size and parameters as more tasks are learned. For a network with $L$ layers and $n$ units per layer, learning $T$ tasks requires $O(T^2 L n^2)$ total parameters due to the lateral connections from all previous columns to each new column.
 
 ### Packnet
 
@@ -266,7 +308,7 @@ PackNet, developed by Mallya and Lazebnik, addresses the growth problem by itera
 
 The pruning step uses magnitude-based pruning, setting weights below a threshold to zero. The threshold is chosen to achieve a target sparsity level. Importance is assessed globally across all tasks: weights that are important for any task are retained. This is implemented by tracking which weights are active (non-zero) after pruning for each task and taking the union of active weight sets.
 
-When learning task $t$, let $$M^{(k)}$$ be the binary mask of active weights for task $k$. The combined mask $$M^{(1:t-1)} = M^{(1)} \vee M^{(2)} \vee \cdots \vee M^{(t-1)}$$ indicates weights used by any previous task. During training on task $t$, only weights where $$M^{(1:t-1)} = 0$$ are updated, ensuring previous task parameters remain unchanged.
+When learning task $t$, let $M^{(k)}$ be the binary mask of active weights for task $k$. The combined mask $M^{(1:t-1)} = M^{(1)} \vee M^{(2)} \vee \cdots \vee M^{(t-1)}$ indicates weights used by any previous task. During training on task $t$, only weights where $M^{(1:t-1)} = 0$ are updated, ensuring previous task parameters remain unchanged.
 
 PackNet can continue learning new tasks until the network reaches full capacity (all weights are being used by some task). In practice, with deep networks and high sparsity levels (e.g., 50-80% of weights pruned per task), PackNet can accommodate many tasks before exhausting capacity. However, unlike progressive networks, there is no theoretical guarantee of unlimited task capacity, and performance may degrade as the network approaches full capacity.
 
@@ -282,7 +324,9 @@ Dynamically Expandable Networks (DEN), proposed by Yoon and colleagues, selectiv
 
 The selective retraining phase minimizes:
 
-$$\mathcal{L}_{retrain}(\theta) = \mathcal{L}_{new}(\theta) + \lambda_1 \sum_i \mathbb{1}[\theta_i \text{ important}] \|\theta_i - \theta_i^{prev}\|^2 + \lambda_2 \sum_g \sqrt{\sum_{i \in g} \theta_i^2}$$
+$$
+\mathcal{L}_{retrain}(\theta) = \mathcal{L}_{new}(\theta) + \lambda_1 \sum_i \mathbb{1}[\theta_i \text{ important}] \|\theta_i - \theta_i^{prev}\|^2 + \lambda_2 \sum_g \sqrt{\sum_{i \in g} \theta_i^2}
+$$
 
 where the first regularization term preserves important parameters, and the second group sparsity term encourages entire neurons to be either active or inactive, facilitating clear task assignment.
 
@@ -294,15 +338,19 @@ DEN provides a middle ground between progressive networks (which always expand) 
 
 Recent work has explored using hypernetworks—networks that generate weights for other networks—for continual learning. The hypernetwork is conditioned on task embeddings and generates task-specific weights for a main network. When learning a new task, the hypernetwork parameters are updated while previously generated weights remain fixed.
 
-Let $$h_\phi$$ be the hypernetwork parameterized by $$\phi$$, and let $$e_t$$ be an embedding vector for task $t$. The weights for task $t$ are generated as:
+Let $h_\phi$ be the hypernetwork parameterized by $\phi$, and let $e_t$ be an embedding vector for task $t$. The weights for task $t$ are generated as:
 
-$$\theta_t = h_\phi(e_t)$$
+$$
+\theta_t = h_\phi(e_t)
+$$
 
 When learning task $t$, we optimize:
 
-$$\min_{\phi, e_t} \mathcal{L}_t(f_{\theta_t}(x), y)$$
+$$
+\min_{\phi, e_t} \mathcal{L}_t(f_{\theta_t}(x), y)
+$$
 
-where $$f_{\theta_t}$$ is the main network with weights $$\theta_t$$. Previously learned task embeddings $$e_1, \ldots, e_{t-1}$$ are frozen, so previous task weights $$\theta_1, \ldots, \theta_{t-1}$$ remain unchanged.
+where $f_{\theta_t}$ is the main network with weights $\theta_t$. Previously learned task embeddings $e_1, \ldots, e_{t-1}$ are frozen, so previous task weights $\theta_1, \ldots, \theta_{t-1}$ remain unchanged.
 
 Hypernetwork-based continual learning provides several advantages: it explicitly separates task-specific knowledge (in the task embeddings) from shared knowledge (in the hypernetwork), it allows tasks to share structure through the hypernetwork while maintaining task-specific parameters, and it can potentially generalize to new tasks through interpolation in embedding space. However, it requires defining task embeddings and assumes task identities are known during training and inference.
 
@@ -324,19 +372,25 @@ Healthcare data is subject to numerous sources of distribution shift that can de
 
 Distribution shift can be taxonomized into several categories based on what aspects of the data generation process change:
 
-**Covariate Shift:** The input distribution $$P(X)$$ changes while the conditional distribution of outputs given inputs $$P(Y|X)$$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
+**Covariate Shift:** The input distribution $P(X)$ changes while the conditional distribution of outputs given inputs $P(Y|X)$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
 
-$$P_{train}(Y|X) = P_{deploy}(Y|X) \quad \text{but} \quad P_{train}(X) \neq P_{deploy}(X)$$
+$$
+P_{train}(Y|X) = P_{deploy}(Y|X) \quad \text{but} \quad P_{train}(X) \neq P_{deploy}(X)
+$$
 
-**Label Shift:** The marginal distribution of outputs $$P(Y)$$ changes while the conditional distribution of inputs given outputs $$P(X|Y)$$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
+**Label Shift:** The marginal distribution of outputs $P(Y)$ changes while the conditional distribution of inputs given outputs $P(X|Y)$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
 
-$$P_{train}(X|Y) = P_{deploy}(X|Y) \quad \text{but} \quad P_{train}(Y) \neq P_{deploy}(Y)$$
+$$
+P_{train}(X|Y) = P_{deploy}(X|Y) \quad \text{but} \quad P_{train}(Y) \neq P_{deploy}(Y)
+$$
 
-**Concept Drift:** The fundamental relationship between inputs and outputs $$P(Y|X)$$ changes. This is the most challenging type of shift as it indicates the underlying phenomena being modeled have changed. In healthcare, concept drift occurs when treatment protocols change, new therapies become available, or the causal pathways linking risk factors to outcomes change. For example, the relationship between blood pressure and cardiovascular risk changed with the introduction of modern antihypertensive medications. Formally:
+**Concept Drift:** The fundamental relationship between inputs and outputs $P(Y|X)$ changes. This is the most challenging type of shift as it indicates the underlying phenomena being modeled have changed. In healthcare, concept drift occurs when treatment protocols change, new therapies become available, or the causal pathways linking risk factors to outcomes change. For example, the relationship between blood pressure and cardiovascular risk changed with the introduction of modern antihypertensive medications. Formally:
 
-$$P_{train}(Y|X) \neq P_{deploy}(Y|X)$$
+$$
+P_{train}(Y|X) \neq P_{deploy}(Y|X)
+$$
 
-**Domain Shift:** More generally, the entire joint distribution $$P(X, Y)$$ changes, which may involve combinations of the above. Electronic health record systems often experience domain shift when transitioning from one documentation system to another, changing both the feature distributions and potentially the relationships between features and outcomes.
+**Domain Shift:** More generally, the entire joint distribution $P(X, Y)$ changes, which may involve combinations of the above. Electronic health record systems often experience domain shift when transitioning from one documentation system to another, changing both the feature distributions and potentially the relationships between features and outcomes.
 
 These shifts can occur gradually over time (gradual drift) or abruptly at specific time points (sudden drift or concept shift). Gradual drift is common when underlying populations slowly evolve, while sudden drift often results from discrete events like policy changes, system implementations, or public health emergencies.
 
@@ -352,13 +406,17 @@ Detecting distribution shift is the first step in adaptive continual learning. N
 
 **Statistical Tests on Input Distributions:** Compare the distribution of input features between training and deployment time. The Maximum Mean Discrepancy (MMD) test is commonly used, measuring the distance between distribution embeddings in a reproducing kernel Hilbert space:
 
-$$MMD(P, Q) = \sup_{f \in \mathcal{F}} \left( \mathbb{E}_{x \sim P}[f(x)] - \mathbb{E}_{x \sim Q}[f(x)] \right)$$
+$$
+MMD(P, Q) = \sup_{f \in \mathcal{F}} \left( \mathbb{E}_{x \sim P}[f(x)] - \mathbb{E}_{x \sim Q}[f(x)] \right)
+$$
 
 For a finite sample, MMD can be computed as:
 
-$$\widehat{MMD}^2 = \frac{1}{n^2} \sum_{i,j} k(x_i, x_j) + \frac{1}{m^2} \sum_{i,j} k(x_i', x_j') - \frac{2}{nm} \sum_{i,j} k(x_i, x_j')$$
+$$
+\widehat{MMD}^2 = \frac{1}{n^2} \sum_{i,j} k(x_i, x_j) + \frac{1}{m^2} \sum_{i,j} k(x_i', x_j') - \frac{2}{nm} \sum_{i,j} k(x_i, x_j')
+$$
 
-where $k$ is a kernel function, $$\{x_i\}$$ are training samples, and $$\{x_i'\}$$ are deployment samples. A permutation test establishes significance: if MMD between training and deployment is larger than most values obtained by randomly permuting labels, we conclude distribution shift has occurred.
+where $k$ is a kernel function, $\{x_i\}$ are training samples, and $\{x_i'\}$ are deployment samples. A permutation test establishes significance: if MMD between training and deployment is larger than most values obtained by randomly permuting labels, we conclude distribution shift has occurred.
 
 **Classifier-Based Shift Detection:** Train a binary classifier to distinguish training data from deployment data. If the classifier achieves accuracy significantly better than random (0.5 for balanced classes), this indicates distribution shift. The classifier's accuracy provides a measure of shift magnitude. This approach can detect both covariate shift and label shift depending on what features are provided to the classifier.
 
@@ -366,7 +424,7 @@ where $k$ is a kernel function, $$\{x_i\}$$ are training samples, and $$\{x_i'\}
 
 **Prediction Uncertainty:** Monitor changes in the model's prediction uncertainty over time. Increased uncertainty may indicate the model is encountering data unlike what it was trained on. For Bayesian neural networks or ensembles, we can track the variance of predictions across ensemble members or posterior samples. For standard neural networks, calibration-aware metrics like the expected calibration error can indicate when the model's confidence is becoming miscalibrated.
 
-**Drift-Specific Statistics:** For specific types of shift, specialized statistics exist. For covariate shift, we can estimate the likelihood ratio $$w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$$$using probabilistic classifiers or density ratio estimation and monitor the distribution of$$w(x)$ over time. For label shift, we can estimate changes in label prevalence using confusion matrices and the method of moments.
+**Drift-Specific Statistics:** For specific types of shift, specialized statistics exist. For covariate shift, we can estimate the likelihood ratio $w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$using probabilistic classifiers or density ratio estimation and monitor the distribution of$w(x)$ over time. For label shift, we can estimate changes in label prevalence using confusion matrices and the method of moments.
 
 In healthcare, shift detection should be stratified by demographic groups to ensure shifts affecting minority populations are not masked by aggregate statistics. For each demographic group, we can compute separate shift detection statistics and trigger adaptation when shift is detected in any group, even if aggregate shift is not significant.
 
@@ -380,9 +438,11 @@ Once shift is detected, several strategies exist for adapting models:
 
 **Ensemble Updating:** Maintain an ensemble of models trained on different time periods or data distributions. When shift is detected, add a new model trained on recent data to the ensemble and potentially remove the oldest model to manage ensemble size. Ensemble predictions can be weighted based on recency or performance on recent validation data. This approach naturally maintains representations of multiple distributions but increases computational costs and complexity.
 
-**Importance Weighting:** Reweight training samples to account for covariate shift. If we can estimate the likelihood ratio $$w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$$, we can train or adapt models using the weighted loss:
+**Importance Weighting:** Reweight training samples to account for covariate shift. If we can estimate the likelihood ratio $w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$, we can train or adapt models using the weighted loss:
 
-$$\mathcal{L}_{weighted}(\theta) = \mathbb{E}_{x, y \sim P_{train}} [w(x) \ell(f_\theta(x), y)]$$
+$$
+\mathcal{L}_{weighted}(\theta) = \mathbb{E}_{x, y \sim P_{train}} [w(x) \ell(f_\theta(x), y)]
+$$
 
 This effectively emphasizes training samples that are more representative of the deployment distribution. Importance weighting is most effective for pure covariate shift but can be combined with other methods when multiple types of shift occur simultaneously.
 
@@ -400,13 +460,13 @@ Adapting models in response to distribution shift while maintaining fairness req
 
 **Fairness-Constrained Retraining:** When retraining or fine-tuning, impose fairness constraints that ensure disparities in performance or error rates across groups do not increase. This can be formulated as constrained optimization:
 
-$$\begin{aligned}
+$\begin{aligned}
 \min_{\theta} \quad & \mathcal{L}(\theta) \\
 \text{subject to} \quad & \Delta_{FPR}(\theta) \leq \epsilon_1 \\
 & \Delta_{FNR}(\theta) \leq \epsilon_2
-\end{aligned}$$
+\end{aligned}$
 
-where $$\Delta_{FPR}(\theta)$$ and $$\Delta_{FNR}(\theta)$$ measure disparities in false positive and false negative rates across groups, and $$\epsilon_1, \epsilon_2$$ are tolerance thresholds.
+where $\Delta_{FPR}(\theta)$ and $\Delta_{FNR}(\theta)$ measure disparities in false positive and false negative rates across groups, and $\epsilon_1, \epsilon_2$ are tolerance thresholds.
 
 **Fairness Auditing After Adaptation:** After any model update, comprehensively audit fairness metrics stratified by demographic groups before deploying the updated model. Establish go/no-go criteria: the updated model should not degrade performance for any demographic group beyond acceptable thresholds, and fairness metrics should not worsen beyond acceptable bounds. If the updated model fails these criteria, either continue adaptation with modified strategies or revert to the previous model while investigating the source of fairness degradation.
 
@@ -437,10 +497,8 @@ from datetime import datetime
 from scipy import stats
 import warnings
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class ContinualLearningConfig:
@@ -449,16 +507,16 @@ class ContinualLearningConfig:
     memory_size: int = 1000
     replay_batch_fraction: float = 0.3
     memory_selection_strategy: str = 'stratified'  # 'random', 'stratified', 'herding'
-    
+
     # EWC parameters
     ewc_lambda: float = 1000.0
     fisher_estimation_samples: int = 500
-    
+
     # Shift detection
     shift_detection_window: int = 100
     shift_detection_threshold: float = 0.05
     use_mmd_test: bool = True
-    
+
     # Fairness monitoring
     sensitive_attributes: List[str] = field(default_factory=lambda: ['race', 'sex', 'age_group'])
     fairness_threshold: Dict[str, float] = field(default_factory=lambda: {
@@ -466,25 +524,24 @@ class ContinualLearningConfig:
         'equalized_odds_difference': 0.1,
         'accuracy_disparity': 0.05
     })
-    
+
     # Adaptation
     adaptation_strategy: str = 'ewc_replay'  # 'full_retrain', 'fine_tune', 'ewc_replay'
     adaptation_epochs: int = 5
     adaptation_lr: float = 0.0001
-    
+
     # Validation
     validation_fraction: float = 0.2
     min_group_size: int = 30
 
-
 class MemoryBuffer:
     """
     Memory buffer for experience replay with fairness-aware sampling.
-    
+
     Maintains representative samples from historical data with stratification
     by demographic groups to ensure equitable replay.
     """
-    
+
     def __init__(
         self,
         max_size: int,
@@ -493,7 +550,7 @@ class MemoryBuffer:
     ):
         """
         Initialize memory buffer.
-        
+
         Args:
             max_size: Maximum number of samples to store
             selection_strategy: Strategy for selecting samples ('random', 'stratified', 'herding')
@@ -502,13 +559,13 @@ class MemoryBuffer:
         self.max_size = max_size
         self.selection_strategy = selection_strategy
         self.sensitive_attributes = sensitive_attributes or []
-        
+
         self.data: List[Dict[str, Any]] = []
         self.current_size = 0
-        
+
         # Track group counts for stratified sampling
         self.group_counts: Dict[Tuple, int] = defaultdict(int)
-        
+
     def add_batch(
         self,
         features: np.ndarray,
@@ -517,26 +574,26 @@ class MemoryBuffer:
     ) -> None:
         """
         Add a batch of samples to memory.
-        
+
         Args:
             features: Feature array of shape (n_samples, n_features)
             labels: Label array of shape (n_samples,)
             metadata: Dictionary of metadata arrays including sensitive attributes
         """
         n_samples = features.shape[0]
-        
+
         for i in range(n_samples):
             sample = {
                 'features': features[i],
                 'label': labels[i],
                 'metadata': {key: val[i] for key, val in metadata.items()}
             }
-            
+
             if self.selection_strategy == 'stratified':
                 self._add_stratified(sample)
             else:
                 self._add_random(sample)
-                
+
     def _add_random(self, sample: Dict[str, Any]) -> None:
         """Add sample using reservoir sampling."""
         if self.current_size < self.max_size:
@@ -547,9 +604,9 @@ class MemoryBuffer:
             idx = np.random.randint(0, self.current_size + 1)
             if idx < self.max_size:
                 self.data[idx] = sample
-        
+
         self.current_size += 1
-                
+
     def _add_stratified(self, sample: Dict[str, Any]) -> None:
         """
         Add sample using stratified sampling to ensure group representation.
@@ -559,7 +616,7 @@ class MemoryBuffer:
             sample['metadata'].get(attr, 'unknown')
             for attr in self.sensitive_attributes
         )
-        
+
         if len(self.data) < self.max_size:
             # Still filling buffer
             self.data.append(sample)
@@ -568,7 +625,7 @@ class MemoryBuffer:
             # Buffer full - use stratified replacement
             # Find group with highest count
             max_group = max(self.group_counts.items(), key=lambda x: x[1])[0]
-            
+
             # If current sample is from underrepresented group or random chance
             if group_key != max_group or np.random.random() < 0.5:
                 # Find sample from overrepresented group to replace
@@ -582,7 +639,7 @@ class MemoryBuffer:
                         self.group_counts[max_group] -= 1
                         self.group_counts[group_key] += 1
                         break
-                        
+
     def _add_herding(
         self,
         sample: Dict[str, Any],
@@ -590,26 +647,26 @@ class MemoryBuffer:
     ) -> None:
         """
         Add sample using herding to maintain representative feature distribution.
-        
+
         Args:
             sample: Sample to add
             feature_extractor: Function to extract features for computing means
         """
         # Extract features for current sample
         features = feature_extractor(sample['features'][np.newaxis, :])[0]
-        
+
         # Extract group identifier
         group_key = tuple(
             sample['metadata'].get(attr, 'unknown')
             for attr in self.sensitive_attributes
         )
-        
+
         # Compute mean feature vector for this group
         group_samples = [
             s for s in self.data
             if tuple(s['metadata'].get(attr, 'unknown') for attr in self.sensitive_attributes) == group_key
         ]
-        
+
         if not group_samples or len(self.data) < self.max_size:
             self.data.append(sample)
             self.group_counts[group_key] += 1
@@ -620,14 +677,14 @@ class MemoryBuffer:
                 for s in group_samples
             ])
             current_mean = group_features.mean(axis=0)
-            
+
             # Compute mean if we add new sample
             new_mean = (current_mean * len(group_samples) + features) / (len(group_samples) + 1)
-            
+
             # Find sample in memory whose removal brings us closest to desired mean
             best_idx = None
             best_distance = float('inf')
-            
+
             for i, stored_sample in enumerate(self.data):
                 stored_group = tuple(
                     stored_sample['metadata'].get(attr, 'unknown')
@@ -643,66 +700,65 @@ class MemoryBuffer:
                         len(group_samples)
                     )
                     distance = np.linalg.norm(hypothetical_mean - new_mean)
-                    
+
                     if distance < best_distance:
                         best_distance = distance
                         best_idx = i
-                        
+
             if best_idx is not None:
                 self.data[best_idx] = sample
-                
+
     def sample(self, batch_size: int) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray]]:
         """
         Sample a batch from memory.
-        
+
         Args:
             batch_size: Number of samples to draw
-            
+
         Returns:
             Tuple of (features, labels, metadata)
         """
         if not self.data:
             raise ValueError("Memory buffer is empty")
-            
+
         # Sample with replacement if batch_size > buffer size
         indices = np.random.choice(len(self.data), size=min(batch_size, len(self.data)), replace=False)
-        
+
         samples = [self.data[i] for i in indices]
-        
+
         features = np.stack([s['features'] for s in samples])
         labels = np.array([s['label'] for s in samples])
-        
+
         metadata = {}
         if samples[0]['metadata']:
             for key in samples[0]['metadata'].keys():
                 metadata[key] = np.array([s['metadata'][key] for s in samples])
-                
+
         return features, labels, metadata
-    
+
     def get_group_statistics(self) -> Dict[Tuple, int]:
         """Get sample counts by demographic group."""
         return dict(self.group_counts)
 
-
 class FisherInformationMatrix:
     """
     Diagonal Fisher Information Matrix for Elastic Weight Consolidation.
-    
+
     Approximates parameter importance by accumulating squared gradients
     of the log-likelihood at optimal parameters.
     """
-    
+
     def __init__(self, model: nn.Module):
         """
         Initialize Fisher information computation.
-        
+
         Args:
             model: Neural network model
         """
         self.model = model
         self.fisher: Dict[str, torch.Tensor] = {}
         self.optimal_params: Dict[str, torch.Tensor] = {}
-        
+
     def compute_fisher(
         self,
         dataloader: DataLoader,
@@ -710,31 +766,31 @@ class FisherInformationMatrix:
     ) -> None:
         """
         Compute diagonal Fisher information matrix.
-        
+
         Args:
             dataloader: DataLoader with samples for Fisher computation
             num_samples: Optional limit on number of samples to use
         """
         self.fisher = {}
-        
+
         # Initialize Fisher dictionary
         for name, param in self.model.named_parameters():
             if param.requires_grad:
                 self.fisher[name] = torch.zeros_like(param)
-                
+
         self.model.eval()
-        
+
         samples_processed = 0
         for batch_idx, (features, labels) in enumerate(dataloader):
             if num_samples and samples_processed >= num_samples:
                 break
-                
+
             features = features.float()
             labels = labels.float()
-            
+
             # Forward pass
             outputs = self.model(features)
-            
+
             # For classification, compute log probability of correct class
             if outputs.shape[1] == 1:
                 # Binary classification
@@ -746,55 +802,54 @@ class FisherInformationMatrix:
             else:
                 # Multi-class classification
                 log_probs = F.cross_entropy(outputs, labels.long(), reduction='sum')
-                
+
             # Backward pass to get gradients
             self.model.zero_grad()
             log_probs.backward()
-            
+
             # Accumulate squared gradients
             for name, param in self.model.named_parameters():
                 if param.requires_grad and param.grad is not None:
                     self.fisher[name] += param.grad.data ** 2
-                    
+
             samples_processed += features.shape[0]
-            
+
         # Average over samples
         for name in self.fisher:
             self.fisher[name] /= samples_processed
-            
+
         # Store current parameters as optimal
         for name, param in self.model.named_parameters():
             if param.requires_grad:
                 self.optimal_params[name] = param.data.clone()
-                
+
         logger.info(f"Computed Fisher information from {samples_processed} samples")
-        
+
     def ewc_loss(self, lambda_: float = 1000.0) -> torch.Tensor:
         """
         Compute EWC regularization loss.
-        
+
         Args:
             lambda_: Regularization strength
-            
+
         Returns:
             EWC loss penalizing changes to important parameters
         """
         loss = torch.tensor(0.0)
-        
+
         for name, param in self.model.named_parameters():
             if param.requires_grad and name in self.fisher:
                 loss += (self.fisher[name] * (param - self.optimal_params[name]) ** 2).sum()
-                
-        return lambda_ * loss / 2
 
+        return lambda_ * loss / 2
 
 class DistributionShiftDetector:
     """
     Detects distribution shift using multiple statistical tests.
-    
+
     Implements MMD test, classifier-based detection, and group-stratified monitoring.
     """
-    
+
     def __init__(
         self,
         window_size: int = 100,
@@ -803,7 +858,7 @@ class DistributionShiftDetector:
     ):
         """
         Initialize shift detector.
-        
+
         Args:
             window_size: Number of recent samples to use for shift detection
             threshold: P-value threshold for detecting significant shift
@@ -812,15 +867,15 @@ class DistributionShiftDetector:
         self.window_size = window_size
         self.threshold = threshold
         self.sensitive_attributes = sensitive_attributes or []
-        
+
         # Maintain reference window from training data
         self.reference_features: Optional[np.ndarray] = None
         self.reference_metadata: Optional[Dict[str, np.ndarray]] = None
-        
+
         # Maintain recent deployment window
         self.recent_features: deque = deque(maxlen=window_size)
         self.recent_metadata: Dict[str, deque] = defaultdict(lambda: deque(maxlen=window_size))
-        
+
     def set_reference(
         self,
         features: np.ndarray,
@@ -828,7 +883,7 @@ class DistributionShiftDetector:
     ) -> None:
         """
         Set reference distribution from training data.
-        
+
         Args:
             features: Reference feature array
             metadata: Reference metadata dictionary
@@ -836,7 +891,7 @@ class DistributionShiftDetector:
         self.reference_features = features
         self.reference_metadata = metadata
         logger.info(f"Set reference distribution with {len(features)} samples")
-        
+
     def update(
         self,
         features: np.ndarray,
@@ -844,28 +899,28 @@ class DistributionShiftDetector:
     ) -> None:
         """
         Update recent distribution window with new samples.
-        
+
         Args:
             features: New feature array
             metadata: New metadata dictionary
         """
         for sample_features in features:
             self.recent_features.append(sample_features)
-            
+
         for key, values in metadata.items():
             for value in values:
                 self.recent_metadata[key].append(value)
-                
+
     def detect_shift(
         self,
         method: str = 'mmd'
     ) -> Dict[str, Any]:
         """
         Detect distribution shift between reference and recent data.
-        
+
         Args:
             method: Detection method ('mmd', 'classifier', or 'both')
-            
+
         Returns:
             Dictionary with shift detection results including:
             - shift_detected: Boolean indicating if shift detected
@@ -874,7 +929,7 @@ class DistributionShiftDetector:
         """
         if self.reference_features is None:
             raise ValueError("Reference distribution not set")
-            
+
         if len(self.recent_features) < self.window_size // 2:
             logger.warning("Insufficient recent samples for reliable shift detection")
             return {
@@ -882,33 +937,33 @@ class DistributionShiftDetector:
                 'p_value': 1.0,
                 'message': 'Insufficient data'
             }
-            
+
         recent_features = np.array(list(self.recent_features))
-        
+
         results = {
             'shift_detected': False,
             'p_value': 1.0,
             'group_results': {}
         }
-        
+
         if method in ['mmd', 'both']:
             # Overall MMD test
             p_value = self._mmd_test(self.reference_features, recent_features)
             results['p_value'] = p_value
             results['shift_detected'] = p_value < self.threshold
-            
+
             # Stratified tests by sensitive attributes
             if self.sensitive_attributes and self.reference_metadata:
                 for attr in self.sensitive_attributes:
                     group_results = self._stratified_shift_test(attr)
                     results['group_results'][attr] = group_results
-                    
+
                     # Overall shift detected if any group shows shift
                     if any(r['shift_detected'] for r in group_results.values()):
                         results['shift_detected'] = True
-                        
+
         return results
-    
+
     def _mmd_test(
         self,
         X: np.ndarray,
@@ -919,95 +974,95 @@ class DistributionShiftDetector:
     ) -> float:
         """
         Compute MMD test for distribution shift.
-        
+
         Args:
             X: Reference samples
             Y: Recent samples
             kernel: Kernel function ('rbf' or 'linear')
             gamma: RBF kernel bandwidth (auto-computed if None)
             n_permutations: Number of permutations for p-value estimation
-            
+
         Returns:
             P-value for the null hypothesis that X and Y are from same distribution
         """
         n = X.shape[0]
         m = Y.shape[0]
-        
+
         if kernel == 'rbf':
             if gamma is None:
                 # Median heuristic for bandwidth
                 dists = np.linalg.norm(X[:100] - X[:100, np.newaxis], axis=2)
                 gamma = 1.0 / (2 * np.median(dists[dists > 0]) ** 2)
-                
+
             def kernel_fn(x1, x2):
                 return np.exp(-gamma * np.linalg.norm(x1 - x2) ** 2)
         else:
             def kernel_fn(x1, x2):
                 return np.dot(x1, x2)
-                
+
         # Compute MMD statistic
         def compute_mmd():
             XX = sum(kernel_fn(X[i], X[j]) for i in range(n) for j in range(i+1, n))
             YY = sum(kernel_fn(Y[i], Y[j]) for i in range(m) for j in range(i+1, m))
             XY = sum(kernel_fn(X[i], Y[j]) for i in range(n) for j in range(m))
-            
+
             mmd = (2.0 * XX / (n * (n-1)) +
                    2.0 * YY / (m * (m-1)) -
                    2.0 * XY / (n * m))
             return mmd
-            
+
         observed_mmd = compute_mmd()
-        
+
         # Permutation test
         combined = np.vstack([X, Y])
         permutation_mmds = []
-        
+
         for _ in range(n_permutations):
             indices = np.random.permutation(n + m)
             X_perm = combined[indices[:n]]
             Y_perm = combined[indices[n:]]
-            
+
             # Recompute with permuted data
             XX = sum(kernel_fn(X_perm[i], X_perm[j]) for i in range(n) for j in range(i+1, n))
             YY = sum(kernel_fn(Y_perm[i], Y_perm[j]) for i in range(m) for j in range(i+1, m))
             XY = sum(kernel_fn(X_perm[i], Y_perm[j]) for i in range(n) for j in range(m))
-            
+
             perm_mmd = (2.0 * XX / (n * (n-1)) +
                        2.0 * YY / (m * (m-1)) -
                        2.0 * XY / (n * m))
             permutation_mmds.append(perm_mmd)
-            
+
         # Compute p-value
         p_value = np.mean(np.array(permutation_mmds) >= observed_mmd)
-        
+
         return p_value
-    
+
     def _stratified_shift_test(self, attribute: str) -> Dict[Any, Dict[str, Any]]:
         """
         Perform shift tests stratified by demographic groups.
-        
+
         Args:
             attribute: Sensitive attribute to stratify by
-            
+
         Returns:
             Dictionary mapping group values to shift test results
         """
         if attribute not in self.reference_metadata:
             return {}
-            
+
         group_results = {}
-        
+
         # Get unique group values
         ref_groups = set(self.reference_metadata[attribute])
         recent_groups = set(self.recent_metadata[attribute])
         all_groups = ref_groups.union(recent_groups)
-        
+
         for group in all_groups:
             # Extract samples for this group
             ref_mask = self.reference_metadata[attribute] == group
             if not any(ref_mask):
                 continue
-                
+
             recent_mask = np.array(list(self.recent_metadata[attribute])) == group
             if not any(recent_mask):
                 group_results[group] = {
@@ -1016,10 +1071,10 @@ class DistributionShiftDetector:
                     'message': 'Group disappeared from recent data'
                 }
                 continue
-                
+
             ref_group_features = self.reference_features[ref_mask]
             recent_group_features = np.array(list(self.recent_features))[recent_mask]
-            
+
             if len(recent_group_features) < 10:
                 group_results[group] = {
                     'shift_detected': False,
@@ -1027,28 +1082,27 @@ class DistributionShiftDetector:
                     'message': 'Insufficient recent samples'
                 }
                 continue
-                
+
             # Perform MMD test for this group
             p_value = self._mmd_test(ref_group_features, recent_group_features)
-            
+
             group_results[group] = {
                 'shift_detected': p_value < self.threshold,
                 'p_value': p_value,
                 'n_reference': len(ref_group_features),
                 'n_recent': len(recent_group_features)
             }
-            
-        return group_results
 
+        return group_results
 
 class FairnessMonitor:
     """
     Monitors fairness metrics across demographic groups during continual learning.
-    
+
     Tracks multiple fairness metrics and detects fairness degradation that should
     trigger adaptation or rollback.
     """
-    
+
     def __init__(
         self,
         sensitive_attributes: List[str],
@@ -1056,18 +1110,18 @@ class FairnessMonitor:
     ):
         """
         Initialize fairness monitor.
-        
+
         Args:
             sensitive_attributes: List of attributes to monitor
             fairness_thresholds: Maximum acceptable disparities for each metric
         """
         self.sensitive_attributes = sensitive_attributes
         self.fairness_thresholds = fairness_thresholds
-        
+
         # Track fairness metrics over time
         self.metric_history: Dict[str, List[float]] = defaultdict(list)
         self.group_metric_history: Dict[Tuple[str, Any], List[Dict[str, float]]] = defaultdict(list)
-        
+
     def evaluate_fairness(
         self,
         y_true: np.ndarray,
@@ -1077,13 +1131,13 @@ class FairnessMonitor:
     ) -> Dict[str, Any]:
         """
         Evaluate fairness metrics across demographic groups.
-        
+
         Args:
             y_true: True labels
             y_pred: Predicted labels
             y_prob: Predicted probabilities
             metadata: Dictionary of metadata including sensitive attributes
-            
+
         Returns:
             Dictionary with fairness metrics and violation flags
         """
@@ -1093,48 +1147,48 @@ class FairnessMonitor:
             'disparities': {},
             'violations': []
         }
-        
+
         for attr in self.sensitive_attributes:
             if attr not in metadata:
                 logger.warning(f"Sensitive attribute '{attr}' not found in metadata")
                 continue
-                
+
             attr_values = metadata[attr]
             unique_values = np.unique(attr_values)
-            
+
             # Compute metrics for each group
             group_metrics = {}
             for value in unique_values:
                 mask = attr_values == value
                 if np.sum(mask) < 10:  # Skip very small groups
                     continue
-                    
+
                 metrics = self._compute_overall_metrics(
                     y_true[mask],
                     y_pred[mask],
                     y_prob[mask]
                 )
                 group_metrics[value] = metrics
-                
+
                 # Store in history
                 self.group_metric_history[(attr, value)].append(metrics)
-                
+
             results['group_metrics'][attr] = group_metrics
-            
+
             # Compute disparities
             disparities = self._compute_disparities(group_metrics)
             results['disparities'][attr] = disparities
-            
+
             # Check for violations
             violations = self._check_violations(attr, disparities)
             results['violations'].extend(violations)
-            
+
         # Store overall metrics in history
         for metric, value in results['overall_metrics'].items():
             self.metric_history[metric].append(value)
-            
+
         return results
-    
+
     def _compute_overall_metrics(
         self,
         y_true: np.ndarray,
@@ -1147,51 +1201,51 @@ class FairnessMonitor:
                 'accuracy': accuracy_score(y_true, y_pred),
                 'auc': roc_auc_score(y_true, y_prob) if len(np.unique(y_true)) > 1 else 0.5
             }
-            
+
             # Compute confusion matrix metrics
             tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-            
+
             metrics['tpr'] = tp / (tp + fn) if (tp + fn) > 0 else 0.0  # True positive rate
             metrics['fpr'] = fp / (fp + tn) if (fp + tn) > 0 else 0.0  # False positive rate
             metrics['tnr'] = tn / (tn + fp) if (tn + fp) > 0 else 0.0  # True negative rate
             metrics['fnr'] = fn / (fn + tp) if (fn + tp) > 0 else 0.0  # False negative rate
             metrics['ppv'] = tp / (tp + fp) if (tp + fp) > 0 else 0.0  # Positive predictive value
-            
+
             return metrics
-            
+
         except Exception as e:
             logger.error(f"Error computing metrics: {e}")
             return {}
-    
+
     def _compute_disparities(
         self,
         group_metrics: Dict[Any, Dict[str, float]]
     ) -> Dict[str, float]:
         """
         Compute disparity metrics across groups.
-        
+
         Args:
             group_metrics: Metrics for each group
-            
+
         Returns:
             Dictionary of disparity measures
         """
         if len(group_metrics) < 2:
             return {}
-            
+
         disparities = {}
-        
+
         # Get all metric names
         metric_names = set()
         for metrics in group_metrics.values():
             metric_names.update(metrics.keys())
-            
+
         for metric in metric_names:
             values = [m[metric] for m in group_metrics.values() if metric in m]
             if len(values) >= 2:
                 disparities[f'{metric}_range'] = max(values) - min(values)
                 disparities[f'{metric}_ratio'] = max(values) / min(values) if min(values) > 0 else float('inf')
-                
+
         # Demographic parity difference (difference in positive prediction rates)
         pos_rates = []
         for metrics in group_metrics.values():
@@ -1200,21 +1254,21 @@ class FairnessMonitor:
                 # For balanced classes, approximate as (TPR + FPR) / 2
                 pos_rate = (metrics['tpr'] + metrics['fpr']) / 2
                 pos_rates.append(pos_rate)
-                
+
         if len(pos_rates) >= 2:
             disparities['demographic_parity_difference'] = max(pos_rates) - min(pos_rates)
-            
+
         # Equalized odds difference (max difference in TPR and FPR)
         tprs = [m['tpr'] for m in group_metrics.values() if 'tpr' in m]
         fprs = [m['fpr'] for m in group_metrics.values() if 'fpr' in m]
-        
+
         if len(tprs) >= 2 and len(fprs) >= 2:
             tpr_diff = max(tprs) - min(tprs)
             fpr_diff = max(fprs) - min(fprs)
             disparities['equalized_odds_difference'] = max(tpr_diff, fpr_diff)
-            
+
         return disparities
-    
+
     def _check_violations(
         self,
         attribute: str,
@@ -1222,16 +1276,16 @@ class FairnessMonitor:
     ) -> List[Dict[str, Any]]:
         """
         Check if disparities exceed acceptable thresholds.
-        
+
         Args:
             attribute: Sensitive attribute being checked
             disparities: Computed disparity measures
-            
+
         Returns:
             List of violation dictionaries
         """
         violations = []
-        
+
         for metric, threshold in self.fairness_thresholds.items():
             if metric in disparities and disparities[metric] > threshold:
                 violations.append({
@@ -1241,9 +1295,9 @@ class FairnessMonitor:
                     'threshold': threshold,
                     'message': f"{metric} disparity {disparities[metric]:.3f} exceeds threshold {threshold:.3f}"
                 })
-                
+
         return violations
-    
+
     def get_fairness_trend(
         self,
         metric: str,
@@ -1251,26 +1305,26 @@ class FairnessMonitor:
     ) -> Dict[str, Any]:
         """
         Analyze trend in fairness metric over time.
-        
+
         Args:
             metric: Metric name to analyze
             window: Window size for trend analysis
-            
+
         Returns:
             Dictionary with trend analysis results
         """
         if metric not in self.metric_history:
             return {'trend': 'unknown', 'message': 'Insufficient history'}
-            
+
         history = self.metric_history[metric][-window:]
-        
+
         if len(history) < 3:
             return {'trend': 'insufficient_data', 'values': history}
-            
+
         # Simple linear regression for trend
         x = np.arange(len(history))
         slope = np.polyfit(x, history, 1)[0]
-        
+
         return {
             'trend': 'improving' if slope < -0.001 else 'degrading' if slope > 0.001 else 'stable',
             'slope': slope,
@@ -1279,15 +1333,14 @@ class FairnessMonitor:
             'std': np.std(history)
         }
 
-
 class ContinualLearningSystem:
     """
     Complete continual learning system with fairness monitoring.
-    
+
     Integrates EWC, experience replay, shift detection, and fairness-aware adaptation
     for healthcare applications.
     """
-    
+
     def __init__(
         self,
         model: nn.Module,
@@ -1295,38 +1348,38 @@ class ContinualLearningSystem:
     ):
         """
         Initialize continual learning system.
-        
+
         Args:
             model: Neural network model to adapt
             config: Configuration for continual learning
         """
         self.model = model
         self.config = config
-        
+
         # Initialize components
         self.memory = MemoryBuffer(
             max_size=config.memory_size,
             selection_strategy=config.memory_selection_strategy,
             sensitive_attributes=config.sensitive_attributes
         )
-        
+
         self.fisher = FisherInformationMatrix(model)
-        
+
         self.shift_detector = DistributionShiftDetector(
             window_size=config.shift_detection_window,
             threshold=config.shift_detection_threshold,
             sensitive_attributes=config.sensitive_attributes
         )
-        
+
         self.fairness_monitor = FairnessMonitor(
             sensitive_attributes=config.sensitive_attributes,
             fairness_thresholds=config.fairness_threshold
         )
-        
+
         # Track adaptation history
         self.adaptation_history: List[Dict[str, Any]] = []
         self.current_task = 0
-        
+
     def initial_training(
         self,
         train_loader: DataLoader,
@@ -1336,53 +1389,53 @@ class ContinualLearningSystem:
     ) -> Dict[str, Any]:
         """
         Perform initial training on first task.
-        
+
         Args:
             train_loader: Training data loader
             val_loader: Validation data loader
             epochs: Number of training epochs
             lr: Learning rate
-            
+
         Returns:
             Dictionary with training results
         """
         logger.info("Starting initial training...")
-        
+
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         criterion = nn.BCEWithLogitsLoss()
-        
+
         self.model.train()
-        
+
         for epoch in range(epochs):
             epoch_loss = 0.0
             n_batches = 0
-            
+
             for features, labels, metadata in train_loader:
                 features = features.float()
                 labels = labels.float()
-                
+
                 optimizer.zero_grad()
                 outputs = self.model(features).squeeze()
                 loss = criterion(outputs, labels)
-                
+
                 loss.backward()
                 optimizer.step()
-                
+
                 epoch_loss += loss.item()
                 n_batches += 1
-                
+
             avg_loss = epoch_loss / n_batches
             logger.info(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
-            
+
         # Evaluate on validation set
         val_results = self._evaluate(val_loader)
-        
+
         # Compute Fisher information
         self.fisher.compute_fisher(
             train_loader,
             num_samples=self.config.fisher_estimation_samples
         )
-        
+
         # Populate memory buffer
         for features, labels, metadata in train_loader:
             self.memory.add_batch(
@@ -1390,30 +1443,30 @@ class ContinualLearningSystem:
                 labels.numpy(),
                 metadata
             )
-            
+
         # Set reference distribution for shift detection
         all_features = []
         all_metadata = defaultdict(list)
-        
+
         for features, labels, metadata in train_loader:
             all_features.append(features.numpy())
             for key, val in metadata.items():
                 all_metadata[key].extend(val)
-                
+
         all_features = np.vstack(all_features)
         all_metadata = {k: np.array(v) for k, v in all_metadata.items()}
-        
+
         self.shift_detector.set_reference(all_features, all_metadata)
-        
+
         logger.info("Initial training completed")
-        
+
         return {
             'task': 0,
             'validation_results': val_results,
             'memory_size': len(self.memory.data),
             'timestamp': datetime.now().isoformat()
         }
-    
+
     def continual_update(
         self,
         new_data_loader: DataLoader,
@@ -1421,37 +1474,37 @@ class ContinualLearningSystem:
     ) -> Dict[str, Any]:
         """
         Perform continual learning update with new data.
-        
+
         Args:
             new_data_loader: DataLoader with new data
             val_loader: Validation data loader
-            
+
         Returns:
             Dictionary with update results and fairness metrics
         """
         self.current_task += 1
         logger.info(f"Starting continual update for task {self.current_task}")
-        
+
         # Detect distribution shift
         new_features = []
         new_metadata = defaultdict(list)
-        
+
         for features, labels, metadata in new_data_loader:
             new_features.append(features.numpy())
             for key, val in metadata.items():
                 new_metadata[key].extend(val)
-                
+
         new_features = np.vstack(new_features)
         new_metadata = {k: np.array(v) for k, v in new_metadata.items()}
-        
+
         self.shift_detector.update(new_features, new_metadata)
         shift_results = self.shift_detector.detect_shift()
-        
+
         logger.info(f"Shift detection: {shift_results['shift_detected']}, p-value: {shift_results['p_value']:.4f}")
-        
+
         # Evaluate baseline performance before update
         baseline_results = self._evaluate(val_loader)
-        
+
         # Perform adaptation based on strategy
         if self.config.adaptation_strategy == 'ewc_replay':
             adaptation_results = self._ewc_replay_adaptation(
@@ -1470,37 +1523,37 @@ class ContinualLearningSystem:
             )
         else:
             raise ValueError(f"Unknown adaptation strategy: {self.config.adaptation_strategy}")
-            
+
         # Evaluate post-adaptation performance
         post_results = self._evaluate(val_loader)
-        
+
         # Check for fairness violations or performance degradation
         violations = post_results['fairness']['violations']
-        
+
         decision = 'accept'
         if violations:
             logger.warning(f"Fairness violations detected: {len(violations)}")
             decision = 'reject'
-            
+
         # Check for severe performance degradation in any group
         for attr in self.config.sensitive_attributes:
             if attr in baseline_results['fairness']['group_metrics'] and \
                attr in post_results['fairness']['group_metrics']:
                 baseline_groups = baseline_results['fairness']['group_metrics'][attr]
                 post_groups = post_results['fairness']['group_metrics'][attr]
-                
+
                 for group in baseline_groups:
                     if group in post_groups:
                         baseline_acc = baseline_groups[group].get('accuracy', 0)
                         post_acc = post_groups[group].get('accuracy', 0)
-                        
+
                         if post_acc < baseline_acc - 0.05:  # 5% degradation threshold
                             logger.warning(
                                 f"Severe accuracy degradation for {attr}={group}: "
                                 f"{baseline_acc:.3f} -> {post_acc:.3f}"
                             )
                             decision = 'reject'
-                            
+
         # Update memory and Fisher if adaptation accepted
         if decision == 'accept':
             # Add new data to memory
@@ -1510,7 +1563,7 @@ class ContinualLearningSystem:
                     labels.numpy(),
                     metadata
                 )
-                
+
             # Recompute Fisher information
             self.fisher.compute_fisher(
                 new_data_loader,
@@ -1519,7 +1572,7 @@ class ContinualLearningSystem:
         else:
             logger.warning("Adaptation rejected due to fairness violations or degradation")
             # In a real system, would roll back model weights here
-            
+
         # Record adaptation in history
         adaptation_record = {
             'task': self.current_task,
@@ -1532,11 +1585,11 @@ class ContinualLearningSystem:
             'decision': decision,
             'violations': violations
         }
-        
+
         self.adaptation_history.append(adaptation_record)
-        
+
         return adaptation_record
-    
+
     def _ewc_replay_adaptation(
         self,
         new_data_loader: DataLoader,
@@ -1544,45 +1597,45 @@ class ContinualLearningSystem:
     ) -> Dict[str, Any]:
         """
         Adapt using EWC regularization and experience replay.
-        
+
         Args:
             new_data_loader: DataLoader with new data
             val_loader: Validation data loader
-            
+
         Returns:
             Dictionary with adaptation results
         """
         logger.info("Performing EWC + replay adaptation")
-        
+
         optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=self.config.adaptation_lr
         )
         criterion = nn.BCEWithLogitsLoss()
-        
+
         self.model.train()
-        
+
         epoch_losses = []
-        
+
         for epoch in range(self.config.adaptation_epochs):
             epoch_loss = 0.0
             ewc_loss_total = 0.0
             replay_loss_total = 0.0
             n_batches = 0
-            
+
             for features, labels, metadata in new_data_loader:
                 features = features.float()
                 labels = labels.float()
-                
+
                 # Get replay batch
                 batch_size = features.shape[0]
                 replay_size = int(batch_size * self.config.replay_batch_fraction)
-                
+
                 if replay_size > 0 and len(self.memory.data) > 0:
                     replay_features, replay_labels, _ = self.memory.sample(replay_size)
                     replay_features = torch.tensor(replay_features, dtype=torch.float32)
                     replay_labels = torch.tensor(replay_labels, dtype=torch.float32)
-                    
+
                     # Combine new and replay data
                     combined_features = torch.cat([features, replay_features])
                     combined_labels = torch.cat([labels, replay_labels])
@@ -1590,24 +1643,24 @@ class ContinualLearningSystem:
                     combined_features = features
                     combined_labels = labels
                     replay_size = 0
-                    
+
                 optimizer.zero_grad()
-                
+
                 # Forward pass
                 outputs = self.model(combined_features).squeeze()
-                
+
                 # Compute task loss
                 task_loss = criterion(outputs, combined_labels)
-                
+
                 # Compute EWC loss
                 ewc_loss = self.fisher.ewc_loss(self.config.ewc_lambda)
-                
+
                 # Total loss
                 loss = task_loss + ewc_loss
-                
+
                 loss.backward()
                 optimizer.step()
-                
+
                 epoch_loss += loss.item()
                 ewc_loss_total += ewc_loss.item()
                 if replay_size > 0:
@@ -1615,27 +1668,27 @@ class ContinualLearningSystem:
                         outputs[-replay_size:],
                         combined_labels[-replay_size:]
                     ).item()
-                    
+
                 n_batches += 1
-                
+
             avg_loss = epoch_loss / n_batches
             avg_ewc_loss = ewc_loss_total / n_batches
             avg_replay_loss = replay_loss_total / n_batches if replay_loss_total > 0 else 0
-            
+
             epoch_losses.append(avg_loss)
-            
+
             logger.info(
                 f"Epoch {epoch+1}/{self.config.adaptation_epochs}, "
                 f"Loss: {avg_loss:.4f}, EWC: {avg_ewc_loss:.4f}, Replay: {avg_replay_loss:.4f}"
             )
-            
+
         return {
             'strategy': 'ewc_replay',
             'epochs': self.config.adaptation_epochs,
             'final_loss': epoch_losses[-1],
             'loss_history': epoch_losses
         }
-    
+
     def _fine_tune_adaptation(
         self,
         new_data_loader: DataLoader,
@@ -1643,56 +1696,56 @@ class ContinualLearningSystem:
     ) -> Dict[str, Any]:
         """
         Adapt using simple fine-tuning with low learning rate.
-        
+
         Args:
             new_data_loader: DataLoader with new data
             val_loader: Validation data loader
-            
+
         Returns:
             Dictionary with adaptation results
         """
         logger.info("Performing fine-tuning adaptation")
-        
+
         optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=self.config.adaptation_lr * 0.1  # Even lower LR for fine-tuning
         )
         criterion = nn.BCEWithLogitsLoss()
-        
+
         self.model.train()
-        
+
         epoch_losses = []
-        
+
         for epoch in range(self.config.adaptation_epochs):
             epoch_loss = 0.0
             n_batches = 0
-            
+
             for features, labels, metadata in new_data_loader:
                 features = features.float()
                 labels = labels.float()
-                
+
                 optimizer.zero_grad()
                 outputs = self.model(features).squeeze()
                 loss = criterion(outputs, labels)
-                
+
                 loss.backward()
                 optimizer.step()
-                
+
                 epoch_loss += loss.item()
                 n_batches += 1
-                
+
             avg_loss = epoch_loss / n_batches
             epoch_losses.append(avg_loss)
-            
+
             logger.info(f"Epoch {epoch+1}/{self.config.adaptation_epochs}, Loss: {avg_loss:.4f}")
-            
+
         return {
             'strategy': 'fine_tune',
             'epochs': self.config.adaptation_epochs,
             'final_loss': epoch_losses[-1],
             'loss_history': epoch_losses
         }
-    
+
     def _full_retrain_adaptation(
         self,
         new_data_loader: DataLoader,
@@ -1700,67 +1753,67 @@ class ContinualLearningSystem:
     ) -> Dict[str, Any]:
         """
         Adapt by retraining from scratch on combined old + new data.
-        
+
         Args:
             new_data_loader: DataLoader with new data
             val_loader: Validation data loader
-            
+
         Returns:
             Dictionary with adaptation results
         """
         logger.info("Performing full retraining")
-        
+
         # Combine memory and new data
         # In practice, would need to construct proper combined dataset
         # For now, just train on new data (simplified)
-        
+
         # Reset model parameters
         for layer in self.model.children():
             if hasattr(layer, 'reset_parameters'):
                 layer.reset_parameters()
-                
+
         return self._fine_tune_adaptation(new_data_loader, val_loader)
-    
+
     def _evaluate(self, data_loader: DataLoader) -> Dict[str, Any]:
         """
         Evaluate model performance including fairness metrics.
-        
+
         Args:
             data_loader: DataLoader for evaluation
-            
+
         Returns:
             Dictionary with performance and fairness metrics
         """
         self.model.eval()
-        
+
         all_features = []
         all_labels = []
         all_predictions = []
         all_probabilities = []
         all_metadata = defaultdict(list)
-        
+
         with torch.no_grad():
             for features, labels, metadata in data_loader:
                 features = features.float()
-                
+
                 outputs = self.model(features).squeeze()
                 probabilities = torch.sigmoid(outputs)
                 predictions = (probabilities > 0.5).float()
-                
+
                 all_features.append(features.numpy())
                 all_labels.append(labels.numpy())
                 all_predictions.append(predictions.numpy())
                 all_probabilities.append(probabilities.numpy())
-                
+
                 for key, val in metadata.items():
                     all_metadata[key].extend(val)
-                    
+
         # Concatenate all batches
         all_labels = np.concatenate(all_labels)
         all_predictions = np.concatenate(all_predictions)
         all_probabilities = np.concatenate(all_probabilities)
         all_metadata = {k: np.array(v) for k, v in all_metadata.items()}
-        
+
         # Compute fairness metrics
         fairness_results = self.fairness_monitor.evaluate_fairness(
             all_labels,
@@ -1768,12 +1821,12 @@ class ContinualLearningSystem:
             all_probabilities,
             all_metadata
         )
-        
+
         return {
             'overall': fairness_results['overall_metrics'],
             'fairness': fairness_results
         }
-    
+
     def save_state(self, filepath: str) -> None:
         """Save complete system state."""
         state = {
@@ -1789,48 +1842,47 @@ class ContinualLearningSystem:
                 'sensitive_attributes': self.config.sensitive_attributes
             }
         }
-        
+
         torch.save(state, filepath)
         logger.info(f"Saved system state to {filepath}")
-        
+
     def load_state(self, filepath: str) -> None:
         """Load complete system state."""
         state = torch.load(filepath)
-        
+
         self.model.load_state_dict(state['model_state'])
         self.fisher.fisher = state['fisher_information']
         self.fisher.optimal_params = state['fisher_optimal_params']
         self.memory.data = state['memory_data']
         self.adaptation_history = state['adaptation_history']
         self.current_task = state['current_task']
-        
-        logger.info(f"Loaded system state from {filepath}")
 
+        logger.info(f"Loaded system state from {filepath}")
 
 # Example usage
 if __name__ == "__main__":
     # Set random seeds for reproducibility
     np.random.seed(42)
     torch.manual_seed(42)
-    
+
     # Create synthetic healthcare dataset with demographic attributes
     n_samples = 1000
     n_features = 20
-    
+
     X = np.random.randn(n_samples, n_features).astype(np.float32)
     y = (X[:, 0] + X[:, 1] + 0.5 * np.random.randn(n_samples) > 0).astype(np.float32)
-    
+
     # Create demographic metadata
     race = np.random.choice(['White', 'Black', 'Hispanic', 'Asian'], size=n_samples)
     sex = np.random.choice(['Male', 'Female'], size=n_samples)
     age_group = np.random.choice(['<45', '45-65', '>65'], size=n_samples)
-    
+
     metadata = {
         'race': race,
         'sex': sex,
         'age_group': age_group
     }
-    
+
     # Create data loaders
     train_dataset = TensorDataset(
         torch.tensor(X[:700]),
@@ -1840,7 +1892,7 @@ if __name__ == "__main__":
         torch.tensor(X[700:]),
         torch.tensor(y[700:])
     )
-    
+
     # Custom collate function to include metadata
     def collate_with_metadata(batch):
         features = torch.stack([item[0] for item in batch])
@@ -1852,7 +1904,7 @@ if __name__ == "__main__":
             'age_group': age_group[indices]
         }
         return features, labels, batch_metadata
-    
+
     train_loader = DataLoader(
         train_dataset,
         batch_size=32,
@@ -1864,7 +1916,7 @@ if __name__ == "__main__":
         batch_size=32,
         collate_fn=collate_with_metadata
     )
-    
+
     # Define simple neural network
     class SimpleClassifier(nn.Module):
         def __init__(self, input_dim, hidden_dim=64):
@@ -1872,46 +1924,46 @@ if __name__ == "__main__":
             self.fc1 = nn.Linear(input_dim, hidden_dim)
             self.fc2 = nn.Linear(hidden_dim, hidden_dim)
             self.fc3 = nn.Linear(hidden_dim, 1)
-            
+
         def forward(self, x):
             x = F.relu(self.fc1(x))
             x = F.relu(self.fc2(x))
             x = self.fc3(x)
             return x
-    
+
     model = SimpleClassifier(n_features)
-    
+
     # Initialize continual learning system
     config = ContinualLearningConfig(
         memory_size=200,
         ewc_lambda=5000.0,
         sensitive_attributes=['race', 'sex', 'age_group']
     )
-    
+
     cl_system = ContinualLearningSystem(model, config)
-    
+
     # Initial training
     print("\n" + "="*60)
     print("INITIAL TRAINING")
     print("="*60)
     initial_results = cl_system.initial_training(train_loader, val_loader, epochs=5)
-    
+
     print(f"\nInitial validation accuracy: {initial_results['validation_results']['overall']['accuracy']:.4f}")
     print(f"Initial validation AUC: {initial_results['validation_results']['overall']['auc']:.4f}")
-    
+
     # Simulate new data with distribution shift
     X_new = np.random.randn(500, n_features).astype(np.float32) + 0.5  # Shift mean
     y_new = (X_new[:, 0] + X_new[:, 1] + 0.5 * np.random.randn(500) > 0).astype(np.float32)
-    
+
     race_new = np.random.choice(['White', 'Black', 'Hispanic', 'Asian'], size=500)
     sex_new = np.random.choice(['Male', 'Female'], size=500)
     age_group_new = np.random.choice(['<45', '45-65', '>65'], size=500)
-    
+
     new_dataset = TensorDataset(
         torch.tensor(X_new[:400]),
         torch.tensor(y_new[:400])
     )
-    
+
     def collate_new_metadata(batch):
         features = torch.stack([item[0] for item in batch])
         labels = torch.stack([item[1] for item in batch])
@@ -1922,42 +1974,42 @@ if __name__ == "__main__":
             'age_group': age_group_new[indices]
         }
         return features, labels, batch_metadata
-    
+
     new_loader = DataLoader(
         new_dataset,
         batch_size=32,
         shuffle=True,
         collate_fn=collate_new_metadata
     )
-    
+
     # Continual update
     print("\n" + "="*60)
     print("CONTINUAL UPDATE WITH NEW DATA")
     print("="*60)
     update_results = cl_system.continual_update(new_loader, val_loader)
-    
+
     print(f"\nShift detected: {update_results['shift_detected']}")
     print(f"Adaptation decision: {update_results['decision']}")
     print(f"Post-update accuracy: {update_results['post_performance']['overall']['accuracy']:.4f}")
     print(f"Post-update AUC: {update_results['post_performance']['overall']['auc']:.4f}")
-    
+
     if update_results['violations']:
         print(f"\nFairness violations: {len(update_results['violations'])}")
         for violation in update_results['violations'][:3]:
             print(f"  - {violation['message']}")
-    
+
     # Display group-specific performance
     print("\n" + "="*60)
     print("GROUP-SPECIFIC PERFORMANCE")
     print("="*60)
-    
+
     for attr in config.sensitive_attributes:
         print(f"\n{attr.upper()}:")
         if attr in update_results['post_performance']['fairness']['group_metrics']:
             group_metrics = update_results['post_performance']['fairness']['group_metrics'][attr]
             for group, metrics in group_metrics.items():
                 print(f"  {group}: Acc={metrics['accuracy']:.3f}, AUC={metrics['auc']:.3f}")
-                
+
     # Save system state
     cl_system.save_state('/mnt/user-data/outputs/continual_learning_checkpoint.pt')
     print("\nSystem state saved")

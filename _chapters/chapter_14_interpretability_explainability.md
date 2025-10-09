@@ -2,9 +2,10 @@
 layout: chapter
 title: "Chapter 14: Interpretability and Explainability"
 chapter_number: 14
+part_number: 4
+prev_chapter: /chapters/chapter-13-bias-detection/
+next_chapter: /chapters/chapter-15-validation-strategies/
 ---
-
-
 # Chapter 14: Model Interpretability and Explainability for Clinical Trust
 
 ## Learning Objectives
@@ -88,11 +89,10 @@ import warnings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class FeatureImportanceResult:
     """Results from feature importance analysis."""
-    
+
     feature_name: str
     importance_score: float
     importance_std: float
@@ -100,21 +100,21 @@ class FeatureImportanceResult:
     group_importances: Optional[Dict[str, float]] = None
     disparity_ratio: Optional[float] = None
     max_disparity: Optional[float] = None
-    
+
 
 class PermutationImportanceAnalyzer:
     """
     Compute permutation importance with stratification by demographic groups.
-    
+
     Permutation importance measures how much model performance degrades when
     each feature is randomly shuffled, breaking its relationship with the
     outcome. This provides a model-agnostic measure of feature importance.
-    
+
     For equity analysis, we compute importance separately for different
     demographic groups to detect whether models rely on features differently
     across populations in ways that might indicate bias.
     """
-    
+
     def __init__(
         self,
         model: Any,
@@ -124,7 +124,7 @@ class PermutationImportanceAnalyzer:
     ):
         """
         Initialize permutation importance analyzer.
-        
+
         Parameters
         ----------
         model : Any
@@ -143,15 +143,15 @@ class PermutationImportanceAnalyzer:
         self.n_repeats = n_repeats
         self.random_state = random_state
         self.rng = np.random.RandomState(random_state)
-        
+
         self.baseline_scores: Dict[str, float] = {}
         self.feature_importances: Dict[str, FeatureImportanceResult] = {}
-        
+
         logger.info(
             f"Initialized PermutationImportanceAnalyzer with "
             f"{n_repeats} repeats"
         )
-    
+
     def compute_importance(
         self,
         X: pd.DataFrame,
@@ -161,7 +161,7 @@ class PermutationImportanceAnalyzer:
     ) -> Dict[str, FeatureImportanceResult]:
         """
         Compute permutation importance for all features.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -172,7 +172,7 @@ class PermutationImportanceAnalyzer:
             Protected attributes for stratified analysis
         feature_names : List[str], optional
             Names of features to analyze. If None, uses all columns.
-            
+
         Returns
         -------
         Dict[str, FeatureImportanceResult]
@@ -180,16 +180,16 @@ class PermutationImportanceAnalyzer:
         """
         if feature_names is None:
             feature_names = X.columns.tolist()
-        
+
         logger.info(f"Computing importance for {len(feature_names)} features")
-        
+
         # Get baseline performance on unpermuted data
         y_pred = self._predict(X)
         baseline_score = self.scoring_function(y, y_pred)
         self.baseline_scores['overall'] = baseline_score
-        
+
         logger.info(f"Baseline score: {baseline_score:.4f}")
-        
+
         # Compute baseline for demographic groups if provided
         if protected_attributes is not None:
             for col in protected_attributes.columns:
@@ -197,14 +197,14 @@ class PermutationImportanceAnalyzer:
                     mask = protected_attributes[col] == group_val
                     if mask.sum() < 30:  # Skip very small groups
                         continue
-                    
+
                     group_label = f"{col}={group_val}"
                     group_score = self.scoring_function(
                         y[mask],
                         y_pred[mask]
                     )
                     self.baseline_scores[group_label] = group_score
-        
+
         # Compute importance for each feature
         for feature in feature_names:
             self.feature_importances[feature] = self._compute_feature_importance(
@@ -213,21 +213,21 @@ class PermutationImportanceAnalyzer:
                 feature_name=feature,
                 protected_attributes=protected_attributes
             )
-        
+
         # Rank features by importance
         sorted_features = sorted(
             self.feature_importances.items(),
             key=lambda x: x[1].importance_score,
             reverse=True
         )
-        
+
         for rank, (feature, result) in enumerate(sorted_features, 1):
             result.rank = rank
-        
+
         logger.info("Completed permutation importance analysis")
-        
+
         return self.feature_importances
-    
+
     def _compute_feature_importance(
         self,
         X: pd.DataFrame,
@@ -237,7 +237,7 @@ class PermutationImportanceAnalyzer:
     ) -> FeatureImportanceResult:
         """
         Compute permutation importance for a single feature.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -248,37 +248,37 @@ class PermutationImportanceAnalyzer:
             Name of feature to analyze
         protected_attributes : pd.DataFrame, optional
             Protected attributes for stratified analysis
-            
+
         Returns
         -------
         FeatureImportanceResult
             Importance result for this feature
         """
         logger.debug(f"Computing importance for feature: {feature_name}")
-        
+
         # Store original values
         X_permuted = X.copy()
         original_values = X[feature_name].values.copy()
-        
+
         # Repeat permutation multiple times for stable estimates
         importance_scores = []
-        
+
         for _ in range(self.n_repeats):
             # Permute feature
             X_permuted[feature_name] = self.rng.permutation(original_values)
-            
+
             # Get predictions and compute score
             y_pred_permuted = self._predict(X_permuted)
             permuted_score = self.scoring_function(y, y_pred_permuted)
-            
+
             # Importance is degradation in performance
             importance = self.baseline_scores['overall'] - permuted_score
             importance_scores.append(importance)
-        
+
         # Aggregate across repeats
         mean_importance = np.mean(importance_scores)
         std_importance = np.std(importance_scores)
-        
+
         # Compute group-specific importances if protected attributes provided
         group_importances = None
         if protected_attributes is not None:
@@ -289,7 +289,7 @@ class PermutationImportanceAnalyzer:
                 protected_attributes=protected_attributes,
                 original_values=original_values
             )
-        
+
         return FeatureImportanceResult(
             feature_name=feature_name,
             importance_score=mean_importance,
@@ -297,7 +297,7 @@ class PermutationImportanceAnalyzer:
             rank=0,  # Will be set after all features computed
             group_importances=group_importances
         )
-    
+
     def _compute_group_importances(
         self,
         X: pd.DataFrame,
@@ -308,29 +308,29 @@ class PermutationImportanceAnalyzer:
     ) -> Dict[str, float]:
         """
         Compute feature importance separately for demographic groups.
-        
+
         This reveals whether the model relies on features differently
         across populations, which can indicate bias or differential
         clinical validity.
         """
         group_importances = {}
         X_permuted = X.copy()
-        
+
         for col in protected_attributes.columns:
             for group_val in protected_attributes[col].unique():
                 mask = protected_attributes[col] == group_val
-                
+
                 if mask.sum() < 30:  # Skip very small groups
                     continue
-                
+
                 group_label = f"{col}={group_val}"
-                
+
                 if group_label not in self.baseline_scores:
                     continue
-                
+
                 # Compute importance for this group
                 group_importance_scores = []
-                
+
                 for _ in range(max(3, self.n_repeats // 2)):  # Fewer repeats for groups
                     # Permute within group
                     group_permutation = self.rng.permutation(
@@ -338,24 +338,24 @@ class PermutationImportanceAnalyzer:
                     )
                     X_permuted_group = X.copy()
                     X_permuted_group.loc[mask, feature_name] = group_permutation
-                    
+
                     # Get predictions for group
                     y_pred_permuted = self._predict(X_permuted_group)
                     permuted_score = self.scoring_function(
                         y[mask],
                         y_pred_permuted[mask]
                     )
-                    
+
                     # Importance is degradation
                     importance = (
                         self.baseline_scores[group_label] - permuted_score
                     )
                     group_importance_scores.append(importance)
-                
+
                 group_importances[group_label] = np.mean(group_importance_scores)
-        
+
         return group_importances
-    
+
     def _predict(self, X: pd.DataFrame) -> np.ndarray:
         """Get model predictions, handling both classifiers and regressors."""
         if hasattr(self.model, 'predict_proba'):
@@ -367,53 +367,53 @@ class PermutationImportanceAnalyzer:
                 return proba
         else:
             return self.model.predict(X)
-    
+
     def analyze_importance_disparities(
         self,
         disparity_threshold: float = 0.5
     ) -> pd.DataFrame:
         """
         Analyze disparities in feature importance across groups.
-        
+
         Identifies features whose importance varies substantially across
         demographic groups, which may indicate bias or differential
         clinical validity.
-        
+
         Parameters
         ----------
         disparity_threshold : float, default=0.5
             Minimum importance difference to flag as disparate
-            
+
         Returns
         -------
         pd.DataFrame
             Features with substantial importance disparities
         """
         disparate_features = []
-        
+
         for feature, result in self.feature_importances.items():
             if result.group_importances is None:
                 continue
-            
+
             if len(result.group_importances) < 2:
                 continue
-            
+
             importances = list(result.group_importances.values())
             max_importance = max(importances)
             min_importance = min(importances)
-            
+
             disparity = max_importance - min_importance
-            
+
             if disparity > disparity_threshold:
                 # Compute ratio if min_importance is positive
                 if min_importance > 0.01:
                     disparity_ratio = max_importance / min_importance
                 else:
                     disparity_ratio = np.inf
-                
+
                 result.max_disparity = disparity
                 result.disparity_ratio = disparity_ratio
-                
+
                 disparate_features.append({
                     'feature': feature,
                     'overall_importance': result.importance_score,
@@ -424,21 +424,21 @@ class PermutationImportanceAnalyzer:
                     'rank': result.rank,
                     'group_importances': result.group_importances
                 })
-        
+
         if not disparate_features:
             logger.info("No features with substantial importance disparities found")
             return pd.DataFrame()
-        
+
         df = pd.DataFrame(disparate_features)
         df = df.sort_values('disparity', ascending=False)
-        
+
         logger.info(
             f"Found {len(df)} features with importance disparities "
             f"exceeding {disparity_threshold}"
         )
-        
+
         return df
-    
+
     def plot_importance_comparison(
         self,
         top_n: int = 15,
@@ -446,7 +446,7 @@ class PermutationImportanceAnalyzer:
     ):
         """
         Visualize feature importance with optional group comparisons.
-        
+
         Parameters
         ----------
         top_n : int, default=15
@@ -455,44 +455,44 @@ class PermutationImportanceAnalyzer:
             Whether to show group-specific importances
         """
         import matplotlib.pyplot as plt
-        
+
         # Get top features
         sorted_features = sorted(
             self.feature_importances.items(),
             key=lambda x: x[1].importance_score,
             reverse=True
         )[:top_n]
-        
+
         features = [f for f, _ in sorted_features]
         importances = [r.importance_score for _, r in sorted_features]
         stds = [r.importance_std for _, r in sorted_features]
-        
+
         fig, ax = plt.subplots(figsize=(12, max(6, len(features) * 0.4)))
-        
+
         y_pos = np.arange(len(features))
-        
+
         # Plot overall importance
         ax.barh(y_pos, importances, xerr=stds, alpha=0.7, label='Overall')
-        
+
         # Plot group-specific importances if available and requested
         if show_group_differences:
             group_labels = set()
             for _, result in sorted_features:
                 if result.group_importances:
                     group_labels.update(result.group_importances.keys())
-            
+
             if group_labels:
                 colors = plt.cm.tab10(np.linspace(0, 1, len(group_labels)))
-                
+
                 for i, group in enumerate(group_labels):
                     group_imps = []
                     for _, result in sorted_features:
-                        if (result.group_importances and 
+                        if (result.group_importances and
                             group in result.group_importances):
                             group_imps.append(result.group_importances[group])
                         else:
                             group_imps.append(0)
-                    
+
                     ax.plot(
                         group_imps,
                         y_pos,
@@ -501,7 +501,7 @@ class PermutationImportanceAnalyzer:
                         color=colors[i],
                         alpha=0.6
                     )
-        
+
         ax.set_yticks(y_pos)
         ax.set_yticklabels(features)
         ax.set_xlabel('Permutation Importance (Score Degradation)')
@@ -511,10 +511,9 @@ class PermutationImportanceAnalyzer:
         )
         ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         ax.axvline(x=0, color='black', linestyle='--', linewidth=0.5)
-        
+
         plt.tight_layout()
         plt.show()
-
 
 def compute_partial_dependence(
     model: Any,
@@ -527,11 +526,11 @@ def compute_partial_dependence(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Compute partial dependence of model output on a single feature.
-    
+
     Partial dependence plots show how model predictions change as a feature
     varies across its range while marginalizing over other features. This
     reveals the functional form of the model's dependence on the feature.
-    
+
     Parameters
     ----------
     model : Any
@@ -548,7 +547,7 @@ def compute_partial_dependence(
         Number of samples to use for marginalization (for efficiency)
     random_state : int, optional
         Random seed for sampling
-        
+
     Returns
     -------
     grid_values : np.ndarray
@@ -557,7 +556,7 @@ def compute_partial_dependence(
         Average predictions at each grid point
     """
     logger.info(f"Computing partial dependence for {feature_name}")
-    
+
     # Sample data if needed for computational efficiency
     if sample_size is not None and len(X) > sample_size:
         rng = np.random.RandomState(random_state)
@@ -565,21 +564,21 @@ def compute_partial_dependence(
         X_sample = X.iloc[sample_indices].copy()
     else:
         X_sample = X.copy()
-    
+
     # Create grid over feature range
     feature_values = X[feature_name].values
     min_val = np.percentile(feature_values, percentile_range[0] * 100)
     max_val = np.percentile(feature_values, percentile_range[1] * 100)
-    
+
     grid_values = np.linspace(min_val, max_val, grid_resolution)
     pd_values = np.zeros(grid_resolution)
-    
+
     # For each grid point, compute average prediction
     for i, grid_val in enumerate(grid_values):
         # Set feature to grid value for all samples
         X_modified = X_sample.copy()
         X_modified[feature_name] = grid_val
-        
+
         # Get predictions
         if hasattr(model, 'predict_proba'):
             proba = model.predict_proba(X_modified)
@@ -589,14 +588,13 @@ def compute_partial_dependence(
                 predictions = proba
         else:
             predictions = model.predict(X_modified)
-        
+
         # Average over samples
         pd_values[i] = predictions.mean()
-    
-    logger.info(f"Computed partial dependence over {grid_resolution} points")
-    
-    return grid_values, pd_values
 
+    logger.info(f"Computed partial dependence over {grid_resolution} points")
+
+    return grid_values, pd_values
 
 def compute_ice_curves(
     model: Any,
@@ -609,12 +607,12 @@ def compute_ice_curves(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute Individual Conditional Expectation (ICE) curves.
-    
+
     ICE curves show how predictions change for individual instances as a
     feature varies, revealing heterogeneity in feature effects across
     patients. Unlike partial dependence which averages over instances,
     ICE curves show each instance's trajectory.
-    
+
     Parameters
     ----------
     model : Any
@@ -631,7 +629,7 @@ def compute_ice_curves(
         Number of instances to plot (for visual clarity)
     random_state : int, optional
         Random seed for sampling instances
-        
+
     Returns
     -------
     grid_values : np.ndarray
@@ -643,26 +641,26 @@ def compute_ice_curves(
         Indices of sampled instances in original data
     """
     logger.info(f"Computing ICE curves for {feature_name}")
-    
+
     # Sample instances
     rng = np.random.RandomState(random_state)
     n_samples = min(sample_size, len(X))
     instance_indices = rng.choice(len(X), size=n_samples, replace=False)
     X_sample = X.iloc[instance_indices].copy()
-    
+
     # Create grid
     feature_values = X[feature_name].values
     min_val = np.percentile(feature_values, percentile_range[0] * 100)
     max_val = np.percentile(feature_values, percentile_range[1] * 100)
     grid_values = np.linspace(min_val, max_val, grid_resolution)
-    
+
     # Compute predictions for each instance at each grid point
     ice_curves = np.zeros((n_samples, grid_resolution))
-    
+
     for i, grid_val in enumerate(grid_values):
         X_modified = X_sample.copy()
         X_modified[feature_name] = grid_val
-        
+
         if hasattr(model, 'predict_proba'):
             proba = model.predict_proba(X_modified)
             if proba.shape[1] == 2:
@@ -671,11 +669,11 @@ def compute_ice_curves(
                 predictions = proba.mean(axis=1)
         else:
             predictions = model.predict(X_modified)
-        
+
         ice_curves[:, i] = predictions
-    
+
     logger.info(f"Computed {n_samples} ICE curves")
-    
+
     return grid_values, ice_curves, instance_indices
 ```
 
@@ -693,15 +691,17 @@ SHAP (SHapley Additive exPlanations) values provide a theoretically grounded app
 
 The theoretical foundation for SHAP values comes from Shapley values in cooperative game theory. Consider a coalition game where players cooperate to achieve a collective payout, and we wish to fairly distribute this payout among players based on their marginal contributions. The Shapley value computes each player's average marginal contribution across all possible orderings in which players could join the coalition. For machine learning interpretation, features are players and the model's prediction for a specific instance is the payout. A feature's SHAP value represents its average marginal contribution to the prediction across all possible subsets of features.
 
-Formally, for a model $f$ making prediction $$f(x)$$ for instance $x$ with features $$x = (x_1, ..., x_p)$$, the SHAP value $$\phi_i$$ for feature $i$ is defined as:
+Formally, for a model $f$ making prediction $f(x)$ for instance $x$ with features $x = (x_1, ..., x_p)$, the SHAP value $\phi_i$ for feature $i$ is defined as:
 
-$$\phi_i(f, x) = \sum_{S \subseteq F \setminus \{i\}} \frac{|S|!(|F| - |S| - 1)!}{|F|!} [f_x(S \cup \{i\}) - f_x(S)]$$
+$$
+\phi_i(f, x) = \sum_{S \subseteq F \setminus \{i\}} \frac{|S|!(|F| - |S| - 1)!}{|F|!} [f_x(S \cup \{i\}) - f_x(S)]
+$$
 
-where $F$ is the set of all features, $S$ ranges over all subsets not containing feature $i$, and $$f_x(S)$$ represents the expected prediction when only features in $S$ are known. The terms $$|S|!(|F|-|S|-1)!/|F|!$$ weight each subset according to how many orderings of features place feature $i$ immediately after the features in $S$. This ensures fair attribution that accounts for feature interactions and dependencies.
+where $F$ is the set of all features, $S$ ranges over all subsets not containing feature $i$, and $f_x(S)$ represents the expected prediction when only features in $S$ are known. The terms $|S|!(|F|-|S|-1)!/|F|!$ weight each subset according to how many orderings of features place feature $i$ immediately after the features in $S$. This ensures fair attribution that accounts for feature interactions and dependencies.
 
-Three key properties distinguish SHAP values from alternative attribution methods. Local accuracy requires that the sum of all feature attributions equals the difference between the prediction for the instance and the expected prediction over the reference distribution: $$f(x) - E[f(X)] = \sum_i \phi_i$$. This ensures that attributions provide a complete explanation accounting for the full prediction. Missingness requires that features with the same value in the instance being explained and the reference distribution receive zero attribution. Consistency requires that if a model changes so a feature's marginal contribution increases or stays the same regardless of other features present, that feature's attribution cannot decrease. SHAP values uniquely satisfy all three properties simultaneously.
+Three key properties distinguish SHAP values from alternative attribution methods. Local accuracy requires that the sum of all feature attributions equals the difference between the prediction for the instance and the expected prediction over the reference distribution: $f(x) - E[f(X)] = \sum_i \phi_i$. This ensures that attributions provide a complete explanation accounting for the full prediction. Missingness requires that features with the same value in the instance being explained and the reference distribution receive zero attribution. Consistency requires that if a model changes so a feature's marginal contribution increases or stays the same regardless of other features present, that feature's attribution cannot decrease. SHAP values uniquely satisfy all three properties simultaneously.
 
-However, computing exact SHAP values requires evaluating the model on exponentially many feature subsets, which becomes computationally prohibitive for even moderately large feature spaces. If we have $p$ features, exact computation requires $$2^p$$ model evaluations per instance. Various approximation methods have been developed to make SHAP computation tractable while maintaining reasonable accuracy. The choice of approximation method depends on the model type and the tradeoff between computational cost and attribution fidelity.
+However, computing exact SHAP values requires evaluating the model on exponentially many feature subsets, which becomes computationally prohibitive for even moderately large feature spaces. If we have $p$ features, exact computation requires $2^p$ model evaluations per instance. Various approximation methods have been developed to make SHAP computation tractable while maintaining reasonable accuracy. The choice of approximation method depends on the model type and the tradeoff between computational cost and attribution fidelity.
 
 For tree-based models including random forests and gradient boosting machines, TreeExplainer provides fast exact SHAP computation by exploiting the tree structure. Rather than evaluating all feature subsets separately, TreeExplainer traces each possible path through the tree ensemble, tracking how feature values direct the path and accumulating attributions efficiently. This reduces computation from exponential to polynomial time, making exact SHAP computation feasible even for large ensembles and high-dimensional data. TreeExplainer represents a major advance that has enabled widespread adoption of SHAP for clinical models built with tree methods.
 
@@ -722,11 +722,10 @@ import warnings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class SHAPAnalysisResult:
     """Results from SHAP value analysis."""
-    
+
     shap_values: np.ndarray  # Shape: (n_samples, n_features)
     base_value: float
     feature_names: List[str]
@@ -734,16 +733,15 @@ class SHAPAnalysisResult:
     group_summaries: Optional[Dict[str, Dict[str, float]]] = None
     disparity_analysis: Optional[pd.DataFrame] = None
 
-
 class ClinicalSHAPAnalyzer:
     """
     Compute and analyze SHAP values for clinical ML models with equity focus.
-    
+
     Provides comprehensive SHAP analysis including individual attributions,
     global feature importance, and stratified analysis across demographic
     groups to detect differential model behavior that might indicate bias.
     """
-    
+
     def __init__(
         self,
         model: Any,
@@ -752,7 +750,7 @@ class ClinicalSHAPAnalyzer:
     ):
         """
         Initialize SHAP analyzer.
-        
+
         Parameters
         ----------
         model : Any
@@ -766,9 +764,9 @@ class ClinicalSHAPAnalyzer:
         self.model_type = model_type
         self.random_state = random_state
         self.explainer = None
-        
+
         logger.info(f"Initialized ClinicalSHAPAnalyzer for {model_type} model")
-    
+
     def compute_shap_values(
         self,
         X: pd.DataFrame,
@@ -778,7 +776,7 @@ class ClinicalSHAPAnalyzer:
     ) -> SHAPAnalysisResult:
         """
         Compute SHAP values for all instances in X.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -790,14 +788,14 @@ class ClinicalSHAPAnalyzer:
             Number of background samples to use
         check_additivity : bool, default=True
             Whether to verify local accuracy property
-            
+
         Returns
         -------
         SHAPAnalysisResult
             Computed SHAP values and metadata
         """
         logger.info(f"Computing SHAP values for {len(X)} instances")
-        
+
         # Initialize explainer if not already done
         if self.explainer is None:
             self.explainer = self._create_explainer(
@@ -805,16 +803,16 @@ class ClinicalSHAPAnalyzer:
                 background_data=background_data,
                 background_size=background_size
             )
-        
+
         # Compute SHAP values
         try:
             if self.model_type == 'tree' or (
-                self.model_type == 'auto' and 
+                self.model_type == 'auto' and
                 hasattr(self.model, 'tree_')
             ):
                 # For tree models, can compute exact SHAP values
                 shap_values = self.explainer.shap_values(X)
-                
+
                 # Handle multi-class case by taking positive class
                 if isinstance(shap_values, list) and len(shap_values) == 2:
                     shap_values = shap_values[1]
@@ -826,19 +824,19 @@ class ClinicalSHAPAnalyzer:
             else:
                 # For other models, use kernel explainer
                 shap_values = self.explainer.shap_values(X)
-                
+
                 if isinstance(shap_values, list):
                     shap_values = shap_values[0]
-                
+
                 if isinstance(self.explainer.expected_value, (list, np.ndarray)):
                     base_value = self.explainer.expected_value[0]
                 else:
                     base_value = self.explainer.expected_value
-        
+
         except Exception as e:
             logger.error(f"Error computing SHAP values: {e}")
             raise
-        
+
         # Verify shape
         if shap_values.shape != X.shape:
             logger.error(
@@ -846,9 +844,9 @@ class ClinicalSHAPAnalyzer:
                 f"data shape {X.shape}"
             )
             raise ValueError("SHAP values shape mismatch")
-        
+
         logger.info(f"Successfully computed SHAP values")
-        
+
         # Check local accuracy if requested
         if check_additivity:
             self._verify_local_accuracy(
@@ -856,14 +854,14 @@ class ClinicalSHAPAnalyzer:
                 shap_values=shap_values,
                 base_value=base_value
             )
-        
+
         return SHAPAnalysisResult(
             shap_values=shap_values,
             base_value=base_value,
             feature_names=X.columns.tolist(),
             data=X
         )
-    
+
     def _create_explainer(
         self,
         X: pd.DataFrame,
@@ -872,28 +870,28 @@ class ClinicalSHAPAnalyzer:
     ):
         """Create appropriate SHAP explainer based on model type."""
         if self.model_type == 'tree' or (
-            self.model_type == 'auto' and 
+            self.model_type == 'auto' and
             hasattr(self.model, 'tree_')
         ):
             logger.info("Using TreeExplainer for exact SHAP computation")
             return shap.TreeExplainer(self.model)
-        
+
         elif self.model_type == 'linear' or (
-            self.model_type == 'auto' and 
+            self.model_type == 'auto' and
             hasattr(self.model, 'coef_')
         ):
             logger.info("Using LinearExplainer")
             return shap.LinearExplainer(self.model, X)
-        
+
         else:
             # Use kernel explainer with background samples
             logger.info(f"Using KernelExplainer with {background_size} samples")
-            
+
             if background_data is not None:
                 background = shap.sample(background_data, background_size)
             else:
                 background = shap.sample(X, background_size)
-            
+
             # Define prediction function
             def predict_fn(x):
                 if hasattr(self.model, 'predict_proba'):
@@ -902,9 +900,9 @@ class ClinicalSHAPAnalyzer:
                         return proba[:, 1]
                     return proba
                 return self.model.predict(x)
-            
+
             return shap.KernelExplainer(predict_fn, background)
-    
+
     def _verify_local_accuracy(
         self,
         X: pd.DataFrame,
@@ -914,7 +912,7 @@ class ClinicalSHAPAnalyzer:
     ):
         """
         Verify that SHAP values satisfy local accuracy property.
-        
+
         For each instance, sum of SHAP values plus base value should
         equal the model's prediction.
         """
@@ -927,15 +925,15 @@ class ClinicalSHAPAnalyzer:
                 predictions = proba.mean(axis=1)
         else:
             predictions = self.model.predict(X)
-        
+
         # Compute prediction from SHAP values
         shap_predictions = base_value + shap_values.sum(axis=1)
-        
+
         # Check agreement
         differences = np.abs(predictions - shap_predictions)
         max_diff = differences.max()
         mean_diff = differences.mean()
-        
+
         if max_diff > tolerance:
             logger.warning(
                 f"Local accuracy violated: max difference {max_diff:.6f}, "
@@ -945,7 +943,7 @@ class ClinicalSHAPAnalyzer:
             logger.info(
                 f"Local accuracy verified: max difference {max_diff:.6f}"
             )
-    
+
     def compute_global_importance(
         self,
         shap_result: SHAPAnalysisResult,
@@ -953,21 +951,21 @@ class ClinicalSHAPAnalyzer:
     ) -> pd.DataFrame:
         """
         Compute global feature importance from SHAP values.
-        
+
         Parameters
         ----------
         shap_result : SHAPAnalysisResult
             Previously computed SHAP values
         method : str, default='mean_abs'
             Method for aggregating: 'mean_abs' or 'mean_abs_normalized'
-            
+
         Returns
         -------
         pd.DataFrame
             Global feature importance rankings
         """
         logger.info(f"Computing global importance using {method}")
-        
+
         if method == 'mean_abs':
             # Mean absolute SHAP value for each feature
             importance = np.abs(shap_result.shap_values).mean(axis=0)
@@ -979,22 +977,22 @@ class ClinicalSHAPAnalyzer:
             )
         else:
             raise ValueError(f"Unknown method: {method}")
-        
+
         # Create dataframe with rankings
         importance_df = pd.DataFrame({
             'feature': shap_result.feature_names,
             'importance': importance
         })
-        
+
         importance_df = importance_df.sort_values(
             'importance',
             ascending=False
         ).reset_index(drop=True)
-        
+
         importance_df['rank'] = range(1, len(importance_df) + 1)
-        
+
         return importance_df
-    
+
     def analyze_group_differences(
         self,
         shap_result: SHAPAnalysisResult,
@@ -1003,11 +1001,11 @@ class ClinicalSHAPAnalyzer:
     ) -> SHAPAnalysisResult:
         """
         Analyze SHAP value differences across demographic groups.
-        
+
         Computes summary statistics for each group and identifies features
         whose attributions differ substantially across groups, which may
         indicate bias or differential model behavior.
-        
+
         Parameters
         ----------
         shap_result : SHAPAnalysisResult
@@ -1016,29 +1014,29 @@ class ClinicalSHAPAnalyzer:
             Protected attributes for grouping
         min_group_size : int, default=50
             Minimum group size to include in analysis
-            
+
         Returns
         -------
         SHAPAnalysisResult
             Updated result with group summaries
         """
         logger.info("Analyzing SHAP values across demographic groups")
-        
+
         group_summaries = {}
-        
+
         for col in protected_attributes.columns:
             for group_val in protected_attributes[col].unique():
                 mask = protected_attributes[col] == group_val
-                
+
                 if mask.sum() < min_group_size:
                     logger.debug(
                         f"Skipping {col}={group_val}: only {mask.sum()} samples"
                     )
                     continue
-                
+
                 group_label = f"{col}={group_val}"
                 group_shap = shap_result.shap_values[mask]
-                
+
                 # Compute summary statistics for this group
                 group_summaries[group_label] = {
                     'sample_size': mask.sum(),
@@ -1046,69 +1044,69 @@ class ClinicalSHAPAnalyzer:
                     'mean_shap': group_shap.mean(axis=0),
                     'std_shap': group_shap.std(axis=0)
                 }
-        
+
         shap_result.group_summaries = group_summaries
-        
+
         # Compute disparity metrics
         shap_result.disparity_analysis = self._compute_disparity_metrics(
             shap_result=shap_result
         )
-        
+
         logger.info(
             f"Analyzed {len(group_summaries)} demographic groups"
         )
-        
+
         return shap_result
-    
+
     def _compute_disparity_metrics(
         self,
         shap_result: SHAPAnalysisResult
     ) -> pd.DataFrame:
         """
         Compute disparity metrics for SHAP values across groups.
-        
+
         Identifies features whose importance or direction differs
         substantially across demographic groups.
         """
         if not shap_result.group_summaries:
             return pd.DataFrame()
-        
+
         disparities = []
-        
+
         for i, feature in enumerate(shap_result.feature_names):
             # Get mean absolute SHAP across groups
             group_importances = {
                 group: summary['mean_abs_shap'][i]
                 for group, summary in shap_result.group_summaries.items()
             }
-            
+
             if len(group_importances) < 2:
                 continue
-            
+
             importances = list(group_importances.values())
             max_imp = max(importances)
             min_imp = min(importances)
-            
+
             # Compute disparity ratio
             if min_imp > 0.001:
                 disparity_ratio = max_imp / min_imp
             else:
                 disparity_ratio = np.inf
-            
+
             # Get mean SHAP (with direction) across groups
             group_means = {
                 group: summary['mean_shap'][i]
                 for group, summary in shap_result.group_summaries.items()
             }
-            
+
             means = list(group_means.values())
             max_mean = max(means)
             min_mean = min(means)
             mean_disparity = max_mean - min_mean
-            
+
             # Check if direction differs across groups
             direction_differs = (max_mean > 0 and min_mean < 0)
-            
+
             disparities.append({
                 'feature': feature,
                 'max_importance': max_imp,
@@ -1119,25 +1117,25 @@ class ClinicalSHAPAnalyzer:
                 'group_importances': group_importances,
                 'group_means': group_means
             })
-        
+
         df = pd.DataFrame(disparities)
-        
+
         # Sort by disparity
         df = df.sort_values('importance_ratio', ascending=False)
-        
+
         # Flag potentially problematic features
         df['flagged'] = (
             (df['importance_ratio'] > 1.5) |
             (df['direction_differs'])
         )
-        
+
         n_flagged = df['flagged'].sum()
         logger.info(
             f"Flagged {n_flagged} features with substantial group differences"
         )
-        
+
         return df
-    
+
     def plot_summary(
         self,
         shap_result: SHAPAnalysisResult,
@@ -1146,7 +1144,7 @@ class ClinicalSHAPAnalyzer:
     ):
         """
         Create summary plot of SHAP values.
-        
+
         Parameters
         ----------
         shap_result : SHAPAnalysisResult
@@ -1165,7 +1163,7 @@ class ClinicalSHAPAnalyzer:
                 show=False
             )
             plt.title('Global Feature Importance (Mean |SHAP|)')
-        
+
         elif plot_type == 'dot':
             shap.summary_plot(
                 shap_result.shap_values,
@@ -1174,7 +1172,7 @@ class ClinicalSHAPAnalyzer:
                 show=False
             )
             plt.title('SHAP Value Distribution by Feature')
-        
+
         elif plot_type == 'violin':
             shap.summary_plot(
                 shap_result.shap_values,
@@ -1184,10 +1182,10 @@ class ClinicalSHAPAnalyzer:
                 show=False
             )
             plt.title('SHAP Value Distributions')
-        
+
         plt.tight_layout()
         plt.show()
-    
+
     def plot_dependence(
         self,
         shap_result: SHAPAnalysisResult,
@@ -1196,7 +1194,7 @@ class ClinicalSHAPAnalyzer:
     ):
         """
         Create dependence plot showing how SHAP values vary with feature.
-        
+
         Parameters
         ----------
         shap_result : SHAPAnalysisResult
@@ -1207,12 +1205,12 @@ class ClinicalSHAPAnalyzer:
             Feature to use for coloring points to show interactions
         """
         feature_idx = shap_result.feature_names.index(feature_name)
-        
+
         if interaction_feature is not None:
             interaction_idx = shap_result.feature_names.index(interaction_feature)
         else:
             interaction_idx = 'auto'
-        
+
         shap.dependence_plot(
             feature_idx,
             shap_result.shap_values,
@@ -1220,11 +1218,11 @@ class ClinicalSHAPAnalyzer:
             interaction_index=interaction_idx,
             show=False
         )
-        
+
         plt.title(f'SHAP Dependence Plot: {feature_name}')
         plt.tight_layout()
         plt.show()
-    
+
     def explain_prediction(
         self,
         shap_result: SHAPAnalysisResult,
@@ -1233,7 +1231,7 @@ class ClinicalSHAPAnalyzer:
     ):
         """
         Create waterfall plot explaining a single prediction.
-        
+
         Parameters
         ----------
         shap_result : SHAPAnalysisResult
@@ -1253,11 +1251,10 @@ class ClinicalSHAPAnalyzer:
             max_display=max_display,
             show=False
         )
-        
+
         plt.title(f'Prediction Explanation for Instance {instance_index}')
         plt.tight_layout()
         plt.show()
-
 
 def generate_fairness_focused_shap_report(
     shap_analyzer: ClinicalSHAPAnalyzer,
@@ -1267,11 +1264,11 @@ def generate_fairness_focused_shap_report(
 ) -> Dict[str, Any]:
     """
     Generate comprehensive fairness-focused SHAP analysis report.
-    
+
     Performs full SHAP analysis with emphasis on detecting potential
     bias through differential feature attribution patterns across
     demographic groups.
-    
+
     Parameters
     ----------
     shap_analyzer : ClinicalSHAPAnalyzer
@@ -1282,31 +1279,31 @@ def generate_fairness_focused_shap_report(
         Protected attributes for fairness analysis
     output_path : str, optional
         Path to save visualizations
-        
+
     Returns
     -------
     Dict
         Comprehensive analysis results
     """
     logger.info("Generating fairness-focused SHAP report")
-    
+
     # Compute SHAP values
     shap_result = shap_analyzer.compute_shap_values(X)
-    
+
     # Global importance
     global_importance = shap_analyzer.compute_global_importance(shap_result)
-    
+
     # Group-stratified analysis
     shap_result = shap_analyzer.analyze_group_differences(
         shap_result=shap_result,
         protected_attributes=protected_attributes
     )
-    
+
     # Identify features with concerning disparities
     flagged_features = shap_result.disparity_analysis[
         shap_result.disparity_analysis['flagged']
     ]
-    
+
     report = {
         'global_importance': global_importance,
         'group_summaries': shap_result.group_summaries,
@@ -1315,34 +1312,33 @@ def generate_fairness_focused_shap_report(
         'n_flagged': len(flagged_features),
         'recommendations': _generate_recommendations(flagged_features)
     }
-    
+
     logger.info(
         f"Report complete: {len(flagged_features)} features flagged "
         "for potential bias"
     )
-    
-    return report
 
+    return report
 
 def _generate_recommendations(flagged_features: pd.DataFrame) -> List[str]:
     """Generate actionable recommendations based on flagged features."""
     recommendations = []
-    
+
     if len(flagged_features) == 0:
         recommendations.append(
             "No features showed substantial SHAP value disparities across "
             "demographic groups, suggesting model treats groups similarly."
         )
         return recommendations
-    
+
     recommendations.append(
         f"Found {len(flagged_features)} features with substantial SHAP "
         "value disparities across demographic groups requiring review:"
     )
-    
+
     for _, row in flagged_features.head(10).iterrows():
         feature = row['feature']
-        
+
         if row['direction_differs']:
             recommendations.append(
                 f"  - {feature}: SHAP values have different directions across "
@@ -1356,7 +1352,7 @@ def _generate_recommendations(flagged_features: pd.DataFrame) -> List[str]:
                 "across groups. Investigate whether this reflects true clinical "
                 "heterogeneity or learned bias from training data."
             )
-    
+
     recommendations.append(
         "\nNext steps: (1) Clinical review of flagged features to assess "
         "clinical validity, (2) Investigate training data for potential bias "
@@ -1364,7 +1360,7 @@ def _generate_recommendations(flagged_features: pd.DataFrame) -> List[str]:
         "(3) Consider constraining model to treat features more similarly "
         "across groups if disparities are not clinically justified."
     )
-    
+
     return recommendations
 ```
 
@@ -1399,21 +1395,20 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class ClinicalLIMEExplainer:
     """
     LIME explanations adapted for clinical tabular data.
-    
+
     Generates local explanations by fitting interpretable models to
     black-box model behavior in the vicinity of specific instances.
-    
+
     Key adaptations for healthcare:
     - Respects feature correlations when generating perturbations
     - Validates that perturbations are clinically plausible
     - Assesses explanation stability across multiple runs
     - Checks whether explanations differ systematically by demographics
     """
-    
+
     def __init__(
         self,
         model: Any,
@@ -1425,7 +1420,7 @@ class ClinicalLIMEExplainer:
     ):
         """
         Initialize LIME explainer.
-        
+
         Parameters
         ----------
         model : Any
@@ -1448,31 +1443,31 @@ class ClinicalLIMEExplainer:
         self.kernel_width = kernel_width
         self.random_state = random_state
         self.rng = np.random.RandomState(random_state)
-        
+
         self.training_statistics = None
-        
+
         logger.info(
             f"Initialized ClinicalLIMEExplainer with {n_samples} samples "
             f"per explanation"
         )
-    
+
     def fit_background(
         self,
         X: pd.DataFrame
     ):
         """
         Fit background statistics from training data.
-        
+
         These statistics are used to generate realistic perturbations
         that respect feature distributions and correlations.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
             Training or background data
         """
         logger.info("Fitting background statistics from training data")
-        
+
         self.training_statistics = {
             'mean': X.mean(),
             'std': X.std(),
@@ -1480,16 +1475,16 @@ class ClinicalLIMEExplainer:
             'max': X.max(),
             'correlation': X.corr()
         }
-        
+
         # For categorical features, store value distributions
         for feature in self.categorical_features:
             if feature in X.columns:
                 self.training_statistics[f'{feature}_dist'] = (
                     X[feature].value_counts(normalize=True)
                 )
-        
+
         logger.info("Background statistics fitted")
-    
+
     def explain_instance(
         self,
         instance: pd.Series,
@@ -1498,7 +1493,7 @@ class ClinicalLIMEExplainer:
     ) -> Dict[str, Any]:
         """
         Generate LIME explanation for a single instance.
-        
+
         Parameters
         ----------
         instance : pd.Series
@@ -1507,28 +1502,28 @@ class ClinicalLIMEExplainer:
             Number of top features to include in explanation
         use_correlated_sampling : bool, default=True
             Whether to respect feature correlations when sampling
-            
+
         Returns
         -------
         Dict
             Explanation with feature weights and metadata
         """
         logger.debug(f"Explaining instance")
-        
+
         if self.training_statistics is None:
             raise ValueError(
                 "Must call fit_background before explaining instances"
             )
-        
+
         # Generate perturbations
         X_perturbed, weights = self._generate_perturbations(
             instance=instance,
             use_correlated=use_correlated_sampling
         )
-        
+
         # Get model predictions for perturbations
         y_perturbed = self._predict(X_perturbed)
-        
+
         # Fit local linear model
         local_model = Ridge(alpha=1.0)
         local_model.fit(
@@ -1536,24 +1531,24 @@ class ClinicalLIMEExplainer:
             y_perturbed,
             sample_weight=weights
         )
-        
+
         # Get feature importances from local model
         feature_weights = local_model.coef_
-        
+
         # Assess explanation quality
         r2 = r2_score(
             y_perturbed,
             local_model.predict(X_perturbed),
             sample_weight=weights
         )
-        
+
         # Get top features
         feature_importance = sorted(
             zip(self.feature_names, feature_weights),
             key=lambda x: abs(x[1]),
             reverse=True
         )[:num_features]
-        
+
         explanation = {
             'instance': instance,
             'prediction': self._predict(instance.to_frame().T)[0],
@@ -1563,11 +1558,11 @@ class ClinicalLIMEExplainer:
             'intercept': local_model.intercept_,
             'n_samples': self.n_samples
         }
-        
+
         logger.debug(f"Generated explanation with R²={r2:.3f}")
-        
+
         return explanation
-    
+
     def _generate_perturbations(
         self,
         instance: pd.Series,
@@ -1575,14 +1570,14 @@ class ClinicalLIMEExplainer:
     ) -> Tuple[pd.DataFrame, np.ndarray]:
         """
         Generate perturbations around instance.
-        
+
         Parameters
         ----------
         instance : pd.Series
             Instance to perturb
         use_correlated : bool
             Whether to use correlated sampling
-            
+
         Returns
         -------
         X_perturbed : pd.DataFrame
@@ -1592,7 +1587,7 @@ class ClinicalLIMEExplainer:
         """
         n_features = len(self.feature_names)
         X_perturbed = np.zeros((self.n_samples, n_features))
-        
+
         if use_correlated:
             # Generate perturbations that respect correlations
             X_perturbed = self._correlated_perturbations(instance)
@@ -1618,36 +1613,36 @@ class ClinicalLIMEExplainer:
                         scale=std,
                         size=self.n_samples
                     )
-                    
+
                     # Clip to training range
                     X_perturbed[:, i] = np.clip(
                         X_perturbed[:, i],
                         self.training_statistics['min'][feature],
                         self.training_statistics['max'][feature]
                     )
-        
+
         X_perturbed_df = pd.DataFrame(
             X_perturbed,
             columns=self.feature_names
         )
-        
+
         # Compute proximity weights
         distances = self._compute_distances(
             X_perturbed_df,
             instance
         )
-        
+
         weights = np.sqrt(np.exp(-(distances ** 2) / self.kernel_width ** 2))
-        
+
         return X_perturbed_df, weights
-    
+
     def _correlated_perturbations(
         self,
         instance: pd.Series
     ) -> np.ndarray:
         """
         Generate perturbations respecting feature correlations.
-        
+
         Uses Cholesky decomposition of correlation matrix to generate
         correlated multivariate normal samples.
         """
@@ -1655,10 +1650,10 @@ class ClinicalLIMEExplainer:
         corr_matrix = self.training_statistics['correlation'].values
         stds = self.training_statistics['std'].values
         means = instance.values
-        
+
         # Create covariance matrix
         cov_matrix = np.outer(stds, stds) * corr_matrix
-        
+
         try:
             # Generate correlated samples
             samples = self.rng.multivariate_normal(
@@ -1666,7 +1661,7 @@ class ClinicalLIMEExplainer:
                 cov=cov_matrix,
                 size=self.n_samples
             )
-            
+
             # Clip to training ranges
             for i, feature in enumerate(self.feature_names):
                 if feature not in self.categorical_features:
@@ -1675,7 +1670,7 @@ class ClinicalLIMEExplainer:
                         self.training_statistics['min'][feature],
                         self.training_statistics['max'][feature]
                     )
-        
+
         except np.linalg.LinAlgError:
             logger.warning(
                 "Correlation matrix not positive definite, "
@@ -1689,9 +1684,9 @@ class ClinicalLIMEExplainer:
                     scale=std,
                     size=self.n_samples
                 )
-        
+
         return samples
-    
+
     def _compute_distances(
         self,
         X_perturbed: pd.DataFrame,
@@ -1699,19 +1694,19 @@ class ClinicalLIMEExplainer:
     ) -> np.ndarray:
         """
         Compute distances from perturbations to instance.
-        
+
         Uses scaled Euclidean distance where each feature is
         normalized by its standard deviation.
         """
         # Standardize by feature standard deviation
         stds = self.training_statistics['std'].values
-        
+
         X_scaled = (X_perturbed.values - instance.values) / (stds + 1e-10)
-        
+
         distances = np.sqrt((X_scaled ** 2).sum(axis=1))
-        
+
         return distances
-    
+
     def _predict(self, X: pd.DataFrame) -> np.ndarray:
         """Get model predictions."""
         if hasattr(self.model, 'predict_proba'):
@@ -1720,7 +1715,7 @@ class ClinicalLIMEExplainer:
                 return proba[:, 1]
             return proba
         return self.model.predict(X)
-    
+
     def assess_stability(
         self,
         instance: pd.Series,
@@ -1729,7 +1724,7 @@ class ClinicalLIMEExplainer:
     ) -> Dict[str, Any]:
         """
         Assess stability of LIME explanation across multiple runs.
-        
+
         Parameters
         ----------
         instance : pd.Series
@@ -1738,33 +1733,33 @@ class ClinicalLIMEExplainer:
             Number of times to repeat explanation
         num_features : int, default=10
             Number of features in explanation
-            
+
         Returns
         -------
         Dict
             Stability metrics
         """
         logger.info(f"Assessing explanation stability over {n_repeats} runs")
-        
+
         all_weights = []
         all_r2 = []
-        
+
         for i in range(n_repeats):
             explanation = self.explain_instance(
                 instance=instance,
                 num_features=num_features
             )
-            
+
             weights = np.array([
                 explanation['all_weights'][f]
                 for f in self.feature_names
             ])
-            
+
             all_weights.append(weights)
             all_r2.append(explanation['local_model_r2'])
-        
+
         all_weights = np.array(all_weights)
-        
+
         # Compute stability metrics
         stability = {
             'mean_weights': all_weights.mean(axis=0),
@@ -1776,20 +1771,19 @@ class ClinicalLIMEExplainer:
                 (np.abs(all_weights.mean(axis=0)) + 1e-10)
             )
         }
-        
+
         # Identify unstable features
         stability['unstable_features'] = [
             feature for i, feature in enumerate(self.feature_names)
             if stability['coefficient_of_variation'][i] > 0.5
         ]
-        
+
         logger.info(
             f"Stability assessment complete: "
             f"{len(stability['unstable_features'])} unstable features identified"
         )
-        
-        return stability
 
+        return stability
 
 def compare_lime_across_demographics(
     lime_explainer: ClinicalLIMEExplainer,
@@ -1800,11 +1794,11 @@ def compare_lime_across_demographics(
 ) -> Dict[str, Any]:
     """
     Compare LIME explanations across demographic groups.
-    
+
     Identifies whether similar patients from different demographics
     receive systematically different explanations, which might indicate
     biased model behavior.
-    
+
     Parameters
     ----------
     lime_explainer : ClinicalLIMEExplainer
@@ -1817,25 +1811,25 @@ def compare_lime_across_demographics(
         Number of instances to explain per group
     num_features : int, default=10
         Number of features in each explanation
-        
+
     Returns
     -------
     Dict
         Comparison results
     """
     logger.info("Comparing LIME explanations across demographics")
-    
+
     group_explanations = {}
-    
+
     for col in protected_attributes.columns:
         for group_val in protected_attributes[col].unique():
             mask = protected_attributes[col] == group_val
-            
+
             if mask.sum() < instances_per_group:
                 continue
-            
+
             group_label = f"{col}={group_val}"
-            
+
             # Sample instances from this group
             group_indices = np.where(mask)[0]
             sampled_indices = np.random.choice(
@@ -1843,7 +1837,7 @@ def compare_lime_across_demographics(
                 size=min(instances_per_group, len(group_indices)),
                 replace=False
             )
-            
+
             # Generate explanations
             explanations = []
             for idx in sampled_indices:
@@ -1852,7 +1846,7 @@ def compare_lime_across_demographics(
                     num_features=num_features
                 )
                 explanations.append(explanation)
-            
+
             # Aggregate feature weights across instances
             all_weights = {}
             for feature in lime_explainer.feature_names:
@@ -1865,29 +1859,28 @@ def compare_lime_across_demographics(
                     'std': np.std(weights),
                     'median': np.median(weights)
                 }
-            
+
             group_explanations[group_label] = {
                 'n_instances': len(explanations),
                 'feature_weights': all_weights,
                 'mean_r2': np.mean([exp['local_model_r2'] for exp in explanations])
             }
-    
+
     # Identify features with disparate explanations
     disparities = _identify_explanation_disparities(
         group_explanations=group_explanations,
         feature_names=lime_explainer.feature_names
     )
-    
+
     logger.info(
         f"Comparison complete: {len(disparities)} features show disparate "
         "explanations across groups"
     )
-    
+
     return {
         'group_explanations': group_explanations,
         'disparities': disparities
     }
-
 
 def _identify_explanation_disparities(
     group_explanations: Dict[str, Dict],
@@ -1896,7 +1889,7 @@ def _identify_explanation_disparities(
 ) -> List[Dict]:
     """
     Identify features whose LIME weights differ across groups.
-    
+
     Parameters
     ----------
     group_explanations : Dict
@@ -1905,30 +1898,30 @@ def _identify_explanation_disparities(
         All feature names
     threshold : float, default=0.3
         Minimum difference to flag
-        
+
     Returns
     -------
     List[Dict]
         Features with disparate explanations
     """
     disparities = []
-    
+
     for feature in feature_names:
         # Get mean weights across groups
         group_weights = {}
         for group, data in group_explanations.items():
             weight = data['feature_weights'][feature]['mean']
             group_weights[group] = weight
-        
+
         if len(group_weights) < 2:
             continue
-        
+
         weights = list(group_weights.values())
         max_weight = max(weights)
         min_weight = min(weights)
-        
+
         disparity = abs(max_weight - min_weight)
-        
+
         if disparity > threshold:
             disparities.append({
                 'feature': feature,
@@ -1937,7 +1930,7 @@ def _identify_explanation_disparities(
                 'disparity': disparity,
                 'group_weights': group_weights
             })
-    
+
     return sorted(disparities, key=lambda x: x['disparity'], reverse=True)
 ```
 
@@ -1966,15 +1959,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class ClinicalAttentionModel(nn.Module):
     """
     Clinical prediction model with attention mechanism.
-    
+
     Implements attention over clinical features or time steps to enable
     interpretation of which inputs most influence predictions.
     """
-    
+
     def __init__(
         self,
         input_dim: int,
@@ -1986,7 +1978,7 @@ class ClinicalAttentionModel(nn.Module):
     ):
         """
         Initialize attention-based clinical model.
-        
+
         Parameters
         ----------
         input_dim : int
@@ -2003,12 +1995,12 @@ class ClinicalAttentionModel(nn.Module):
             Number of attention heads if multihead
         """
         super().__init__()
-        
+
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
         self.use_multihead_attention = use_multihead_attention
-        
+
         # Encoder
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -2017,7 +2009,7 @@ class ClinicalAttentionModel(nn.Module):
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU()
         )
-        
+
         # Attention mechanism
         if use_multihead_attention:
             self.attention = nn.MultiheadAttention(
@@ -2030,7 +2022,7 @@ class ClinicalAttentionModel(nn.Module):
             # Simple additive attention
             self.attention_weights = nn.Linear(hidden_dim, attention_dim)
             self.attention_context = nn.Linear(attention_dim, 1)
-        
+
         # Classifier
         self.classifier = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim // 2),
@@ -2038,12 +2030,12 @@ class ClinicalAttentionModel(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(hidden_dim // 2, output_dim)
         )
-        
+
         logger.info(
             f"Initialized ClinicalAttentionModel with "
             f"{'multi-head' if use_multihead_attention else 'simple'} attention"
         )
-    
+
     def forward(
         self,
         x: torch.Tensor,
@@ -2051,7 +2043,7 @@ class ClinicalAttentionModel(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         Forward pass with optional attention weight extraction.
-        
+
         Parameters
         ----------
         x : torch.Tensor
@@ -2059,7 +2051,7 @@ class ClinicalAttentionModel(nn.Module):
             or (batch_size, input_dim)
         return_attention : bool, default=False
             Whether to return attention weights
-            
+
         Returns
         -------
         output : torch.Tensor
@@ -2070,12 +2062,12 @@ class ClinicalAttentionModel(nn.Module):
         # Handle both 2D and 3D inputs
         if x.dim() == 2:
             x = x.unsqueeze(1)  # Add sequence dimension
-        
+
         batch_size, seq_len, _ = x.shape
-        
+
         # Encode inputs
         encoded = self.encoder(x)  # (batch, seq, hidden)
-        
+
         # Apply attention
         if self.use_multihead_attention:
             attended, attention_weights = self.attention(
@@ -2090,36 +2082,35 @@ class ClinicalAttentionModel(nn.Module):
             attention_scores = self.attention_context(
                 attention_scores
             ).squeeze(-1)  # (batch, seq)
-            
+
             # Softmax to get weights
             attention_weights = torch.softmax(attention_scores, dim=1)
-            
+
             # Apply attention
             attended = torch.bmm(
                 attention_weights.unsqueeze(1),
                 encoded
             ).squeeze(1)  # (batch, hidden)
-            
+
             if not return_attention:
                 attention_weights = None
-        
+
         # Classification
         output = self.classifier(attended)
-        
+
         if return_attention:
             return output, attention_weights
         return output, None
 
-
 class AttentionAnalyzer:
     """
     Analyze attention patterns for interpretability and fairness.
-    
+
     Extracts attention weights from models and analyzes whether attention
     patterns differ systematically across demographic groups in ways that
     might indicate bias.
     """
-    
+
     def __init__(
         self,
         model: ClinicalAttentionModel,
@@ -2127,7 +2118,7 @@ class AttentionAnalyzer:
     ):
         """
         Initialize attention analyzer.
-        
+
         Parameters
         ----------
         model : ClinicalAttentionModel
@@ -2137,38 +2128,38 @@ class AttentionAnalyzer:
         """
         self.model = model
         self.feature_names = feature_names
-        
+
         self.attention_patterns = {}
-        
+
         logger.info("Initialized AttentionAnalyzer")
-    
+
     def extract_attention(
         self,
         X: torch.Tensor
     ) -> np.ndarray:
         """
         Extract attention weights for inputs.
-        
+
         Parameters
         ----------
         X : torch.Tensor
             Input data
-            
+
         Returns
         -------
         np.ndarray
             Attention weights for each instance
         """
         self.model.eval()
-        
+
         with torch.no_grad():
             _, attention_weights = self.model(X, return_attention=True)
-        
+
         if attention_weights is None:
             raise ValueError("Model did not return attention weights")
-        
+
         return attention_weights.cpu().numpy()
-    
+
     def analyze_attention_patterns(
         self,
         X: torch.Tensor,
@@ -2177,7 +2168,7 @@ class AttentionAnalyzer:
     ) -> Dict[str, Any]:
         """
         Analyze attention patterns across demographic groups.
-        
+
         Parameters
         ----------
         X : torch.Tensor
@@ -2186,34 +2177,34 @@ class AttentionAnalyzer:
             Protected attributes for grouping
         min_group_size : int, default=30
             Minimum group size
-            
+
         Returns
         -------
         Dict
             Analysis results
         """
         logger.info("Analyzing attention patterns across demographics")
-        
+
         # Extract attention for all instances
         attention_weights = self.extract_attention(X)
-        
+
         # Analyze by group
         group_patterns = {}
-        
+
         for col in protected_attributes.columns:
             for group_val in protected_attributes[col].unique():
                 mask = (protected_attributes[col] == group_val).values
-                
+
                 if mask.sum() < min_group_size:
                     continue
-                
+
                 group_label = f"{col}={group_val}"
                 group_attention = attention_weights[mask]
-                
+
                 # Compute summary statistics
                 mean_attention = group_attention.mean(axis=0)
                 std_attention = group_attention.std(axis=0)
-                
+
                 # Identify features with highest average attention
                 if attention_weights.ndim == 2:
                     top_features_idx = np.argsort(mean_attention)[-5:]
@@ -2223,38 +2214,38 @@ class AttentionAnalyzer:
                     ]
                 else:
                     top_features = []
-                
+
                 group_patterns[group_label] = {
                     'n_instances': mask.sum(),
                     'mean_attention': mean_attention,
                     'std_attention': std_attention,
                     'top_features': top_features
                 }
-        
+
         # Compute disparity metrics
         disparities = self._compute_attention_disparities(group_patterns)
-        
+
         logger.info(
             f"Analyzed attention for {len(group_patterns)} groups"
         )
-        
+
         return {
             'group_patterns': group_patterns,
             'disparities': disparities
         }
-    
+
     def _compute_attention_disparities(
         self,
         group_patterns: Dict[str, Dict]
     ) -> List[Dict]:
         """
         Identify features with disparate attention across groups.
-        
+
         Parameters
         ----------
         group_patterns : Dict
             Attention patterns by group
-            
+
         Returns
         -------
         List[Dict]
@@ -2262,33 +2253,33 @@ class AttentionAnalyzer:
         """
         if len(group_patterns) < 2:
             return []
-        
+
         # Get attention dimensions
         first_group = list(group_patterns.values())[0]
         n_features = len(first_group['mean_attention'])
-        
+
         if n_features != len(self.feature_names):
             logger.warning(
                 f"Feature count mismatch: {n_features} attention values "
                 f"but {len(self.feature_names)} feature names"
             )
             return []
-        
+
         disparities = []
-        
+
         for i, feature in enumerate(self.feature_names):
             # Get mean attention for this feature across groups
             group_attentions = {
                 group: data['mean_attention'][i]
                 for group, data in group_patterns.items()
             }
-            
+
             attentions = list(group_attentions.values())
             max_attn = max(attentions)
             min_attn = min(attentions)
-            
+
             disparity = max_attn - min_attn
-            
+
             if disparity > 0.1:  # Threshold for meaningful disparity
                 disparities.append({
                     'feature': feature,
@@ -2297,9 +2288,9 @@ class AttentionAnalyzer:
                     'disparity': disparity,
                     'group_attentions': group_attentions
                 })
-        
+
         return sorted(disparities, key=lambda x: x['disparity'], reverse=True)
-    
+
     def visualize_attention(
         self,
         instance_idx: int,
@@ -2308,7 +2299,7 @@ class AttentionAnalyzer:
     ):
         """
         Visualize attention weights for a single instance.
-        
+
         Parameters
         ----------
         instance_idx : int
@@ -2319,11 +2310,11 @@ class AttentionAnalyzer:
             Number of top features to display
         """
         import matplotlib.pyplot as plt
-        
+
         # Extract attention for this instance
         x_instance = X[instance_idx:instance_idx+1]
         attention = self.extract_attention(x_instance)[0]
-        
+
         # Get top features by attention
         if attention.ndim == 1:
             top_idx = np.argsort(attention)[-top_k:]
@@ -2335,17 +2326,17 @@ class AttentionAnalyzer:
             top_idx = np.argsort(avg_attention)[-top_k:]
             top_features = [self.feature_names[i] for i in top_idx]
             top_attention = avg_attention[top_idx]
-        
+
         # Plot
         fig, ax = plt.subplots(figsize=(10, max(4, len(top_features) * 0.4)))
-        
+
         y_pos = np.arange(len(top_features))
         ax.barh(y_pos, top_attention)
         ax.set_yticks(y_pos)
         ax.set_yticklabels(top_features)
         ax.set_xlabel('Attention Weight')
         ax.set_title(f'Top {top_k} Features by Attention (Instance {instance_idx})')
-        
+
         plt.tight_layout()
         plt.show()
 ```
@@ -2360,9 +2351,9 @@ The limitations of attention as interpretation have led to development of altern
 
 Counterfactual explanations answer a fundamentally different question than feature attribution methods: rather than explaining why the model made a particular prediction, counterfactuals describe what would need to change for the model to make a different prediction. For clinical decision support, this actionability makes counterfactuals particularly valuable. A clinician caring for a patient classified as high risk for readmission gains little from knowing which factors contributed to that classification but gains substantially from knowing which modifiable factors, if changed, would reduce the predicted risk below the threshold requiring intervention.
 
-The formal definition of counterfactual explanations comes from causal reasoning. For instance $x$ with prediction $$f(x) = y$$, a counterfactual $x'$ is a minimally modified version of $x$ such that $$f(x') = y'$$ where $y'$ is the desired alternative outcome. The minimality constraint ensures the counterfactual remains similar to the original instance, making it interpretable as describing small changes rather than entirely different scenarios. Different distance metrics capture different notions of similarity; Euclidean distance treats all feature changes equally, while domain-specific distance metrics can weight changes based on clinical significance or difficulty of modification.
+The formal definition of counterfactual explanations comes from causal reasoning. For instance $x$ with prediction $f(x) = y$, a counterfactual $x'$ is a minimally modified version of $x$ such that $f(x') = y'$ where $y'$ is the desired alternative outcome. The minimality constraint ensures the counterfactual remains similar to the original instance, making it interpretable as describing small changes rather than entirely different scenarios. Different distance metrics capture different notions of similarity; Euclidean distance treats all feature changes equally, while domain-specific distance metrics can weight changes based on clinical significance or difficulty of modification.
 
-Computing counterfactuals requires solving an optimization problem to find $x'$ that satisfies the prediction constraint $$f(x') = y'$$ while minimizing distance to the original instance $x$. For differentiable models, gradient-based optimization can efficiently find counterfactuals. For non-differentiable models like tree ensembles, heuristic search methods or genetic algorithms may be required. Additional constraints ensure counterfactuals remain realistic: categorical features should take values from their actual domain, continuous features should stay within plausible ranges, and dependent features should maintain relationships that exist in real data.
+Computing counterfactuals requires solving an optimization problem to find $x'$ that satisfies the prediction constraint $f(x') = y'$ while minimizing distance to the original instance $x$. For differentiable models, gradient-based optimization can efficiently find counterfactuals. For non-differentiable models like tree ensembles, heuristic search methods or genetic algorithms may be required. Additional constraints ensure counterfactuals remain realistic: categorical features should take values from their actual domain, continuous features should stay within plausible ranges, and dependent features should maintain relationships that exist in real data.
 
 However, counterfactual explanations face important limitations and concerns in healthcare contexts. A counterfactual may be mathematically optimal but clinically implausible if it requires changing features that are difficult or impossible to modify in practice. Suggesting that reducing patient age by 10 years would lower mortality risk provides no actionable guidance. Even modifiable factors like weight or blood pressure cannot typically change instantaneously as the counterfactual implicitly suggests. The temporal dynamics of clinical interventions mean that most counterfactuals correspond to long-term prevention strategies rather than immediate treatment decisions.
 
@@ -2378,21 +2369,20 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class CounterfactualGenerator:
     """
     Generate counterfactual explanations for clinical predictions.
-    
+
     Finds minimal changes to feature values that would change model
     predictions, providing actionable insights for clinical intervention.
-    
+
     Key considerations for healthcare:
     - Ensures counterfactuals are clinically plausible
     - Restricts changes to modifiable features
     - Validates counterfactuals maintain feature dependencies
     - Assesses whether counterfactuals differ across demographics
     """
-    
+
     def __init__(
         self,
         model: Any,
@@ -2403,7 +2393,7 @@ class CounterfactualGenerator:
     ):
         """
         Initialize counterfactual generator.
-        
+
         Parameters
         ----------
         model : Any
@@ -2422,18 +2412,18 @@ class CounterfactualGenerator:
         self.modifiable_features = modifiable_features
         self.feature_ranges = feature_ranges
         self.categorical_features = categorical_features or []
-        
+
         # Identify modifiable feature indices
         self.modifiable_indices = [
             i for i, name in enumerate(feature_names)
             if name in modifiable_features
         ]
-        
+
         logger.info(
             f"Initialized CounterfactualGenerator with "
             f"{len(modifiable_features)} modifiable features"
         )
-    
+
     def generate_counterfactual(
         self,
         instance: pd.Series,
@@ -2445,7 +2435,7 @@ class CounterfactualGenerator:
     ) -> Dict[str, Any]:
         """
         Generate counterfactual explanation for instance.
-        
+
         Parameters
         ----------
         instance : pd.Series
@@ -2460,25 +2450,25 @@ class CounterfactualGenerator:
             Maximum optimization iterations
         tolerance : float, default=0.01
             Tolerance for achieving desired outcome
-            
+
         Returns
         -------
         Dict
             Counterfactual explanation with changes and metadata
         """
         logger.debug(f"Generating counterfactual for instance")
-        
+
         # Convert instance to array
         x_original = instance.values
-        
+
         # Current prediction
         current_pred = self._predict_instance(x_original)
-        
+
         logger.debug(
             f"Current prediction: {current_pred:.3f}, "
             f"desired: {desired_outcome:.3f}"
         )
-        
+
         # If already at desired outcome, no counterfactual needed
         if abs(current_pred - desired_outcome) < tolerance:
             return {
@@ -2490,12 +2480,12 @@ class CounterfactualGenerator:
                 'original_prediction': current_pred,
                 'counterfactual_prediction': current_pred
             }
-        
+
         # Define optimization objective
         def objective(x_candidate):
             """
             Objective combines prediction loss and distance from original.
-            
+
             We want to minimize:
             1. Difference from desired outcome
             2. Distance from original instance
@@ -2503,7 +2493,7 @@ class CounterfactualGenerator:
             # Prediction loss
             pred = self._predict_instance(x_candidate)
             pred_loss = (pred - desired_outcome) ** 2
-            
+
             # Distance from original
             dist = self._compute_distance(
                 x_candidate,
@@ -2511,13 +2501,13 @@ class CounterfactualGenerator:
                 metric=distance_metric,
                 weights=feature_weights
             )
-            
+
             # Combined objective (weighted sum)
             return pred_loss + 0.5 * dist
-        
+
         # Optimization constraints
         constraints = []
-        
+
         # Keep non-modifiable features fixed
         for i, name in enumerate(self.feature_names):
             if name not in self.modifiable_features:
@@ -2525,7 +2515,7 @@ class CounterfactualGenerator:
                     'type': 'eq',
                     'fun': lambda x, idx=i, val=x_original[i]: x[idx] - val
                 })
-        
+
         # Feature range bounds
         bounds = []
         for i, name in enumerate(self.feature_names):
@@ -2535,7 +2525,7 @@ class CounterfactualGenerator:
                 # Use original value ± 20% if no range specified
                 val = x_original[i]
                 bounds.append((val * 0.8, val * 1.2))
-        
+
         # Optimize
         result = minimize(
             objective,
@@ -2545,7 +2535,7 @@ class CounterfactualGenerator:
             constraints=constraints,
             options={'maxiter': max_iterations}
         )
-        
+
         if not result.success:
             logger.warning(f"Optimization did not converge: {result.message}")
             return {
@@ -2557,25 +2547,25 @@ class CounterfactualGenerator:
                 'original_prediction': current_pred,
                 'counterfactual_prediction': None
             }
-        
+
         # Extract counterfactual
         x_counterfactual = result.x
-        
+
         # Round categorical features
         for name in self.categorical_features:
             if name in self.feature_names:
                 idx = self.feature_names.index(name)
                 x_counterfactual[idx] = np.round(x_counterfactual[idx])
-        
+
         # Verify counterfactual achieves desired outcome
         cf_pred = self._predict_instance(x_counterfactual)
-        
+
         if abs(cf_pred - desired_outcome) > tolerance * 2:
             logger.warning(
                 f"Counterfactual prediction {cf_pred:.3f} does not achieve "
                 f"desired outcome {desired_outcome:.3f}"
             )
-        
+
         # Identify changes
         changes = {}
         for i, name in enumerate(self.feature_names):
@@ -2585,7 +2575,7 @@ class CounterfactualGenerator:
                     'counterfactual': float(x_counterfactual[i]),
                     'change': float(x_counterfactual[i] - x_original[i])
                 }
-        
+
         # Compute distance
         distance = self._compute_distance(
             x_counterfactual,
@@ -2593,12 +2583,12 @@ class CounterfactualGenerator:
             metric=distance_metric,
             weights=feature_weights
         )
-        
+
         logger.debug(
             f"Found counterfactual with {len(changes)} changes, "
             f"distance={distance:.3f}"
         )
-        
+
         return {
             'success': True,
             'message': 'Counterfactual found',
@@ -2608,20 +2598,20 @@ class CounterfactualGenerator:
             'original_prediction': current_pred,
             'counterfactual_prediction': cf_pred
         }
-    
+
     def _predict_instance(self, x: np.ndarray) -> float:
         """Get model prediction for instance."""
         # Reshape for single instance prediction
         x_reshaped = x.reshape(1, -1)
-        
+
         if hasattr(self.model, 'predict_proba'):
             proba = self.model.predict_proba(x_reshaped)
             if proba.shape[1] == 2:
                 return float(proba[0, 1])
             return float(proba[0].mean())
-        
+
         return float(self.model.predict(x_reshaped)[0])
-    
+
     def _compute_distance(
         self,
         x1: np.ndarray,
@@ -2631,7 +2621,7 @@ class CounterfactualGenerator:
     ) -> float:
         """
         Compute distance between instances.
-        
+
         Parameters
         ----------
         x1, x2 : np.ndarray
@@ -2640,7 +2630,7 @@ class CounterfactualGenerator:
             Distance metric
         weights : Dict[str, float], optional
             Feature weights
-            
+
         Returns
         -------
         float
@@ -2648,10 +2638,10 @@ class CounterfactualGenerator:
         """
         if metric == 'euclidean':
             return np.sqrt(((x1 - x2) ** 2).sum())
-        
+
         elif metric == 'manhattan':
             return np.abs(x1 - x2).sum()
-        
+
         elif metric == 'weighted':
             if weights is None:
                 # Default: weight by inverse variance (if available)
@@ -2661,12 +2651,12 @@ class CounterfactualGenerator:
                     weights.get(name, 1.0)
                     for name in self.feature_names
                 ])
-            
+
             return np.sqrt((weights_array * (x1 - x2) ** 2).sum())
-        
+
         else:
             raise ValueError(f"Unknown metric: {metric}")
-    
+
     def assess_plausibility(
         self,
         counterfactual_result: Dict[str, Any],
@@ -2674,17 +2664,17 @@ class CounterfactualGenerator:
     ) -> Dict[str, Any]:
         """
         Assess whether counterfactual is clinically plausible.
-        
+
         Checks if counterfactual values fall within observed ranges
         and if feature combinations are realistic.
-        
+
         Parameters
         ----------
         counterfactual_result : Dict
             Result from generate_counterfactual
         training_data : pd.DataFrame
             Training data for comparison
-            
+
         Returns
         -------
         Dict
@@ -2692,24 +2682,24 @@ class CounterfactualGenerator:
         """
         if not counterfactual_result['success']:
             return {'plausible': False, 'reasons': ['Generation failed']}
-        
+
         cf = counterfactual_result['counterfactual']
         reasons = []
-        
+
         # Check if values are within observed ranges
         for feature in self.feature_names:
             cf_value = cf[feature]
             train_values = training_data[feature]
-            
+
             min_val = train_values.min()
             max_val = train_values.max()
-            
+
             if cf_value < min_val or cf_value > max_val:
                 reasons.append(
                     f"{feature}={cf_value:.2f} outside training range "
                     f"[{min_val:.2f}, {max_val:.2f}]"
                 )
-        
+
         # Check if number of changes is reasonable
         n_changes = len(counterfactual_result['changes'])
         if n_changes > len(self.modifiable_features) * 0.5:
@@ -2717,16 +2707,15 @@ class CounterfactualGenerator:
                 f"Many features changed ({n_changes}), "
                 "may not be realistic"
             )
-        
+
         plausible = len(reasons) == 0
-        
+
         return {
             'plausible': plausible,
             'reasons': reasons if not plausible else [],
             'n_changes': n_changes,
             'distance': counterfactual_result['distance']
         }
-
 
 def compare_counterfactuals_across_demographics(
     generator: CounterfactualGenerator,
@@ -2737,11 +2726,11 @@ def compare_counterfactuals_across_demographics(
 ) -> Dict[str, Any]:
     """
     Compare counterfactuals across demographic groups.
-    
+
     Identifies whether similar patients from different demographics
     require different changes to achieve the same outcome, which might
     indicate biased model behavior.
-    
+
     Parameters
     ----------
     generator : CounterfactualGenerator
@@ -2754,25 +2743,25 @@ def compare_counterfactuals_across_demographics(
         Target outcome for counterfactuals
     instances_per_group : int, default=20
         Number of instances per group
-        
+
     Returns
     -------
     Dict
         Comparison results
     """
     logger.info("Comparing counterfactuals across demographics")
-    
+
     group_counterfactuals = {}
-    
+
     for col in protected_attributes.columns:
         for group_val in protected_attributes[col].unique():
             mask = protected_attributes[col] == group_val
-            
+
             if mask.sum() < instances_per_group:
                 continue
-            
+
             group_label = f"{col}={group_val}"
-            
+
             # Sample instances
             group_indices = np.where(mask)[0]
             sampled_indices = np.random.choice(
@@ -2780,7 +2769,7 @@ def compare_counterfactuals_across_demographics(
                 size=min(instances_per_group, len(group_indices)),
                 replace=False
             )
-            
+
             # Generate counterfactuals
             counterfactuals = []
             for idx in sampled_indices:
@@ -2790,10 +2779,10 @@ def compare_counterfactuals_across_demographics(
                 )
                 if cf_result['success']:
                     counterfactuals.append(cf_result)
-            
+
             if not counterfactuals:
                 continue
-            
+
             # Analyze changes required
             all_changes = {}
             for feature in generator.modifiable_features:
@@ -2802,14 +2791,14 @@ def compare_counterfactuals_across_demographics(
                     for cf in counterfactuals
                     if feature in cf['changes']
                 ]
-                
+
                 if changes:
                     all_changes[feature] = {
                         'mean_change': np.mean(changes),
                         'std_change': np.std(changes),
                         'frequency': len(changes) / len(counterfactuals)
                     }
-            
+
             group_counterfactuals[group_label] = {
                 'n_instances': len(counterfactuals),
                 'success_rate': len(counterfactuals) / len(sampled_indices),
@@ -2818,22 +2807,21 @@ def compare_counterfactuals_across_demographics(
                     cf['distance'] for cf in counterfactuals
                 ])
             }
-    
+
     # Identify disparate change requirements
     disparities = _identify_counterfactual_disparities(
         group_counterfactuals=group_counterfactuals,
         modifiable_features=generator.modifiable_features
     )
-    
+
     logger.info(
         f"Compared counterfactuals for {len(group_counterfactuals)} groups"
     )
-    
+
     return {
         'group_counterfactuals': group_counterfactuals,
         'disparities': disparities
     }
-
 
 def _identify_counterfactual_disparities(
     group_counterfactuals: Dict[str, Dict],
@@ -2842,7 +2830,7 @@ def _identify_counterfactual_disparities(
 ) -> List[Dict]:
     """
     Identify features with disparate change requirements across groups.
-    
+
     Parameters
     ----------
     group_counterfactuals : Dict
@@ -2851,30 +2839,30 @@ def _identify_counterfactual_disparities(
         Modifiable features
     threshold : float, default=0.3
         Minimum difference to flag
-        
+
     Returns
     -------
     List[Dict]
         Features with disparate requirements
     """
     disparities = []
-    
+
     for feature in modifiable_features:
         # Get mean changes across groups
         group_changes = {}
         for group, data in group_counterfactuals.items():
             if feature in data['changes']:
                 group_changes[group] = data['changes'][feature]['mean_change']
-        
+
         if len(group_changes) < 2:
             continue
-        
+
         changes = list(group_changes.values())
         max_change = max(np.abs(changes))
         min_change = min(np.abs(changes))
-        
+
         disparity = max_change - min_change
-        
+
         if disparity > threshold:
             disparities.append({
                 'feature': feature,
@@ -2883,7 +2871,7 @@ def _identify_counterfactual_disparities(
                 'disparity': disparity,
                 'group_changes': group_changes
             })
-    
+
     return sorted(disparities, key=lambda x: x['disparity'], reverse=True)
 ```
 
@@ -2908,16 +2896,15 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class MultiStakeholderExplanationSystem:
     """
     Generate explanations tailored to different stakeholders.
-    
+
     Creates clinician-facing, patient-facing, and regulatory explanations
     from the same model outputs, adapting format, complexity, and emphasis
     to stakeholder needs and contexts.
     """
-    
+
     def __init__(
         self,
         model: Any,
@@ -2927,7 +2914,7 @@ class MultiStakeholderExplanationSystem:
     ):
         """
         Initialize explanation system.
-        
+
         Parameters
         ----------
         model : Any
@@ -2943,9 +2930,9 @@ class MultiStakeholderExplanationSystem:
         self.feature_names = feature_names
         self.feature_descriptions = feature_descriptions
         self.clinical_thresholds = clinical_thresholds
-        
+
         logger.info("Initialized MultiStakeholderExplanationSystem")
-    
+
     def explain_for_clinician(
         self,
         instance: pd.Series,
@@ -2955,10 +2942,10 @@ class MultiStakeholderExplanationSystem:
     ) -> Dict[str, Any]:
         """
         Generate clinician-facing explanation.
-        
+
         Emphasizes actionable clinical insights, uses medical terminology,
         and formats for rapid interpretation during patient care.
-        
+
         Parameters
         ----------
         instance : pd.Series
@@ -2969,14 +2956,14 @@ class MultiStakeholderExplanationSystem:
             Model prediction
         top_n : int, default=5
             Number of top contributing factors to highlight
-            
+
         Returns
         -------
         Dict
             Clinician-facing explanation
         """
         logger.debug("Generating clinician explanation")
-        
+
         # Risk categorization
         if prediction >= 0.7:
             risk_category = "High"
@@ -2987,19 +2974,19 @@ class MultiStakeholderExplanationSystem:
         else:
             risk_category = "Low"
             risk_color = "green"
-        
+
         # Get top contributing factors
         sorted_factors = sorted(
             feature_attributions.items(),
             key=lambda x: abs(x[1]),
             reverse=True
         )[:top_n]
-        
+
         # Format factors with clinical context
         contributing_factors = []
         for feature, attribution in sorted_factors:
             value = instance[feature]
-            
+
             # Check against clinical thresholds
             if feature in self.clinical_thresholds:
                 thresholds = self.clinical_thresholds[feature]
@@ -3011,10 +2998,10 @@ class MultiStakeholderExplanationSystem:
                     flag = "NORMAL"
             else:
                 flag = None
-            
+
             # Direction of contribution
             direction = "increases" if attribution > 0 else "decreases"
-            
+
             contributing_factors.append({
                 'feature': feature,
                 'value': float(value),
@@ -3026,7 +3013,7 @@ class MultiStakeholderExplanationSystem:
                     f"(weight: {abs(attribution):.2f})"
                 )
             })
-        
+
         explanation = {
             'prediction': float(prediction),
             'risk_category': risk_category,
@@ -3041,9 +3028,9 @@ class MultiStakeholderExplanationSystem:
                 factors=contributing_factors
             )
         }
-        
+
         return explanation
-    
+
     def explain_for_patient(
         self,
         instance: pd.Series,
@@ -3054,10 +3041,10 @@ class MultiStakeholderExplanationSystem:
     ) -> Dict[str, Any]:
         """
         Generate patient-facing explanation.
-        
+
         Uses plain language, avoids jargon, provides context about
         model limitations, and emphasizes human clinical judgment.
-        
+
         Parameters
         ----------
         instance : pd.Series
@@ -3070,14 +3057,14 @@ class MultiStakeholderExplanationSystem:
             'low', 'average', or 'high'
         language : str, default='en'
             Language code
-            
+
         Returns
         -------
         Dict
             Patient-facing explanation
         """
         logger.debug(f"Generating patient explanation (literacy: {literacy_level})")
-        
+
         # Convert prediction to risk category and visual representation
         if prediction >= 0.7:
             risk_category = "higher"
@@ -3088,14 +3075,14 @@ class MultiStakeholderExplanationSystem:
         else:
             risk_category = "lower"
             risk_visual = "●○○○○"  # 1 out of 5
-        
+
         # Get top factors in plain language
         sorted_factors = sorted(
             feature_attributions.items(),
             key=lambda x: abs(x[1]),
             reverse=True
         )[:3]  # Fewer factors for patient communication
-        
+
         plain_factors = []
         for feature, attribution in sorted_factors:
             # Use plain language description
@@ -3103,21 +3090,21 @@ class MultiStakeholderExplanationSystem:
                 feature,
                 feature.replace('_', ' ')
             )
-            
+
             value = instance[feature]
-            
+
             # Simplify direction
             if attribution > 0:
                 effect = "increases your risk"
             else:
                 effect = "decreases your risk"
-            
+
             plain_factors.append({
                 'factor': description,
                 'value': value,
                 'effect': effect
             })
-        
+
         # Adapt explanation to literacy level
         if literacy_level == 'low':
             summary = (
@@ -3141,7 +3128,7 @@ class MultiStakeholderExplanationSystem:
                 "your healthcare team make decisions. Your doctor will "
                 "consider your individual situation."
             )
-        
+
         explanation = {
             'prediction': float(prediction),
             'risk_category': risk_category,
@@ -3156,9 +3143,9 @@ class MultiStakeholderExplanationSystem:
                 "- Questions you have about your care"
             )
         }
-        
+
         return explanation
-    
+
     def explain_for_regulator(
         self,
         model_performance: Dict[str, float],
@@ -3168,11 +3155,11 @@ class MultiStakeholderExplanationSystem:
     ) -> Dict[str, Any]:
         """
         Generate regulatory documentation.
-        
+
         Provides comprehensive technical details, performance metrics
         stratified by demographics, validation approach, and safety
         considerations required for regulatory review.
-        
+
         Parameters
         ----------
         model_performance : Dict
@@ -3183,14 +3170,14 @@ class MultiStakeholderExplanationSystem:
             Validation study results
         interpretability_analysis : Dict
             Interpretability analyses conducted
-            
+
         Returns
         -------
         Dict
             Regulatory documentation
         """
         logger.debug("Generating regulatory explanation")
-        
+
         documentation = {
             'model_overview': {
                 'model_type': type(self.model).__name__,
@@ -3214,9 +3201,9 @@ class MultiStakeholderExplanationSystem:
             'limitations': self._document_limitations(),
             'monitoring_plan': self._describe_monitoring_plan()
         }
-        
+
         return documentation
-    
+
     def _generate_clinical_summary(
         self,
         risk_category: str,
@@ -3229,17 +3216,17 @@ class MultiStakeholderExplanationSystem:
             summary = "Patient at moderate risk. Key factors: "
         else:
             summary = "Patient at low risk. Key factors: "
-        
+
         factor_descriptions = [
             f"{f['feature']} ({f['flag']})" if f['flag']
             else f['feature']
             for f in factors[:3]
         ]
-        
+
         summary += ", ".join(factor_descriptions)
-        
+
         return summary
-    
+
     def _generate_clinical_recommendations(
         self,
         prediction: float,
@@ -3247,7 +3234,7 @@ class MultiStakeholderExplanationSystem:
     ) -> List[str]:
         """Generate clinical recommendations based on prediction."""
         recommendations = []
-        
+
         if prediction >= 0.7:
             recommendations.append(
                 "Consider enhanced monitoring or intervention"
@@ -3255,20 +3242,20 @@ class MultiStakeholderExplanationSystem:
             recommendations.append(
                 "Review modifiable risk factors with patient"
             )
-        
+
         # Factor-specific recommendations
         for factor in factors:
             if factor['flag'] == "HIGH" or factor['flag'] == "LOW":
                 recommendations.append(
                     f"Address abnormal {factor['feature']}"
                 )
-        
+
         recommendations.append(
             "Use clinical judgment - model is decision support, not decision maker"
         )
-        
+
         return recommendations
-    
+
     def _generate_safety_documentation(self) -> Dict[str, Any]:
         """Document safety considerations for regulatory review."""
         return {
@@ -3288,7 +3275,7 @@ class MultiStakeholderExplanationSystem:
                 "Requires regular recalibration"
             ]
         }
-    
+
     def _document_limitations(self) -> List[str]:
         """Document model limitations."""
         return [
@@ -3298,7 +3285,7 @@ class MultiStakeholderExplanationSystem:
             "Model cannot account for factors not in training data",
             "Performance may differ across demographic groups"
         ]
-    
+
     def _describe_monitoring_plan(self) -> Dict[str, Any]:
         """Describe post-deployment monitoring plan."""
         return {
@@ -3325,7 +3312,6 @@ class MultiStakeholderExplanationSystem:
             ]
         }
 
-
 def generate_multilevel_explanation_report(
     instance: pd.Series,
     model: Any,
@@ -3336,10 +3322,10 @@ def generate_multilevel_explanation_report(
 ) -> Dict[str, Any]:
     """
     Generate comprehensive explanation report for all stakeholders.
-    
+
     Creates clinician, patient, and technical explanations from single
     analysis, ensuring consistency while adapting to stakeholder needs.
-    
+
     Parameters
     ----------
     instance : pd.Series
@@ -3354,7 +3340,7 @@ def generate_multilevel_explanation_report(
         Demographics
     clinical_context : Dict
         Additional clinical information
-        
+
     Returns
     -------
     Dict
@@ -3368,7 +3354,7 @@ def generate_multilevel_explanation_report(
         feature_descriptions={},  # Would provide comprehensive mapping
         clinical_thresholds={}  # Would provide clinical thresholds
     )
-    
+
     report = {
         'instance_id': clinical_context.get('patient_id', 'unknown'),
         'timestamp': pd.Timestamp.now().isoformat(),
@@ -3393,7 +3379,7 @@ def generate_multilevel_explanation_report(
             'prediction_confidence': clinical_context.get('confidence', None)
         }
     }
-    
+
     return report
 ```
 

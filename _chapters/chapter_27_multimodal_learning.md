@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 27: Multi-Modal Learning for Clinical AI"
 chapter_number: 27
+part_number: 7
+prev_chapter: /chapters/chapter-26-llms-in-healthcare/
+next_chapter: /chapters/chapter-28-continual-learning/
 ---
-
 # Chapter 27: Multi-Modal Learning for Clinical AI
 
 ## Learning Objectives
@@ -31,19 +33,21 @@ This chapter develops the mathematical foundations and practical implementations
 
 ## Mathematical Foundations of Multimodal Learning
 
-Consider a clinical prediction task where we have access to $M$ different modalities. For a given patient $i$, we observe data $$\mathbf{x}_i = \{\mathbf{x}_i^{(1)}, \mathbf{x}_i^{(2)}, \ldots, \mathbf{x}_i^{(M)}\}$$ where $$\mathbf{x}_i^{(m)}$$$represents the data from modality$$m$. Each modality lives in its own space: $$\mathbf{x}_i^{(m)} \in \mathcal{X}^{(m)}$$. For instance, in a clinical setting we might have imaging data $$\mathbf{x}_i^{(1)} \in \mathbb{R}^{H \times W \times C}$$ (a chest radiograph), clinical notes $$\mathbf{x}_i^{(2)} \in \mathcal{V}^{L}$$ (a sequence of tokens from vocabulary $$\mathcal{V}$$$of length$$L$), and structured EHR data $$\mathbf{x}_i^{(3)} \in \mathbb{R}^{D}$$ (laboratory values and vital signs).
+Consider a clinical prediction task where we have access to $M$ different modalities. For a given patient $i$, we observe data $\mathbf{x}_i = \{\mathbf{x}_i^{(1)}, \mathbf{x}_i^{(2)}, \ldots, \mathbf{x}_i^{(M)}\}$ where $\mathbf{x}_i^{(m)}$represents the data from modality$m$. Each modality lives in its own space: $\mathbf{x}_i^{(m)} \in \mathcal{X}^{(m)}$. For instance, in a clinical setting we might have imaging data $\mathbf{x}_i^{(1)} \in \mathbb{R}^{H \times W \times C}$ (a chest radiograph), clinical notes $\mathbf{x}_i^{(2)} \in \mathcal{V}^{L}$ (a sequence of tokens from vocabulary $\mathcal{V}$of length$L$), and structured EHR data $\mathbf{x}_i^{(3)} \in \mathbb{R}^{D}$ (laboratory values and vital signs).
 
-The goal of multimodal learning is to learn a function $$f: \mathcal{X}^{(1)} \times \mathcal{X}^{(2)} \times \cdots \times \mathcal{X}^{(M)} \rightarrow \mathcal{Y}$$ that maps from the joint space of all modalities to an output space $$\mathcal{Y}$$, such as disease diagnosis or mortality risk. The key challenge is that the modalities are heterogeneous: they have different dimensionalities, statistical properties, and semantic content.
+The goal of multimodal learning is to learn a function $f: \mathcal{X}^{(1)} \times \mathcal{X}^{(2)} \times \cdots \times \mathcal{X}^{(M)} \rightarrow \mathcal{Y}$ that maps from the joint space of all modalities to an output space $\mathcal{Y}$, such as disease diagnosis or mortality risk. The key challenge is that the modalities are heterogeneous: they have different dimensionalities, statistical properties, and semantic content.
 
 ### Modality-Specific Encoders
 
-The first step in multimodal learning is encoding each modality into a common representational space. We define modality-specific encoders $$\phi^{(m)}: \mathcal{X}^{(m)} \rightarrow \mathbb{R}^{d}$$ that map raw modality data to fixed-dimensional embeddings. These encoders are typically deep neural networks whose architecture is tailored to the structure of each modality. For imaging data, convolutional neural networks extract spatial features. For text, transformer-based language models encode semantic content. For structured data, feedforward networks or graph neural networks (when relationships between features are known) produce embeddings.
+The first step in multimodal learning is encoding each modality into a common representational space. We define modality-specific encoders $\phi^{(m)}: \mathcal{X}^{(m)} \rightarrow \mathbb{R}^{d}$ that map raw modality data to fixed-dimensional embeddings. These encoders are typically deep neural networks whose architecture is tailored to the structure of each modality. For imaging data, convolutional neural networks extract spatial features. For text, transformer-based language models encode semantic content. For structured data, feedforward networks or graph neural networks (when relationships between features are known) produce embeddings.
 
 Formally, for each modality $m$, we compute an embedding:
 
-$$\mathbf{z}_i^{(m)} = \phi^{(m)}(\mathbf{x}_i^{(m)}; \theta^{(m)})$$
+$$
+\mathbf{z}_i^{(m)} = \phi^{(m)}(\mathbf{x}_i^{(m)}; \theta^{(m)})
+$$
 
-where $$\theta^{(m)}$$ are the parameters of the encoder for modality $m$, and $$\mathbf{z}_i^{(m)} \in \mathbb{R}^{d}$$$is the resulting embedding. The choice of embedding dimension$$d$ involves trade-offs: larger dimensions provide more representational capacity but increase computational cost and risk of overfitting, particularly when training data is limited.
+where $\theta^{(m)}$ are the parameters of the encoder for modality $m$, and $\mathbf{z}_i^{(m)} \in \mathbb{R}^{d}$is the resulting embedding. The choice of embedding dimension$d$ involves trade-offs: larger dimensions provide more representational capacity but increase computational cost and risk of overfitting, particularly when training data is limited.
 
 ### Fusion Strategies
 
@@ -51,73 +55,109 @@ Once we have embeddings for each modality, we must combine them to make predicti
 
 **Early Fusion** concatenates raw or lightly processed features from all modalities before learning a joint representation:
 
-$$\mathbf{h}_i = \psi([\mathbf{x}_i^{(1)}, \mathbf{x}_i^{(2)}, \ldots, \mathbf{x}_i^{(M)}]; \theta_{\text{fusion}})$$
+$$
+\mathbf{h}_i = \psi([\mathbf{x}_i^{(1)}, \mathbf{x}_i^{(2)}, \ldots, \mathbf{x}_i^{(M)}]; \theta_{\text{fusion}})
+$$
 
-where $$[\cdot]$$ denotes concatenation (or another combining operation), and $$\psi$$ is a joint model that processes all modalities simultaneously. Early fusion allows the model to learn low-level cross-modal interactions but requires all modalities to be available during training and inference. In clinical settings, this can be problematic as the concatenation of a high-resolution image with a short text note creates imbalanced inputs.
+where $[\cdot]$ denotes concatenation (or another combining operation), and $\psi$ is a joint model that processes all modalities simultaneously. Early fusion allows the model to learn low-level cross-modal interactions but requires all modalities to be available during training and inference. In clinical settings, this can be problematic as the concatenation of a high-resolution image with a short text note creates imbalanced inputs.
 
 **Late Fusion** processes each modality independently through modality-specific models, then combines their predictions:
 
-$$\mathbf{z}_i^{(m)} = \phi^{(m)}(\mathbf{x}_i^{(m)}; \theta^{(m)})$$
-$$\hat{y}_i^{(m)} = g^{(m)}(\mathbf{z}_i^{(m)}; \theta_g^{(m)})$$
-$$\hat{y}_i = \text{Aggregate}(\{\hat{y}_i^{(1)}, \hat{y}_i^{(2)}, \ldots, \hat{y}_i^{(M)}\})$$
+$$
+\mathbf{z}_i^{(m)} = \phi^{(m)}(\mathbf{x}_i^{(m)}; \theta^{(m)})
+$$
 
-where $$g^{(m)}$$ is a prediction head for modality $m$, and the aggregation function might be averaging, voting, or a learned weighted combination. Late fusion is robust to missing modalities since each modality produces an independent prediction, but it cannot capture cross-modal interactions that may be clinically important. For instance, a late fusion model cannot learn that certain imaging findings are particularly concerning in the context of specific laboratory abnormalities.
+$$
+\hat{y}_i^{(m)} = g^{(m)}(\mathbf{z}_i^{(m)}; \theta_g^{(m)})
+$$
+
+$$
+\hat{y}_i = \text{Aggregate}(\{\hat{y}_i^{(1)}, \hat{y}_i^{(2)}, \ldots, \hat{y}_i^{(M)}\})
+$$
+
+where $g^{(m)}$ is a prediction head for modality $m$, and the aggregation function might be averaging, voting, or a learned weighted combination. Late fusion is robust to missing modalities since each modality produces an independent prediction, but it cannot capture cross-modal interactions that may be clinically important. For instance, a late fusion model cannot learn that certain imaging findings are particularly concerning in the context of specific laboratory abnormalities.
 
 **Intermediate Fusion** strikes a balance by learning modality-specific encoders, then fusing their embeddings to learn joint representations:
 
-$$\mathbf{z}_i^{(m)} = \phi^{(m)}(\mathbf{x}_i^{(m)}; \theta^{(m)})$$
-$$\mathbf{h}_i = \psi([\mathbf{z}_i^{(1)}, \mathbf{z}_i^{(2)}, \ldots, \mathbf{z}_i^{(M)}]; \theta_{\text{fusion}})$$
-$$\hat{y}_i = g(\mathbf{h}_i; \theta_g)$$
+$$
+\mathbf{z}_i^{(m)} = \phi^{(m)}(\mathbf{x}_i^{(m)}; \theta^{(m)})
+$$
+
+$$
+\mathbf{h}_i = \psi([\mathbf{z}_i^{(1)}, \mathbf{z}_i^{(2)}, \ldots, \mathbf{z}_i^{(M)}]; \theta_{\text{fusion}})
+$$
+
+$$
+\hat{y}_i = g(\mathbf{h}_i; \theta_g)
+$$
 
 This approach allows learning both modality-specific representations and cross-modal interactions while providing some flexibility when modalities are missing, though typically requiring additional strategies to handle missing data robustly.
 
 ### Attention-Based Fusion
 
-Attention mechanisms have emerged as powerful tools for multimodal fusion, allowing the model to dynamically weight the contribution of each modality based on the input. Given embeddings $$\{\mathbf{z}_i^{(1)}, \mathbf{z}_i^{(2)}, \ldots, \mathbf{z}_i^{(M)}\}$$$, we compute attention weights$$\alpha_i^{(m)}$$that indicate the importance of modality$$m$$for predicting the outcome of patient$$i$:
+Attention mechanisms have emerged as powerful tools for multimodal fusion, allowing the model to dynamically weight the contribution of each modality based on the input. Given embeddings $\{\mathbf{z}_i^{(1)}, \mathbf{z}_i^{(2)}, \ldots, \mathbf{z}_i^{(M)}\}$, we compute attention weights$\alpha_i^{(m)}$that indicate the importance of modality$m$for predicting the outcome of patient$i$:
 
-$$\alpha_i^{(m)} = \frac{\exp(w^{(m)\top} \mathbf{z}_i^{(m)})}{\sum_{m'=1}^{M} \exp(w^{(m')\top} \mathbf{z}_i^{(m')})}$$
+$$
+\alpha_i^{(m)} = \frac{\exp(w^{(m)\top} \mathbf{z}_i^{(m)})}{\sum_{m'=1}^{M} \exp(w^{(m')\top} \mathbf{z}_i^{(m')})}
+$$
 
 The fused representation is then a weighted combination:
 
-$$\mathbf{h}_i = \sum_{m=1}^{M} \alpha_i^{(m)} \mathbf{z}_i^{(m)}$$
+$$
+\mathbf{h}_i = \sum_{m=1}^{M} \alpha_i^{(m)} \mathbf{z}_i^{(m)}
+$$
 
 More sophisticated attention mechanisms compute attention weights based on interactions between modalities. Cross-modal attention allows one modality to attend to another:
 
-$$\mathbf{q}_i = W_q \mathbf{z}_i^{(1)}, \quad \mathbf{k}_i^{(m)} = W_k \mathbf{z}_i^{(m)}, \quad \mathbf{v}_i^{(m)} = W_v \mathbf{z}_i^{(m)}$$
+$$
+\mathbf{q}_i = W_q \mathbf{z}_i^{(1)}, \quad \mathbf{k}_i^{(m)} = W_k \mathbf{z}_i^{(m)}, \quad \mathbf{v}_i^{(m)} = W_v \mathbf{z}_i^{(m)}
+$$
 
-$$\alpha_i^{(m)} = \frac{\exp(\mathbf{q}_i^\top \mathbf{k}_i^{(m)} / \sqrt{d})}{\sum_{m'=2}^{M} \exp(\mathbf{q}_i^\top \mathbf{k}_i^{(m')} / \sqrt{d})}$$
+$$
+\alpha_i^{(m)} = \frac{\exp(\mathbf{q}_i^\top \mathbf{k}_i^{(m)} / \sqrt{d})}{\sum_{m'=2}^{M} \exp(\mathbf{q}_i^\top \mathbf{k}_i^{(m')} / \sqrt{d})}
+$$
 
-$$\mathbf{h}_i = \mathbf{z}_i^{(1)} + \sum_{m=2}^{M} \alpha_i^{(m)} \mathbf{v}_i^{(m)}$$
+$$
+\mathbf{h}_i = \mathbf{z}_i^{(1)} + \sum_{m=2}^{M} \alpha_i^{(m)} \mathbf{v}_i^{(m)}
+$$
 
-This formulation, inspired by transformer architectures, allows imaging data (modality 1) to query information from clinical notes (modalities 2 through $M$), creating rich cross-modal representations. The attention weights $$\alpha_i^{(m)}$$ also provide interpretability, indicating which modalities were most informative for each prediction.
+This formulation, inspired by transformer architectures, allows imaging data (modality 1) to query information from clinical notes (modalities 2 through $M$), creating rich cross-modal representations. The attention weights $\alpha_i^{(m)}$ also provide interpretability, indicating which modalities were most informative for each prediction.
 
 ### Co-Attention and Transformer-Based Fusion
 
-Co-attention mechanisms extend cross-modal attention by allowing bidirectional information flow between modalities. For two modalities with embeddings $$\mathbf{z}_i^{(1)} \in \mathbb{R}^{d_1}$$ and $$\mathbf{z}_i^{(2)} \in \mathbb{R}^{d_2}$$, co-attention computes:
+Co-attention mechanisms extend cross-modal attention by allowing bidirectional information flow between modalities. For two modalities with embeddings $\mathbf{z}_i^{(1)} \in \mathbb{R}^{d_1}$ and $\mathbf{z}_i^{(2)} \in \mathbb{R}^{d_2}$, co-attention computes:
 
-$$\mathbf{C}_i = \tanh(\mathbf{z}_i^{(1)} W_c (\mathbf{z}_i^{(2)})^\top)$$
+$$
+\mathbf{C}_i = \tanh(\mathbf{z}_i^{(1)} W_c (\mathbf{z}_i^{(2)})^\top)
+$$
 
-where $$\mathbf{C}_i \in \mathbb{R}^{d_1 \times d_2}$$ captures pairwise affinities between elements of the two modalities. Attention weights are derived from $$\mathbf{C}_i$$ to produce modality-specific attended representations that encode information from both modalities.
+where $\mathbf{C}_i \in \mathbb{R}^{d_1 \times d_2}$ captures pairwise affinities between elements of the two modalities. Attention weights are derived from $\mathbf{C}_i$ to produce modality-specific attended representations that encode information from both modalities.
 
 Transformer architectures have been adapted for multimodal learning by treating embeddings from different modalities as different types of tokens in a sequence. Given modality embeddings, we add modality-specific positional encodings:
 
-$$\tilde{\mathbf{z}}_i^{(m)} = \mathbf{z}_i^{(m)} + \mathbf{e}^{(m)}$$
+$$
+\tilde{\mathbf{z}}_i^{(m)} = \mathbf{z}_i^{(m)} + \mathbf{e}^{(m)}
+$$
 
-where $$\mathbf{e}^{(m)}$$ is a learned modality embedding. These tokens are then processed by transformer layers:
+where $\mathbf{e}^{(m)}$ is a learned modality embedding. These tokens are then processed by transformer layers:
 
-$$\mathbf{Z}_i^{(l+1)} = \text{TransformerLayer}(\mathbf{Z}_i^{(l)})$$
+$$
+\mathbf{Z}_i^{(l+1)} = \text{TransformerLayer}(\mathbf{Z}_i^{(l)})
+$$
 
-where $$\mathbf{Z}_i^{(l)} = [\tilde{\mathbf{z}}_i^{(1)}, \tilde{\mathbf{z}}_i^{(2)}, \ldots, \tilde{\mathbf{z}}_i^{(M)}]$$$at layer$$l$. The transformer's self-attention mechanism allows each modality to attend to all others, learning rich cross-modal interactions. The final prediction is typically derived from a special classification token or by pooling across all modality tokens.
+where $\mathbf{Z}_i^{(l)} = [\tilde{\mathbf{z}}_i^{(1)}, \tilde{\mathbf{z}}_i^{(2)}, \ldots, \tilde{\mathbf{z}}_i^{(M)}]$at layer$l$. The transformer's self-attention mechanism allows each modality to attend to all others, learning rich cross-modal interactions. The final prediction is typically derived from a special classification token or by pooling across all modality tokens.
 
 ### Joint Embedding Spaces and Contrastive Learning
 
 An alternative approach to multimodal learning focuses on learning a joint embedding space where semantically similar inputs from different modalities are mapped to nearby points. This is particularly valuable when we have paired multimodal data but limited labeled outcomes. For instance, we might have many chest X-rays with associated radiology reports but few with disease labels.
 
-Contrastive learning trains encoders to maximize agreement between different views of the same entity while minimizing agreement between different entities. For modalities $m$ and $m'$ with paired data $$(\mathbf{x}_i^{(m)}, \mathbf{x}_i^{(m')})$$, we compute embeddings and maximize their similarity while minimizing similarity to negative pairs:
+Contrastive learning trains encoders to maximize agreement between different views of the same entity while minimizing agreement between different entities. For modalities $m$ and $m'$ with paired data $(\mathbf{x}_i^{(m)}, \mathbf{x}_i^{(m')})$, we compute embeddings and maximize their similarity while minimizing similarity to negative pairs:
 
-$$\mathcal{L}_{\text{contrast}} = -\log \frac{\exp(\text{sim}(\mathbf{z}_i^{(m)}, \mathbf{z}_i^{(m')}) / \tau)}{\sum_{j \neq i} \exp(\text{sim}(\mathbf{z}_i^{(m)}, \mathbf{z}_j^{(m')}) / \tau)}$$
+$$
+\mathcal{L}_{\text{contrast}} = -\log \frac{\exp(\text{sim}(\mathbf{z}_i^{(m)}, \mathbf{z}_i^{(m')}) / \tau)}{\sum_{j \neq i} \exp(\text{sim}(\mathbf{z}_i^{(m)}, \mathbf{z}_j^{(m')}) / \tau)}
+$$
 
-where $$\text{sim}(\cdot, \cdot)$$ is a similarity function (typically cosine similarity), and $$\tau$$ is a temperature parameter. This loss, known as InfoNCE, encourages the encoders to produce aligned representations across modalities. In clinical settings, this allows learning from image-text pairs (such as radiographs and reports) without explicit labels, then fine-tuning on smaller labeled datasets for specific tasks.
+where $\text{sim}(\cdot, \cdot)$ is a similarity function (typically cosine similarity), and $\tau$ is a temperature parameter. This loss, known as InfoNCE, encourages the encoders to produce aligned representations across modalities. In clinical settings, this allows learning from image-text pairs (such as radiographs and reports) without explicit labels, then fine-tuning on smaller labeled datasets for specific tasks.
 
 The CLIP (Contrastive Language-Image Pre-training) framework has demonstrated remarkable success in learning joint vision-language representations. Adaptations for clinical data, such as BiomedCLIP and RadFM, learn alignments between medical images and clinical text, enabling zero-shot or few-shot prediction on new tasks by computing similarity between image embeddings and text descriptions of diseases.
 
@@ -127,13 +167,17 @@ The CLIP (Contrastive Language-Image Pre-training) framework has demonstrated re
 
 Medical imaging reports naturally pair images with text, making vision-language models particularly applicable. The standard architecture consists of an image encoder (typically a convolutional neural network or vision transformer), a text encoder (typically a transformer-based language model), and a mechanism to align their representations.
 
-For a chest radiograph $$\mathbf{x}_{\text{img}}$$ and associated report $$\mathbf{x}_{\text{text}}$$, we compute:
+For a chest radiograph $\mathbf{x}_{\text{img}}$ and associated report $\mathbf{x}_{\text{text}}$, we compute:
 
-$$\mathbf{z}_{\text{img}} = \phi_{\text{img}}(\mathbf{x}_{\text{img}}), \quad \mathbf{z}_{\text{text}} = \phi_{\text{text}}(\mathbf{x}_{\text{text}})$$
+$$
+\mathbf{z}_{\text{img}} = \phi_{\text{img}}(\mathbf{x}_{\text{img}}), \quad \mathbf{z}_{\text{text}} = \phi_{\text{text}}(\mathbf{x}_{\text{text}})
+$$
 
 These embeddings are projected to a joint space:
 
-$$\mathbf{u}_{\text{img}} = W_{\text{img}} \mathbf{z}_{\text{img}}, \quad \mathbf{u}_{\text{text}} = W_{\text{text}} \mathbf{z}_{\text{text}}$$
+$$
+\mathbf{u}_{\text{img}} = W_{\text{img}} \mathbf{z}_{\text{img}}, \quad \mathbf{u}_{\text{text}} = W_{\text{text}} \mathbf{z}_{\text{text}}
+$$
 
 The contrastive loss aligns paired image-text embeddings. Once trained, the model can be used for various downstream tasks. For classification, we compute similarity between the image embedding and text embeddings of disease descriptions. For report generation, the image embedding serves as context for an autoregressive text decoder.
 
@@ -145,19 +189,27 @@ Electronic health records integrate diverse structured data: demographics, vital
 
 A typical multimodal EHR architecture processes each data type separately before fusion. Continuous variables pass through feedforward networks with normalization:
 
-$$\mathbf{z}_{\text{lab}} = \phi_{\text{lab}}(\mathbf{x}_{\text{lab}})$$
+$$
+\mathbf{z}_{\text{lab}} = \phi_{\text{lab}}(\mathbf{x}_{\text{lab}})
+$$
 
 Categorical variables are embedded:
 
-$$\mathbf{z}_{\text{med}} = \sum_{j} \mathbf{E}_{\text{med}}[x_{\text{med},j}]$$
+$$
+\mathbf{z}_{\text{med}} = \sum_{j} \mathbf{E}_{\text{med}}[x_{\text{med},j}]
+$$
 
-where $$\mathbf{E}_{\text{med}}$$ is a learned embedding matrix. Time-series data (vital signs, treatments over time) are processed by recurrent networks or transformers:
+where $\mathbf{E}_{\text{med}}$ is a learned embedding matrix. Time-series data (vital signs, treatments over time) are processed by recurrent networks or transformers:
 
-$$\mathbf{z}_{\text{ts}} = \text{RNN}(\{\mathbf{x}_{\text{ts}}^{(t_1)}, \mathbf{x}_{\text{ts}}^{(t_2)}, \ldots\})$$
+$$
+\mathbf{z}_{\text{ts}} = \text{RNN}(\{\mathbf{x}_{\text{ts}}^{(t_1)}, \mathbf{x}_{\text{ts}}^{(t_2)}, \ldots\})
+$$
 
 These embeddings are fused using attention or concatenation:
 
-$$\mathbf{h} = \text{FusionModule}([\mathbf{z}_{\text{lab}}, \mathbf{z}_{\text{med}}, \mathbf{z}_{\text{ts}}])$$
+$$
+\mathbf{h} = \text{FusionModule}([\mathbf{z}_{\text{lab}}, \mathbf{z}_{\text{med}}, \mathbf{z}_{\text{ts}}])
+$$
 
 The fusion module might be a feedforward network, attention mechanism, or graph neural network that models relationships between data types.
 
@@ -167,19 +219,33 @@ The most challenging multimodal scenarios combine fundamentally different data t
 
 A comprehensive architecture processes each modality with appropriate encoders:
 
-$$\mathbf{z}_{\text{img}} = \phi_{\text{img}}(\mathbf{x}_{\text{img}}; \theta_{\text{img}})$$
-$$\mathbf{z}_{\text{text}} = \phi_{\text{text}}(\mathbf{x}_{\text{text}}; \theta_{\text{text}})$$
-$$\mathbf{z}_{\text{lab}} = \phi_{\text{lab}}(\mathbf{x}_{\text{lab}}; \theta_{\text{lab}})$$
+$$
+\mathbf{z}_{\text{img}} = \phi_{\text{img}}(\mathbf{x}_{\text{img}}; \theta_{\text{img}})
+$$
+
+$$
+\mathbf{z}_{\text{text}} = \phi_{\text{text}}(\mathbf{x}_{\text{text}}; \theta_{\text{text}})
+$$
+
+$$
+\mathbf{z}_{\text{lab}} = \phi_{\text{lab}}(\mathbf{x}_{\text{lab}}; \theta_{\text{lab}})
+$$
 
 A cross-modal transformer fuses these embeddings:
 
-$$\mathbf{Z} = [\mathbf{z}_{\text{img}} + \mathbf{e}_{\text{img}}, \mathbf{z}_{\text{text}} + \mathbf{e}_{\text{text}}, \mathbf{z}_{\text{lab}} + \mathbf{e}_{\text{lab}}]$$
+$$
+\mathbf{Z} = [\mathbf{z}_{\text{img}} + \mathbf{e}_{\text{img}}, \mathbf{z}_{\text{text}} + \mathbf{e}_{\text{text}}, \mathbf{z}_{\text{lab}} + \mathbf{e}_{\text{lab}}]
+$$
 
-$$\mathbf{H} = \text{Transformer}(\mathbf{Z}; \theta_{\text{trans}})$$
+$$
+\mathbf{H} = \text{Transformer}(\mathbf{Z}; \theta_{\text{trans}})
+$$
 
-$$\hat{y} = \text{softmax}(W_{\text{out}} \text{Pool}(\mathbf{H}) + b_{\text{out}})$$
+$$
+\hat{y} = \text{softmax}(W_{\text{out}} \text{Pool}(\mathbf{H}) + b_{\text{out}})
+$$
 
-The modality embeddings $$\mathbf{e}_{\text{img}}, \mathbf{e}_{\text{text}}, \mathbf{e}_{\text{lab}}$$ inform the transformer which modality each token represents. The pooling operation aggregates information across modalities, typically using the first token's output (if a CLS token is prepended) or average pooling.
+The modality embeddings $\mathbf{e}_{\text{img}}, \mathbf{e}_{\text{text}}, \mathbf{e}_{\text{lab}}$ inform the transformer which modality each token represents. The pooling operation aggregates information across modalities, typically using the first token's output (if a CLS token is prepended) or average pooling.
 
 ## Handling Missing Modalities in Clinical Settings
 
@@ -187,26 +253,30 @@ Missing modalities are pervasive in clinical settings. Not all patients receive 
 
 ### Architectural Strategies for Missing Modalities
 
-**Modality Dropout During Training:** A simple but effective approach introduces modality dropout during training. With probability $$p_{\text{drop}}^{(m)}$$, we set the embedding for modality $m$ to a learned mask token or zero vector:
+**Modality Dropout During Training:** A simple but effective approach introduces modality dropout during training. With probability $p_{\text{drop}}^{(m)}$, we set the embedding for modality $m$ to a learned mask token or zero vector:
 
-$$\tilde{\mathbf{z}}_i^{(m)} = \begin{cases}
+$\tilde{\mathbf{z}}_i^{(m)} = \begin{cases}
 \mathbf{z}_i^{(m)} & \text{with probability } 1 - p_{\text{drop}}^{(m)} \\
 \mathbf{z}_{\text{mask}}^{(m)} & \text{with probability } p_{\text{drop}}^{(m)}
-\end{cases}$$
+\end{cases}$
 
-This forces the model to learn representations that remain informative even when certain modalities are absent. The dropout probabilities should reflect the expected missingness patterns at deployment: if imaging is available for only fifty percent of patients, set $$p_{\text{drop}}^{(\text{img})} = 0.5$$.
+This forces the model to learn representations that remain informative even when certain modalities are absent. The dropout probabilities should reflect the expected missingness patterns at deployment: if imaging is available for only fifty percent of patients, set $p_{\text{drop}}^{(\text{img})} = 0.5$.
 
 **Modality-Specific Adapters:** Another approach trains a universal multimodal model with modality-specific adapter networks that activate only when the modality is present:
 
-$$\mathbf{h}_i = \sum_{m=1}^{M} \mathbb{1}[m \in \mathcal{M}_i] \cdot \text{Adapter}^{(m)}(\mathbf{z}_i^{(m)})$$
+$$
+\mathbf{h}_i = \sum_{m=1}^{M} \mathbb{1}[m \in \mathcal{M}_i] \cdot \text{Adapter}^{(m)}(\mathbf{z}_i^{(m)})
+$$
 
-where $$\mathcal{M}_i$$$is the set of available modalities for patient$$i$, and $$\mathbb{1}[\cdot]$$ is an indicator function. Each adapter is a small feedforward network that transforms modality-specific embeddings to a common space. This architecture naturally handles any combination of available modalities without requiring retraining.
+where $\mathcal{M}_i$is the set of available modalities for patient$i$, and $\mathbb{1}[\cdot]$ is an indicator function. Each adapter is a small feedforward network that transforms modality-specific embeddings to a common space. This architecture naturally handles any combination of available modalities without requiring retraining.
 
-**Mixture of Modality Experts:** We can train separate expert models for each modality subset, then route each patient to the appropriate expert based on available modalities. For $M$ modalities, this requires training $$2^M - 1$$ models (one for each non-empty subset). While computationally expensive during training, this approach allows each expert to optimize for its specific input pattern. A gating network can dynamically weight expert predictions when multiple experts are applicable:
+**Mixture of Modality Experts:** We can train separate expert models for each modality subset, then route each patient to the appropriate expert based on available modalities. For $M$ modalities, this requires training $2^M - 1$ models (one for each non-empty subset). While computationally expensive during training, this approach allows each expert to optimize for its specific input pattern. A gating network can dynamically weight expert predictions when multiple experts are applicable:
 
-$$\hat{y}_i = \sum_{s \in \mathcal{S}_i} \alpha_{i,s} \cdot \hat{y}_{i,s}$$
+$$
+\hat{y}_i = \sum_{s \in \mathcal{S}_i} \alpha_{i,s} \cdot \hat{y}_{i,s}
+$$
 
-where $$\mathcal{S}_i$$$is the set of experts compatible with patient$$i$$'s available modalities, and$$\alpha_{i,s}$ are learned gating weights.
+where $\mathcal{S}_i$is the set of experts compatible with patient$i$'s available modalities, and$\alpha_{i,s}$ are learned gating weights.
 
 ### Generative Approaches for Missing Modalities
 
@@ -214,7 +284,9 @@ Rather than handling missing modalities during prediction, we can attempt to imp
 
 For instance, given a patient's clinical notes and laboratory values, we might generate a plausible chest radiograph:
 
-$$\hat{\mathbf{x}}_{\text{img}} \sim p(\mathbf{x}_{\text{img}} \mid \mathbf{x}_{\text{text}}, \mathbf{x}_{\text{lab}}; \theta_{\text{gen}})$$
+$$
+\hat{\mathbf{x}}_{\text{img}} \sim p(\mathbf{x}_{\text{img}} \mid \mathbf{x}_{\text{text}}, \mathbf{x}_{\text{lab}}; \theta_{\text{gen}})
+$$
 
 This generated image can then be used by the multimodal model. Generative adversarial networks (GANs), variational autoencoders (VAEs), and diffusion models have all been explored for cross-modal generation in medical imaging.
 
@@ -222,7 +294,9 @@ However, this approach requires caution in clinical settings. Generated images m
 
 A more conservative approach uses generative models to estimate uncertainty about the missing modality. Rather than generating a single imputation, we sample multiple plausible imputations and propagate this uncertainty through the prediction:
 
-$$\hat{y}_i = \mathbb{E}_{\mathbf{x}_{\text{img}} \sim p(\mathbf{x}_{\text{img}} \mid \mathbf{x}_{\text{text}}, \mathbf{x}_{\text{lab}})}[f(\mathbf{x}_{\text{img}}, \mathbf{x}_{\text{text}}, \mathbf{x}_{\text{lab}})]$$
+$$
+\hat{y}_i = \mathbb{E}_{\mathbf{x}_{\text{img}} \sim p(\mathbf{x}_{\text{img}} \mid \mathbf{x}_{\text{text}}, \mathbf{x}_{\text{lab}})}[f(\mathbf{x}_{\text{img}}, \mathbf{x}_{\text{text}}, \mathbf{x}_{\text{lab}})]
+$$
 
 This Monte Carlo estimate provides both a point prediction and uncertainty bounds reflecting the missing information.
 
@@ -232,13 +306,17 @@ Missingness patterns often correlate with demographic characteristics and socioe
 
 If a multimodal model's performance degrades significantly when certain modalities are missing, and those modalities are systematically absent in underserved populations, the model will exhibit disparate performance. We must therefore evaluate models across all relevant missingness patterns and demographic groups.
 
-Define a missingness pattern $$\mathcal{M} \subseteq \{1, 2, \ldots, M\}$$ as a subset of available modalities. For each pattern $$\mathcal{M}$$$and demographic group$$g$, we compute performance metrics:
+Define a missingness pattern $\mathcal{M} \subseteq \{1, 2, \ldots, M\}$ as a subset of available modalities. For each pattern $\mathcal{M}$and demographic group$g$, we compute performance metrics:
 
-$$\text{Performance}(\mathcal{M}, g) = \text{Metric}(\hat{\mathbf{y}}[\mathcal{M}_i = \mathcal{M}, G_i = g], \mathbf{y}[\mathcal{M}_i = \mathcal{M}, G_i = g])$$
+$$
+\text{Performance}(\mathcal{M}, g) = \text{Metric}(\hat{\mathbf{y}}[\mathcal{M}_i = \mathcal{M}, G_i = g], \mathbf{y}[\mathcal{M}_i = \mathcal{M}, G_i = g])
+$$
 
-where $$[\cdot]$$ denotes subsetting. A model is fair across missingness patterns if performance is similar across groups for each missingness pattern:
+where $[\cdot]$ denotes subsetting. A model is fair across missingness patterns if performance is similar across groups for each missingness pattern:
 
-$$|\text{Performance}(\mathcal{M}, g) - \text{Performance}(\mathcal{M}, g')| < \epsilon \quad \forall \mathcal{M}, g, g'$$
+$$
+|\text{Performance}(\mathcal{M}, g) - \text{Performance}(\mathcal{M}, g')| < \epsilon \quad \forall \mathcal{M}, g, g'
+$$
 
 This criterion is stronger than typical fairness metrics because it requires equitable performance not only across groups but also across patterns of data availability.
 
@@ -248,9 +326,11 @@ Understanding how multimodal models make predictions is essential for clinical a
 
 ### Attention Visualization
 
-When using attention-based fusion, the attention weights $$\alpha^{(m)}$$ indicate the relative importance of each modality for a given prediction. Visualizing these weights provides a high-level summary of the model's reasoning:
+When using attention-based fusion, the attention weights $\alpha^{(m)}$ indicate the relative importance of each modality for a given prediction. Visualizing these weights provides a high-level summary of the model's reasoning:
 
-$$\text{Importance}^{(m)} = \frac{\alpha^{(m)}}{\sum_{m'} \alpha^{(m')}}$$
+$$
+\text{Importance}^{(m)} = \frac{\alpha^{(m)}}{\sum_{m'} \alpha^{(m')}}
+$$
 
 For a patient with chest radiograph, clinical notes, and laboratory values, we might find that the model assigns seventy percent weight to imaging, twenty percent to notes, and ten percent to labs, suggesting that imaging findings were the primary driver of the prediction.
 
@@ -258,15 +338,19 @@ However, attention weights alone do not provide complete interpretability. High 
 
 ### Cross-Modal Gradients
 
-Gradient-based methods can identify which features within each modality contribute most to predictions. For a multimodal model $$f(\mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(M)})$$$, the gradient of the output with respect to inputs in modality$$m$ indicates feature importance:
+Gradient-based methods can identify which features within each modality contribute most to predictions. For a multimodal model $f(\mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(M)})$, the gradient of the output with respect to inputs in modality$m$ indicates feature importance:
 
-$$\mathbf{g}^{(m)} = \frac{\partial f}{\partial \mathbf{x}^{(m)}}$$
+$$
+\mathbf{g}^{(m)} = \frac{\partial f}{\partial \mathbf{x}^{(m)}}
+$$
 
 For imaging modalities, these gradients can be visualized as saliency maps highlighting image regions that influenced the prediction. For text, gradients indicate which words or phrases were most important. For structured data, gradients quantify the sensitivity of predictions to each feature.
 
 Cross-modal gradients can also reveal interactions between modalities. The mixed partial derivative:
 
-$$\frac{\partial^2 f}{\partial \mathbf{x}^{(m)} \partial \mathbf{x}^{(m')}}$$
+$$
+\frac{\partial^2 f}{\partial \mathbf{x}^{(m)} \partial \mathbf{x}^{(m')}}
+$$
 
 captures how changing a feature in one modality affects the importance of features in another modality, revealing cross-modal synergies.
 
@@ -276,43 +360,57 @@ Integrated gradients provide a principled attribution method that satisfies desi
 
 For each modality, we compute integrated gradients by accumulating gradients along a path from a baseline input to the actual input:
 
-$$\text{IG}^{(m)}(\mathbf{x}^{(m)}) = (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)}) \times \int_{\alpha=0}^{1} \frac{\partial f}{\partial \mathbf{x}^{(m)}}(\mathbf{x}_{\text{baseline}}^{(m)} + \alpha (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)})) d\alpha$$
+$$
+\text{IG}^{(m)}(\mathbf{x}^{(m)}) = (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)}) \times \int_{\alpha=0}^{1} \frac{\partial f}{\partial \mathbf{x}^{(m)}}(\mathbf{x}_{\text{baseline}}^{(m)} + \alpha (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)})) d\alpha
+$$
 
 The choice of baseline is important and modality-specific. For images, we might use a black image or Gaussian noise. For text, we might replace words with mask tokens. For structured data, we might use population means or zeros.
 
 In practice, the integral is approximated by a finite sum over steps:
 
-$$\text{IG}^{(m)}(\mathbf{x}^{(m)}) \approx (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)}) \times \frac{1}{n} \sum_{k=1}^{n} \frac{\partial f}{\partial \mathbf{x}^{(m)}}(\mathbf{x}_{\text{baseline}}^{(m)} + \frac{k}{n} (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)}))$$
+$$
+\text{IG}^{(m)}(\mathbf{x}^{(m)}) \approx (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)}) \times \frac{1}{n} \sum_{k=1}^{n} \frac{\partial f}{\partial \mathbf{x}^{(m)}}(\mathbf{x}_{\text{baseline}}^{(m)} + \frac{k}{n} (\mathbf{x}^{(m)} - \mathbf{x}_{\text{baseline}}^{(m)}))
+$$
 
 This provides feature-level attributions within each modality while naturally handling multimodal inputs.
 
 ### Modality Ablation Studies
 
-A complementary approach to interpretability systematically removes or masks each modality and measures the change in predictions. For patient $i$ with prediction $$\hat{y}_i$$ using all modalities, we compute predictions using all subsets:
+A complementary approach to interpretability systematically removes or masks each modality and measures the change in predictions. For patient $i$ with prediction $\hat{y}_i$ using all modalities, we compute predictions using all subsets:
 
-$$\hat{y}_i^{(-m)} = f(\mathbf{x}_i^{(1)}, \ldots, \mathbf{x}_i^{(m-1)}, \mathbf{0}, \mathbf{x}_i^{(m+1)}, \ldots, \mathbf{x}_i^{(M)})$$
+$$
+\hat{y}_i^{(-m)} = f(\mathbf{x}_i^{(1)}, \ldots, \mathbf{x}_i^{(m-1)}, \mathbf{0}, \mathbf{x}_i^{(m+1)}, \ldots, \mathbf{x}_i^{(M)})
+$$
 
 The importance of modality $m$ is quantified by the change in prediction:
 
-$$\Delta_i^{(m)} = |\hat{y}_i - \hat{y}_i^{(-m)}|$$
+$$
+\Delta_i^{(m)} = |\hat{y}_i - \hat{y}_i^{(-m)}|
+$$
 
 This can be extended to measure the importance of modality combinations by ablating multiple modalities simultaneously. Shapley values provide a principled framework for computing feature importance that satisfies desirable axioms (efficiency, symmetry, dummy, additivity). For modality $m$:
 
-$$\phi^{(m)} = \sum_{\mathcal{S} \subseteq \mathcal{M} \setminus \{m\}} \frac{|\mathcal{S}|! (M - |\mathcal{S}| - 1)!}{M!} [f(\mathcal{S} \cup \{m\}) - f(\mathcal{S})]$$
+$$
+\phi^{(m)} = \sum_{\mathcal{S} \subseteq \mathcal{M} \setminus \{m\}} \frac{|\mathcal{S}|! (M - |\mathcal{S}| - 1)!}{M!} [f(\mathcal{S} \cup \{m\}) - f(\mathcal{S})]
+$$
 
-where $$\mathcal{M}$$ is the set of all modalities, and $$f(\mathcal{S})$$ is the model's prediction using only modalities in set $$\mathcal{S}$$$. Computing exact Shapley values requires evaluating$$2^M$ subsets, but efficient approximations exist.
+where $\mathcal{M}$ is the set of all modalities, and $f(\mathcal{S})$ is the model's prediction using only modalities in set $\mathcal{S}$. Computing exact Shapley values requires evaluating$2^M$ subsets, but efficient approximations exist.
 
 ### Concept-Based Explanations
 
 High-level clinical concepts may not align with individual features within modalities. Concept-based interpretability methods learn or define clinically meaningful concepts, then assess how much each concept contributed to a prediction.
 
-For a predefined set of clinical concepts $$\{c_1, c_2, \ldots, c_K\}$$ (such as "pulmonary edema," "elevated creatinine," "history of heart failure"), we train concept detectors that identify the presence of each concept from multimodal inputs:
+For a predefined set of clinical concepts $\{c_1, c_2, \ldots, c_K\}$ (such as "pulmonary edema," "elevated creatinine," "history of heart failure"), we train concept detectors that identify the presence of each concept from multimodal inputs:
 
-$$p(c_k \mid \mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(M)}) = g_k(\phi^{(1)}(\mathbf{x}^{(1)}), \ldots, \phi^{(M)}(\mathbf{x}^{(M)}))$$
+$$
+p(c_k \mid \mathbf{x}^{(1)}, \ldots, \mathbf{x}^{(M)}) = g_k(\phi^{(1)}(\mathbf{x}^{(1)}), \ldots, \phi^{(M)}(\mathbf{x}^{(M)}))
+$$
 
 We then train a final model that predicts the outcome from detected concepts:
 
-$$\hat{y} = h(p(c_1), \ldots, p(c_K))$$
+$$
+\hat{y} = h(p(c_1), \ldots, p(c_K))
+$$
 
 This two-stage approach provides interpretable explanations in terms of clinical concepts: "The model predicts high risk of acute kidney injury because it detected pulmonary edema in the chest X-ray (concept score 0.9) and elevated creatinine in the labs (concept score 0.85)."
 
@@ -351,14 +449,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class ModalityType(Enum):
     """Enumeration of supported modality types."""
     IMAGE = "image"
     TEXT = "text"
     STRUCTURED = "structured"
     TIMESERIES = "timeseries"
-
 
 @dataclass
 class ModalityConfig:
@@ -367,12 +463,11 @@ class ModalityConfig:
     is_required: bool
     preprocessing: Optional[Dict[str, Any]] = None
     embedding_dim: int = 256
-    
+
     def __post_init__(self) -> None:
         """Validate configuration."""
         if self.embedding_dim <= 0:
             raise ValueError(f"embedding_dim must be positive, got {self.embedding_dim}")
-
 
 @dataclass
 class MultimodalSample:
@@ -383,7 +478,7 @@ class MultimodalSample:
     label: Optional[torch.Tensor]
     demographic_group: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
-    
+
     def __post_init__(self) -> None:
         """Validate sample consistency."""
         for modality_name in self.available_modalities:
@@ -392,13 +487,12 @@ class MultimodalSample:
                     f"Modality {modality_name} listed as available but not present in data"
                 )
 
-
 class ClinicalImagePreprocessor:
     """
     Preprocessor for medical imaging data with domain-specific augmentation
     and normalization suitable for deployment.
     """
-    
+
     def __init__(
         self,
         img_size: Tuple[int, int] = (224, 224),
@@ -408,7 +502,7 @@ class ClinicalImagePreprocessor:
     ) -> None:
         """
         Initialize image preprocessor.
-        
+
         Args:
             img_size: Target image size (height, width)
             normalize_mean: Mean for normalization per channel
@@ -417,17 +511,17 @@ class ClinicalImagePreprocessor:
         """
         self.img_size = img_size
         self.augment = augment
-        
+
         # Default ImageNet normalization if not specified
         self.normalize_mean = normalize_mean or [0.485, 0.456, 0.406]
         self.normalize_std = normalize_std or [0.229, 0.224, 0.225]
-        
+
         # Build transformation pipeline
         transform_list = [
             transforms.Resize(img_size),
             transforms.ToTensor(),
         ]
-        
+
         # Add augmentation for training
         if augment:
             # Conservative augmentation appropriate for medical images
@@ -435,25 +529,25 @@ class ClinicalImagePreprocessor:
             transform_list.insert(1, transforms.RandomHorizontalFlip(p=0.5))
             transform_list.insert(2, transforms.RandomRotation(degrees=5))
             transform_list.insert(
-                3, 
+                3,
                 transforms.ColorJitter(
                     brightness=0.1, contrast=0.1, saturation=0.0, hue=0.0
                 )
             )
-        
+
         transform_list.append(
             transforms.Normalize(mean=self.normalize_mean, std=self.normalize_std)
         )
-        
+
         self.transform = transforms.Compose(transform_list)
-        
+
     def __call__(self, img: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
         """
         Apply preprocessing to an image.
-        
+
         Args:
             img: Input image as numpy array or tensor
-            
+
         Returns:
             Preprocessed image tensor
         """
@@ -466,19 +560,18 @@ class ClinicalImagePreprocessor:
                 if len(img.shape) == 2:  # Grayscale
                     img = np.stack([img] * 3, axis=-1)
                 img = Image.fromarray(img)
-            
+
             return self.transform(img)
         except Exception as e:
             logger.error(f"Error preprocessing image: {e}")
             raise
-
 
 class ClinicalTextPreprocessor:
     """
     Preprocessor for clinical text data with handling of medical terminology
     and structured note formats.
     """
-    
+
     def __init__(
         self,
         model_name: str = "emilyalsentzer/Bio_ClinicalBERT",
@@ -487,7 +580,7 @@ class ClinicalTextPreprocessor:
     ) -> None:
         """
         Initialize text preprocessor.
-        
+
         Args:
             model_name: HuggingFace model name for tokenizer
             max_length: Maximum sequence length
@@ -495,31 +588,31 @@ class ClinicalTextPreprocessor:
         """
         self.max_length = max_length
         self.truncation_strategy = truncation_strategy
-        
+
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             logger.info(f"Loaded tokenizer: {model_name}")
         except Exception as e:
             logger.error(f"Failed to load tokenizer {model_name}: {e}")
             raise
-    
+
     def __call__(self, text: str) -> Dict[str, torch.Tensor]:
         """
         Tokenize and preprocess clinical text.
-        
+
         Args:
             text: Input clinical text
-            
+
         Returns:
             Dictionary with input_ids, attention_mask, token_type_ids
         """
         if not isinstance(text, str):
             raise TypeError(f"Expected string input, got {type(text)}")
-        
+
         if not text.strip():
             warnings.warn("Empty text provided, using placeholder")
             text = "[EMPTY]"
-        
+
         try:
             encoded = self.tokenizer(
                 text,
@@ -528,20 +621,19 @@ class ClinicalTextPreprocessor:
                 padding="max_length",
                 return_tensors="pt"
             )
-            
+
             # Remove batch dimension since we process one sample at a time
             return {k: v.squeeze(0) for k, v in encoded.items()}
         except Exception as e:
             logger.error(f"Error tokenizing text: {e}")
             raise
 
-
 class StructuredDataPreprocessor:
     """
     Preprocessor for structured EHR data with imputation, normalization,
     and encoding of categorical variables.
     """
-    
+
     def __init__(
         self,
         feature_names: List[str],
@@ -552,7 +644,7 @@ class StructuredDataPreprocessor:
     ) -> None:
         """
         Initialize structured data preprocessor.
-        
+
         Args:
             feature_names: List of all feature names in order
             categorical_features: List of categorical feature names
@@ -565,20 +657,20 @@ class StructuredDataPreprocessor:
         self.numerical_features = numerical_features or []
         self.imputation_strategy = imputation_strategy
         self.normalization = normalization
-        
+
         # Initialize statistics (fit during training)
         self.feature_means: Optional[Dict[str, float]] = None
         self.feature_stds: Optional[Dict[str, float]] = None
         self.feature_medians: Optional[Dict[str, float]] = None
         self.category_mappings: Optional[Dict[str, Dict[str, int]]] = None
-        
+
         self._validate_features()
-    
+
     def _validate_features(self) -> None:
         """Validate feature configuration."""
         all_specified = set(self.categorical_features + self.numerical_features)
         all_features = set(self.feature_names)
-        
+
         if all_specified != all_features:
             missing = all_features - all_specified
             extra = all_specified - all_features
@@ -588,28 +680,28 @@ class StructuredDataPreprocessor:
             if extra:
                 msg_parts.append(f"Extra features specified: {extra}")
             raise ValueError("; ".join(msg_parts))
-    
+
     def fit(self, data: pd.DataFrame) -> None:
         """
         Fit preprocessor statistics from training data.
-        
+
         Args:
             data: Training dataframe with all features
         """
         if not set(self.feature_names).issubset(data.columns):
             missing = set(self.feature_names) - set(data.columns)
             raise ValueError(f"Missing features in data: {missing}")
-        
+
         # Compute statistics for numerical features
         self.feature_means = {}
         self.feature_stds = {}
         self.feature_medians = {}
-        
+
         for feat in self.numerical_features:
             self.feature_means[feat] = data[feat].mean()
             self.feature_stds[feat] = data[feat].std()
             self.feature_medians[feat] = data[feat].median()
-        
+
         # Build category mappings for categorical features
         self.category_mappings = {}
         for feat in self.categorical_features:
@@ -618,31 +710,31 @@ class StructuredDataPreprocessor:
             self.category_mappings[feat] = {
                 val: idx + 1 for idx, val in enumerate(sorted(unique_vals))
             }
-        
+
         logger.info("Fitted structured data preprocessor")
-    
+
     def __call__(self, data: Union[pd.Series, Dict[str, Any]]) -> torch.Tensor:
         """
         Preprocess structured data sample.
-        
+
         Args:
             data: Single sample as Series or dict
-            
+
         Returns:
             Preprocessed feature tensor
         """
         if self.feature_means is None:
             raise RuntimeError("Preprocessor not fitted. Call fit() first.")
-        
+
         if isinstance(data, dict):
             data = pd.Series(data)
-        
+
         processed_features = []
-        
+
         # Process numerical features
         for feat in self.numerical_features:
             val = data.get(feat, np.nan)
-            
+
             # Impute missing values
             if pd.isna(val):
                 if self.imputation_strategy == "mean":
@@ -653,37 +745,36 @@ class StructuredDataPreprocessor:
                     val = 0.0
                 else:
                     raise ValueError(f"Unknown imputation strategy: {self.imputation_strategy}")
-            
+
             # Normalize
             if self.normalization == "standard":
                 val = (val - self.feature_means[feat]) / (self.feature_stds[feat] + 1e-8)
             elif self.normalization == "minmax":
                 # This would require storing min/max during fit
                 raise NotImplementedError("MinMax normalization not yet implemented")
-            
+
             processed_features.append(val)
-        
+
         # Process categorical features
         for feat in self.categorical_features:
             val = data.get(feat, None)
-            
+
             # Map to integer, use 0 for unknown
             if val is None or pd.isna(val):
                 idx = 0
             else:
                 idx = self.category_mappings[feat].get(val, 0)
-            
-            processed_features.append(float(idx))
-        
-        return torch.tensor(processed_features, dtype=torch.float32)
 
+            processed_features.append(float(idx))
+
+        return torch.tensor(processed_features, dtype=torch.float32)
 
 class MultimodalClinicalDataset(Dataset):
     """
     Dataset for multimodal clinical data with support for missing modalities,
     demographic annotations, and equity-aware sampling.
     """
-    
+
     def __init__(
         self,
         data_path: Union[str, Path],
@@ -695,7 +786,7 @@ class MultimodalClinicalDataset(Dataset):
     ) -> None:
         """
         Initialize multimodal dataset.
-        
+
         Args:
             data_path: Path to data directory or manifest file
             modality_configs: Configuration for each modality
@@ -710,15 +801,15 @@ class MultimodalClinicalDataset(Dataset):
         self.label_column = label_column
         self.demographic_column = demographic_column
         self.stratify_by_missingness = stratify_by_missingness
-        
+
         # Load manifest/index
         self.samples = self._load_manifest()
         logger.info(f"Loaded {len(self.samples)} samples from {data_path}")
-        
+
         # Track missingness patterns if requested
         if self.stratify_by_missingness:
             self._compute_missingness_statistics()
-    
+
     def _load_manifest(self) -> List[Dict[str, Any]]:
         """Load dataset manifest with sample metadata."""
         # Implementation depends on data organization
@@ -726,37 +817,37 @@ class MultimodalClinicalDataset(Dataset):
         manifest_path = self.data_path / "manifest.csv"
         if not manifest_path.exists():
             raise FileNotFoundError(f"Manifest not found: {manifest_path}")
-        
+
         df = pd.read_csv(manifest_path)
         required_cols = ["patient_id"]
         if self.label_column:
             required_cols.append(self.label_column)
-        
+
         missing_cols = set(required_cols) - set(df.columns)
         if missing_cols:
             raise ValueError(f"Missing required columns in manifest: {missing_cols}")
-        
+
         return df.to_dict('records')
-    
+
     def _compute_missingness_statistics(self) -> None:
         """Compute statistics about missingness patterns."""
         missingness_patterns = {}
-        
+
         for sample in self.samples:
             available = []
             for modality_name in self.modality_configs.keys():
                 if self._is_modality_available(sample, modality_name):
                     available.append(modality_name)
-            
+
             pattern = tuple(sorted(available))
             missingness_patterns[pattern] = missingness_patterns.get(pattern, 0) + 1
-        
+
         logger.info("Missingness pattern distribution:")
         for pattern, count in sorted(missingness_patterns.items(), key=lambda x: -x[1]):
             logger.info(f"  {pattern}: {count} samples ({100*count/len(self.samples):.1f}%)")
-        
+
         self.missingness_patterns = missingness_patterns
-    
+
     def _is_modality_available(self, sample: Dict[str, Any], modality_name: str) -> bool:
         """Check if a modality is available for a sample."""
         # Check if the path column exists and is not null
@@ -765,18 +856,18 @@ class MultimodalClinicalDataset(Dataset):
             return False
         path = sample[path_col]
         return path is not None and pd.notna(path) and Path(path).exists()
-    
+
     def __len__(self) -> int:
         return len(self.samples)
-    
+
     def __getitem__(self, idx: int) -> MultimodalSample:
         """Load and preprocess a multimodal sample."""
         sample_info = self.samples[idx]
         patient_id = sample_info['patient_id']
-        
+
         modalities = {}
         available_modalities = []
-        
+
         # Process each configured modality
         for modality_name, config in self.modality_configs.items():
             if self._is_modality_available(sample_info, modality_name):
@@ -784,50 +875,50 @@ class MultimodalClinicalDataset(Dataset):
                     # Load raw data
                     path_col = f"{modality_name}_path"
                     data_path = self.data_path / sample_info[path_col]
-                    
+
                     if config.modality_type == ModalityType.IMAGE:
                         from PIL import Image
                         img = Image.open(data_path).convert('RGB')
                         modalities[modality_name] = self.preprocessors[modality_name](img)
-                    
+
                     elif config.modality_type == ModalityType.TEXT:
                         with open(data_path, 'r') as f:
                             text = f.read()
                         modalities[modality_name] = self.preprocessors[modality_name](text)
-                    
+
                     elif config.modality_type == ModalityType.STRUCTURED:
                         # Assume structured data is in the manifest row itself
                         modalities[modality_name] = self.preprocessors[modality_name](sample_info)
-                    
+
                     else:
                         raise NotImplementedError(
                             f"Modality type {config.modality_type} not implemented"
                         )
-                    
+
                     available_modalities.append(modality_name)
-                
+
                 except Exception as e:
                     logger.warning(
                         f"Failed to load {modality_name} for patient {patient_id}: {e}"
                     )
                     if config.is_required:
                         raise
-            
+
             elif config.is_required:
                 raise ValueError(
                     f"Required modality {modality_name} not available for patient {patient_id}"
                 )
-        
+
         # Load label if specified
         label = None
         if self.label_column and self.label_column in sample_info:
             label = torch.tensor(sample_info[self.label_column], dtype=torch.float32)
-        
+
         # Load demographic group if specified
         demographic_group = None
         if self.demographic_column and self.demographic_column in sample_info:
             demographic_group = sample_info[self.demographic_column]
-        
+
         return MultimodalSample(
             patient_id=patient_id,
             modalities=modalities,
@@ -837,17 +928,16 @@ class MultimodalClinicalDataset(Dataset):
             metadata=sample_info
         )
 
-
 def collate_multimodal_batch(
     batch: List[MultimodalSample]
 ) -> Dict[str, Union[torch.Tensor, List]]:
     """
     Custom collate function for multimodal batches that handles
     variable modality availability.
-    
+
     Args:
         batch: List of MultimodalSample objects
-        
+
     Returns:
         Dictionary with batched tensors and metadata
     """
@@ -855,19 +945,19 @@ def collate_multimodal_batch(
     all_modalities = set()
     for sample in batch:
         all_modalities.update(sample.available_modalities)
-    
+
     batched = {
         'patient_ids': [s.patient_id for s in batch],
         'labels': torch.stack([s.label for s in batch]) if batch[0].label is not None else None,
         'demographic_groups': [s.demographic_group for s in batch],
         'available_modalities': [s.available_modalities for s in batch]
     }
-    
+
     # Batch each modality separately
     for modality_name in all_modalities:
         modality_data = []
         modality_mask = []
-        
+
         for sample in batch:
             if modality_name in sample.available_modalities:
                 data = sample.modalities[modality_name]
@@ -892,15 +982,15 @@ def collate_multimodal_batch(
                         placeholder = torch.zeros_like(modality_data[0])
                         modality_data.append(placeholder)
                 modality_mask.append(0)
-        
+
         # Stack into batch
         if isinstance(modality_data, dict):
             batched[modality_name] = {k: torch.stack(v) for k, v in modality_data.items()}
         else:
             batched[modality_name] = torch.stack(modality_data)
-        
+
         batched[f'{modality_name}_mask'] = torch.tensor(modality_mask, dtype=torch.bool)
-    
+
     return batched
 ```
 
@@ -922,14 +1012,13 @@ from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 
-
 class ModalityEncoder(nn.Module):
     """Base class for modality-specific encoders."""
-    
+
     def __init__(self, input_dim: int, embedding_dim: int, dropout: float = 0.1):
         """
         Initialize encoder.
-        
+
         Args:
             input_dim: Input dimension for this modality
             embedding_dim: Output embedding dimension
@@ -939,18 +1028,17 @@ class ModalityEncoder(nn.Module):
         self.input_dim = input_dim
         self.embedding_dim = embedding_dim
         self.dropout = dropout
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Encode modality data to embedding space."""
         raise NotImplementedError
-
 
 class ImageEncoder(ModalityEncoder):
     """
     Encoder for medical imaging data using convolutional neural networks
     or vision transformers.
     """
-    
+
     def __init__(
         self,
         embedding_dim: int = 512,
@@ -960,7 +1048,7 @@ class ImageEncoder(ModalityEncoder):
     ):
         """
         Initialize image encoder.
-        
+
         Args:
             embedding_dim: Output embedding dimension
             pretrained: Whether to use pretrained weights
@@ -968,7 +1056,7 @@ class ImageEncoder(ModalityEncoder):
             dropout: Dropout probability
         """
         super().__init__(input_dim=2048, embedding_dim=embedding_dim, dropout=dropout)
-        
+
         if architecture == "resnet50":
             from torchvision.models import resnet50, ResNet50_Weights
             weights = ResNet50_Weights.DEFAULT if pretrained else None
@@ -978,7 +1066,7 @@ class ImageEncoder(ModalityEncoder):
             backbone_dim = 2048
         else:
             raise ValueError(f"Unknown architecture: {architecture}")
-        
+
         # Projection to embedding space
         self.projection = nn.Sequential(
             nn.Linear(backbone_dim, embedding_dim),
@@ -986,16 +1074,16 @@ class ImageEncoder(ModalityEncoder):
             nn.Dropout(dropout),
             nn.Linear(embedding_dim, embedding_dim)
         )
-        
+
         logger.info(f"Initialized {architecture} image encoder with embedding_dim={embedding_dim}")
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Encode image to embedding.
-        
+
         Args:
             x: Image tensor [batch_size, channels, height, width]
-            
+
         Returns:
             Image embedding [batch_size, embedding_dim]
         """
@@ -1004,12 +1092,11 @@ class ImageEncoder(ModalityEncoder):
         embedding = self.projection(features)
         return embedding
 
-
 class TextEncoder(ModalityEncoder):
     """
     Encoder for clinical text using transformer-based language models.
     """
-    
+
     def __init__(
         self,
         embedding_dim: int = 512,
@@ -1019,7 +1106,7 @@ class TextEncoder(ModalityEncoder):
     ):
         """
         Initialize text encoder.
-        
+
         Args:
             embedding_dim: Output embedding dimension
             model_name: HuggingFace model name
@@ -1027,19 +1114,19 @@ class TextEncoder(ModalityEncoder):
             dropout: Dropout probability
         """
         from transformers import AutoModel
-        
+
         base_model = AutoModel.from_pretrained(model_name)
         base_dim = base_model.config.hidden_size
-        
+
         super().__init__(input_dim=base_dim, embedding_dim=embedding_dim, dropout=dropout)
-        
+
         self.base_model = base_model
-        
+
         if freeze_base:
             for param in self.base_model.parameters():
                 param.requires_grad = False
             logger.info(f"Froze base model weights for {model_name}")
-        
+
         # Projection to embedding space
         self.projection = nn.Sequential(
             nn.Linear(base_dim, embedding_dim),
@@ -1047,36 +1134,35 @@ class TextEncoder(ModalityEncoder):
             nn.Dropout(dropout),
             nn.Linear(embedding_dim, embedding_dim)
         )
-        
+
         logger.info(f"Initialized {model_name} text encoder with embedding_dim={embedding_dim}")
-    
+
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
         """
         Encode text to embedding.
-        
+
         Args:
             input_ids: Token IDs [batch_size, seq_length]
             attention_mask: Attention mask [batch_size, seq_length]
-            
+
         Returns:
             Text embedding [batch_size, embedding_dim]
         """
         # Get contextualized representations
         outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask)
-        
+
         # Use [CLS] token representation
         cls_embedding = outputs.last_hidden_state[:, 0, :]
-        
+
         # Project to embedding space
         embedding = self.projection(cls_embedding)
         return embedding
-
 
 class StructuredEncoder(ModalityEncoder):
     """
     Encoder for structured EHR data.
     """
-    
+
     def __init__(
         self,
         input_dim: int,
@@ -1086,7 +1172,7 @@ class StructuredEncoder(ModalityEncoder):
     ):
         """
         Initialize structured data encoder.
-        
+
         Args:
             input_dim: Number of input features
             embedding_dim: Output embedding dimension
@@ -1094,10 +1180,10 @@ class StructuredEncoder(ModalityEncoder):
             dropout: Dropout probability
         """
         super().__init__(input_dim=input_dim, embedding_dim=embedding_dim, dropout=dropout)
-        
+
         if hidden_dims is None:
             hidden_dims = [256, 256]
-        
+
         # Build MLP
         layers = []
         prev_dim = input_dim
@@ -1108,33 +1194,32 @@ class StructuredEncoder(ModalityEncoder):
                 nn.Dropout(dropout)
             ])
             prev_dim = hidden_dim
-        
+
         layers.append(nn.Linear(prev_dim, embedding_dim))
-        
+
         self.mlp = nn.Sequential(*layers)
-        
+
         logger.info(
             f"Initialized structured encoder: {input_dim} -> {hidden_dims} -> {embedding_dim}"
         )
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Encode structured data to embedding.
-        
+
         Args:
             x: Structured features [batch_size, input_dim]
-            
+
         Returns:
             Embedding [batch_size, embedding_dim]
         """
         return self.mlp(x)
 
-
 class CrossModalAttention(nn.Module):
     """
     Cross-modal attention mechanism allowing one modality to attend to another.
     """
-    
+
     def __init__(
         self,
         embedding_dim: int,
@@ -1143,29 +1228,29 @@ class CrossModalAttention(nn.Module):
     ):
         """
         Initialize cross-modal attention.
-        
+
         Args:
             embedding_dim: Dimension of embeddings
             num_heads: Number of attention heads
             dropout: Dropout probability
         """
         super().__init__()
-        
+
         if embedding_dim % num_heads != 0:
             raise ValueError(f"embedding_dim ({embedding_dim}) must be divisible by num_heads ({num_heads})")
-        
+
         self.embedding_dim = embedding_dim
         self.num_heads = num_heads
         self.head_dim = embedding_dim // num_heads
-        
+
         self.q_proj = nn.Linear(embedding_dim, embedding_dim)
         self.k_proj = nn.Linear(embedding_dim, embedding_dim)
         self.v_proj = nn.Linear(embedding_dim, embedding_dim)
         self.out_proj = nn.Linear(embedding_dim, embedding_dim)
-        
+
         self.dropout = nn.Dropout(dropout)
         self.scale = self.head_dim ** -0.5
-    
+
     def forward(
         self,
         query: torch.Tensor,
@@ -1175,50 +1260,49 @@ class CrossModalAttention(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Apply cross-modal attention.
-        
+
         Args:
             query: Query embeddings [batch_size, embedding_dim]
             key: Key embeddings [batch_size, num_keys, embedding_dim]
             value: Value embeddings [batch_size, num_keys, embedding_dim]
             mask: Attention mask [batch_size, num_keys]
-            
+
         Returns:
             Attended embeddings and attention weights
         """
         batch_size = query.size(0)
-        
+
         # Project and reshape
         q = self.q_proj(query).view(batch_size, 1, self.num_heads, self.head_dim).transpose(1, 2)
         k = self.k_proj(key).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
         v = self.v_proj(value).view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
-        
+
         # Attention scores
         attn_scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
-        
+
         # Apply mask if provided
         if mask is not None:
             mask = mask.unsqueeze(1).unsqueeze(2)  # [batch_size, 1, 1, num_keys]
             attn_scores = attn_scores.masked_fill(~mask, float('-inf'))
-        
+
         attn_weights = F.softmax(attn_scores, dim=-1)
         attn_weights = self.dropout(attn_weights)
-        
+
         # Apply attention to values
         attn_output = torch.matmul(attn_weights, v)
         attn_output = attn_output.transpose(1, 2).contiguous().view(batch_size, 1, self.embedding_dim)
         attn_output = attn_output.squeeze(1)
-        
-        output = self.out_proj(attn_output)
-        
-        return output, attn_weights.squeeze(1).squeeze(1)
 
+        output = self.out_proj(attn_output)
+
+        return output, attn_weights.squeeze(1).squeeze(1)
 
 class MultimodalFusionModule(nn.Module):
     """
     Fusion module combining embeddings from multiple modalities with
     attention-based weighting and cross-modal interactions.
     """
-    
+
     def __init__(
         self,
         embedding_dim: int,
@@ -1229,7 +1313,7 @@ class MultimodalFusionModule(nn.Module):
     ):
         """
         Initialize fusion module.
-        
+
         Args:
             embedding_dim: Dimension of modality embeddings
             num_modalities: Number of modalities
@@ -1238,11 +1322,11 @@ class MultimodalFusionModule(nn.Module):
             dropout: Dropout probability
         """
         super().__init__()
-        
+
         self.embedding_dim = embedding_dim
         self.num_modalities = num_modalities
         self.fusion_strategy = fusion_strategy
-        
+
         if fusion_strategy == "concat":
             self.fusion = nn.Sequential(
                 nn.Linear(embedding_dim * num_modalities, embedding_dim),
@@ -1250,7 +1334,7 @@ class MultimodalFusionModule(nn.Module):
                 nn.Dropout(dropout),
                 nn.Linear(embedding_dim, embedding_dim)
             )
-        
+
         elif fusion_strategy == "attention":
             self.attention_weights = nn.Linear(embedding_dim, 1)
             self.fusion = nn.Sequential(
@@ -1258,7 +1342,7 @@ class MultimodalFusionModule(nn.Module):
                 nn.ReLU(),
                 nn.Dropout(dropout)
             )
-        
+
         elif fusion_strategy == "cross_attention":
             self.cross_attention = nn.ModuleList([
                 CrossModalAttention(embedding_dim, num_heads, dropout)
@@ -1269,12 +1353,12 @@ class MultimodalFusionModule(nn.Module):
                 nn.ReLU(),
                 nn.Dropout(dropout)
             )
-        
+
         else:
             raise ValueError(f"Unknown fusion strategy: {fusion_strategy}")
-        
+
         logger.info(f"Initialized {fusion_strategy} fusion module")
-    
+
     def forward(
         self,
         embeddings: Dict[str, torch.Tensor],
@@ -1282,78 +1366,77 @@ class MultimodalFusionModule(nn.Module):
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """
         Fuse modality embeddings.
-        
+
         Args:
             embeddings: Dictionary of modality embeddings
             masks: Dictionary of modality availability masks
-            
+
         Returns:
             Fused embedding and attention weights (if applicable)
         """
         modality_names = list(embeddings.keys())
         batch_size = embeddings[modality_names[0]].size(0)
-        
+
         if self.fusion_strategy == "concat":
             # Concatenate all embeddings
             concat_embeddings = torch.cat([embeddings[m] for m in modality_names], dim=1)
             fused = self.fusion(concat_embeddings)
             attention_weights = {m: None for m in modality_names}
-        
+
         elif self.fusion_strategy == "attention":
             # Compute attention weights for each modality
             embeddings_stack = torch.stack([embeddings[m] for m in modality_names], dim=1)
             masks_stack = torch.stack([masks[m] for m in modality_names], dim=1)
-            
+
             # Compute unnormalized attention scores
             attn_logits = self.attention_weights(embeddings_stack).squeeze(-1)
             attn_logits = attn_logits.masked_fill(~masks_stack, float('-inf'))
-            
+
             # Normalize to get attention weights
             attn_weights = F.softmax(attn_logits, dim=1)
-            
+
             # Weighted sum of embeddings
             weighted_sum = (embeddings_stack * attn_weights.unsqueeze(-1)).sum(dim=1)
             fused = self.fusion(weighted_sum)
-            
+
             # Store attention weights for each modality
             attention_weights = {
                 m: attn_weights[:, i] for i, m in enumerate(modality_names)
             }
-        
+
         elif self.fusion_strategy == "cross_attention":
             # Each modality attends to all others
             attended_embeddings = []
             attention_weights = {}
-            
+
             for i, modality in enumerate(modality_names):
                 query = embeddings[modality]
-                
+
                 # Stack other modalities as key/value
                 other_modalities = [m for m in modality_names if m != modality]
                 keys = torch.stack([embeddings[m] for m in other_modalities], dim=1)
                 values = keys
-                
+
                 key_masks = torch.stack([masks[m] for m in other_modalities], dim=1)
-                
+
                 # Apply cross-attention
                 attended, attn_w = self.cross_attention[i](query, keys, values, key_masks)
                 attended_embeddings.append(attended)
-                
+
                 attention_weights[modality] = dict(zip(other_modalities, attn_w.unbind(1)))
-            
+
             # Combine attended embeddings
             combined = torch.stack(attended_embeddings, dim=1).mean(dim=1)
             fused = self.fusion(combined)
-        
-        return fused, attention_weights
 
+        return fused, attention_weights
 
 class MultimodalClinicalModel(nn.Module):
     """
     Complete multimodal clinical AI model with encoders, fusion, and prediction head.
     Handles missing modalities and provides interpretability.
     """
-    
+
     def __init__(
         self,
         modality_configs: Dict[str, Dict[str, Any]],
@@ -1365,7 +1448,7 @@ class MultimodalClinicalModel(nn.Module):
     ):
         """
         Initialize multimodal model.
-        
+
         Args:
             modality_configs: Configuration for each modality encoder
             embedding_dim: Common embedding dimension
@@ -1375,18 +1458,18 @@ class MultimodalClinicalModel(nn.Module):
             modality_dropout_prob: Probability of dropping modality during training
         """
         super().__init__()
-        
+
         self.modality_names = list(modality_configs.keys())
         self.embedding_dim = embedding_dim
         self.fusion_strategy = fusion_strategy
         self.num_classes = num_classes
         self.modality_dropout_prob = modality_dropout_prob
-        
+
         # Initialize encoders
         self.encoders = nn.ModuleDict()
         for modality_name, config in modality_configs.items():
             encoder_type = config['type']
-            
+
             if encoder_type == 'image':
                 self.encoders[modality_name] = ImageEncoder(
                     embedding_dim=embedding_dim,
@@ -1410,7 +1493,7 @@ class MultimodalClinicalModel(nn.Module):
                 )
             else:
                 raise ValueError(f"Unknown encoder type: {encoder_type}")
-        
+
         # Initialize fusion module
         self.fusion = MultimodalFusionModule(
             embedding_dim=embedding_dim,
@@ -1418,7 +1501,7 @@ class MultimodalClinicalModel(nn.Module):
             fusion_strategy=fusion_strategy,
             dropout=dropout
         )
-        
+
         # Prediction head
         self.classifier = nn.Sequential(
             nn.Linear(embedding_dim, embedding_dim // 2),
@@ -1426,12 +1509,12 @@ class MultimodalClinicalModel(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(embedding_dim // 2, num_classes)
         )
-        
+
         logger.info(
             f"Initialized multimodal model with {len(self.modality_names)} modalities, "
             f"{fusion_strategy} fusion, {num_classes} classes"
         )
-    
+
     def forward(
         self,
         inputs: Dict[str, Any],
@@ -1440,24 +1523,24 @@ class MultimodalClinicalModel(nn.Module):
     ) -> Dict[str, torch.Tensor]:
         """
         Forward pass through multimodal model.
-        
+
         Args:
             inputs: Dictionary of modality inputs and masks
             return_embeddings: Whether to return intermediate embeddings
             return_attention: Whether to return attention weights
-            
+
         Returns:
             Dictionary with logits and optional embeddings/attention
         """
         batch_size = inputs[f'{self.modality_names[0]}_mask'].size(0)
-        
+
         # Encode each modality
         embeddings = {}
         masks = {}
-        
+
         for modality_name in self.modality_names:
             mask = inputs[f'{modality_name}_mask']
-            
+
             # Apply modality dropout during training
             if self.training and torch.rand(1).item() < self.modality_dropout_prob:
                 # Randomly drop this modality
@@ -1468,7 +1551,7 @@ class MultimodalClinicalModel(nn.Module):
             else:
                 # Encode modality
                 modality_input = inputs[modality_name]
-                
+
                 if isinstance(modality_input, dict):
                     # Text modality with multiple inputs
                     embedding = self.encoders[modality_name](
@@ -1477,53 +1560,53 @@ class MultimodalClinicalModel(nn.Module):
                     )
                 else:
                     embedding = self.encoders[modality_name](modality_input)
-                
+
                 # Mask unavailable modalities
                 embedding = embedding * mask.unsqueeze(1).float()
-                
+
                 embeddings[modality_name] = embedding
                 masks[modality_name] = mask
-        
+
         # Fuse modalities
         fused_embedding, attention_weights = self.fusion(embeddings, masks)
-        
+
         # Classification
         logits = self.classifier(fused_embedding)
-        
+
         # Prepare output
         outputs = {'logits': logits}
-        
+
         if return_embeddings:
             outputs['embeddings'] = embeddings
             outputs['fused_embedding'] = fused_embedding
-        
+
         if return_attention:
             outputs['attention_weights'] = attention_weights
-        
+
         return outputs
-    
+
     def get_modality_importance(
         self,
         inputs: Dict[str, Any]
     ) -> Dict[str, torch.Tensor]:
         """
         Compute importance of each modality for predictions via ablation.
-        
+
         Args:
             inputs: Dictionary of modality inputs
-            
+
         Returns:
             Dictionary mapping modality names to importance scores
         """
         self.eval()
-        
+
         with torch.no_grad():
             # Get full model prediction
             full_output = self.forward(inputs)
             full_logits = full_output['logits']
-            
+
             importances = {}
-            
+
             # Ablate each modality
             for modality_name in self.modality_names:
                 # Create modified inputs with this modality masked
@@ -1531,15 +1614,15 @@ class MultimodalClinicalModel(nn.Module):
                 ablated_inputs[f'{modality_name}_mask'] = torch.zeros_like(
                     inputs[f'{modality_name}_mask']
                 )
-                
+
                 # Get prediction without this modality
                 ablated_output = self.forward(ablated_inputs)
                 ablated_logits = ablated_output['logits']
-                
+
                 # Importance is the change in prediction
                 importance = (full_logits - ablated_logits).abs().mean(dim=1)
                 importances[modality_name] = importance
-        
+
         return importances
 ```
 
@@ -1561,13 +1644,12 @@ from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
-
 class MultimodalFairnessEvaluator:
     """
     Evaluator for fairness metrics across demographic groups and
     modality availability patterns.
     """
-    
+
     def __init__(
         self,
         demographic_groups: List[str],
@@ -1576,7 +1658,7 @@ class MultimodalFairnessEvaluator:
     ):
         """
         Initialize fairness evaluator.
-        
+
         Args:
             demographic_groups: List of demographic group identifiers
             modality_patterns: List of modality availability patterns to evaluate
@@ -1584,22 +1666,22 @@ class MultimodalFairnessEvaluator:
         """
         self.demographic_groups = demographic_groups
         self.modality_patterns = modality_patterns or []
-        
+
         if metrics is None:
             self.metrics = ['auroc', 'auprc', 'accuracy', 'calibration']
         else:
             self.metrics = metrics
-        
+
         # Storage for predictions and labels
         self.predictions = defaultdict(list)
         self.labels = defaultdict(list)
         self.probabilities = defaultdict(list)
-        
+
         logger.info(
             f"Initialized fairness evaluator for {len(demographic_groups)} groups, "
             f"{len(self.modality_patterns)} modality patterns"
         )
-    
+
     def add_batch(
         self,
         predictions: torch.Tensor,
@@ -1610,7 +1692,7 @@ class MultimodalFairnessEvaluator:
     ) -> None:
         """
         Add a batch of predictions for evaluation.
-        
+
         Args:
             predictions: Predicted class labels [batch_size]
             labels: True labels [batch_size]
@@ -1621,62 +1703,62 @@ class MultimodalFairnessEvaluator:
         predictions = predictions.cpu().numpy()
         labels = labels.cpu().numpy()
         probabilities = probabilities.cpu().numpy()
-        
+
         for i in range(len(predictions)):
             group = demographic_groups[i]
             modalities = tuple(sorted(available_modalities[i]))
-            
+
             # Store overall
             key = ('overall', 'all_modalities')
             self.predictions[key].append(predictions[i])
             self.labels[key].append(labels[i])
             self.probabilities[key].append(probabilities[i])
-            
+
             # Store by demographic group
             key = (group, 'all_modalities')
             self.predictions[key].append(predictions[i])
             self.labels[key].append(labels[i])
             self.probabilities[key].append(probabilities[i])
-            
+
             # Store by modality pattern
             key = ('overall', modalities)
             self.predictions[key].append(predictions[i])
             self.labels[key].append(labels[i])
             self.probabilities[key].append(probabilities[i])
-            
+
             # Store by demographic group and modality pattern
             key = (group, modalities)
             self.predictions[key].append(predictions[i])
             self.labels[key].append(labels[i])
             self.probabilities[key].append(probabilities[i])
-    
+
     def compute_metrics(self) -> Dict[str, Dict[str, float]]:
         """
         Compute all fairness metrics.
-        
+
         Returns:
             Nested dictionary of metrics by group and modality pattern
         """
         results = {}
-        
+
         for key, preds in self.predictions.items():
             if len(preds) < 10:  # Skip groups with too few samples
                 continue
-            
+
             group, modality_pattern = key
-            
+
             preds = np.array(preds)
             true_labels = np.array(self.labels[key])
             probs = np.array(self.probabilities[key])
-            
+
             # Get positive class probabilities
             if probs.ndim == 2:
                 pos_probs = probs[:, 1]
             else:
                 pos_probs = probs
-            
+
             metrics_dict = {}
-            
+
             # AUROC
             if 'auroc' in self.metrics and len(np.unique(true_labels)) > 1:
                 try:
@@ -1684,7 +1766,7 @@ class MultimodalFairnessEvaluator:
                     metrics_dict['auroc'] = float(auroc)
                 except Exception as e:
                     logger.warning(f"Failed to compute AUROC for {key}: {e}")
-            
+
             # AUPRC
             if 'auprc' in self.metrics and len(np.unique(true_labels)) > 1:
                 try:
@@ -1692,12 +1774,12 @@ class MultimodalFairnessEvaluator:
                     metrics_dict['auprc'] = float(auprc)
                 except Exception as e:
                     logger.warning(f"Failed to compute AUPRC for {key}: {e}")
-            
+
             # Accuracy
             if 'accuracy' in self.metrics:
                 acc = accuracy_score(true_labels, preds)
                 metrics_dict['accuracy'] = float(acc)
-            
+
             # Calibration error (ECE)
             if 'calibration' in self.metrics and len(np.unique(true_labels)) > 1:
                 try:
@@ -1705,12 +1787,12 @@ class MultimodalFairnessEvaluator:
                     metrics_dict['ece'] = float(ece)
                 except Exception as e:
                     logger.warning(f"Failed to compute ECE for {key}: {e}")
-            
+
             # Store results
             results[key] = metrics_dict
-        
+
         return results
-    
+
     def _compute_expected_calibration_error(
         self,
         labels: np.ndarray,
@@ -1719,19 +1801,19 @@ class MultimodalFairnessEvaluator:
     ) -> float:
         """
         Compute expected calibration error.
-        
+
         Args:
             labels: True binary labels
             probabilities: Predicted probabilities for positive class
             n_bins: Number of bins for calibration
-            
+
         Returns:
             Expected calibration error
         """
         bin_edges = np.linspace(0, 1, n_bins + 1)
         bin_indices = np.digitize(probabilities, bin_edges[:-1]) - 1
         bin_indices = np.clip(bin_indices, 0, n_bins - 1)
-        
+
         ece = 0.0
         for i in range(n_bins):
             mask = bin_indices == i
@@ -1740,9 +1822,9 @@ class MultimodalFairnessEvaluator:
                 bin_confidence = probabilities[mask].mean()
                 bin_weight = mask.sum() / len(labels)
                 ece += bin_weight * abs(bin_accuracy - bin_confidence)
-        
+
         return ece
-    
+
     def compute_disparity_metrics(
         self,
         results: Dict[Tuple[str, Tuple[str, ...]], Dict[str, float]],
@@ -1750,62 +1832,62 @@ class MultimodalFairnessEvaluator:
     ) -> Dict[str, float]:
         """
         Compute disparity metrics comparing groups to reference.
-        
+
         Args:
             results: Results dictionary from compute_metrics()
             reference_group: Reference group for comparison
-            
+
         Returns:
             Dictionary of disparity metrics
         """
         disparities = {}
-        
+
         # Get reference metrics for each modality pattern
         reference_metrics = {}
         for key, metrics in results.items():
             group, modality_pattern = key
             if group == reference_group:
                 reference_metrics[modality_pattern] = metrics
-        
+
         # Compute disparities
         for key, metrics in results.items():
             group, modality_pattern = key
-            
+
             if group == reference_group or modality_pattern not in reference_metrics:
                 continue
-            
+
             ref_metrics = reference_metrics[modality_pattern]
-            
+
             for metric_name in metrics.keys():
                 if metric_name not in ref_metrics:
                     continue
-                
+
                 # Absolute difference
                 disparity_key = f"{group}_{modality_pattern}_{metric_name}_diff"
                 disparities[disparity_key] = metrics[metric_name] - ref_metrics[metric_name]
-                
+
                 # Ratio
                 if ref_metrics[metric_name] != 0:
                     disparity_key = f"{group}_{modality_pattern}_{metric_name}_ratio"
                     disparities[disparity_key] = metrics[metric_name] / ref_metrics[metric_name]
-        
+
         return disparities
-    
+
     def generate_report(self) -> str:
         """
         Generate a comprehensive fairness report.
-        
+
         Returns:
             Formatted report string
         """
         results = self.compute_metrics()
         disparities = self.compute_disparity_metrics(results)
-        
+
         report = ["=" * 80]
         report.append("MULTIMODAL FAIRNESS EVALUATION REPORT")
         report.append("=" * 80)
         report.append("")
-        
+
         # Overall performance
         overall_key = ('overall', 'all_modalities')
         if overall_key in results:
@@ -1813,7 +1895,7 @@ class MultimodalFairnessEvaluator:
             for metric, value in results[overall_key].items():
                 report.append(f"  {metric}: {value:.4f}")
             report.append("")
-        
+
         # Performance by demographic group
         report.append("Performance by Demographic Group:")
         for group in self.demographic_groups:
@@ -1823,7 +1905,7 @@ class MultimodalFairnessEvaluator:
                 for metric, value in results[group_key].items():
                     report.append(f"    {metric}: {value:.4f}")
         report.append("")
-        
+
         # Performance by modality pattern
         if self.modality_patterns:
             report.append("Performance by Modality Pattern:")
@@ -1834,7 +1916,7 @@ class MultimodalFairnessEvaluator:
                     for metric, value in results[pattern_key].items():
                         report.append(f"    {metric}: {value:.4f}")
             report.append("")
-        
+
         # Disparity summary
         if disparities:
             report.append("Key Disparities:")
@@ -1847,11 +1929,10 @@ class MultimodalFairnessEvaluator:
             for key, value in sorted_disparities:
                 report.append(f"  {key}: {value:+.4f}")
             report.append("")
-        
-        report.append("=" * 80)
-        
-        return "\n".join(report)
 
+        report.append("=" * 80)
+
+        return "\n".join(report)
 
 def stratified_evaluation(
     model: torch.nn.Module,
@@ -1861,22 +1942,22 @@ def stratified_evaluation(
 ) -> Tuple[Dict, str]:
     """
     Perform stratified evaluation of multimodal model.
-    
+
     Args:
         model: Multimodal model to evaluate
         dataloader: DataLoader with test data
         device: Device for computation
         demographic_groups: List of demographic groups
-        
+
     Returns:
         Results dictionary and formatted report
     """
     model.eval()
-    
+
     evaluator = MultimodalFairnessEvaluator(
         demographic_groups=demographic_groups
     )
-    
+
     with torch.no_grad():
         for batch in dataloader:
             # Move to device
@@ -1885,17 +1966,17 @@ def stratified_evaluation(
                 for k, v in batch.items()
                 if k not in ['patient_ids', 'demographic_groups', 'available_modalities']
             }
-            
+
             labels = batch['labels'].to(device)
-            
+
             # Forward pass
             outputs = model(inputs)
             logits = outputs['logits']
-            
+
             # Get predictions
             probabilities = torch.softmax(logits, dim=1)
             predictions = torch.argmax(logits, dim=1)
-            
+
             # Add to evaluator
             evaluator.add_batch(
                 predictions=predictions,
@@ -1904,11 +1985,11 @@ def stratified_evaluation(
                 demographic_groups=batch['demographic_groups'],
                 available_modalities=batch['available_modalities']
             )
-    
+
     # Compute metrics and generate report
     results = evaluator.compute_metrics()
     report = evaluator.generate_report()
-    
+
     return results, report
 ```
 

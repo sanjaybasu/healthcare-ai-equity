@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 1: Clinical Informatics Foundations for Equity-Centered AI"
 chapter_number: 1
+part_number: 1
+prev_chapter: null
+next_chapter: /chapters/chapter-02-mathematical-foundations/
 ---
-
 # Chapter 1: Clinical Informatics Foundations for Equity-Centered AI
 
 ## Learning Objectives
@@ -217,14 +219,13 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class DataQualityMetrics:
     """
     Tracks data quality metrics with specific attention to patterns that
     may indicate systematic bias or differential data collection quality
     across patient populations.
-    
+
     Attributes:
         completeness_overall: Overall fraction of non-null values
         completeness_by_group: Completeness stratified by demographic groups
@@ -239,26 +240,26 @@ class DataQualityMetrics:
     measurement_frequency: Dict[str, float] = field(default_factory=dict)
     code_specificity: Dict[str, int] = field(default_factory=dict)
     documentation_length: Dict[str, float] = field(default_factory=dict)
-    
+
     def equity_disparity_score(self) -> float:
         """
         Calculates a summary metric of data quality disparity across groups.
         Higher scores indicate larger disparities in data completeness that
         may lead to differential model performance.
-        
+
         Returns:
             Float value representing coefficient of variation in completeness
             across demographic groups. Values > 0.2 warrant investigation.
         """
         if not self.completeness_by_group:
             return 0.0
-        
+
         values = list(self.completeness_by_group.values())
         mean_completeness = np.mean(values)
-        
+
         if mean_completeness == 0:
             return float('inf')
-            
+
         return np.std(values) / mean_completeness
 ```
 
@@ -273,16 +274,16 @@ class FHIRDataProcessor:
     """
     Production-grade processor for FHIR resources with explicit attention to
     data quality issues that manifest differently across diverse care settings.
-    
+
     This processor goes beyond standard FHIR parsing to assess data completeness,
     identify proxy variables that may encode social determinants, and track
     patterns of missing data that correlate with patient demographics.
     """
-    
+
     def __init__(self, quality_threshold: float = 0.7):
         """
         Initialize FHIR data processor with configurable quality thresholds.
-        
+
         Args:
             quality_threshold: Minimum acceptable data completeness score.
                              Lower values may be necessary for safety-net settings.
@@ -291,9 +292,9 @@ class FHIRDataProcessor:
         self.processed_patients: Dict[str, Dict[str, Any]] = {}
         self.quality_metrics: Dict[str, DataQualityMetrics] = {}
         self.missing_patterns: Dict[str, List[str]] = {}
-        
+
         logger.info(f"Initialized FHIR processor with quality threshold {quality_threshold}")
-    
+
     def process_patient_bundle(
         self,
         bundle: Dict[str, Any],
@@ -303,71 +304,71 @@ class FHIRDataProcessor:
         Process a FHIR bundle containing patient resources and extract
         structured data suitable for machine learning while tracking data
         quality issues that may introduce bias.
-        
+
         Args:
             bundle: FHIR Bundle resource as dictionary
             assess_equity: Whether to compute equity-focused quality metrics
-            
+
         Returns:
             Tuple of (processed DataFrame, quality metrics if assess_equity=True)
-            
+
         Raises:
             ValueError: If bundle is malformed or missing required elements
         """
         if not bundle or 'entry' not in bundle:
             raise ValueError("Bundle must contain 'entry' element with resources")
-        
+
         processed_data = []
         demographic_groups = {}
-        
+
         for entry in bundle['entry']:
             if 'resource' not in entry:
                 logger.warning("Bundle entry missing 'resource' field")
                 continue
-                
+
             resource = entry['resource']
             resource_type = resource.get('resourceType')
-            
+
             try:
                 if resource_type == 'Patient':
                     patient_data = self._process_patient(resource)
                     processed_data.append(patient_data)
-                    
+
                     # Track demographic group for equity assessment
                     patient_id = resource.get('id')
                     demographic_groups[patient_id] = self._extract_demographics(resource)
-                    
+
                 elif resource_type == 'Observation':
                     obs_data = self._process_observation(resource)
                     processed_data.append(obs_data)
-                    
+
                 elif resource_type == 'Condition':
                     condition_data = self._process_condition(resource)
                     processed_data.append(condition_data)
-                    
+
             except Exception as e:
                 logger.error(f"Error processing {resource_type}: {str(e)}")
                 continue
-        
+
         df = pd.DataFrame(processed_data)
-        
+
         # Assess data quality with equity focus if requested
         quality_metrics = None
         if assess_equity and demographic_groups:
             quality_metrics = self._assess_data_quality_equity(
                 df, demographic_groups
             )
-            
+
         return df, quality_metrics
-    
+
     def _process_patient(self, patient_resource: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract patient demographic and identifier information from FHIR
         Patient resource with attention to representation of diverse populations.
-        
+
         Args:
             patient_resource: FHIR Patient resource as dictionary
-            
+
         Returns:
             Dictionary of extracted patient data with explicit null handling
         """
@@ -381,18 +382,18 @@ class FHIRDataProcessor:
             'address_complete': False,
             'contact_complete': False
         }
-        
+
         # Extract race and ethnicity from US Core extensions if present
         # These are critical for equity assessment but often missing in practice
         if 'extension' in patient_resource:
             for ext in patient_resource['extension']:
                 url = ext.get('url', '')
-                
+
                 if 'us-core-race' in url:
                     patient_data['race'] = self._extract_coding_display(ext)
                 elif 'us-core-ethnicity' in url:
                     patient_data['ethnicity'] = self._extract_coding_display(ext)
-        
+
         # Extract preferred language from communication preference
         # Language is often incompletely documented but critical for care quality
         if 'communication' in patient_resource:
@@ -400,7 +401,7 @@ class FHIRDataProcessor:
                 if comm.get('preferred'):
                     patient_data['preferred_language'] = self._extract_language_code(comm)
                     break
-        
+
         # Assess completeness of address information
         # Address quality varies systematically with housing stability
         if 'address' in patient_resource and patient_resource['address']:
@@ -411,20 +412,20 @@ class FHIRDataProcessor:
                 address.get('state'),
                 address.get('postalCode')
             ])
-        
+
         # Assess completeness of contact information
         # Contact completeness correlates with social stability
         if 'telecom' in patient_resource:
             patient_data['contact_complete'] = len(patient_resource['telecom']) > 0
-        
+
         # Track which fields are missing for equity analysis
         missing_fields = [k for k, v in patient_data.items() if v is None or v is False]
         if missing_fields:
             patient_id = patient_data['patient_id']
             self.missing_patterns[patient_id] = missing_fields
-        
+
         return patient_data
-    
+
     def _process_observation(
         self,
         observation_resource: Dict[str, Any]
@@ -433,10 +434,10 @@ class FHIRDataProcessor:
         Extract observation data including laboratory results, vital signs,
         and clinical measurements with attention to measurement frequency
         patterns that may indicate differential care quality.
-        
+
         Args:
             observation_resource: FHIR Observation resource as dictionary
-            
+
         Returns:
             Dictionary of extracted observation data
         """
@@ -451,7 +452,7 @@ class FHIRDataProcessor:
             'status': observation_resource.get('status'),
             'has_reference_range': False
         }
-        
+
         # Extract observation code with attention to code system
         # Code system choice may vary across care settings
         if 'code' in observation_resource:
@@ -460,7 +461,7 @@ class FHIRDataProcessor:
                 coding = code_element['coding'][0]
                 obs_data['code'] = coding.get('code')
                 obs_data['code_system'] = coding.get('system')
-        
+
         # Extract observation value with type-aware handling
         if 'valueQuantity' in observation_resource:
             value_qty = observation_resource['valueQuantity']
@@ -470,24 +471,24 @@ class FHIRDataProcessor:
             obs_data['value'] = self._extract_coding_display(
                 observation_resource['valueCodeableConcept']
             )
-        
+
         # Check for reference range which affects interpretation
         # Reference ranges may be missing more often in certain settings
         if 'referenceRange' in observation_resource:
             obs_data['has_reference_range'] = len(
                 observation_resource['referenceRange']
             ) > 0
-        
+
         return obs_data
-    
+
     def _process_condition(self, condition_resource: Dict[str, Any]) -> Dict[str, Any]:
         """
         Extract condition/diagnosis information with attention to coding
         specificity patterns that may vary across documentation settings.
-        
+
         Args:
             condition_resource: FHIR Condition resource as dictionary
-            
+
         Returns:
             Dictionary of extracted condition data
         """
@@ -502,7 +503,7 @@ class FHIRDataProcessor:
             'onset_datetime': condition_resource.get('onsetDateTime'),
             'recorded_date': condition_resource.get('recordedDate')
         }
-        
+
         # Extract condition code with attention to specificity
         # Code specificity often lower in time-pressured settings
         if 'code' in condition_resource:
@@ -512,20 +513,20 @@ class FHIRDataProcessor:
                 condition_data['code'] = coding.get('code')
                 condition_data['code_system'] = coding.get('system')
                 condition_data['code_display'] = coding.get('display')
-        
+
         # Extract status information critical for problem list accuracy
         if 'clinicalStatus' in condition_resource:
             condition_data['clinical_status'] = self._extract_coding_display(
                 condition_resource['clinicalStatus']
             )
-        
+
         if 'verificationStatus' in condition_resource:
             condition_data['verification_status'] = self._extract_coding_display(
                 condition_resource['verificationStatus']
             )
-        
+
         return condition_data
-    
+
     def _assess_data_quality_equity(
         self,
         df: pd.DataFrame,
@@ -534,47 +535,47 @@ class FHIRDataProcessor:
         """
         Assess data quality with specific focus on whether quality metrics
         differ systematically across demographic groups.
-        
+
         Args:
             df: Processed DataFrame
             demographic_groups: Patient demographics keyed by patient_id
-            
+
         Returns:
             DataQualityMetrics object with equity-focused assessments
         """
         # Calculate overall completeness
         completeness_overall = 1.0 - df.isnull().sum().sum() / (df.shape[0] * df.shape[1])
-        
+
         # Calculate completeness by demographic group
         completeness_by_group = {}
-        
+
         for group_name in ['race', 'ethnicity', 'preferred_language']:
             group_completeness = {}
-            
+
             for patient_id, demographics in demographic_groups.items():
                 group_value = demographics.get(group_name)
                 if group_value and group_value != 'Unknown':
                     patient_rows = df[df['patient_id'] == patient_id]
                     if not patient_rows.empty:
                         patient_completeness = 1.0 - (
-                            patient_rows.isnull().sum().sum() / 
+                            patient_rows.isnull().sum().sum() /
                             (patient_rows.shape[0] * patient_rows.shape[1])
                         )
-                        
+
                         if group_value not in group_completeness:
                             group_completeness[group_value] = []
                         group_completeness[group_value].append(patient_completeness)
-            
+
             # Average completeness within each group
             for group_value, completeness_list in group_completeness.items():
                 key = f"{group_name}_{group_value}"
                 completeness_by_group[key] = np.mean(completeness_list)
-        
+
         metrics = DataQualityMetrics(
             completeness_overall=completeness_overall,
             completeness_by_group=completeness_by_group
         )
-        
+
         # Log warning if disparity detected
         disparity_score = metrics.equity_disparity_score()
         if disparity_score > 0.2:
@@ -582,9 +583,9 @@ class FHIRDataProcessor:
                 f"Data quality disparity detected (score={disparity_score:.3f}). "
                 f"Completeness varies substantially across demographic groups."
             )
-        
+
         return metrics
-    
+
     @staticmethod
     def _extract_patient_reference(resource: Dict[str, Any]) -> Optional[str]:
         """Extract patient ID from resource subject/patient reference."""
@@ -595,14 +596,14 @@ class FHIRDataProcessor:
             if '/' in ref:
                 return ref.split('/')[-1]
         return None
-    
+
     @staticmethod
     def _extract_coding_display(element: Dict[str, Any]) -> Optional[str]:
         """Extract display text from CodeableConcept or Coding element."""
         if 'coding' in element and element['coding']:
             return element['coding'][0].get('display')
         return element.get('text')
-    
+
     @staticmethod
     def _extract_language_code(communication: Dict[str, Any]) -> Optional[str]:
         """Extract language code from communication preference."""
@@ -611,7 +612,7 @@ class FHIRDataProcessor:
             if coding:
                 return coding[0].get('code')
         return None
-    
+
     def _extract_demographics(self, patient_resource: Dict[str, Any]) -> Dict[str, Any]:
         """Extract demographic information for equity stratification."""
         demographics = {
@@ -619,7 +620,7 @@ class FHIRDataProcessor:
             'ethnicity': 'Unknown',
             'preferred_language': 'Unknown'
         }
-        
+
         if 'extension' in patient_resource:
             for ext in patient_resource['extension']:
                 url = ext.get('url', '')
@@ -627,7 +628,7 @@ class FHIRDataProcessor:
                     demographics['race'] = self._extract_coding_display(ext) or 'Unknown'
                 elif 'us-core-ethnicity' in url:
                     demographics['ethnicity'] = self._extract_coding_display(ext) or 'Unknown'
-        
+
         if 'communication' in patient_resource:
             for comm in patient_resource['communication']:
                 if comm.get('preferred'):
@@ -635,7 +636,7 @@ class FHIRDataProcessor:
                     if lang:
                         demographics['preferred_language'] = lang
                     break
-        
+
         return demographics
 ```
 
@@ -652,15 +653,15 @@ class ClinicalTerminologyProcessor:
     to code specificity patterns, synonym handling, and systematic differences
     in coding practices across diverse care settings.
     """
-    
+
     def __init__(self):
         """Initialize terminology processor with connection to code systems."""
         self.snomed_client = self._initialize_snomed_client()
         self.icd10_processor = ICD10()
         self.code_usage_patterns: Dict[str, Dict[str, int]] = {}
-        
+
         logger.info("Initialized clinical terminology processor")
-    
+
     def analyze_code_specificity(
         self,
         codes: List[str],
@@ -671,62 +672,62 @@ class ClinicalTerminologyProcessor:
         Analyze the specificity level of diagnostic or procedure codes,
         which may vary systematically across care settings serving different
         populations due to differences in documentation time and EHR systems.
-        
+
         Args:
             codes: List of clinical codes to analyze
             code_system: Code system identifier ('SNOMED-CT', 'ICD-10', etc.)
             demographic_group: Optional group label for stratified analysis
-            
+
         Returns:
             Dictionary with specificity metrics and identified patterns
         """
         if not codes:
             return {'mean_specificity': 0.0, 'specificity_distribution': {}}
-        
+
         specificity_scores = []
         specificity_distribution = {'high': 0, 'medium': 0, 'low': 0}
-        
+
         for code in codes:
             specificity = self._compute_code_specificity(code, code_system)
             specificity_scores.append(specificity)
-            
+
             if specificity >= 0.7:
                 specificity_distribution['high'] += 1
             elif specificity >= 0.4:
                 specificity_distribution['medium'] += 1
             else:
                 specificity_distribution['low'] += 1
-        
+
         results = {
             'mean_specificity': np.mean(specificity_scores),
             'std_specificity': np.std(specificity_scores),
             'specificity_distribution': specificity_distribution,
             'n_codes': len(codes)
         }
-        
+
         if demographic_group:
             results['demographic_group'] = demographic_group
-            
+
             # Track usage patterns by group for equity assessment
             if demographic_group not in self.code_usage_patterns:
                 self.code_usage_patterns[demographic_group] = {}
-            
+
             for code in codes:
                 if code not in self.code_usage_patterns[demographic_group]:
                     self.code_usage_patterns[demographic_group][code] = 0
                 self.code_usage_patterns[demographic_group][code] += 1
-        
+
         return results
-    
+
     def _compute_code_specificity(self, code: str, code_system: str) -> float:
         """
         Compute specificity score for a clinical code based on its position
         in the terminology hierarchy and the amount of clinical detail it captures.
-        
+
         Args:
             code: Clinical code string
             code_system: Code system identifier
-            
+
         Returns:
             Specificity score from 0.0 (very general) to 1.0 (highly specific)
         """
@@ -736,33 +737,33 @@ class ClinicalTerminologyProcessor:
             # 4-5 character codes add etiology/anatomic detail (medium)
             # 6-7 character codes add episode/laterality (high)
             code_length = len(code.replace('.', ''))
-            
+
             if code_length <= 3:
                 return 0.3
             elif code_length <= 5:
                 return 0.6
             else:
                 return 0.9
-        
+
         elif code_system == 'SNOMED-CT':
             # SNOMED specificity requires traversing hierarchy
             # More specific concepts have more ancestors
             try:
                 ancestors = self.snomed_client.get_ancestors(code)
                 depth = len(ancestors)
-                
+
                 # Normalize by typical maximum depth in clinical use (~8-12 levels)
                 specificity = min(depth / 10.0, 1.0)
                 return specificity
-                
+
             except Exception as e:
                 logger.warning(f"Could not determine SNOMED depth for {code}: {e}")
                 return 0.5  # Unknown specificity
-        
+
         else:
             logger.warning(f"Specificity computation not implemented for {code_system}")
             return 0.5
-    
+
     def detect_coding_pattern_disparities(
         self,
         coding_data: pd.DataFrame,
@@ -772,11 +773,11 @@ class ClinicalTerminologyProcessor:
         Detect systematic differences in coding patterns across demographic
         groups that may indicate differential documentation quality or care
         patterns that could introduce bias into predictive models.
-        
+
         Args:
             coding_data: DataFrame with columns for codes, code_system, and demographics
             demographic_column: Column name containing demographic group labels
-            
+
         Returns:
             Dictionary summarizing coding pattern disparities
         """
@@ -786,13 +787,13 @@ class ClinicalTerminologyProcessor:
             'unspecified_code_rate_by_group': {},
             'disparity_metrics': {}
         }
-        
+
         for group in coding_data[demographic_column].unique():
             if pd.isna(group):
                 continue
-                
+
             group_data = coding_data[coding_data[demographic_column] == group]
-            
+
             # Analyze code specificity
             if 'code' in group_data.columns and 'code_system' in group_data.columns:
                 specificity = self.analyze_code_specificity(
@@ -801,12 +802,12 @@ class ClinicalTerminologyProcessor:
                     demographic_group=str(group)
                 )
                 disparities['overall_specificity_by_group'][str(group)] = specificity['mean_specificity']
-            
+
             # Analyze code diversity (unique codes per patient)
             if 'patient_id' in group_data.columns and 'code' in group_data.columns:
                 codes_per_patient = group_data.groupby('patient_id')['code'].nunique()
                 disparities['code_diversity_by_group'][str(group)] = codes_per_patient.mean()
-            
+
             # Detect unspecified/non-specific code usage
             unspecified_pattern = r'unspecified|NOS|not otherwise specified'
             if 'code_display' in group_data.columns:
@@ -819,7 +820,7 @@ class ClinicalTerminologyProcessor:
                 disparities['unspecified_code_rate_by_group'][str(group)] = (
                     unspecified_count / total_count if total_count > 0 else 0.0
                 )
-        
+
         # Compute disparity metrics
         specificity_values = list(disparities['overall_specificity_by_group'].values())
         if len(specificity_values) > 1:
@@ -827,14 +828,14 @@ class ClinicalTerminologyProcessor:
                 np.std(specificity_values) / np.mean(specificity_values)
                 if np.mean(specificity_values) > 0 else 0.0
             )
-        
+
         diversity_values = list(disparities['code_diversity_by_group'].values())
         if len(diversity_values) > 1:
             disparities['disparity_metrics']['diversity_cv'] = (
                 np.std(diversity_values) / np.mean(diversity_values)
                 if np.mean(diversity_values) > 0 else 0.0
             )
-        
+
         # Log significant disparities
         for metric_name, cv_value in disparities['disparity_metrics'].items():
             if cv_value > 0.2:
@@ -842,9 +843,9 @@ class ClinicalTerminologyProcessor:
                     f"Significant coding pattern disparity detected in {metric_name}: "
                     f"CV = {cv_value:.3f}. This may introduce bias into models."
                 )
-        
+
         return disparities
-    
+
     def harmonize_codes_across_systems(
         self,
         codes: List[str],
@@ -855,68 +856,68 @@ class ClinicalTerminologyProcessor:
         Map codes from one terminology system to another, with attention to
         lossy mappings that may affect code specificity differently across
         patient populations.
-        
+
         Args:
             codes: List of source codes to map
             source_system: Source terminology system
             target_system: Target terminology system
-            
+
         Returns:
             List of tuples (source_code, target_code, mapping_confidence)
         """
         mappings = []
-        
+
         for code in codes:
             try:
                 if source_system == 'ICD-10' and target_system == 'SNOMED-CT':
                     # ICD-10 to SNOMED mapping via ICD-10-CM to SNOMED map
                     target_code, confidence = self._map_icd10_to_snomed(code)
-                    
+
                 elif source_system == 'SNOMED-CT' and target_system == 'ICD-10':
                     # SNOMED to ICD-10 mapping (often lossy)
                     target_code, confidence = self._map_snomed_to_icd10(code)
-                    
+
                 else:
                     logger.warning(
                         f"Mapping from {source_system} to {target_system} not implemented"
                     )
                     target_code, confidence = None, 0.0
-                
+
                 mappings.append((code, target_code, confidence))
-                
+
             except Exception as e:
                 logger.error(f"Error mapping code {code}: {e}")
                 mappings.append((code, None, 0.0))
-        
+
         return mappings
-    
+
     def _map_icd10_to_snomed(self, icd10_code: str) -> Tuple[Optional[str], float]:
         """
         Map ICD-10 code to SNOMED CT concept.
-        
+
         Note: This is a simplified implementation. Production systems should
         use official mapping tables from SNOMED International or NLM.
         """
         # Placeholder for actual mapping logic
         # In production, this would query official mapping tables
         return None, 0.0
-    
+
     def _map_snomed_to_icd10(self, snomed_code: str) -> Tuple[Optional[str], float]:
         """
         Map SNOMED CT concept to ICD-10 code.
-        
+
         Note: SNOMED to ICD-10 mappings are often many-to-one and may lose
         clinical specificity, which can affect model performance differently
         across populations if code usage patterns differ.
         """
         # Placeholder for actual mapping logic
         return None, 0.0
-    
+
     @staticmethod
     def _initialize_snomed_client():
         """
         Initialize connection to SNOMED CT terminology server.
-        
+
         Note: This requires access to a SNOMED CT terminology service.
         Options include Snowstorm (open source), SNOMED International's
         browser, or commercial terminology services.
@@ -939,14 +940,14 @@ class MissingnessAnalyzer:
     focus on whether missingness correlates with patient demographics or
     social circumstances in ways that could introduce bias.
     """
-    
+
     def __init__(self):
         """Initialize missingness analyzer."""
         self.missingness_patterns: Dict[str, Dict[str, float]] = {}
         self.informative_missingness_features: List[str] = []
-        
+
         logger.info("Initialized missingness analyzer for equity assessment")
-    
+
     def analyze_missingness_patterns(
         self,
         df: pd.DataFrame,
@@ -957,12 +958,12 @@ class MissingnessAnalyzer:
         Comprehensive analysis of missing data patterns including assessment
         of whether missingness is random, systematically associated with
         demographics, or informative about outcomes.
-        
+
         Args:
             df: DataFrame to analyze
             demographic_columns: Columns containing demographic information
             outcome_column: Optional outcome variable for testing informative missingness
-            
+
         Returns:
             Dictionary with detailed missingness analysis results
         """
@@ -972,49 +973,49 @@ class MissingnessAnalyzer:
             'missing_data_correlations': {},
             'informative_missingness_tests': {}
         }
-        
+
         # Overall missingness rates
         for col in df.columns:
             if col not in demographic_columns and col != outcome_column:
                 missing_rate = df[col].isnull().mean()
                 results['overall_missingness'][col] = missing_rate
-        
+
         # Missingness stratified by demographics
         for demo_col in demographic_columns:
             if demo_col not in df.columns:
                 continue
-                
+
             results['missingness_by_demographics'][demo_col] = {}
-            
+
             for group in df[demo_col].dropna().unique():
                 group_df = df[df[demo_col] == group]
                 group_missingness = {}
-                
+
                 for col in df.columns:
                     if col not in demographic_columns and col != outcome_column:
                         group_missingness[col] = group_df[col].isnull().mean()
-                
+
                 results['missingness_by_demographics'][demo_col][str(group)] = group_missingness
-        
+
         # Test for demographic disparities in missingness
         results['demographic_disparity_detected'] = self._test_missingness_disparities(
             df, demographic_columns
         )
-        
+
         # Correlations between missingness indicators
         missingness_indicators = df.isnull().astype(int)
         results['missing_data_correlations'] = self._compute_missingness_correlations(
             missingness_indicators
         )
-        
+
         # Test if missingness is informative about outcome
         if outcome_column and outcome_column in df.columns:
             results['informative_missingness_tests'] = self._test_informative_missingness(
                 df, outcome_column
             )
-        
+
         return results
-    
+
     def _test_missingness_disparities(
         self,
         df: pd.DataFrame,
@@ -1023,29 +1024,29 @@ class MissingnessAnalyzer:
         """
         Statistical test for whether missingness rates differ significantly
         across demographic groups.
-        
+
         Args:
             df: DataFrame to test
             demographic_columns: Demographic stratification variables
-            
+
         Returns:
             Dictionary mapping demographic columns to lists of variables
             with significant missingness disparities
         """
         from scipy.stats import chi2_contingency
-        
+
         disparate_missingness = {}
-        
+
         for demo_col in demographic_columns:
             if demo_col not in df.columns:
                 continue
-                
+
             disparate_vars = []
-            
+
             for col in df.columns:
                 if col in demographic_columns or col == demo_col:
                     continue
-                
+
                 # Create contingency table of demographic group vs missingness
                 try:
                     contingency = pd.crosstab(
@@ -1053,29 +1054,29 @@ class MissingnessAnalyzer:
                         df[col].isnull(),
                         dropna=False
                     )
-                    
+
                     # Chi-square test for independence
                     chi2, p_value, dof, expected = chi2_contingency(contingency)
-                    
+
                     # Bonferroni correction for multiple testing
                     alpha = 0.05 / len(df.columns)
-                    
+
                     if p_value < alpha:
                         disparate_vars.append(col)
                         logger.warning(
                             f"Missingness in {col} varies significantly across {demo_col} "
                             f"(p={p_value:.4f}). This may introduce bias."
                         )
-                        
+
                 except Exception as e:
                     logger.debug(f"Could not test {col} vs {demo_col}: {e}")
                     continue
-            
+
             if disparate_vars:
                 disparate_missingness[demo_col] = disparate_vars
-        
+
         return disparate_missingness
-    
+
     def _compute_missingness_correlations(
         self,
         missingness_indicators: pd.DataFrame
@@ -1084,18 +1085,18 @@ class MissingnessAnalyzer:
         Compute correlations between missingness indicators to detect
         patterns where multiple variables tend to be missing together,
         which may indicate systematic data collection differences.
-        
+
         Args:
             missingness_indicators: DataFrame of binary missingness indicators
-            
+
         Returns:
             Dictionary mapping variables to their most correlated missingness patterns
         """
         correlations = {}
-        
+
         # Compute pairwise correlations
         corr_matrix = missingness_indicators.corr()
-        
+
         for col in corr_matrix.columns:
             # Find variables with highly correlated missingness
             high_corr = []
@@ -1104,12 +1105,12 @@ class MissingnessAnalyzer:
                     corr_value = corr_matrix.loc[col, other_col]
                     if abs(corr_value) > 0.5:  # Threshold for high correlation
                         high_corr.append((other_col, corr_value))
-            
+
             if high_corr:
                 correlations[col] = sorted(high_corr, key=lambda x: abs(x[1]), reverse=True)
-        
+
         return correlations
-    
+
     def _test_informative_missingness(
         self,
         df: pd.DataFrame,
@@ -1119,30 +1120,30 @@ class MissingnessAnalyzer:
         Test whether missingness in predictor variables is associated with
         the outcome, which would indicate that the missingness itself is
         informative and should be explicitly modeled.
-        
+
         Args:
             df: DataFrame with predictors and outcome
             outcome_column: Name of outcome variable
-            
+
         Returns:
             Dictionary with test results for each variable
         """
         from scipy.stats import ttest_ind, chi2_contingency
-        
+
         informative_tests = {}
-        
+
         for col in df.columns:
             if col == outcome_column or col in df.select_dtypes(include='object').columns:
                 continue
-            
+
             try:
                 # Create missingness indicator
                 missing = df[col].isnull()
-                
+
                 # Test if outcome differs between missing and non-missing
                 outcome_missing = df.loc[missing, outcome_column].dropna()
                 outcome_present = df.loc[~missing, outcome_column].dropna()
-                
+
                 if len(outcome_missing) > 0 and len(outcome_present) > 0:
                     # Continuous outcome: t-test
                     if df[outcome_column].dtype in ['float64', 'int64']:
@@ -1151,7 +1152,7 @@ class MissingnessAnalyzer:
                             outcome_present,
                             equal_var=False
                         )
-                        
+
                         informative_tests[col] = {
                             'test': 't-test',
                             'statistic': statistic,
@@ -1159,20 +1160,20 @@ class MissingnessAnalyzer:
                             'mean_outcome_when_missing': outcome_missing.mean(),
                             'mean_outcome_when_present': outcome_present.mean()
                         }
-                        
+
                         if p_value < 0.05:
                             self.informative_missingness_features.append(col)
                             logger.info(
                                 f"Missingness in {col} is informative about outcome "
                                 f"(p={p_value:.4f}). Consider explicit missingness modeling."
                             )
-                    
+
             except Exception as e:
                 logger.debug(f"Could not test informative missingness for {col}: {e}")
                 continue
-        
+
         return informative_tests
-    
+
     def create_missingness_features(
         self,
         df: pd.DataFrame,
@@ -1182,32 +1183,32 @@ class MissingnessAnalyzer:
         Create explicit features indicating whether data is missing,
         allowing models to learn from missingness patterns rather than
         requiring imputation that may obscure important signals.
-        
+
         Args:
             df: Original DataFrame
             columns_to_encode: Columns for which to create missingness indicators.
                              If None, creates for all columns with missing data.
-            
+
         Returns:
             DataFrame with original data plus missingness indicator columns
         """
         df_with_indicators = df.copy()
-        
+
         if columns_to_encode is None:
             # Create indicators for all columns with any missing values
             columns_to_encode = df.columns[df.isnull().any()].tolist()
-        
+
         for col in columns_to_encode:
             if col in df.columns:
                 indicator_name = f"{col}_is_missing"
                 df_with_indicators[indicator_name] = df[col].isnull().astype(int)
-        
+
         logger.info(
             f"Created {len(columns_to_encode)} missingness indicator features"
         )
-        
+
         return df_with_indicators
-    
+
     def suggest_imputation_strategy(
         self,
         df: pd.DataFrame,
@@ -1216,54 +1217,54 @@ class MissingnessAnalyzer:
         """
         Suggest appropriate imputation strategies for each variable based on
         missingness patterns and equity considerations.
-        
+
         Args:
             df: DataFrame to analyze
             demographic_columns: Demographic stratification variables
-            
+
         Returns:
             Dictionary mapping column names to suggested imputation strategies
         """
         strategies = {}
-        
+
         # Analyze missingness patterns
         analysis = self.analyze_missingness_patterns(df, demographic_columns)
-        
+
         for col in df.columns:
             if col in demographic_columns:
                 continue
-                
+
             missing_rate = analysis['overall_missingness'].get(col, 0.0)
-            
+
             if missing_rate == 0:
                 strategies[col] = 'no_imputation_needed'
-                
+
             elif missing_rate < 0.05:
                 # Low missingness rate
                 strategies[col] = 'mean_median_mode'
-                
+
             elif col in self.informative_missingness_features:
                 # Missingness is informative - don't impute, use indicator
                 strategies[col] = 'use_missingness_indicator'
-                
+
             elif missing_rate > 0.5:
                 # High missingness rate - imputation may be inappropriate
                 strategies[col] = 'consider_excluding_or_indicator_only'
-                
+
             else:
                 # Check for demographic disparities
                 has_disparity = any(
                     col in vars
                     for vars in analysis['demographic_disparity_detected'].values()
                 )
-                
+
                 if has_disparity:
                     # Demographic disparities suggest group-specific imputation
                     strategies[col] = 'group_specific_imputation'
                 else:
                     # Standard model-based imputation
                     strategies[col] = 'model_based_imputation'
-        
+
         return strategies
 ```
 
@@ -1281,19 +1282,19 @@ class SocialDeterminantsIntegrator:
     exposures, and other public datasets that capture neighborhood and
     community characteristics affecting health.
     """
-    
+
     def __init__(self, census_api_key: Optional[str] = None):
         """
         Initialize social determinants integrator with API credentials.
-        
+
         Args:
             census_api_key: API key for Census Bureau API access
         """
         self.census_api_key = census_api_key
         self.sdoh_cache: Dict[str, Dict[str, Any]] = {}
-        
+
         logger.info("Initialized social determinants of health integrator")
-    
+
     def enrich_patient_data_with_sdoh(
         self,
         patient_df: pd.DataFrame,
@@ -1304,21 +1305,21 @@ class SocialDeterminantsIntegrator:
         Enrich patient-level data with area-level social determinants
         indicators while explicitly tracking when area-level measures are
         used as proxies for individual-level factors.
-        
+
         Args:
             patient_df: DataFrame with patient records including address
             address_column: Column name containing patient addresses
             zip_column: Optional column with ZIP codes if addresses incomplete
-            
+
         Returns:
             Enriched DataFrame with SDOH variables and metadata
         """
         enriched_df = patient_df.copy()
-        
+
         # Add metadata column tracking data sources
         enriched_df['sdoh_data_source'] = None
         enriched_df['sdoh_geographic_level'] = None
-        
+
         # Extract geographic identifiers
         if address_column in enriched_df.columns:
             enriched_df['census_tract'] = enriched_df[address_column].apply(
@@ -1331,15 +1332,15 @@ class SocialDeterminantsIntegrator:
         else:
             logger.warning("No address or ZIP code column found. Cannot enrich with SDOH.")
             return enriched_df
-        
+
         # Fetch SDOH data for each census tract
         unique_tracts = enriched_df['census_tract'].dropna().unique()
-        
+
         for tract in unique_tracts:
             if tract not in self.sdoh_cache:
                 sdoh_data = self._fetch_census_tract_sdoh(tract)
                 self.sdoh_cache[tract] = sdoh_data
-        
+
         # Join SDOH data to patient records
         sdoh_columns = [
             'median_household_income',
@@ -1357,35 +1358,35 @@ class SocialDeterminantsIntegrator:
             'svi_minority_language',
             'svi_housing_transportation'
         ]
-        
+
         for col in sdoh_columns:
             enriched_df[col] = enriched_df['census_tract'].map(
                 lambda x: self.sdoh_cache.get(x, {}).get(col)
                 if x and x in self.sdoh_cache else None
             )
-        
+
         # Add source metadata
         enriched_df.loc[enriched_df['census_tract'].notna(), 'sdoh_data_source'] = 'census_acs_5yr'
         enriched_df.loc[enriched_df['census_tract'].notna(), 'sdoh_geographic_level'] = 'census_tract'
-        
+
         # Log enrichment results
         n_enriched = enriched_df['census_tract'].notna().sum()
         pct_enriched = 100 * n_enriched / len(enriched_df)
-        
+
         logger.info(
             f"Enriched {n_enriched} records ({pct_enriched:.1f}%) with SDOH data. "
             f"{len(enriched_df) - n_enriched} records lack geographic identifiers."
         )
-        
+
         return enriched_df
-    
+
     def _geocode_to_census_tract(self, address: str) -> Optional[str]:
         """
         Convert address to census tract identifier using geocoding service.
-        
+
         Args:
             address: Street address string
-            
+
         Returns:
             Census tract GEOID or None if geocoding fails
         """
@@ -1393,37 +1394,37 @@ class SocialDeterminantsIntegrator:
         # In production, this would call Census Geocoder API or similar service
         # Returns format: SSCCCTTTTTT (State, County, Tract codes)
         return None
-    
+
     def _zip_to_census_tract(self, zip_code: str) -> Optional[str]:
         """
         Map ZIP code to census tract.
-        
+
         Note: This is approximate since ZIP codes don't align with census tracts.
         Where possible, use actual address geocoding instead.
-        
+
         Args:
             zip_code: 5-digit ZIP code
-            
+
         Returns:
             Representative census tract for ZIP code
         """
         # Placeholder for ZIP-to-tract crosswalk
         # In production, use HUD USPS ZIP-Tract crosswalk file
         return None
-    
+
     def _fetch_census_tract_sdoh(self, tract_geoid: str) -> Dict[str, Any]:
         """
         Fetch social determinants indicators for a census tract from
         American Community Survey and CDC/ATSDR Social Vulnerability Index.
-        
+
         Args:
             tract_geoid: Census tract GEOID identifier
-            
+
         Returns:
             Dictionary of SDOH indicators for the tract
         """
         sdoh_data = {}
-        
+
         try:
             # Fetch ACS 5-year estimates for economic indicators
             # In production, this would call Census API
@@ -1431,7 +1432,7 @@ class SocialDeterminantsIntegrator:
             # B19013_001E: Median household income
             # S1701_C03_001E: Poverty rate
             # S2301_C04_001E: Unemployment rate
-            
+
             sdoh_data['median_household_income'] = None  # Placeholder
             sdoh_data['poverty_rate'] = None
             sdoh_data['unemployment_rate'] = None
@@ -1441,7 +1442,7 @@ class SocialDeterminantsIntegrator:
             sdoh_data['housing_cost_burden'] = None
             sdoh_data['overcrowding_rate'] = None
             sdoh_data['percent_renter_occupied'] = None
-            
+
             # Fetch CDC SVI data
             # In production, download CDC SVI database and join by GEOID
             sdoh_data['svi_overall'] = None
@@ -1449,12 +1450,12 @@ class SocialDeterminantsIntegrator:
             sdoh_data['svi_household_composition'] = None
             sdoh_data['svi_minority_language'] = None
             sdoh_data['svi_housing_transportation'] = None
-            
+
         except Exception as e:
             logger.error(f"Error fetching SDOH data for tract {tract_geoid}: {e}")
-        
+
         return sdoh_data
-    
+
     def create_composite_disadvantage_index(
         self,
         sdoh_df: pd.DataFrame,
@@ -1464,19 +1465,19 @@ class SocialDeterminantsIntegrator:
         Create composite index of neighborhood disadvantage from multiple
         SDOH indicators using dimensionality reduction while preserving
         interpretability about which factors drive the index.
-        
+
         Args:
             sdoh_df: DataFrame with SDOH variables
             method: Method for creating composite ('pca', 'factor_analysis', 'simple_average')
-            
+
         Returns:
             DataFrame with added composite disadvantage index
         """
         from sklearn.preprocessing import StandardScaler
         from sklearn.decomposition import PCA, FactorAnalysis
-        
+
         result_df = sdoh_df.copy()
-        
+
         # Select SDOH variables for composite
         sdoh_vars = [
             'poverty_rate',
@@ -1485,56 +1486,56 @@ class SocialDeterminantsIntegrator:
             'percent_no_health_insurance',
             'housing_cost_burden'
         ]
-        
+
         # Filter to rows with complete data
         complete_data = result_df[sdoh_vars].dropna()
-        
+
         if len(complete_data) < 10:
             logger.warning("Insufficient data for composite index creation")
             return result_df
-        
+
         # Standardize variables
         scaler = StandardScaler()
         scaled_data = scaler.fit_transform(complete_data)
-        
+
         if method == 'pca':
             # Principal component analysis - first component captures shared variance
             pca = PCA(n_components=1)
             composite_values = pca.fit_transform(scaled_data)
-            
+
             # Log factor loadings for interpretability
             loadings = pca.components_[0]
             for var, loading in zip(sdoh_vars, loadings):
                 logger.info(f"PCA loading for {var}: {loading:.3f}")
-            
+
         elif method == 'factor_analysis':
             # Factor analysis with single factor
             fa = FactorAnalysis(n_components=1)
             composite_values = fa.fit_transform(scaled_data)
-            
+
         elif method == 'simple_average':
             # Simple average of standardized variables
             composite_values = scaled_data.mean(axis=1).reshape(-1, 1)
-            
+
         else:
             raise ValueError(f"Unknown method: {method}")
-        
+
         # Add composite index to result
         result_df.loc[complete_data.index, 'composite_disadvantage_index'] = composite_values.flatten()
-        
+
         # Normalize to 0-1 scale for interpretability
         min_val = result_df['composite_disadvantage_index'].min()
         max_val = result_df['composite_disadvantage_index'].max()
-        
+
         if max_val > min_val:
             result_df['composite_disadvantage_index'] = (
                 (result_df['composite_disadvantage_index'] - min_val) / (max_val - min_val)
             )
-        
+
         logger.info(f"Created composite disadvantage index using {method} method")
-        
+
         return result_df
-    
+
     def assess_ecological_fallacy_risk(
         self,
         patient_df: pd.DataFrame,
@@ -1544,16 +1545,16 @@ class SocialDeterminantsIntegrator:
         """
         Assess risk of ecological fallacy when using area-level SDOH measures
         to make individual-level predictions.
-        
+
         The ecological fallacy occurs when relationships observed at aggregate
         level don't hold at individual level. This is particularly concerning
         when using census tract averages as proxies for individual circumstances.
-        
+
         Args:
             patient_df: DataFrame with both area-level and individual data
             area_level_vars: Area-level SDOH variable names
             individual_outcome: Individual-level outcome variable
-            
+
         Returns:
             Dictionary with ecological fallacy risk assessment
         """
@@ -1563,29 +1564,29 @@ class SocialDeterminantsIntegrator:
             'variance_ratio': {},
             'ecological_fallacy_risk': {}
         }
-        
+
         # For each area-level variable, assess how much variation exists
         # within areas vs between areas
         for var in area_level_vars:
             if var not in patient_df.columns or 'census_tract' not in patient_df.columns:
                 continue
-            
+
             # Group by census tract
             grouped = patient_df.groupby('census_tract')[individual_outcome]
-            
+
             # Within-area variance (average variance within each tract)
             within_var = grouped.var().mean()
-            
+
             # Between-area variance (variance of tract means)
             between_var = grouped.mean().var()
-            
+
             # Total variance
             total_var = patient_df[individual_outcome].var()
-            
+
             assessment['within_area_variance'][var] = within_var
             assessment['between_area_variance'][var] = between_var
             assessment['variance_ratio'][var] = within_var / between_var if between_var > 0 else float('inf')
-            
+
             # High within-area variance relative to between-area variance
             # indicates substantial ecological fallacy risk
             if assessment['variance_ratio'][var] > 2.0:
@@ -1598,7 +1599,7 @@ class SocialDeterminantsIntegrator:
                 assessment['ecological_fallacy_risk'][var] = 'moderate'
             else:
                 assessment['ecological_fallacy_risk'][var] = 'low'
-        
+
         return assessment
 ```
 
@@ -1613,14 +1614,14 @@ class EquityAwareClinicalDataPipeline:
     """
     End-to-end pipeline for processing clinical data for machine learning
     with integrated equity assessment and bias mitigation throughout.
-    
+
     This pipeline demonstrates the principles of equity-centered AI development:
     1. Explicit tracking of data quality disparities across populations
     2. Treatment of missing data as potentially informative
     3. Integration of social determinants alongside clinical variables
     4. Comprehensive documentation of preprocessing decisions and their equity implications
     """
-    
+
     def __init__(
         self,
         quality_threshold: float = 0.7,
@@ -1628,7 +1629,7 @@ class EquityAwareClinicalDataPipeline:
     ):
         """
         Initialize equity-aware pipeline with configurable parameters.
-        
+
         Args:
             quality_threshold: Minimum data quality threshold
             census_api_key: API key for social determinants data enrichment
@@ -1637,11 +1638,11 @@ class EquityAwareClinicalDataPipeline:
         self.terminology_processor = ClinicalTerminologyProcessor()
         self.missingness_analyzer = MissingnessAnalyzer()
         self.sdoh_integrator = SocialDeterminantsIntegrator(census_api_key=census_api_key)
-        
+
         self.pipeline_metrics: Dict[str, Any] = {}
-        
+
         logger.info("Initialized equity-aware clinical data pipeline")
-    
+
     def process_clinical_data(
         self,
         fhir_bundles: List[Dict[str, Any]],
@@ -1651,21 +1652,21 @@ class EquityAwareClinicalDataPipeline:
         """
         Complete processing pipeline from raw FHIR data to ML-ready dataset
         with comprehensive equity assessment and documentation.
-        
+
         Args:
             fhir_bundles: List of FHIR Bundle resources
             demographic_stratification_vars: Variables for equity stratification
             include_sdoh: Whether to enrich with social determinants data
-            
+
         Returns:
             Tuple of (processed DataFrame, pipeline metrics and quality assessment)
         """
         logger.info(f"Processing {len(fhir_bundles)} FHIR bundles through equity-aware pipeline")
-        
+
         # Stage 1: Parse FHIR resources with quality assessment
         all_data = []
         all_quality_metrics = []
-        
+
         for i, bundle in enumerate(fhir_bundles):
             try:
                 df, quality = self.fhir_processor.process_patient_bundle(
@@ -1675,17 +1676,17 @@ class EquityAwareClinicalDataPipeline:
                 all_data.append(df)
                 if quality:
                     all_quality_metrics.append(quality)
-                    
+
             except Exception as e:
                 logger.error(f"Error processing bundle {i}: {e}")
                 continue
-        
+
         if not all_data:
             raise ValueError("No data successfully processed from FHIR bundles")
-        
+
         # Combine all processed data
         combined_df = pd.concat(all_data, ignore_index=True)
-        
+
         # Document Stage 1 metrics
         self.pipeline_metrics['stage_1_fhir_parsing'] = {
             'n_bundles_processed': len(all_data),
@@ -1693,64 +1694,64 @@ class EquityAwareClinicalDataPipeline:
             'total_records': len(combined_df),
             'quality_metrics': self._aggregate_quality_metrics(all_quality_metrics)
         }
-        
+
         # Stage 2: Clinical terminology processing and bias detection
         if 'code' in combined_df.columns and 'code_system' in combined_df.columns:
             coding_disparities = self.terminology_processor.detect_coding_pattern_disparities(
                 combined_df,
                 demographic_column=demographic_stratification_vars[0]
             )
-            
+
             self.pipeline_metrics['stage_2_terminology_processing'] = {
                 'coding_disparities_detected': coding_disparities
             }
-        
+
         # Stage 3: Missingness analysis
         missingness_analysis = self.missingness_analyzer.analyze_missingness_patterns(
             combined_df,
             demographic_columns=demographic_stratification_vars
         )
-        
+
         self.pipeline_metrics['stage_3_missingness_analysis'] = missingness_analysis
-        
+
         # Create missingness indicator features for informative missingness
         combined_df = self.missingness_analyzer.create_missingness_features(combined_df)
-        
+
         # Stage 4: Social determinants integration
         if include_sdoh and 'address' in combined_df.columns:
             combined_df = self.sdoh_integrator.enrich_patient_data_with_sdoh(
                 combined_df,
                 address_column='address'
             )
-            
+
             # Assess ecological fallacy risk
             sdoh_vars = [col for col in combined_df.columns if any(
                 term in col for term in ['income', 'poverty', 'unemployment', 'svi_']
             )]
-            
+
             if sdoh_vars and 'patient_id' in combined_df.columns:
                 # Create composite disadvantage index
                 combined_df = self.sdoh_integrator.create_composite_disadvantage_index(
                     combined_df,
                     method='pca'
                 )
-                
+
                 self.pipeline_metrics['stage_4_sdoh_integration'] = {
                     'n_records_enriched': combined_df['census_tract'].notna().sum(),
                     'sdoh_vars_added': sdoh_vars
                 }
-        
+
         # Stage 5: Final quality assessment and reporting
         final_assessment = self._generate_final_quality_report(
             combined_df,
             demographic_stratification_vars
         )
-        
+
         self.pipeline_metrics['stage_5_final_assessment'] = final_assessment
-        
+
         logger.info("Pipeline processing complete")
         return combined_df, self.pipeline_metrics
-    
+
     def _aggregate_quality_metrics(
         self,
         quality_metrics: List[DataQualityMetrics]
@@ -1758,22 +1759,22 @@ class EquityAwareClinicalDataPipeline:
         """Aggregate quality metrics across multiple bundles."""
         if not quality_metrics:
             return {}
-        
+
         # Average completeness metrics
         avg_completeness = np.mean([m.completeness_overall for m in quality_metrics])
-        
+
         # Average disparity scores
         disparity_scores = [m.equity_disparity_score() for m in quality_metrics]
         avg_disparity = np.mean(disparity_scores)
         max_disparity = np.max(disparity_scores)
-        
+
         return {
             'average_completeness': avg_completeness,
             'average_disparity_score': avg_disparity,
             'max_disparity_score': max_disparity,
             'n_bundles_with_high_disparity': sum(1 for s in disparity_scores if s > 0.2)
         }
-    
+
     def _generate_final_quality_report(
         self,
         df: pd.DataFrame,
@@ -1787,7 +1788,7 @@ class EquityAwareClinicalDataPipeline:
             'features_with_high_missingness': [],
             'demographic_representation': {}
         }
-        
+
         # Identify features with high missingness
         for col in df.columns:
             missing_rate = df[col].isnull().mean()
@@ -1796,23 +1797,23 @@ class EquityAwareClinicalDataPipeline:
                     'feature': col,
                     'missing_rate': missing_rate
                 })
-        
+
         # Assess demographic representation
         for demo_var in demographic_vars:
             if demo_var in df.columns:
                 value_counts = df[demo_var].value_counts()
                 report['demographic_representation'][demo_var] = value_counts.to_dict()
-        
+
         return report
-    
+
     def generate_pipeline_documentation(self, output_path: Path) -> None:
         """
         Generate comprehensive documentation of pipeline processing including
         all quality assessments, equity metrics, and processing decisions.
-        
+
         This documentation is essential for algorithmic transparency and
         for enabling external audit of potential bias sources.
-        
+
         Args:
             output_path: Path to save documentation JSON file
         """
@@ -1845,10 +1846,10 @@ class EquityAwareClinicalDataPipeline:
                 ).get('demographic_representation', {})
             }
         }
-        
+
         with open(output_path, 'w') as f:
             json.dump(documentation, f, indent=2, default=str)
-        
+
         logger.info(f"Pipeline documentation saved to {output_path}")
 ```
 

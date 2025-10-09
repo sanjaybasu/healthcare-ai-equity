@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 15: Validation Strategies for Clinical AI"
 chapter_number: 15
+part_number: 4
+prev_chapter: /chapters/chapter-14-interpretability-explainability/
+next_chapter: /chapters/chapter-16-uncertainty-calibration/
 ---
-
 # Chapter 15: Validation Strategies for Clinical AI
 
 ## Learning Objectives
@@ -81,7 +83,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class SplitStrategy(Enum):
     """Enumeration of data splitting strategies for validation."""
     RANDOM = "random"
@@ -90,12 +91,11 @@ class SplitStrategy(Enum):
     MULTIDIMENSIONAL_STRATIFIED = "multidimensional_stratified"
     TEMPORAL = "temporal"
 
-
 @dataclass
 class ValidationSplit:
     """
     Container for train/validation data split with metadata.
-    
+
     Attributes:
         train_indices: Indices of training samples
         val_indices: Indices of validation samples
@@ -108,7 +108,7 @@ class ValidationSplit:
     train_demographics: Dict[str, Dict[str, float]]
     val_demographics: Dict[str, Dict[str, float]]
     split_metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def get_representation_ratio(
         self,
         demographic_column: str,
@@ -116,32 +116,32 @@ class ValidationSplit:
     ) -> float:
         """
         Calculate ratio of validation to training representation for a group.
-        
+
         A ratio near 1.0 indicates balanced representation. Ratios substantially
         different from 1.0 suggest potential issues with stratification.
-        
+
         Args:
             demographic_column: Name of demographic variable
             demographic_value: Specific value to check
-            
+
         Returns:
             Ratio of validation to training proportions
         """
         if demographic_column not in self.val_demographics:
             raise ValueError(f"Demographic column {demographic_column} not found")
-        
+
         train_prop = self.train_demographics[demographic_column].get(
             demographic_value, 0.0
         )
         val_prop = self.val_demographics[demographic_column].get(
             demographic_value, 0.0
         )
-        
+
         if train_prop == 0:
             return float('inf') if val_prop > 0 else 1.0
-        
+
         return val_prop / train_prop
-    
+
     def check_minimum_representation(
         self,
         demographic_column: str,
@@ -149,35 +149,34 @@ class ValidationSplit:
     ) -> Dict[str, bool]:
         """
         Check if all demographic groups meet minimum count threshold.
-        
+
         Args:
             demographic_column: Name of demographic variable
             minimum_count: Minimum number of samples required
-            
+
         Returns:
             Dictionary mapping demographic values to whether minimum is met
         """
         total_val_samples = len(self.val_indices)
         results = {}
-        
+
         for value, proportion in self.val_demographics[demographic_column].items():
             count = int(proportion * total_val_samples)
             results[value] = count >= minimum_count
-        
-        return results
 
+        return results
 
 class EquityAwareDataSplitter:
     """
     Advanced data splitting for equitable internal validation.
-    
+
     This class implements sophisticated data splitting strategies that ensure
     validation cohorts contain adequate representation of diverse patient
     populations for meaningful fairness evaluation. It goes beyond simple
     random or outcome-stratified splits to handle multidimensional
     stratification across demographics, clinical characteristics, and outcomes.
     """
-    
+
     def __init__(
         self,
         random_state: Optional[int] = None,
@@ -186,7 +185,7 @@ class EquityAwareDataSplitter:
     ):
         """
         Initialize data splitter.
-        
+
         Args:
             random_state: Random seed for reproducibility
             min_group_size_validation: Minimum samples per group in validation
@@ -196,13 +195,13 @@ class EquityAwareDataSplitter:
         self.min_group_size_validation = min_group_size_validation
         self.target_validation_fraction = target_validation_fraction
         self.rng = np.random.RandomState(random_state)
-        
+
         logger.info(
             f"Initialized EquityAwareDataSplitter with validation fraction "
             f"{target_validation_fraction} and minimum group size "
             f"{min_group_size_validation}"
         )
-    
+
     def _compute_demographic_distribution(
         self,
         df: pd.DataFrame,
@@ -211,28 +210,28 @@ class EquityAwareDataSplitter:
     ) -> Dict[str, Dict[str, float]]:
         """
         Compute demographic distribution for dataset or subset.
-        
+
         Args:
             df: DataFrame containing demographic information
             demographic_columns: Columns to analyze
             indices: Optional subset of indices to analyze
-            
+
         Returns:
             Nested dictionary of proportions for each demographic variable
         """
         subset = df.iloc[indices] if indices is not None else df
         distributions = {}
-        
+
         for col in demographic_columns:
             if col not in subset.columns:
                 logger.warning(f"Demographic column {col} not found in data")
                 continue
-            
+
             value_counts = subset[col].value_counts(normalize=True)
             distributions[col] = value_counts.to_dict()
-        
+
         return distributions
-    
+
     def _create_stratification_key(
         self,
         df: pd.DataFrame,
@@ -240,35 +239,35 @@ class EquityAwareDataSplitter:
     ) -> pd.Series:
         """
         Create composite stratification key from multiple columns.
-        
+
         Combines multiple stratification variables into a single key that can
         be used with sklearn's stratified splitting. Handles missing values
         by treating them as a separate category.
-        
+
         Args:
             df: DataFrame with stratification variables
             stratification_columns: Columns to combine for stratification
-            
+
         Returns:
             Series containing composite stratification keys
         """
         key_parts = []
-        
+
         for col in stratification_columns:
             if col not in df.columns:
                 raise ValueError(f"Stratification column {col} not found")
-            
+
             # Convert to string and handle missing values
             col_str = df[col].fillna('__MISSING__').astype(str)
             key_parts.append(col_str)
-        
+
         # Create composite key
         composite_key = key_parts[0]
         for part in key_parts[1:]:
             composite_key = composite_key + '|||' + part
-        
+
         return composite_key
-    
+
     def multidimensional_stratified_split(
         self,
         df: pd.DataFrame,
@@ -278,37 +277,37 @@ class EquityAwareDataSplitter:
     ) -> ValidationSplit:
         """
         Create train/validation split with multidimensional stratification.
-        
+
         This method performs stratified splitting that preserves distributions
         across multiple dimensions: outcomes, demographics, and clinical
         characteristics. It ensures adequate representation of demographic
         subgroups for fairness evaluation while maintaining outcome balance.
-        
+
         Args:
             df: Full dataset
             outcome_column: Column containing outcomes
             demographic_columns: Demographic variables for stratification
             clinical_stratification_columns: Optional clinical variables
-            
+
         Returns:
             ValidationSplit object with indices and metadata
         """
         logger.info(
             f"Performing multidimensional stratified split on {len(df)} samples"
         )
-        
+
         # Determine all stratification columns
         all_strat_cols = [outcome_column] + demographic_columns
         if clinical_stratification_columns:
             all_strat_cols.extend(clinical_stratification_columns)
-        
+
         # Create composite stratification key
         strat_key = self._create_stratification_key(df, all_strat_cols)
-        
+
         # Check if stratification is feasible
         strat_counts = strat_key.value_counts()
         min_strat_count = strat_counts.min()
-        
+
         if min_strat_count < 2:
             logger.warning(
                 f"Some stratification groups have <2 samples. Falling back to "
@@ -317,16 +316,16 @@ class EquityAwareDataSplitter:
             )
             # Fall back to outcome-only stratification
             strat_key = df[outcome_column]
-        
+
         # Perform stratified split
         splitter = StratifiedShuffleSplit(
             n_splits=1,
             test_size=self.target_validation_fraction,
             random_state=self.random_state
         )
-        
+
         train_idx, val_idx = next(splitter.split(df, strat_key))
-        
+
         # Compute demographic distributions
         train_demo = self._compute_demographic_distribution(
             df, demographic_columns, train_idx
@@ -334,10 +333,10 @@ class EquityAwareDataSplitter:
         val_demo = self._compute_demographic_distribution(
             df, demographic_columns, val_idx
         )
-        
+
         # Check if minimum group sizes are met
         val_outcome_dist = df[outcome_column].iloc[val_idx].value_counts()
-        
+
         split_metadata = {
             'strategy': SplitStrategy.MULTIDIMENSIONAL_STRATIFIED.value,
             'n_train': len(train_idx),
@@ -346,7 +345,7 @@ class EquityAwareDataSplitter:
             'stratification_columns': all_strat_cols,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         # Check minimum representation requirements
         warnings = []
         for demo_col in demographic_columns:
@@ -359,16 +358,16 @@ class EquityAwareDataSplitter:
                         f"(minimum: {self.min_group_size_validation})"
                     )
                 min_checks[value] = count
-            
+
             split_metadata[f'{demo_col}_validation_counts'] = min_checks
-        
+
         if warnings:
             logger.warning(
                 "Some demographic groups have insufficient validation samples:\n" +
                 "\n".join(warnings)
             )
             split_metadata['representation_warnings'] = warnings
-        
+
         validation_split = ValidationSplit(
             train_indices=train_idx,
             val_indices=val_idx,
@@ -376,13 +375,13 @@ class EquityAwareDataSplitter:
             val_demographics=val_demo,
             split_metadata=split_metadata
         )
-        
+
         logger.info(
             f"Split complete: {len(train_idx)} training, {len(val_idx)} validation"
         )
-        
+
         return validation_split
-    
+
     def temporal_split(
         self,
         df: pd.DataFrame,
@@ -393,30 +392,30 @@ class EquityAwareDataSplitter:
     ) -> ValidationSplit:
         """
         Create temporal train/validation split.
-        
+
         Temporal splitting uses data before a cutoff date for training and
         after for validation, mimicking prospective deployment. This reveals
         whether models maintain performance as clinical practices, patient
         populations, and coding patterns evolve over time.
-        
+
         Args:
             df: Full dataset with time column
             time_column: Column containing dates/times
             outcome_column: Column containing outcomes
             demographic_columns: Demographic variables to track
             validation_start_date: Optional cutoff date; if None, uses 80/20 split
-            
+
         Returns:
             ValidationSplit object with indices and metadata
         """
         logger.info(f"Performing temporal split on column '{time_column}'")
-        
+
         if time_column not in df.columns:
             raise ValueError(f"Time column '{time_column}' not found")
-        
+
         # Ensure time column is datetime
         time_series = pd.to_datetime(df[time_column])
-        
+
         # Determine split date
         if validation_start_date is None:
             # Use 80th percentile of dates as split point
@@ -425,17 +424,17 @@ class EquityAwareDataSplitter:
         else:
             split_date = validation_start_date
             logger.info(f"Using specified split date: {split_date}")
-        
+
         # Create train/validation indices
         train_idx = np.where(time_series < split_date)[0]
         val_idx = np.where(time_series >= split_date)[0]
-        
+
         if len(train_idx) == 0 or len(val_idx) == 0:
             raise ValueError(
                 f"Temporal split resulted in empty partition. "
                 f"Train size: {len(train_idx)}, Validation size: {len(val_idx)}"
             )
-        
+
         # Compute demographic distributions
         train_demo = self._compute_demographic_distribution(
             df, demographic_columns, train_idx
@@ -443,11 +442,11 @@ class EquityAwareDataSplitter:
         val_demo = self._compute_demographic_distribution(
             df, demographic_columns, val_idx
         )
-        
+
         # Compute outcome distributions
         train_outcome_dist = df[outcome_column].iloc[train_idx].value_counts()
         val_outcome_dist = df[outcome_column].iloc[val_idx].value_counts()
-        
+
         split_metadata = {
             'strategy': SplitStrategy.TEMPORAL.value,
             'split_date': split_date.isoformat(),
@@ -465,28 +464,28 @@ class EquityAwareDataSplitter:
             'validation_outcome_distribution': val_outcome_dist.to_dict(),
             'timestamp': datetime.now().isoformat()
         }
-        
+
         # Check for demographic drift
         drift_warnings = []
         for demo_col in demographic_columns:
             for value in set(train_demo[demo_col].keys()) | set(val_demo[demo_col].keys()):
                 train_prop = train_demo[demo_col].get(value, 0.0)
                 val_prop = val_demo[demo_col].get(value, 0.0)
-                
+
                 # Flag substantial changes in representation
                 if abs(train_prop - val_prop) > 0.10:  # 10 percentage point difference
                     drift_warnings.append(
                         f"{demo_col}={value}: train {train_prop:.2%} vs "
                         f"validation {val_prop:.2%}"
                     )
-        
+
         if drift_warnings:
             logger.warning(
                 "Demographic drift detected between training and validation:\n" +
                 "\n".join(drift_warnings)
             )
             split_metadata['demographic_drift_warnings'] = drift_warnings
-        
+
         validation_split = ValidationSplit(
             train_indices=train_idx,
             val_indices=val_idx,
@@ -494,20 +493,19 @@ class EquityAwareDataSplitter:
             val_demographics=val_demo,
             split_metadata=split_metadata
         )
-        
+
         logger.info(
             f"Temporal split complete: {len(train_idx)} training (before {split_date.date()}), "
             f"{len(val_idx)} validation (after {split_date.date()})"
         )
-        
-        return validation_split
 
+        return validation_split
 
 @dataclass
 class PerformanceMetrics:
     """
     Container for comprehensive performance metrics.
-    
+
     Attributes:
         auc_roc: Area under ROC curve
         auc_pr: Area under precision-recall curve
@@ -536,7 +534,7 @@ class PerformanceMetrics:
     n_samples: int
     n_positive: int
     confidence_interval: Optional[Dict[str, Tuple[float, float]]] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert metrics to dictionary format."""
         return {
@@ -555,16 +553,15 @@ class PerformanceMetrics:
             'confidence_interval': self.confidence_interval
         }
 
-
 class InternalValidator:
     """
     Comprehensive internal validation with equity evaluation.
-    
+
     This class implements rigorous internal validation including stratified
     performance evaluation across demographic groups, fairness metric
     calculation, calibration analysis, and statistical testing for disparities.
     """
-    
+
     def __init__(
         self,
         classification_threshold: float = 0.5,
@@ -574,7 +571,7 @@ class InternalValidator:
     ):
         """
         Initialize internal validator.
-        
+
         Args:
             classification_threshold: Threshold for binary classification metrics
             bootstrap_iterations: Number of bootstrap samples for CI estimation
@@ -586,13 +583,13 @@ class InternalValidator:
         self.confidence_level = confidence_level
         self.random_state = random_state
         self.rng = np.random.RandomState(random_state)
-        
+
         logger.info(
             f"Initialized InternalValidator with threshold {classification_threshold}, "
             f"{bootstrap_iterations} bootstrap iterations, "
             f"{confidence_level:.0%} confidence intervals"
         )
-    
+
     def _compute_calibration_metrics(
         self,
         y_true: np.ndarray,
@@ -600,33 +597,33 @@ class InternalValidator:
     ) -> Tuple[float, float]:
         """
         Compute calibration slope and intercept via logistic calibration.
-        
+
         Calibration slope indicates whether predicted probabilities span an
         appropriate range (slope near 1.0 is ideal). Calibration intercept
         indicates systematic over- or under-prediction (intercept near 0.0
         is ideal).
-        
+
         Args:
             y_true: True binary outcomes
             y_pred_proba: Predicted probabilities
-            
+
         Returns:
             Tuple of (calibration_slope, calibration_intercept)
         """
         from sklearn.linear_model import LogisticRegression
-        
+
         # Fit logistic calibration model
         logit_pred = np.log(y_pred_proba / (1 - y_pred_proba + 1e-10))
         logit_pred = logit_pred.reshape(-1, 1)
-        
+
         cal_model = LogisticRegression(random_state=self.random_state)
         cal_model.fit(logit_pred, y_true)
-        
+
         slope = float(cal_model.coef_[0, 0])
         intercept = float(cal_model.intercept_[0])
-        
+
         return slope, intercept
-    
+
     def evaluate_performance(
         self,
         y_true: np.ndarray,
@@ -635,40 +632,40 @@ class InternalValidator:
     ) -> PerformanceMetrics:
         """
         Compute comprehensive performance metrics with confidence intervals.
-        
+
         Args:
             y_true: True binary outcomes (0/1)
             y_pred_proba: Predicted probabilities
             compute_ci: Whether to compute bootstrap confidence intervals
-            
+
         Returns:
             PerformanceMetrics object with all metrics
         """
         y_true = np.asarray(y_true)
         y_pred_proba = np.asarray(y_pred_proba)
-        
+
         # Basic validation
         if len(y_true) != len(y_pred_proba):
             raise ValueError("Length mismatch between y_true and y_pred_proba")
-        
+
         if not np.all((y_pred_proba >= 0) & (y_pred_proba <= 1)):
             raise ValueError("Predicted probabilities must be in [0, 1]")
-        
+
         # Compute discrimination metrics
         try:
             auc_roc = roc_auc_score(y_true, y_pred_proba)
         except ValueError as e:
             logger.warning(f"Could not compute AUC-ROC: {e}")
             auc_roc = np.nan
-        
+
         try:
             auc_pr = average_precision_score(y_true, y_pred_proba)
         except ValueError as e:
             logger.warning(f"Could not compute AUC-PR: {e}")
             auc_pr = np.nan
-        
+
         brier = brier_score_loss(y_true, y_pred_proba)
-        
+
         # Compute calibration metrics
         if len(np.unique(y_true)) == 2:
             cal_slope, cal_intercept = self._compute_calibration_metrics(
@@ -676,24 +673,24 @@ class InternalValidator:
             )
         else:
             cal_slope, cal_intercept = np.nan, np.nan
-        
+
         # Compute classification metrics at threshold
         y_pred_binary = (y_pred_proba >= self.classification_threshold).astype(int)
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred_binary).ravel()
-        
+
         sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
         ppv = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         npv = tn / (tn + fn) if (tn + fn) > 0 else 0.0
-        
+
         n_samples = len(y_true)
         n_positive = int(np.sum(y_true))
-        
+
         # Bootstrap confidence intervals if requested
         ci = None
         if compute_ci and n_samples > 30:
             ci = self._bootstrap_confidence_intervals(y_true, y_pred_proba)
-        
+
         return PerformanceMetrics(
             auc_roc=auc_roc,
             auc_pr=auc_pr,
@@ -709,7 +706,7 @@ class InternalValidator:
             n_positive=n_positive,
             confidence_interval=ci
         )
-    
+
     def _bootstrap_confidence_intervals(
         self,
         y_true: np.ndarray,
@@ -717,11 +714,11 @@ class InternalValidator:
     ) -> Dict[str, Tuple[float, float]]:
         """
         Compute bootstrap confidence intervals for key metrics.
-        
+
         Args:
             y_true: True binary outcomes
             y_pred_proba: Predicted probabilities
-            
+
         Returns:
             Dictionary mapping metric names to (lower, upper) CI bounds
         """
@@ -729,60 +726,60 @@ class InternalValidator:
         auc_roc_boots = []
         sensitivity_boots = []
         specificity_boots = []
-        
+
         for _ in range(self.bootstrap_iterations):
             # Resample with replacement
             boot_idx = self.rng.choice(n_samples, size=n_samples, replace=True)
             y_boot = y_true[boot_idx]
             y_pred_boot = y_pred_proba[boot_idx]
-            
+
             # Skip if bootstrap sample doesn't have both classes
             if len(np.unique(y_boot)) < 2:
                 continue
-            
+
             # Compute metrics on bootstrap sample
             try:
                 auc_boot = roc_auc_score(y_boot, y_pred_boot)
                 auc_roc_boots.append(auc_boot)
             except ValueError:
                 pass
-            
+
             y_pred_binary_boot = (y_pred_boot >= self.classification_threshold).astype(int)
             tn, fp, fn, tp = confusion_matrix(y_boot, y_pred_binary_boot).ravel()
-            
+
             sens_boot = tp / (tp + fn) if (tp + fn) > 0 else 0.0
             spec_boot = tn / (tn + fp) if (tn + fp) > 0 else 0.0
-            
+
             sensitivity_boots.append(sens_boot)
             specificity_boots.append(spec_boot)
-        
+
         # Compute percentile-based confidence intervals
         alpha = 1 - self.confidence_level
         lower_percentile = 100 * (alpha / 2)
         upper_percentile = 100 * (1 - alpha / 2)
-        
+
         ci_dict = {}
-        
+
         if len(auc_roc_boots) > 0:
             ci_dict['auc_roc'] = (
                 np.percentile(auc_roc_boots, lower_percentile),
                 np.percentile(auc_roc_boots, upper_percentile)
             )
-        
+
         if len(sensitivity_boots) > 0:
             ci_dict['sensitivity'] = (
                 np.percentile(sensitivity_boots, lower_percentile),
                 np.percentile(sensitivity_boots, upper_percentile)
             )
-        
+
         if len(specificity_boots) > 0:
             ci_dict['specificity'] = (
                 np.percentile(specificity_boots, lower_percentile),
                 np.percentile(specificity_boots, upper_percentile)
             )
-        
+
         return ci_dict
-    
+
     def stratified_evaluation(
         self,
         y_true: np.ndarray,
@@ -792,17 +789,17 @@ class InternalValidator:
     ) -> Dict[str, PerformanceMetrics]:
         """
         Evaluate performance stratified by a grouping variable.
-        
+
         This method computes performance metrics separately for each level
         of a stratification variable (e.g., race, gender, age group), enabling
         detection of performance disparities across patient subgroups.
-        
+
         Args:
             y_true: True binary outcomes
             y_pred_proba: Predicted probabilities
             stratification_variable: Categorical variable defining subgroups
             compute_ci: Whether to compute confidence intervals per subgroup
-            
+
         Returns:
             Dictionary mapping group labels to PerformanceMetrics
         """
@@ -810,19 +807,19 @@ class InternalValidator:
             f"Computing stratified evaluation for variable with "
             f"{stratification_variable.nunique()} unique values"
         )
-        
+
         results = {}
-        
+
         for group_value in stratification_variable.unique():
             # Skip missing values
             if pd.isna(group_value):
                 continue
-            
+
             # Get indices for this group
             group_mask = (stratification_variable == group_value).values
             y_true_group = y_true[group_mask]
             y_pred_group = y_pred_proba[group_mask]
-            
+
             # Skip groups with insufficient samples or only one class
             if len(y_true_group) < 30:
                 logger.warning(
@@ -830,13 +827,13 @@ class InternalValidator:
                     f"{len(y_true_group)} samples"
                 )
                 continue
-            
+
             if len(np.unique(y_true_group)) < 2:
                 logger.warning(
                     f"Skipping group '{group_value}' with only one outcome class"
                 )
                 continue
-            
+
             # Compute metrics for this group
             try:
                 metrics = self.evaluate_performance(
@@ -845,16 +842,16 @@ class InternalValidator:
                     compute_ci=compute_ci
                 )
                 results[str(group_value)] = metrics
-                
+
                 logger.info(
                     f"Group '{group_value}': n={metrics.n_samples}, "
                     f"AUC-ROC={metrics.auc_roc:.3f}"
                 )
             except Exception as e:
                 logger.error(f"Error computing metrics for group '{group_value}': {e}")
-        
+
         return results
-    
+
     def compute_fairness_metrics(
         self,
         y_true: np.ndarray,
@@ -864,33 +861,33 @@ class InternalValidator:
     ) -> Dict[str, Any]:
         """
         Compute comprehensive fairness metrics across demographic groups.
-        
+
         This method computes key fairness metrics including:
         - Demographic parity: difference in positive prediction rates
         - Equalized odds: difference in TPR and FPR across groups
         - Calibration within groups
         - Predictive parity: difference in PPV across groups
-        
+
         Args:
             y_true: True binary outcomes
             y_pred_proba: Predicted probabilities
             protected_attribute: Demographic variable (e.g., race, gender)
             reference_group: Optional reference group for computing ratios
-            
+
         Returns:
             Dictionary containing fairness metrics and group comparisons
         """
         logger.info("Computing comprehensive fairness metrics")
-        
+
         # Get stratified performance metrics
         stratified_metrics = self.stratified_evaluation(
             y_true, y_pred_proba, protected_attribute, compute_ci=False
         )
-        
+
         if len(stratified_metrics) < 2:
             logger.warning("Need at least 2 groups for fairness evaluation")
             return {}
-        
+
         # Determine reference group
         if reference_group is None:
             # Use largest group as reference
@@ -899,14 +896,14 @@ class InternalValidator:
                 for group, metrics in stratified_metrics.items()
             }
             reference_group = max(group_sizes, key=group_sizes.get)
-        
+
         logger.info(f"Using '{reference_group}' as reference group")
-        
+
         if reference_group not in stratified_metrics:
             raise ValueError(f"Reference group '{reference_group}' not found")
-        
+
         ref_metrics = stratified_metrics[reference_group]
-        
+
         # Compute fairness metrics
         fairness_results = {
             'reference_group': reference_group,
@@ -916,72 +913,72 @@ class InternalValidator:
             'calibration': {},
             'predictive_parity': {}
         }
-        
+
         for group, metrics in stratified_metrics.items():
             if group == reference_group:
                 continue
-            
+
             # Store group metrics
             fairness_results['group_metrics'][group] = metrics.to_dict()
-            
+
             # Demographic parity: difference in positive prediction rate
             # Compute positive prediction rates
             group_mask = (protected_attribute == group).values
             ref_mask = (protected_attribute == reference_group).values
-            
+
             group_pos_rate = np.mean(
                 y_pred_proba[group_mask] >= self.classification_threshold
             )
             ref_pos_rate = np.mean(
                 y_pred_proba[ref_mask] >= self.classification_threshold
             )
-            
+
             fairness_results['demographic_parity'][group] = {
                 'group_positive_rate': float(group_pos_rate),
                 'reference_positive_rate': float(ref_pos_rate),
                 'difference': float(group_pos_rate - ref_pos_rate),
                 'ratio': float(group_pos_rate / ref_pos_rate) if ref_pos_rate > 0 else np.nan
             }
-            
+
             # Equalized odds: difference in TPR and FPR
             tpr_diff = metrics.sensitivity - ref_metrics.sensitivity
             # Compute FPR
             group_fpr = 1 - metrics.specificity
             ref_fpr = 1 - ref_metrics.specificity
             fpr_diff = group_fpr - ref_fpr
-            
+
             fairness_results['equalized_odds'][group] = {
                 'tpr_difference': float(tpr_diff),
                 'fpr_difference': float(fpr_diff),
                 'max_difference': float(max(abs(tpr_diff), abs(fpr_diff)))
             }
-            
+
             # Calibration: difference in calibration metrics
             cal_slope_diff = metrics.calibration_slope - ref_metrics.calibration_slope
             cal_int_diff = metrics.calibration_intercept - ref_metrics.calibration_intercept
-            
+
             fairness_results['calibration'][group] = {
                 'slope_difference': float(cal_slope_diff),
                 'intercept_difference': float(cal_int_diff),
                 'group_slope': float(metrics.calibration_slope),
                 'group_intercept': float(metrics.calibration_intercept)
             }
-            
+
             # Predictive parity: difference in PPV
             ppv_diff = metrics.ppv - ref_metrics.ppv
-            
+
             fairness_results['predictive_parity'][group] = {
                 'ppv_difference': float(ppv_diff),
                 'ppv_ratio': float(metrics.ppv / ref_metrics.ppv) if ref_metrics.ppv > 0 else np.nan,
                 'group_ppv': float(metrics.ppv),
                 'reference_ppv': float(ref_metrics.ppv)
             }
-        
+
         # Store reference group metrics
         fairness_results['group_metrics'][reference_group] = ref_metrics.to_dict()
-        
+
         return fairness_results
-    
+
     def generate_validation_report(
         self,
         overall_metrics: PerformanceMetrics,
@@ -991,13 +988,13 @@ class InternalValidator:
     ) -> str:
         """
         Generate comprehensive validation report.
-        
+
         Args:
             overall_metrics: Overall performance metrics
             stratified_metrics: Performance stratified by demographics
             fairness_metrics: Fairness evaluation results
             validation_split: Information about data split
-            
+
         Returns:
             Formatted validation report as string
         """
@@ -1006,14 +1003,14 @@ class InternalValidator:
         lines.append("INTERNAL VALIDATION REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Split information
         lines.append("VALIDATION SPLIT INFORMATION:")
         lines.append(f"  Strategy: {validation_split.split_metadata.get('strategy', 'Unknown')}")
         lines.append(f"  Training samples: {validation_split.split_metadata.get('n_train', 0):,}")
         lines.append(f"  Validation samples: {validation_split.split_metadata.get('n_validation', 0):,}")
         lines.append("")
-        
+
         # Overall performance
         lines.append("OVERALL PERFORMANCE:")
         lines.append(f"  Samples: {overall_metrics.n_samples:,}")
@@ -1035,19 +1032,19 @@ class InternalValidator:
         lines.append(f"    Slope: {overall_metrics.calibration_slope:.4f} (ideal: 1.0)")
         lines.append(f"    Intercept: {overall_metrics.calibration_intercept:.4f} (ideal: 0.0)")
         lines.append("")
-        
+
         # Stratified performance
         if stratified_metrics:
             lines.append("STRATIFIED PERFORMANCE:")
             lines.append("")
-            
+
             # Sort groups by sample size
             sorted_groups = sorted(
                 stratified_metrics.items(),
                 key=lambda x: x[1].n_samples,
                 reverse=True
             )
-            
+
             for group, metrics in sorted_groups:
                 lines.append(f"  Group: {group}")
                 lines.append(f"    n={metrics.n_samples:,} ({100*metrics.n_samples/overall_metrics.n_samples:.1f}% of total)")
@@ -1058,13 +1055,13 @@ class InternalValidator:
                 lines.append(f"    PPV: {metrics.ppv:.4f}")
                 lines.append(f"    Calibration slope: {metrics.calibration_slope:.4f}")
                 lines.append("")
-        
+
         # Fairness metrics
         if fairness_metrics:
             lines.append("FAIRNESS EVALUATION:")
             lines.append(f"  Reference group: {fairness_metrics.get('reference_group', 'N/A')}")
             lines.append("")
-            
+
             # Demographic parity
             if 'demographic_parity' in fairness_metrics:
                 lines.append("  Demographic Parity:")
@@ -1076,7 +1073,7 @@ class InternalValidator:
                         f"ratio={ratio:.4f}"
                     )
                 lines.append("")
-            
+
             # Equalized odds
             if 'equalized_odds' in fairness_metrics:
                 lines.append("  Equalized Odds:")
@@ -1086,7 +1083,7 @@ class InternalValidator:
                         f"    {group}: max(|TPR diff|, |FPR diff|)={max_diff:.4f}"
                     )
                 lines.append("")
-            
+
             # Predictive parity
             if 'predictive_parity' in fairness_metrics:
                 lines.append("  Predictive Parity (PPV):")
@@ -1098,22 +1095,22 @@ class InternalValidator:
                         f"ratio={ratio:.4f}"
                     )
                 lines.append("")
-        
+
         # Warnings
         if 'representation_warnings' in validation_split.split_metadata:
             lines.append("REPRESENTATION WARNINGS:")
             for warning in validation_split.split_metadata['representation_warnings']:
                 lines.append(f"  [WARN]  {warning}")
             lines.append("")
-        
+
         if 'demographic_drift_warnings' in validation_split.split_metadata:
             lines.append("DEMOGRAPHIC DRIFT WARNINGS:")
             for warning in validation_split.split_metadata['demographic_drift_warnings']:
                 lines.append(f"  [WARN]  {warning}")
             lines.append("")
-        
+
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
 ```
 
@@ -1148,12 +1145,11 @@ import numpy as np
 from scipy import stats
 from dataclasses import dataclass
 
-
 @dataclass
 class PowerAnalysisParameters:
     """
     Parameters for fairness-focused power analysis.
-    
+
     Attributes:
         alpha: Significance level (default 0.05)
         beta: Type II error rate (1 - power, default 0.20 for 80% power)
@@ -1173,25 +1169,24 @@ class PowerAnalysisParameters:
     n_groups: int = 2
     multiple_testing_correction: str = "bonferroni"
 
-
 class FairnessPowerCalculator:
     """
     Sample size and power calculations for fairness evaluation.
-    
+
     This class implements methods for determining adequate validation cohort
     sizes to detect meaningful performance disparities across demographic
     groups with specified statistical power.
     """
-    
+
     def __init__(self, parameters: PowerAnalysisParameters):
         """
         Initialize power calculator.
-        
+
         Args:
             parameters: Power analysis parameters
         """
         self.params = parameters
-        
+
         # Adjust alpha for multiple testing if needed
         if self.params.multiple_testing_correction == "bonferroni":
             n_comparisons = (self.params.n_groups * (self.params.n_groups - 1)) // 2
@@ -1202,130 +1197,130 @@ class FairnessPowerCalculator:
             )
         else:
             self.adjusted_alpha = self.params.alpha
-        
+
         # Pre-compute z-scores for efficiency
         self.z_alpha = stats.norm.ppf(1 - self.adjusted_alpha / 2)
         self.z_beta = stats.norm.ppf(1 - self.params.beta)
-    
+
     def sample_size_for_sensitivity_difference(
         self,
         alternative_sensitivity: Optional[float] = None
     ) -> int:
         """
         Calculate required positive cases per group to detect sensitivity difference.
-        
+
         Uses two-proportion z-test formula for comparing sensitivities between
         two groups. Assumes equal numbers of positive cases in each group.
-        
+
         Args:
             alternative_sensitivity: Sensitivity in comparison group. If None,
                 uses baseline_sensitivity + minimum_detectable_difference
-                
+
         Returns:
             Required number of positive cases per group
         """
         p1 = self.params.baseline_sensitivity
-        
+
         if alternative_sensitivity is None:
             p2 = p1 + self.params.minimum_detectable_difference
         else:
             p2 = alternative_sensitivity
-        
+
         # Average proportion
         p_avg = (p1 + p2) / 2
-        
+
         # Effect size
         delta = abs(p2 - p1)
-        
+
         if delta == 0:
             raise ValueError("Cannot detect zero difference")
-        
+
         # Sample size formula for two-proportion test
         n_positive = (
             (self.z_alpha + self.z_beta) ** 2 * p_avg * (1 - p_avg)
         ) / (delta ** 2)
-        
+
         # Round up to integer
         n_positive = int(np.ceil(n_positive))
-        
+
         logger.info(
             f"Sensitivity difference detection: need {n_positive} positive "
             f"cases per group (p1={p1:.3f}, p2={p2:.3f}, delta={delta:.3f})"
         )
-        
+
         return n_positive
-    
+
     def sample_size_for_specificity_difference(
         self,
         alternative_specificity: Optional[float] = None
     ) -> int:
         """
         Calculate required negative cases per group to detect specificity difference.
-        
+
         Args:
             alternative_specificity: Specificity in comparison group. If None,
                 uses baseline_specificity + minimum_detectable_difference
-                
+
         Returns:
             Required number of negative cases per group
         """
         p1 = self.params.baseline_specificity
-        
+
         if alternative_specificity is None:
             p2 = p1 + self.params.minimum_detectable_difference
         else:
             p2 = alternative_specificity
-        
+
         p_avg = (p1 + p2) / 2
         delta = abs(p2 - p1)
-        
+
         if delta == 0:
             raise ValueError("Cannot detect zero difference")
-        
+
         n_negative = (
             (self.z_alpha + self.z_beta) ** 2 * p_avg * (1 - p_avg)
         ) / (delta ** 2)
-        
+
         n_negative = int(np.ceil(n_negative))
-        
+
         logger.info(
             f"Specificity difference detection: need {n_negative} negative "
             f"cases per group"
         )
-        
+
         return n_negative
-    
+
     def total_validation_size(self) -> Dict[str, int]:
         """
         Calculate total validation cohort size requirements.
-        
+
         Combines requirements for sensitivity and specificity difference
         detection with prevalence assumptions to determine total cohort
         size needed per group and overall.
-        
+
         Returns:
             Dictionary with sample size requirements
         """
         # Positive cases needed per group
         n_pos_per_group = self.sample_size_for_sensitivity_difference()
-        
+
         # Negative cases needed per group
         n_neg_per_group = self.sample_size_for_specificity_difference()
-        
+
         # Total samples per group based on positive cases and prevalence
         n_total_from_pos = int(np.ceil(n_pos_per_group / self.params.prevalence))
-        
+
         # Total samples per group based on negative cases and prevalence
         n_total_from_neg = int(np.ceil(
             n_neg_per_group / (1 - self.params.prevalence)
         ))
-        
+
         # Take maximum to satisfy both constraints
         n_per_group = max(n_total_from_pos, n_total_from_neg)
-        
+
         # Total validation cohort size across all groups
         n_total = n_per_group * self.params.n_groups
-        
+
         results = {
             'positive_cases_per_group': n_pos_per_group,
             'negative_cases_per_group': n_neg_per_group,
@@ -1334,14 +1329,14 @@ class FairnessPowerCalculator:
             'expected_positives_per_group': int(n_per_group * self.params.prevalence),
             'expected_negatives_per_group': int(n_per_group * (1 - self.params.prevalence))
         }
-        
+
         logger.info(
             f"Total validation requirements: {n_total:,} total samples "
             f"({n_per_group:,} per group across {self.params.n_groups} groups)"
         )
-        
+
         return results
-    
+
     def sample_size_for_auc_difference(
         self,
         baseline_auc: float,
@@ -1350,63 +1345,63 @@ class FairnessPowerCalculator:
     ) -> int:
         """
         Calculate sample size for detecting AUC differences between groups.
-        
+
         Uses DeLong's method for correlated AUCs when evaluated on the
         same validation set. This is more complex than proportion tests
         because AUC variance depends on both discrimination and sample size.
-        
+
         Args:
             baseline_auc: Expected AUC in reference group
             alternative_auc: Expected AUC in comparison group
             correlation: Assumed correlation between group AUCs (default 0.5)
-            
+
         Returns:
             Approximate total sample size needed per group
         """
         if alternative_auc is None:
             alternative_auc = baseline_auc + self.params.minimum_detectable_difference
-        
+
         # Hanley-McNeil approximation for AUC variance
         def auc_variance(auc: float, n_pos: int, n_neg: int) -> float:
             q1 = auc / (2 - auc)
             q2 = 2 * auc ** 2 / (1 + auc)
-            
+
             var = (
                 auc * (1 - auc) +
                 (n_pos - 1) * (q1 - auc ** 2) +
                 (n_neg - 1) * (q2 - auc ** 2)
             ) / (n_pos * n_neg)
-            
+
             return var
-        
+
         # Iterative search for sample size
         # Start with rough estimate
         n = 100
-        
+
         while n < 100000:  # Safety limit
             n_pos = int(n * self.params.prevalence)
             n_neg = n - n_pos
-            
+
             if n_pos < 10 or n_neg < 10:
                 n += 100
                 continue
-            
+
             var1 = auc_variance(baseline_auc, n_pos, n_neg)
             var2 = auc_variance(alternative_auc, n_pos, n_neg)
-            
+
             # Variance of difference assuming correlation
             var_diff = var1 + var2 - 2 * correlation * np.sqrt(var1 * var2)
             se_diff = np.sqrt(var_diff)
-            
+
             # Effect size
             delta = abs(alternative_auc - baseline_auc)
-            
+
             # Z-statistic for difference
             z_stat = delta / se_diff
-            
+
             # Power for this sample size
             power = 1 - stats.norm.cdf(self.z_alpha - z_stat)
-            
+
             # Check if we've achieved target power
             if power >= (1 - self.params.beta):
                 logger.info(
@@ -1415,19 +1410,19 @@ class FairnessPowerCalculator:
                     f"alternative AUC={alternative_auc:.3f})"
                 )
                 return n
-            
+
             # Increase sample size
             n = int(n * 1.1)
-        
+
         logger.warning(
             "Could not find feasible sample size for AUC difference detection"
         )
         return 100000
-    
+
     def generate_power_analysis_report(self) -> str:
         """
         Generate comprehensive power analysis report.
-        
+
         Returns:
             Formatted report describing sample size requirements
         """
@@ -1436,7 +1431,7 @@ class FairnessPowerCalculator:
         lines.append("SAMPLE SIZE CALCULATION FOR FAIRNESS EVALUATION")
         lines.append("=" * 80)
         lines.append("")
-        
+
         lines.append("PARAMETERS:")
         lines.append(f"  Significance level (alpha): {self.params.alpha}")
         lines.append(f"  Power (1 - beta): {1 - self.params.beta}")
@@ -1447,24 +1442,24 @@ class FairnessPowerCalculator:
             lines.append(f"  Number of pairwise comparisons: {n_comp}")
             lines.append(f"  Adjusted alpha per test: {self.adjusted_alpha:.6f}")
         lines.append("")
-        
+
         lines.append("EXPECTED PERFORMANCE:")
         lines.append(f"  Baseline sensitivity: {self.params.baseline_sensitivity:.3f}")
         lines.append(f"  Baseline specificity: {self.params.baseline_specificity:.3f}")
         lines.append(f"  Outcome prevalence: {self.params.prevalence:.3f}")
         lines.append(f"  Minimum detectable difference: {self.params.minimum_detectable_difference:.3f}")
         lines.append("")
-        
+
         # Calculate requirements
         size_req = self.total_validation_size()
-        
+
         lines.append("SAMPLE SIZE REQUIREMENTS:")
         lines.append(f"  Positive cases per group: {size_req['positive_cases_per_group']:,}")
         lines.append(f"  Negative cases per group: {size_req['negative_cases_per_group']:,}")
         lines.append(f"  Total samples per group: {size_req['total_samples_per_group']:,}")
         lines.append(f"  Total validation cohort: {size_req['total_validation_cohort']:,}")
         lines.append("")
-        
+
         lines.append("INTERPRETATION:")
         lines.append(
             f"  To detect a {self.params.minimum_detectable_difference:.1%} difference "
@@ -1483,7 +1478,7 @@ class FairnessPowerCalculator:
             f"{size_req['total_validation_cohort']:,} patients."
         )
         lines.append("")
-        
+
         lines.append("EXPECTED OUTCOME DISTRIBUTION:")
         lines.append(
             f"  Each group expected to have ~{size_req['expected_positives_per_group']:,} "
@@ -1493,9 +1488,9 @@ class FairnessPowerCalculator:
             f"  and ~{size_req['expected_negatives_per_group']:,} negative outcomes"
         )
         lines.append("")
-        
+
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
 ```
 
@@ -1530,12 +1525,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-
 @dataclass
 class PerformanceSnapshot:
     """
     Performance metrics at a specific time point.
-    
+
     Attributes:
         timestamp: When evaluation was performed
         overall_metrics: Overall performance metrics
@@ -1551,11 +1545,10 @@ class PerformanceSnapshot:
     n_samples: int
     data_distribution: Dict[str, Any] = field(default_factory=dict)
 
-
 class TemporalValidator:
     """
     Temporal validation with drift detection and fairness monitoring.
-    
+
     This class implements comprehensive temporal validation including:
     - Statistical process control for performance monitoring
     - Drift detection using multiple algorithms
@@ -1563,7 +1556,7 @@ class TemporalValidator:
     - Automated alerts for fairness violations
     - Trend analysis and degradation forecasting
     """
-    
+
     def __init__(
         self,
         baseline_metrics: PerformanceSnapshot,
@@ -1574,7 +1567,7 @@ class TemporalValidator:
     ):
         """
         Initialize temporal validator.
-        
+
         Args:
             baseline_metrics: Initial performance snapshot for comparison
             control_limit_sigma: Standard deviations for control limits
@@ -1586,46 +1579,46 @@ class TemporalValidator:
         self.control_limit_sigma = control_limit_sigma
         self.min_samples_for_alert = min_samples_for_alert
         self.fairness_alert_threshold = fairness_alert_threshold
-        
+
         # Rolling history of performance snapshots
         self.history = deque(maxlen=history_length)
         self.history.append(baseline_metrics)
-        
+
         # Alert tracking
         self.active_alerts = []
-        
+
         logger.info(
             f"Initialized TemporalValidator with baseline AUC "
             f"{baseline_metrics.overall_metrics.auc_roc:.4f}"
         )
-    
+
     def _compute_control_limits(
         self,
         metric_values: List[float]
     ) -> Tuple[float, float, float]:
         """
         Compute statistical process control limits.
-        
+
         Uses mean and standard deviation from historical data to establish
         control limits for detecting anomalous performance.
-        
+
         Args:
             metric_values: Historical values of a metric
-            
+
         Returns:
             Tuple of (center_line, lower_control_limit, upper_control_limit)
         """
         if len(metric_values) < 2:
             return np.nan, np.nan, np.nan
-        
+
         center_line = np.mean(metric_values)
         std_dev = np.std(metric_values, ddof=1)
-        
+
         lcl = center_line - self.control_limit_sigma * std_dev
         ucl = center_line + self.control_limit_sigma * std_dev
-        
+
         return center_line, lcl, ucl
-    
+
     def evaluate_current_performance(
         self,
         y_true: np.ndarray,
@@ -1636,44 +1629,44 @@ class TemporalValidator:
     ) -> PerformanceSnapshot:
         """
         Evaluate current performance and compare to baseline.
-        
+
         Args:
             y_true: True binary outcomes
             y_pred_proba: Predicted probabilities
             stratification_variable: Demographic variable for stratification
             timestamp: Evaluation timestamp (defaults to now)
             data_features: Optional features for distribution monitoring
-            
+
         Returns:
             PerformanceSnapshot with current metrics
         """
         if timestamp is None:
             timestamp = datetime.now()
-        
+
         logger.info(f"Evaluating performance at {timestamp}")
-        
+
         # Initialize internal validator
         validator = InternalValidator(
             classification_threshold=self.baseline.overall_metrics.threshold,
             bootstrap_iterations=0,  # Skip CI computation for speed
             random_state=42
         )
-        
+
         # Compute overall metrics
         overall_metrics = validator.evaluate_performance(
             y_true, y_pred_proba, compute_ci=False
         )
-        
+
         # Compute stratified metrics
         stratified_metrics = validator.stratified_evaluation(
             y_true, y_pred_proba, stratification_variable, compute_ci=False
         )
-        
+
         # Compute fairness metrics
         fairness_metrics = validator.compute_fairness_metrics(
             y_true, y_pred_proba, stratification_variable
         )
-        
+
         # Track data distribution if features provided
         data_distribution = {}
         if data_features is not None:
@@ -1684,7 +1677,7 @@ class TemporalValidator:
                         'std': float(data_features[col].std()),
                         'missing_rate': float(data_features[col].isna().mean())
                     }
-        
+
         snapshot = PerformanceSnapshot(
             timestamp=timestamp,
             overall_metrics=overall_metrics,
@@ -1693,31 +1686,31 @@ class TemporalValidator:
             n_samples=len(y_true),
             data_distribution=data_distribution
         )
-        
+
         # Add to history
         self.history.append(snapshot)
-        
+
         # Check for alerts
         self._check_for_alerts(snapshot)
-        
+
         return snapshot
-    
+
     def _check_for_alerts(self, current: PerformanceSnapshot):
         """
         Check current performance against thresholds and generate alerts.
-        
+
         Args:
             current: Current performance snapshot
         """
         if current.n_samples < self.min_samples_for_alert:
             return
-        
+
         # Check overall performance degradation
         auc_decline = (
             self.baseline.overall_metrics.auc_roc -
             current.overall_metrics.auc_roc
         )
-        
+
         if auc_decline > 0.05:  # 5 percentage point decline
             alert = {
                 'type': 'OVERALL_PERFORMANCE_DEGRADATION',
@@ -1731,12 +1724,12 @@ class TemporalValidator:
             }
             self.active_alerts.append(alert)
             logger.warning(alert['message'])
-        
+
         # Check calibration degradation
         cal_slope_drift = abs(
             current.overall_metrics.calibration_slope - 1.0
         )
-        
+
         if cal_slope_drift > 0.20:  # Calibration slope >20% from ideal
             alert = {
                 'type': 'CALIBRATION_DRIFT',
@@ -1749,12 +1742,12 @@ class TemporalValidator:
             }
             self.active_alerts.append(alert)
             logger.warning(alert['message'])
-        
+
         # Check fairness metric violations
         if 'demographic_parity' in current.fairness_metrics:
             for group, metrics in current.fairness_metrics['demographic_parity'].items():
                 diff = abs(metrics['difference'])
-                
+
                 if diff > self.fairness_alert_threshold:
                     alert = {
                         'type': 'FAIRNESS_VIOLATION',
@@ -1770,12 +1763,12 @@ class TemporalValidator:
                     }
                     self.active_alerts.append(alert)
                     logger.warning(alert['message'])
-        
+
         # Check equalized odds violations
         if 'equalized_odds' in current.fairness_metrics:
             for group, metrics in current.fairness_metrics['equalized_odds'].items():
                 max_diff = metrics['max_difference']
-                
+
                 if max_diff > self.fairness_alert_threshold:
                     alert = {
                         'type': 'FAIRNESS_VIOLATION',
@@ -1790,17 +1783,17 @@ class TemporalValidator:
                     }
                     self.active_alerts.append(alert)
                     logger.warning(alert['message'])
-        
+
         # Check for group-specific performance degradation
         if self.baseline.stratified_metrics and current.stratified_metrics:
             for group in current.stratified_metrics:
                 if group not in self.baseline.stratified_metrics:
                     continue
-                
+
                 baseline_auc = self.baseline.stratified_metrics[group].auc_roc
                 current_auc = current.stratified_metrics[group].auc_roc
                 group_decline = baseline_auc - current_auc
-                
+
                 if group_decline > 0.08:  # 8 percentage point decline for subgroup
                     alert = {
                         'type': 'GROUP_PERFORMANCE_DEGRADATION',
@@ -1814,36 +1807,36 @@ class TemporalValidator:
                     }
                     self.active_alerts.append(alert)
                     logger.warning(alert['message'])
-    
+
     def detect_concept_drift(
         self,
         method: str = "kolmogorov_smirnov"
     ) -> Dict[str, Any]:
         """
         Detect concept drift in input feature distributions.
-        
+
         Concept drift occurs when the relationship between features and
         outcomes changes over time, potentially degrading model performance.
-        
+
         Args:
             method: Drift detection method ("kolmogorov_smirnov" or "population_stability")
-            
+
         Returns:
             Dictionary with drift detection results
         """
         if len(self.history) < 2:
             logger.warning("Insufficient history for drift detection")
             return {}
-        
+
         baseline_dist = self.baseline.data_distribution
         current_dist = self.history[-1].data_distribution
-        
+
         if not baseline_dist or not current_dist:
             logger.warning("No feature distributions available for drift detection")
             return {}
-        
+
         drift_results = {}
-        
+
         if method == "kolmogorov_smirnov":
             # This is simplified - would need actual feature values
             # for proper KS test implementation
@@ -1852,35 +1845,35 @@ class TemporalValidator:
                 baseline_std = baseline_dist[feature]['std']
                 current_mean = current_dist[feature]['mean']
                 current_std = current_dist[feature]['std']
-                
+
                 # Approximate drift measure based on distribution moments
                 mean_shift = abs(current_mean - baseline_mean) / (baseline_std + 1e-10)
-                
+
                 drift_results[feature] = {
                     'mean_shift_std_units': float(mean_shift),
                     'drift_detected': mean_shift > 2.0,  # >2 standard deviations
                     'baseline_mean': baseline_mean,
                     'current_mean': current_mean
                 }
-        
+
         # Count features with detected drift
         n_drifted = sum(1 for r in drift_results.values() if r['drift_detected'])
-        
+
         logger.info(
             f"Drift detection: {n_drifted}/{len(drift_results)} features show drift"
         )
-        
+
         return {
             'method': method,
             'n_features_checked': len(drift_results),
             'n_features_drifted': n_drifted,
             'feature_results': drift_results
         }
-    
+
     def get_performance_trends(self) -> Dict[str, List[Tuple[datetime, float]]]:
         """
         Extract performance metric trends over time.
-        
+
         Returns:
             Dictionary mapping metric names to time series
         """
@@ -1891,23 +1884,23 @@ class TemporalValidator:
             'calibration_slope': [],
             'brier_score': []
         }
-        
+
         for snapshot in self.history:
             ts = snapshot.timestamp
             m = snapshot.overall_metrics
-            
+
             trends['auc_roc'].append((ts, m.auc_roc))
             trends['sensitivity'].append((ts, m.sensitivity))
             trends['specificity'].append((ts, m.specificity))
             trends['calibration_slope'].append((ts, m.calibration_slope))
             trends['brier_score'].append((ts, m.brier_score))
-        
+
         return trends
-    
+
     def generate_monitoring_report(self) -> str:
         """
         Generate comprehensive temporal monitoring report.
-        
+
         Returns:
             Formatted monitoring report
         """
@@ -1916,7 +1909,7 @@ class TemporalValidator:
         lines.append("TEMPORAL VALIDATION AND PERFORMANCE MONITORING REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Monitoring period
         if len(self.history) > 1:
             start = self.history[0].timestamp
@@ -1924,7 +1917,7 @@ class TemporalValidator:
             lines.append(f"Monitoring period: {start.date()} to {end.date()}")
             lines.append(f"Number of evaluations: {len(self.history)}")
             lines.append("")
-        
+
         # Baseline performance
         lines.append("BASELINE PERFORMANCE:")
         bm = self.baseline.overall_metrics
@@ -1934,12 +1927,12 @@ class TemporalValidator:
         lines.append(f"  Specificity: {bm.specificity:.4f}")
         lines.append(f"  Calibration slope: {bm.calibration_slope:.4f}")
         lines.append("")
-        
+
         # Current performance
         if len(self.history) > 1:
             current = self.history[-1]
             cm = current.overall_metrics
-            
+
             lines.append("CURRENT PERFORMANCE:")
             lines.append(f"  Timestamp: {current.timestamp}")
             lines.append(f"  AUC-ROC: {cm.auc_roc:.4f} (change: {cm.auc_roc - bm.auc_roc:+.4f})")
@@ -1947,21 +1940,21 @@ class TemporalValidator:
             lines.append(f"  Specificity: {cm.specificity:.4f} (change: {cm.specificity - bm.specificity:+.4f})")
             lines.append(f"  Calibration slope: {cm.calibration_slope:.4f} (change: {cm.calibration_slope - bm.calibration_slope:+.4f})")
             lines.append("")
-        
+
         # Active alerts
         if self.active_alerts:
             lines.append(f"ACTIVE ALERTS ({len(self.active_alerts)}):")
-            
+
             # Group by severity
             high_alerts = [a for a in self.active_alerts if a['severity'] == 'HIGH']
             med_alerts = [a for a in self.active_alerts if a['severity'] == 'MEDIUM']
-            
+
             if high_alerts:
                 lines.append(f"  HIGH SEVERITY ({len(high_alerts)}):")
                 for alert in high_alerts[-5:]:  # Show most recent 5
                     lines.append(f"    [{alert['timestamp'].strftime('%Y-%m-%d')}] {alert['message']}")
                 lines.append("")
-            
+
             if med_alerts:
                 lines.append(f"  MEDIUM SEVERITY ({len(med_alerts)}):")
                 for alert in med_alerts[-5:]:
@@ -1970,7 +1963,7 @@ class TemporalValidator:
         else:
             lines.append("ACTIVE ALERTS: None")
             lines.append("")
-        
+
         # Fairness tracking
         if len(self.history) > 1:
             current = self.history[-1]
@@ -1983,9 +1976,9 @@ class TemporalValidator:
                     lines.append(f"    Demographic parity difference: {diff:+.4f}")
                     lines.append(f"    Demographic parity ratio: {ratio:.4f}")
                 lines.append("")
-        
+
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
 ```
 
@@ -2018,12 +2011,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-
 @dataclass
 class SiteCharacteristics:
     """
     Characteristics of an external validation site.
-    
+
     Attributes:
         site_id: Unique identifier
         site_name: Human-readable name
@@ -2043,12 +2035,11 @@ class SiteCharacteristics:
     demographics: Dict[str, Dict[str, float]]
     data_quality_metrics: Dict[str, float]
 
-
 @dataclass
 class SiteValidationResults:
     """
     Validation results from a single external site.
-    
+
     Attributes:
         site_characteristics: Site information
         overall_metrics: Overall performance at this site
@@ -2066,17 +2057,16 @@ class SiteValidationResults:
     validation_timestamp: datetime
     notes: Optional[str] = None
 
-
 class MultiSiteExternalValidator:
     """
     Framework for coordinating external validation across diverse sites.
-    
+
     This class implements comprehensive multi-site external validation including
     meta-analysis of site-level results, assessment of heterogeneity, and
     reporting that highlights performance variation across different care
     settings and patient populations.
     """
-    
+
     def __init__(
         self,
         internal_validation_results: PerformanceMetrics,
@@ -2085,7 +2075,7 @@ class MultiSiteExternalValidator:
     ):
         """
         Initialize multi-site validator.
-        
+
         Args:
             internal_validation_results: Baseline internal validation metrics
             classification_threshold: Threshold for binary classification
@@ -2094,22 +2084,22 @@ class MultiSiteExternalValidator:
         self.internal_results = internal_validation_results
         self.classification_threshold = classification_threshold
         self.min_site_sample_size = min_site_sample_size
-        
+
         # Storage for site-level results
         self.site_results: List[SiteValidationResults] = []
-        
+
         logger.info(
             f"Initialized MultiSiteExternalValidator with baseline AUC "
             f"{internal_validation_results.auc_roc:.4f}"
         )
-    
+
     def add_site_results(
         self,
         site_results: SiteValidationResults
     ):
         """
         Add validation results from an external site.
-        
+
         Args:
             site_results: Complete validation results from one site
         """
@@ -2119,56 +2109,56 @@ class MultiSiteExternalValidator:
                 f"{site_results.n_samples} samples (minimum: {self.min_site_sample_size}). "
                 f"Results may be unreliable."
             )
-        
+
         self.site_results.append(site_results)
-        
+
         logger.info(
             f"Added results from {site_results.site_characteristics.site_name}: "
             f"n={site_results.n_samples}, AUC={site_results.overall_metrics.auc_roc:.4f}"
         )
-    
+
     def meta_analyze_performance(
         self,
         metric: str = "auc_roc"
     ) -> Dict[str, float]:
         """
         Perform meta-analysis of performance across sites.
-        
+
         Uses inverse-variance weighting to combine site-level estimates,
         providing overall external validation performance and measures of
         heterogeneity across sites.
-        
+
         Args:
             metric: Performance metric to meta-analyze
-            
+
         Returns:
             Dictionary with pooled estimate and heterogeneity statistics
         """
         if len(self.site_results) < 2:
             logger.warning("Need at least 2 sites for meta-analysis")
             return {}
-        
+
         logger.info(f"Performing meta-analysis of {metric} across {len(self.site_results)} sites")
-        
+
         # Extract metric values and sample sizes
         estimates = []
         variances = []
         weights = []
-        
+
         for site in self.site_results:
             metric_value = getattr(site.overall_metrics, metric)
             n = site.n_samples
-            
+
             # Approximate variance for AUC using Hanley-McNeil
             if metric == "auc_roc":
                 # Simplified variance approximation
                 q1 = metric_value / (2 - metric_value)
                 q2 = 2 * metric_value**2 / (1 + metric_value)
-                
+
                 # Assume balanced prevalence for simplicity
                 n_pos = site.overall_metrics.n_positive
                 n_neg = n - n_pos
-                
+
                 if n_pos > 0 and n_neg > 0:
                     variance = (
                         metric_value * (1 - metric_value) +
@@ -2180,45 +2170,45 @@ class MultiSiteExternalValidator:
             else:
                 # For other metrics, use simple binomial variance approximation
                 variance = metric_value * (1 - metric_value) / n
-            
+
             estimates.append(metric_value)
             variances.append(variance)
             weights.append(1.0 / variance)
-        
+
         estimates = np.array(estimates)
         variances = np.array(variances)
         weights = np.array(weights)
-        
+
         # Inverse-variance weighted pooled estimate
         pooled_estimate = np.sum(weights * estimates) / np.sum(weights)
         pooled_variance = 1.0 / np.sum(weights)
         pooled_se = np.sqrt(pooled_variance)
-        
+
         # Heterogeneity statistics (I-squared and Cochran's Q)
         q_statistic = np.sum(weights * (estimates - pooled_estimate)**2)
         df = len(estimates) - 1
-        
+
         if df > 0:
             q_pvalue = 1 - stats.chi2.cdf(q_statistic, df)
-            
+
             # I-squared: proportion of variance due to heterogeneity
             i_squared = max(0, (q_statistic - df) / q_statistic) if q_statistic > 0 else 0
         else:
             q_pvalue = 1.0
             i_squared = 0.0
-        
+
         # Prediction interval for a new site
         # Incorporates both within-site and between-site variation
         tau_squared = max(0, (q_statistic - df) / (np.sum(weights) - np.sum(weights**2) / np.sum(weights)))
         pred_variance = pooled_variance + tau_squared
         pred_se = np.sqrt(pred_variance)
-        
+
         # 95% confidence and prediction intervals
         ci_lower = pooled_estimate - 1.96 * pooled_se
         ci_upper = pooled_estimate + 1.96 * pooled_se
         pred_lower = pooled_estimate - 1.96 * pred_se
         pred_upper = pooled_estimate + 1.96 * pred_se
-        
+
         results = {
             'pooled_estimate': float(pooled_estimate),
             'pooled_se': float(pooled_se),
@@ -2232,54 +2222,54 @@ class MultiSiteExternalValidator:
             'tau_squared': float(tau_squared),
             'n_sites': len(self.site_results)
         }
-        
+
         logger.info(
             f"Meta-analysis results: pooled {metric} = {pooled_estimate:.4f} "
             f"(95% CI: {ci_lower:.4f}-{ci_upper:.4f}), "
             f"I^2 = {i_squared:.1%}"
         )
-        
+
         return results
-    
+
     def assess_site_heterogeneity(self) -> Dict[str, Any]:
         """
         Assess heterogeneity in performance across validation sites.
-        
+
         Examines whether performance varies systematically by site
         characteristics such as site type, geographic region, or patient
         demographics.
-        
+
         Returns:
             Dictionary with heterogeneity analysis results
         """
         if len(self.site_results) < 3:
             logger.warning("Need at least 3 sites for heterogeneity assessment")
             return {}
-        
+
         logger.info("Assessing site-level heterogeneity")
-        
+
         # Organize results by site characteristics
         by_site_type = {}
         by_region = {}
-        
+
         for site in self.site_results:
             site_type = site.site_characteristics.site_type
             region = site.site_characteristics.geographic_region
-            
+
             if site_type not in by_site_type:
                 by_site_type[site_type] = []
             by_site_type[site_type].append(site.overall_metrics.auc_roc)
-            
+
             if region not in by_region:
                 by_region[region] = []
             by_region[region].append(site.overall_metrics.auc_roc)
-        
+
         heterogeneity = {
             'by_site_type': {},
             'by_region': {},
             'overall_variance': float(np.var([s.overall_metrics.auc_roc for s in self.site_results]))
         }
-        
+
         # Analyze by site type
         for site_type, aucs in by_site_type.items():
             heterogeneity['by_site_type'][site_type] = {
@@ -2289,7 +2279,7 @@ class MultiSiteExternalValidator:
                 'min_auc': float(np.min(aucs)),
                 'max_auc': float(np.max(aucs))
             }
-        
+
         # Analyze by region
         for region, aucs in by_region.items():
             heterogeneity['by_region'][region] = {
@@ -2299,7 +2289,7 @@ class MultiSiteExternalValidator:
                 'min_auc': float(np.min(aucs)),
                 'max_auc': float(np.max(aucs))
             }
-        
+
         # ANOVA test for differences across site types (if sufficient data)
         if len(by_site_type) >= 2:
             site_type_groups = [aucs for aucs in by_site_type.values() if len(aucs) >= 2]
@@ -2309,40 +2299,40 @@ class MultiSiteExternalValidator:
                     'f_statistic': float(f_stat),
                     'p_value': float(p_value)
                 }
-        
+
         return heterogeneity
-    
+
     def compare_to_internal_validation(self) -> Dict[str, Any]:
         """
         Compare external validation results to internal validation.
-        
+
         Assesses whether model performance generalizes well or shows
         substantial degradation on external data.
-        
+
         Returns:
             Dictionary with internal vs external comparison
         """
         if not self.site_results:
             return {}
-        
+
         # Compute mean external performance
         external_aucs = [s.overall_metrics.auc_roc for s in self.site_results]
         mean_external_auc = np.mean(external_aucs)
         std_external_auc = np.std(external_aucs)
-        
+
         internal_auc = self.internal_results.auc_roc
-        
+
         # Performance degradation
         degradation = internal_auc - mean_external_auc
         degradation_pct = 100 * degradation / internal_auc
-        
+
         # Statistical test: is external performance significantly different?
         # One-sample t-test comparing external sites to internal estimate
         if len(external_aucs) >= 2:
             t_stat, p_value = stats.ttest_1samp(external_aucs, internal_auc)
         else:
             t_stat, p_value = np.nan, np.nan
-        
+
         comparison = {
             'internal_auc': float(internal_auc),
             'mean_external_auc': float(mean_external_auc),
@@ -2355,18 +2345,18 @@ class MultiSiteExternalValidator:
             'p_value': float(p_value),
             'n_external_sites': len(self.site_results)
         }
-        
+
         logger.info(
             f"Internal vs external: {internal_auc:.4f} vs {mean_external_auc:.4f} "
             f"(degradation: {degradation:.4f}, {degradation_pct:.1f}%)"
         )
-        
+
         return comparison
-    
+
     def generate_external_validation_report(self) -> str:
         """
         Generate comprehensive external validation report.
-        
+
         Returns:
             Formatted multi-site validation report
         """
@@ -2375,40 +2365,40 @@ class MultiSiteExternalValidator:
         lines.append("EXTERNAL VALIDATION REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Summary
         lines.append(f"Number of external validation sites: {len(self.site_results)}")
         total_samples = sum(s.n_samples for s in self.site_results)
         lines.append(f"Total external validation samples: {total_samples:,}")
         lines.append("")
-        
+
         # Internal validation reference
         lines.append("INTERNAL VALIDATION REFERENCE:")
         lines.append(f"  AUC-ROC: {self.internal_results.auc_roc:.4f}")
         lines.append(f"  Sensitivity: {self.internal_results.sensitivity:.4f}")
         lines.append(f"  Specificity: {self.internal_results.specificity:.4f}")
         lines.append("")
-        
+
         # Site-by-site results
         lines.append("SITE-LEVEL RESULTS:")
         lines.append("")
-        
+
         for site in sorted(self.site_results, key=lambda x: x.overall_metrics.auc_roc, reverse=True):
             char = site.site_characteristics
             metrics = site.overall_metrics
-            
+
             lines.append(f"  {char.site_name} ({char.site_type}, {char.geographic_region})")
             lines.append(f"    Samples: {site.n_samples:,}")
             lines.append(f"    AUC-ROC: {metrics.auc_roc:.4f}")
             lines.append(f"    Sensitivity: {metrics.sensitivity:.4f}")
             lines.append(f"    Specificity: {metrics.specificity:.4f}")
             lines.append(f"    Calibration slope: {metrics.calibration_slope:.4f}")
-            
+
             if site.notes:
                 lines.append(f"    Notes: {site.notes}")
-            
+
             lines.append("")
-        
+
         # Meta-analysis
         meta_results = self.meta_analyze_performance("auc_roc")
         if meta_results:
@@ -2424,7 +2414,7 @@ class MultiSiteExternalValidator:
             lines.append(f"  Heterogeneity (I^2): {meta_results['i_squared']:.1%}")
             lines.append(f"  Cochran's Q p-value: {meta_results['q_pvalue']:.4f}")
             lines.append("")
-        
+
         # Heterogeneity assessment
         heterogeneity = self.assess_site_heterogeneity()
         if heterogeneity and 'by_site_type' in heterogeneity:
@@ -2440,7 +2430,7 @@ class MultiSiteExternalValidator:
                     f"    Range: {stats_dict['min_auc']:.4f} - {stats_dict['max_auc']:.4f}"
                 )
             lines.append("")
-        
+
         # Internal vs external comparison
         comparison = self.compare_to_internal_validation()
         if comparison:
@@ -2451,7 +2441,7 @@ class MultiSiteExternalValidator:
                 f"  Performance degradation: {comparison['degradation_absolute']:.4f} "
                 f"({comparison['degradation_percent']:.1f}%)"
             )
-            
+
             if comparison['p_value'] < 0.05:
                 lines.append(
                     f"  Difference is statistically significant (p={comparison['p_value']:.4f})"
@@ -2461,27 +2451,27 @@ class MultiSiteExternalValidator:
                     f"  Difference is not statistically significant (p={comparison['p_value']:.4f})"
                 )
             lines.append("")
-        
+
         # Interpretation
         lines.append("INTERPRETATION:")
-        
+
         if comparison and abs(comparison['degradation_percent']) < 5:
             lines.append("  [OK] Model performance generalizes well to external sites")
         elif comparison and abs(comparison['degradation_percent']) < 10:
             lines.append("  [WARN]  Model shows modest performance degradation on external data")
         else:
             lines.append("  [FAIL] Model shows substantial performance degradation on external data")
-        
+
         if meta_results and meta_results['i_squared'] < 0.25:
             lines.append("  [OK] Performance is consistent across sites (low heterogeneity)")
         elif meta_results and meta_results['i_squared'] < 0.50:
             lines.append("  [WARN]  Performance shows moderate variation across sites")
         else:
             lines.append("  [FAIL] Performance varies substantially across sites (high heterogeneity)")
-        
+
         lines.append("")
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
 ```
 

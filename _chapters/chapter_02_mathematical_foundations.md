@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 2: Mathematical Foundations with Health Equity Applications"
 chapter_number: 2
+part_number: 1
+prev_chapter: /chapters/chapter-01-clinical-informatics/
+next_chapter: /chapters/chapter-03-healthcare-data-engineering/
 ---
-
 # Chapter 2: Mathematical Foundations with Health Equity Applications
 
 ## Learning Objectives
@@ -66,13 +68,12 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class PatientVector:
     """
     Represents a patient as a vector in feature space with metadata about
     the patient's demographic characteristics and data quality.
-    
+
     Attributes:
         patient_id: Unique patient identifier
         features: Numeric feature vector
@@ -87,7 +88,7 @@ class PatientVector:
     demographic_group: Optional[Dict[str, str]] = None
     data_quality_score: Optional[float] = None
     missingness_indicators: Optional[np.ndarray] = None
-    
+
     def __post_init__(self):
         """Validate that feature array dimensions match feature names."""
         if len(self.features) != len(self.feature_names):
@@ -96,14 +97,13 @@ class PatientVector:
                 f"feature names length ({len(self.feature_names)})"
             )
 
-
 class EquityAwareVectorSpace:
     """
     Creates and manages vector representations of patients with explicit
     attention to how standardization choices affect fairness across
     patient populations with different feature distributions.
     """
-    
+
     def __init__(
         self,
         standardization_method: str = 'standard',
@@ -111,7 +111,7 @@ class EquityAwareVectorSpace:
     ):
         """
         Initialize vector space with configurable standardization approach.
-        
+
         Args:
             standardization_method: Method for feature scaling
                 'standard': Mean centering and unit variance scaling
@@ -124,16 +124,16 @@ class EquityAwareVectorSpace:
         """
         self.standardization_method = standardization_method
         self.group_specific_scaling = group_specific_scaling
-        
+
         self.global_scaler: Optional[Union[StandardScaler, RobustScaler]] = None
         self.group_scalers: Dict[str, Union[StandardScaler, RobustScaler]] = {}
         self.feature_names: List[str] = []
-        
+
         logger.info(
             f"Initialized vector space with {standardization_method} standardization, "
             f"group_specific_scaling={group_specific_scaling}"
         )
-    
+
     def fit(
         self,
         patient_df: pd.DataFrame,
@@ -143,18 +143,18 @@ class EquityAwareVectorSpace:
         """
         Fit standardization parameters from training data with option for
         group-specific standardization to preserve within-group patterns.
-        
+
         Args:
             patient_df: DataFrame with patient data
             feature_columns: Column names to use as features
             demographic_column: Column for group-specific standardization
-            
+
         Returns:
             Self for method chaining
         """
         self.feature_names = feature_columns
         X = patient_df[feature_columns].values
-        
+
         # Fit global scaler
         if self.standardization_method == 'standard':
             self.global_scaler = StandardScaler()
@@ -167,10 +167,10 @@ class EquityAwareVectorSpace:
             self.global_scaler = None
         else:
             raise ValueError(f"Unknown standardization method: {self.standardization_method}")
-        
+
         if self.global_scaler is not None:
             self.global_scaler.fit(X)
-        
+
         # Fit group-specific scalers if requested
         if self.group_specific_scaling and demographic_column is not None:
             if demographic_column not in patient_df.columns:
@@ -183,7 +183,7 @@ class EquityAwareVectorSpace:
                     if pd.notna(group):
                         group_data = patient_df[patient_df[demographic_column] == group]
                         X_group = group_data[feature_columns].values
-                        
+
                         if len(X_group) > 1:  # Need at least 2 samples for scaling
                             if self.standardization_method == 'standard':
                                 group_scaler = StandardScaler()
@@ -194,17 +194,17 @@ class EquityAwareVectorSpace:
                                 group_scaler = MinMaxScaler()
                             else:
                                 group_scaler = None
-                            
+
                             if group_scaler is not None:
                                 group_scaler.fit(X_group)
                                 self.group_scalers[str(group)] = group_scaler
-        
+
         logger.info(f"Fitted vector space on {len(patient_df)} patients")
         if self.group_scalers:
             logger.info(f"Created group-specific scalers for {len(self.group_scalers)} groups")
-        
+
         return self
-    
+
     def transform(
         self,
         patient_df: pd.DataFrame,
@@ -212,25 +212,25 @@ class EquityAwareVectorSpace:
     ) -> List[PatientVector]:
         """
         Transform patients into vector representations using fitted scaling.
-        
+
         Args:
             patient_df: DataFrame with patient data
             demographic_column: Column with demographic group labels
-            
+
         Returns:
             List of PatientVector objects
         """
         if not self.feature_names:
             raise ValueError("Must call fit() before transform()")
-        
+
         patient_vectors = []
-        
+
         for idx, row in patient_df.iterrows():
             patient_id = str(row.get('patient_id', f'patient_{idx}'))
-            
+
             # Extract feature values
             feature_values = row[self.feature_names].values.astype(float)
-            
+
             # Determine which scaler to use
             demographic_group = None
             if demographic_column and demographic_column in row:
@@ -238,7 +238,7 @@ class EquityAwareVectorSpace:
                 group_key = str(row[demographic_column])
             else:
                 group_key = None
-            
+
             # Apply scaling
             if self.group_specific_scaling and group_key in self.group_scalers:
                 # Use group-specific scaler
@@ -252,13 +252,13 @@ class EquityAwareVectorSpace:
             else:
                 # No scaling
                 scaled_features = feature_values
-            
+
             # Track missingness
             missingness_indicators = pd.isna(row[self.feature_names]).values.astype(int)
-            
+
             # Calculate data quality score
             data_quality = 1.0 - missingness_indicators.mean()
-            
+
             patient_vector = PatientVector(
                 patient_id=patient_id,
                 features=scaled_features,
@@ -267,11 +267,11 @@ class EquityAwareVectorSpace:
                 data_quality_score=data_quality,
                 missingness_indicators=missingness_indicators
             )
-            
+
             patient_vectors.append(patient_vector)
-        
+
         return patient_vectors
-    
+
     def compute_distance_matrix(
         self,
         patient_vectors: List[PatientVector],
@@ -280,23 +280,23 @@ class EquityAwareVectorSpace:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute pairwise distances between patients with optional quality weighting.
-        
+
         Standard distance metrics can be misleading when data quality differs
         systematically across populations. Quality weighting down-weights distances
         involving patients with poor data quality.
-        
+
         Args:
             patient_vectors: List of patient vector representations
             metric: Distance metric ('euclidean', 'manhattan', 'cosine')
             weight_by_quality: Whether to weight distances by data quality scores
-            
+
         Returns:
             Tuple of (distance matrix, quality-adjusted distance matrix if weight_by_quality)
         """
         n = len(patient_vectors)
         distance_matrix = np.zeros((n, n))
         quality_matrix = np.ones((n, n))
-        
+
         for i in range(n):
             for j in range(i + 1, n):
                 # Compute base distance
@@ -315,17 +315,17 @@ class EquityAwareVectorSpace:
                     )
                     norm_i = np.linalg.norm(patient_vectors[i].features)
                     norm_j = np.linalg.norm(patient_vectors[j].features)
-                    
+
                     if norm_i > 0 and norm_j > 0:
                         dist = 1.0 - (dot_product / (norm_i * norm_j))
                     else:
                         dist = 1.0  # Maximum distance if either vector is zero
                 else:
                     raise ValueError(f"Unknown metric: {metric}")
-                
+
                 distance_matrix[i, j] = dist
                 distance_matrix[j, i] = dist
-                
+
                 # Compute quality adjustment
                 if weight_by_quality:
                     quality_i = patient_vectors[i].data_quality_score or 1.0
@@ -333,14 +333,14 @@ class EquityAwareVectorSpace:
                     quality_weight = np.sqrt(quality_i * quality_j)
                     quality_matrix[i, j] = quality_weight
                     quality_matrix[j, i] = quality_weight
-        
+
         if weight_by_quality:
             # Adjust distances by quality - higher quality pairs get lower adjusted distance
             adjusted_distance = distance_matrix / quality_matrix
             return distance_matrix, adjusted_distance
         else:
             return distance_matrix, distance_matrix
-    
+
     def analyze_distance_bias(
         self,
         patient_vectors: List[PatientVector],
@@ -349,16 +349,16 @@ class EquityAwareVectorSpace:
     ) -> Dict[str, any]:
         """
         Analyze whether distance calculations are biased across demographic groups.
-        
+
         This checks whether patients from certain demographic groups tend to be
         closer or farther from other patients in the vector space, which could
         indicate that the feature representation or standardization is inappropriate.
-        
+
         Args:
             patient_vectors: List of patient vectors
             distance_matrix: Pairwise distance matrix
             demographic_attribute: Which demographic attribute to analyze
-            
+
         Returns:
             Dictionary with bias analysis results
         """
@@ -368,7 +368,7 @@ class EquityAwareVectorSpace:
             'group_cohesion_scores': {},
             'bias_detected': False
         }
-        
+
         # Extract demographic groups
         groups = {}
         for i, pv in enumerate(patient_vectors):
@@ -377,11 +377,11 @@ class EquityAwareVectorSpace:
                 if group not in groups:
                     groups[group] = []
                 groups[group].append(i)
-        
+
         if len(groups) < 2:
             logger.warning("Need at least 2 demographic groups for bias analysis")
             return analysis
-        
+
         # Compute within-group distances
         for group, indices in groups.items():
             if len(indices) > 1:
@@ -389,9 +389,9 @@ class EquityAwareVectorSpace:
                 for i in range(len(indices)):
                     for j in range(i + 1, len(indices)):
                         within_distances.append(distance_matrix[indices[i], indices[j]])
-                
+
                 analysis['mean_within_group_distance'][group] = np.mean(within_distances)
-        
+
         # Compute between-group distances
         group_pairs = [(g1, g2) for g1 in groups for g2 in groups if g1 < g2]
         for g1, g2 in group_pairs:
@@ -399,14 +399,14 @@ class EquityAwareVectorSpace:
             for i in groups[g1]:
                 for j in groups[g2]:
                     between_distances.append(distance_matrix[i, j])
-            
+
             pair_key = f"{g1}_vs_{g2}"
             analysis['mean_between_group_distance'][pair_key] = np.mean(between_distances)
-        
+
         # Compute cohesion scores (ratio of within to between distance)
         for group in groups:
             within_dist = analysis['mean_within_group_distance'].get(group, 0)
-            
+
             # Average between-group distance for this group
             between_dists = []
             for other_group in groups:
@@ -416,13 +416,13 @@ class EquityAwareVectorSpace:
                         between_dists.append(
                             analysis['mean_between_group_distance'][pair_key]
                         )
-            
+
             if between_dists:
                 avg_between = np.mean(between_dists)
                 if avg_between > 0:
                     cohesion = within_dist / avg_between
                     analysis['group_cohesion_scores'][group] = cohesion
-        
+
         # Check for bias: large differences in cohesion suggest representation issues
         cohesion_values = list(analysis['group_cohesion_scores'].values())
         if len(cohesion_values) >= 2:
@@ -434,7 +434,7 @@ class EquityAwareVectorSpace:
                     f"Cohesion scores vary substantially across groups (CV={cohesion_cv:.3f}). "
                     f"Some groups may be poorly represented in this feature space."
                 )
-        
+
         return analysis
 ```
 
@@ -456,12 +456,12 @@ class EquityAwareMatrixOperations:
     Matrix operations for healthcare data with explicit validation that
     transformations don't introduce systematic bias across patient populations.
     """
-    
+
     def __init__(self):
         """Initialize matrix operations handler."""
         self.transformation_history: List[Dict[str, any]] = []
         logger.info("Initialized equity-aware matrix operations")
-    
+
     def linear_combination_features(
         self,
         data_matrix: np.ndarray,
@@ -473,14 +473,14 @@ class EquityAwareMatrixOperations:
         """
         Create new features as linear combinations of existing features with
         validation that the transformation works consistently across demographic groups.
-        
+
         Args:
             data_matrix: (n_patients, n_features) data matrix
             weights: (n_features,) weight vector for linear combination
             feature_names: Names of input features
             new_feature_name: Name for the newly created feature
             demographic_labels: Optional (n_patients,) array of demographic group labels
-            
+
         Returns:
             Tuple of (new feature vector, validation results)
         """
@@ -489,10 +489,10 @@ class EquityAwareMatrixOperations:
                 f"Data matrix has {data_matrix.shape[1]} features but "
                 f"weight vector has {len(weights)} elements"
             )
-        
+
         # Compute linear combination
         new_feature = data_matrix @ weights
-        
+
         # Validate transformation
         validation = {
             'new_feature_name': new_feature_name,
@@ -500,15 +500,15 @@ class EquityAwareMatrixOperations:
             'feature_names': feature_names,
             'transformation_bias_detected': False
         }
-        
+
         if demographic_labels is not None:
             # Check if transformation affects groups differently
             unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-            
+
             group_correlations = {}
             for group in unique_groups:
                 group_mask = demographic_labels == group
-                
+
                 # For each original feature, compute correlation with new feature
                 correlations = []
                 for j in range(data_matrix.shape[1]):
@@ -518,14 +518,14 @@ class EquityAwareMatrixOperations:
                             new_feature[group_mask]
                         )[0, 1]
                         correlations.append(corr)
-                
+
                 group_correlations[str(group)] = {
                     'mean_correlation': np.mean(correlations),
                     'feature_correlations': dict(zip(feature_names, correlations))
                 }
-            
+
             validation['group_correlations'] = group_correlations
-            
+
             # Check for large differences in how features relate to composite
             mean_corrs = [v['mean_correlation'] for v in group_correlations.values()]
             if len(mean_corrs) > 1:
@@ -537,12 +537,12 @@ class EquityAwareMatrixOperations:
                         f"relationships to input features across demographic groups. "
                         f"This may indicate the weights are not appropriate for all populations."
                     )
-        
+
         # Record transformation
         self.transformation_history.append(validation)
-        
+
         return new_feature, validation
-    
+
     def center_data_matrix(
         self,
         data_matrix: np.ndarray,
@@ -551,16 +551,16 @@ class EquityAwareMatrixOperations:
     ) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
         """
         Center data matrix by subtracting means with option for group-specific centering.
-        
+
         Standard centering subtracts the overall mean, which can obscure within-group
         patterns when groups have systematically different means. Group-specific
         centering preserves within-group variation structure.
-        
+
         Args:
             data_matrix: (n_patients, n_features) data matrix
             demographic_labels: Optional group labels for group-specific centering
             group_specific: Whether to center within each group separately
-            
+
         Returns:
             Tuple of (centered matrix, dictionary of centering parameters)
         """
@@ -568,7 +568,7 @@ class EquityAwareMatrixOperations:
             # Global centering
             means = np.mean(data_matrix, axis=0)
             centered = data_matrix - means
-            
+
             centering_params = {
                 'method': 'global',
                 'global_means': means
@@ -577,25 +577,25 @@ class EquityAwareMatrixOperations:
             # Group-specific centering
             centered = np.zeros_like(data_matrix)
             group_means = {}
-            
+
             unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-            
+
             for group in unique_groups:
                 group_mask = demographic_labels == group
                 group_data = data_matrix[group_mask]
-                
+
                 if len(group_data) > 0:
                     group_mean = np.mean(group_data, axis=0)
                     centered[group_mask] = group_data - group_mean
                     group_means[str(group)] = group_mean
-            
+
             centering_params = {
                 'method': 'group_specific',
                 'group_means': group_means
             }
-        
+
         return centered, centering_params
-    
+
     def compute_covariance_matrix(
         self,
         data_matrix: np.ndarray,
@@ -605,76 +605,76 @@ class EquityAwareMatrixOperations:
         """
         Compute covariance matrix with optional analysis of whether covariance
         structure differs across demographic groups.
-        
+
         Different covariance structures across groups indicate that relationships
         between variables differ systematically, which has implications for
         modeling approaches that assume homogeneous covariance.
-        
+
         Args:
             data_matrix: (n_patients, n_features) centered data matrix
             demographic_labels: Optional group labels
             analyze_group_differences: Whether to test for covariance structure differences
-            
+
         Returns:
             Tuple of (covariance matrix, optional analysis results)
         """
         n_samples = data_matrix.shape[0]
-        
+
         # Compute overall covariance
         cov_matrix = (data_matrix.T @ data_matrix) / (n_samples - 1)
-        
+
         analysis_results = None
-        
+
         if analyze_group_differences and demographic_labels is not None:
             analysis_results = {
                 'group_covariances': {},
                 'covariance_homogeneity_test': {}
             }
-            
+
             unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-            
+
             group_cov_matrices = {}
             for group in unique_groups:
                 group_mask = demographic_labels == group
                 group_data = data_matrix[group_mask]
-                
+
                 if len(group_data) > data_matrix.shape[1]:  # Need n > p for valid covariance
                     group_cov = (group_data.T @ group_data) / (len(group_data) - 1)
                     group_cov_matrices[str(group)] = group_cov
-                    
+
                     # Store summary statistics
                     analysis_results['group_covariances'][str(group)] = {
                         'trace': np.trace(group_cov),
                         'determinant': np.linalg.det(group_cov) if group_cov.shape[0] > 0 else 0,
                         'frobenius_norm': np.linalg.norm(group_cov, 'fro')
                     }
-            
+
             # Test for homogeneity using Box's M test approximation
             # This tests whether covariance matrices are equal across groups
             if len(group_cov_matrices) >= 2:
                 # Compute pooled covariance
                 pooled_cov = cov_matrix
-                
+
                 # Compare each group covariance to pooled
                 for group, group_cov in group_cov_matrices.items():
                     diff_norm = np.linalg.norm(group_cov - pooled_cov, 'fro')
                     pooled_norm = np.linalg.norm(pooled_cov, 'fro')
-                    
+
                     relative_difference = diff_norm / pooled_norm if pooled_norm > 0 else 0
-                    
+
                     analysis_results['covariance_homogeneity_test'][group] = {
                         'relative_difference': relative_difference
                     }
-                    
+
                     if relative_difference > 0.3:
                         logger.warning(
                             f"Group {group} has substantially different covariance structure "
                             f"(relative difference = {relative_difference:.3f}). "
                             f"Models assuming homogeneous covariance may perform poorly."
                         )
-        
+
         return cov_matrix, analysis_results
-    
+
     def compute_correlation_matrix(
         self,
         data_matrix: np.ndarray,
@@ -684,12 +684,12 @@ class EquityAwareMatrixOperations:
         """
         Compute correlation matrix with detailed reporting suitable for identifying
         features that may serve as proxies for demographic characteristics.
-        
+
         Args:
             data_matrix: (n_patients, n_features) data matrix
             feature_names: Names of features
             demographic_labels: Optional group labels
-            
+
         Returns:
             Tuple of (correlation matrix, correlation analysis DataFrame)
         """
@@ -697,14 +697,14 @@ class EquityAwareMatrixOperations:
         data_std = (data_matrix - np.mean(data_matrix, axis=0)) / (
             np.std(data_matrix, axis=0) + 1e-8
         )
-        
+
         # Compute correlation matrix
         corr_matrix = (data_std.T @ data_std) / (data_matrix.shape[0] - 1)
-        
+
         # Create detailed report
         n_features = len(feature_names)
         correlation_details = []
-        
+
         for i in range(n_features):
             for j in range(i + 1, n_features):
                 correlation_details.append({
@@ -713,10 +713,10 @@ class EquityAwareMatrixOperations:
                     'correlation': corr_matrix[i, j],
                     'abs_correlation': abs(corr_matrix[i, j])
                 })
-        
+
         corr_df = pd.DataFrame(correlation_details)
         corr_df = corr_df.sort_values('abs_correlation', ascending=False)
-        
+
         # Flag potentially problematic high correlations
         high_corr = corr_df[corr_df['abs_correlation'] > 0.8]
         if len(high_corr) > 0:
@@ -724,7 +724,7 @@ class EquityAwareMatrixOperations:
                 f"Found {len(high_corr)} feature pairs with |correlation| > 0.8. "
                 f"High correlations may indicate redundant features or proxy variables."
             )
-        
+
         return corr_matrix, corr_df
 ```
 
@@ -744,17 +744,16 @@ Let me implement PCA with explicit equity safeguards:
 from sklearn.decomposition import PCA
 from scipy.linalg import eigh
 
-
 class EquityAwarePCA:
     """
     Principal Components Analysis with explicit validation that dimensionality
     reduction preserves information equitably across patient populations.
     """
-    
+
     def __init__(self, n_components: Optional[int] = None):
         """
         Initialize equity-aware PCA.
-        
+
         Args:
             n_components: Number of components to retain. If None, keeps all components.
         """
@@ -763,9 +762,9 @@ class EquityAwarePCA:
         self.explained_variance_: Optional[np.ndarray] = None
         self.mean_: Optional[np.ndarray] = None
         self.group_reconstruction_errors_: Dict[str, float] = {}
-        
+
         logger.info(f"Initialized equity-aware PCA with n_components={n_components}")
-    
+
     def fit(
         self,
         X: np.ndarray,
@@ -773,30 +772,30 @@ class EquityAwarePCA:
     ) -> 'EquityAwarePCA':
         """
         Fit PCA on data with optional analysis of reconstruction quality across groups.
-        
+
         Args:
             X: (n_samples, n_features) data matrix
             demographic_labels: Optional (n_samples,) array of group labels
-            
+
         Returns:
             Self for method chaining
         """
         # Center the data
         self.mean_ = np.mean(X, axis=0)
         X_centered = X - self.mean_
-        
+
         # Compute covariance matrix
         cov_matrix = (X_centered.T @ X_centered) / (X.shape[0] - 1)
-        
+
         # Eigendecomposition
         # eigh is for symmetric matrices and returns eigenvalues in ascending order
         eigenvalues, eigenvectors = eigh(cov_matrix)
-        
+
         # Sort in descending order of eigenvalues
         idx = np.argsort(eigenvalues)[::-1]
         eigenvalues = eigenvalues[idx]
         eigenvectors = eigenvectors[:, idx]
-        
+
         # Store results
         if self.n_components is not None:
             self.components_ = eigenvectors[:, :self.n_components].T
@@ -804,44 +803,44 @@ class EquityAwarePCA:
         else:
             self.components_ = eigenvectors.T
             self.explained_variance_ = eigenvalues
-        
+
         # Analyze reconstruction quality across groups
         if demographic_labels is not None:
             self._analyze_group_reconstruction(X_centered, demographic_labels)
-        
+
         return self
-    
+
     def transform(self, X: np.ndarray) -> np.ndarray:
         """
         Transform data to principal component space.
-        
+
         Args:
             X: (n_samples, n_features) data matrix
-            
+
         Returns:
             (n_samples, n_components) transformed data
         """
         if self.components_ is None or self.mean_ is None:
             raise ValueError("Must call fit() before transform()")
-        
+
         X_centered = X - self.mean_
         return X_centered @ self.components_.T
-    
+
     def inverse_transform(self, X_transformed: np.ndarray) -> np.ndarray:
         """
         Transform data back from principal component space to original space.
-        
+
         Args:
             X_transformed: (n_samples, n_components) data in PC space
-            
+
         Returns:
             (n_samples, n_features) reconstructed data
         """
         if self.components_ is None or self.mean_ is None:
             raise ValueError("Must call fit() before inverse_transform()")
-        
+
         return (X_transformed @ self.components_) + self.mean_
-    
+
     def _analyze_group_reconstruction(
         self,
         X_centered: np.ndarray,
@@ -849,75 +848,75 @@ class EquityAwarePCA:
     ) -> None:
         """
         Analyze how well PCA reconstruction works for different demographic groups.
-        
+
         Poor reconstruction for some groups indicates that the principal components
         don't capture the variation patterns in those groups well.
         """
         unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-        
+
         # Transform and reconstruct data
         X_transformed = X_centered @ self.components_.T
         X_reconstructed = X_transformed @ self.components_
-        
+
         # Compute reconstruction error for each group
         for group in unique_groups:
             group_mask = demographic_labels == group
-            
+
             # Mean squared reconstruction error
             reconstruction_error = np.mean(
                 np.sum((X_centered[group_mask] - X_reconstructed[group_mask])**2, axis=1)
             )
-            
+
             self.group_reconstruction_errors_[str(group)] = reconstruction_error
-        
+
         # Check for disparities
         errors = list(self.group_reconstruction_errors_.values())
         if len(errors) > 1:
             max_error = max(errors)
             min_error = min(errors)
             error_ratio = max_error / min_error if min_error > 0 else float('inf')
-            
+
             if error_ratio > 2.0:
                 logger.warning(
                     f"Large disparity in PCA reconstruction error across groups "
                     f"(ratio={error_ratio:.2f}). Principal components may not "
                     f"represent all populations equally well."
                 )
-    
+
     def get_explained_variance_ratio(self) -> np.ndarray:
         """
         Get the proportion of variance explained by each principal component.
-        
+
         Returns:
             Array of explained variance ratios
         """
         if self.explained_variance_ is None:
             raise ValueError("Must call fit() first")
-        
+
         return self.explained_variance_ / np.sum(self.explained_variance_)
-    
+
     def plot_scree(self) -> None:
         """
         Create scree plot showing variance explained by each component.
-        
+
         This helps determine how many components to retain.
         """
         import matplotlib.pyplot as plt
-        
+
         if self.explained_variance_ is None:
             raise ValueError("Must call fit() first")
-        
+
         variance_ratios = self.get_explained_variance_ratio()
         cumulative_variance = np.cumsum(variance_ratios)
-        
+
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-        
+
         # Individual variance
         ax1.bar(range(1, len(variance_ratios) + 1), variance_ratios)
         ax1.set_xlabel('Principal Component')
         ax1.set_ylabel('Proportion of Variance Explained')
         ax1.set_title('Scree Plot')
-        
+
         # Cumulative variance
         ax2.plot(range(1, len(cumulative_variance) + 1), cumulative_variance, 'bo-')
         ax2.axhline(y=0.8, color='r', linestyle='--', label='80% threshold')
@@ -927,23 +926,23 @@ class EquityAwarePCA:
         ax2.set_title('Cumulative Variance')
         ax2.legend()
         ax2.grid(True, alpha=0.3)
-        
+
         plt.tight_layout()
         plt.show()
-    
+
     def assess_equity_impact(self) -> Dict[str, any]:
         """
         Comprehensive assessment of whether PCA affects demographic groups equitably.
-        
+
         Returns:
             Dictionary with equity assessment results
         """
         if not self.group_reconstruction_errors_:
             logger.warning("No group reconstruction errors available. Run fit() with demographic_labels.")
             return {}
-        
+
         errors = list(self.group_reconstruction_errors_.values())
-        
+
         assessment = {
             'group_reconstruction_errors': self.group_reconstruction_errors_,
             'max_error': max(errors),
@@ -952,7 +951,7 @@ class EquityAwarePCA:
             'error_cv': np.std(errors) / np.mean(errors),
             'equity_concern_detected': False
         }
-        
+
         # Flag equity concerns
         if assessment['error_ratio'] > 2.0 or assessment['error_cv'] > 0.3:
             assessment['equity_concern_detected'] = True
@@ -964,7 +963,7 @@ class EquityAwarePCA:
             assessment['recommendation'] = (
                 "PCA appears to work reasonably consistently across groups."
             )
-        
+
         return assessment
 ```
 
@@ -982,16 +981,15 @@ Let me implement SVD-based methods with explicit equity considerations:
 from scipy.linalg import svd as scipy_svd
 from sklearn.impute import IterativeImputer
 
-
 class EquityAwareSVD:
     """
     Singular Value Decomposition with equity-aware analysis and applications.
     """
-    
+
     def __init__(self, n_components: Optional[int] = None):
         """
         Initialize equity-aware SVD.
-        
+
         Args:
             n_components: Number of components to retain for low-rank approximation
         """
@@ -999,9 +997,9 @@ class EquityAwareSVD:
         self.U_: Optional[np.ndarray] = None
         self.singular_values_: Optional[np.ndarray] = None
         self.Vt_: Optional[np.ndarray] = None
-        
+
         logger.info(f"Initialized equity-aware SVD with n_components={n_components}")
-    
+
     def fit(
         self,
         X: np.ndarray,
@@ -1009,11 +1007,11 @@ class EquityAwareSVD:
     ) -> 'EquityAwareSVD':
         """
         Compute SVD of data matrix.
-        
+
         Args:
             X: (n_samples, n_features) data matrix
             center: Whether to center data before SVD
-            
+
         Returns:
             Self for method chaining
         """
@@ -1023,10 +1021,10 @@ class EquityAwareSVD:
         else:
             self.mean_ = np.zeros(X.shape[1])
             X_centered = X
-        
+
         # Compute full SVD
         U, s, Vt = scipy_svd(X_centered, full_matrices=False)
-        
+
         # Retain specified number of components
         if self.n_components is not None:
             self.U_ = U[:, :self.n_components]
@@ -1036,44 +1034,44 @@ class EquityAwareSVD:
             self.U_ = U
             self.singular_values_ = s
             self.Vt_ = Vt
-        
+
         return self
-    
+
     def transform(self, X: np.ndarray) -> np.ndarray:
         """
         Project data into latent space.
-        
+
         Args:
             X: (n_samples, n_features) data matrix
-            
+
         Returns:
             (n_samples, n_components) latent representation
         """
         if self.Vt_ is None or self.singular_values_ is None:
             raise ValueError("Must call fit() first")
-        
+
         X_centered = X - self.mean_
         return X_centered @ self.Vt_.T
-    
+
     def reconstruct(self, X: np.ndarray) -> np.ndarray:
         """
         Reconstruct data from low-rank approximation.
-        
+
         Args:
             X: (n_samples, n_features) original data matrix
-            
+
         Returns:
             (n_samples, n_features) reconstructed data
         """
         if self.U_ is None or self.singular_values_ is None or self.Vt_ is None:
             raise ValueError("Must call fit() first")
-        
+
         X_centered = X - self.mean_
         X_latent = self.transform(X)
         X_reconstructed = X_latent @ self.Vt_
-        
+
         return X_reconstructed + self.mean_
-    
+
     def impute_missing_with_svd(
         self,
         X: np.ndarray,
@@ -1083,55 +1081,55 @@ class EquityAwareSVD:
     ) -> Tuple[np.ndarray, Dict[str, any]]:
         """
         Impute missing values using iterative SVD-based matrix completion.
-        
+
         This method alternates between SVD decomposition and missing value
         imputation until convergence. With equity monitoring, it tracks whether
         imputation quality differs across demographic groups.
-        
+
         Args:
             X: (n_samples, n_features) data matrix with missing values (np.nan)
             demographic_labels: Optional group labels for equity monitoring
             max_iterations: Maximum iterations for convergence
             tolerance: Convergence tolerance for change in imputed values
-            
+
         Returns:
             Tuple of (imputed data matrix, imputation quality metrics)
         """
         # Initialize missing values with column means
         X_imputed = X.copy()
         missing_mask = np.isnan(X)
-        
+
         for j in range(X.shape[1]):
             col_mean = np.nanmean(X[:, j])
             X_imputed[missing_mask[:, j], j] = col_mean
-        
+
         # Iterative refinement
         for iteration in range(max_iterations):
             X_prev = X_imputed.copy()
-            
+
             # Fit SVD on current imputed data
             self.fit(X_imputed, center=True)
-            
+
             # Reconstruct and update missing values
             X_reconstructed = self.reconstruct(X_imputed)
             X_imputed[missing_mask] = X_reconstructed[missing_mask]
-            
+
             # Check convergence
             change = np.sqrt(np.mean((X_imputed[missing_mask] - X_prev[missing_mask])**2))
             if change < tolerance:
                 logger.info(f"SVD imputation converged after {iteration + 1} iterations")
                 break
-        
+
         # Assess imputation quality across groups
         quality_metrics = {'converged': change < tolerance, 'final_change': change}
-        
+
         if demographic_labels is not None:
             quality_metrics['group_imputation_quality'] = self._assess_imputation_quality(
                 X, X_imputed, missing_mask, demographic_labels
             )
-        
+
         return X_imputed, quality_metrics
-    
+
     def _assess_imputation_quality(
         self,
         X_original: np.ndarray,
@@ -1141,49 +1139,48 @@ class EquityAwareSVD:
     ) -> Dict[str, any]:
         """
         Assess whether imputation quality differs across demographic groups.
-        
+
         We can't directly assess accuracy since we don't know true values,
         but we can check whether imputed values have reasonable statistical
         properties within each group.
         """
         unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-        
+
         quality_by_group = {}
-        
+
         for group in unique_groups:
             group_mask = demographic_labels == group
-            
+
             # For observed values in this group, check distributional match
             group_observed = X_original[group_mask & ~missing_mask]
             group_imputed = X_imputed[group_mask & missing_mask]
-            
+
             if len(group_observed) > 0 and len(group_imputed) > 0:
                 # Compare means
                 observed_mean = np.nanmean(group_observed)
                 imputed_mean = np.mean(group_imputed)
                 mean_difference = abs(observed_mean - imputed_mean)
-                
+
                 # Compare standard deviations
                 observed_std = np.nanstd(group_observed)
                 imputed_std = np.std(group_imputed)
                 std_ratio = imputed_std / observed_std if observed_std > 0 else 1.0
-                
+
                 quality_by_group[str(group)] = {
                     'mean_difference': mean_difference,
                     'std_ratio': std_ratio,
                     'n_imputed': len(group_imputed),
                     'n_observed': len(group_observed)
                 }
-        
-        return quality_by_group
 
+        return quality_by_group
 
 class EquityAwareMatrixFactorization:
     """
     Non-negative matrix factorization with equity considerations for
     discovering latent patient subgroups or disease phenotypes.
     """
-    
+
     def __init__(
         self,
         n_components: int,
@@ -1192,7 +1189,7 @@ class EquityAwareMatrixFactorization:
     ):
         """
         Initialize matrix factorization model.
-        
+
         Args:
             n_components: Number of latent factors
             max_iterations: Maximum iterations for optimization
@@ -1201,15 +1198,15 @@ class EquityAwareMatrixFactorization:
         self.n_components = n_components
         self.max_iterations = max_iterations
         self.regularization = regularization
-        
+
         self.W_: Optional[np.ndarray] = None  # Patient factors
         self.H_: Optional[np.ndarray] = None  # Feature factors
-        
+
         logger.info(
             f"Initialized matrix factorization with {n_components} components, "
             f"regularization={regularization}"
         )
-    
+
     def fit(
         self,
         X: np.ndarray,
@@ -1217,73 +1214,73 @@ class EquityAwareMatrixFactorization:
     ) -> 'EquityAwareMatrixFactorization':
         """
         Fit non-negative matrix factorization with multiplicative updates.
-        
+
         Factorizes X ≈ WH where W is (n_samples, n_components) and
         H is (n_components, n_features).
-        
+
         Args:
             X: (n_samples, n_features) non-negative data matrix
             demographic_labels: Optional group labels for equity monitoring
-            
+
         Returns:
             Self for method chaining
         """
         if np.any(X < 0):
             raise ValueError("Non-negative matrix factorization requires non-negative data")
-        
+
         n_samples, n_features = X.shape
-        
+
         # Initialize factors with small random values
         np.random.seed(42)
         self.W_ = np.random.rand(n_samples, self.n_components) * 0.01
         self.H_ = np.random.rand(self.n_components, n_features) * 0.01
-        
+
         # Multiplicative update algorithm
         for iteration in range(self.max_iterations):
             # Update H
             numerator = self.W_.T @ X
             denominator = self.W_.T @ (self.W_ @ self.H_) + self.regularization
             self.H_ = self.H_ * (numerator / (denominator + 1e-10))
-            
+
             # Update W
             numerator = X @ self.H_.T
             denominator = (self.W_ @ self.H_) @ self.H_.T + self.regularization
             self.W_ = self.W_ * (numerator / (denominator + 1e-10))
-            
+
             # Compute reconstruction error periodically
             if iteration % 20 == 0:
                 reconstruction_error = np.linalg.norm(X - self.W_ @ self.H_, 'fro')
                 logger.debug(f"Iteration {iteration}, reconstruction error: {reconstruction_error:.4f}")
-        
+
         # Analyze whether factors are balanced across demographic groups
         if demographic_labels is not None:
             self._analyze_factor_distribution(demographic_labels)
-        
+
         return self
-    
+
     def transform(self, X: np.ndarray) -> np.ndarray:
         """
         Project new data into latent factor space.
-        
+
         Args:
             X: (n_samples, n_features) data matrix
-            
+
         Returns:
             (n_samples, n_components) factor representation
         """
         if self.H_ is None:
             raise ValueError("Must call fit() first")
-        
+
         # Solve for W given X and H using multiplicative updates
         W = np.random.rand(X.shape[0], self.n_components) * 0.01
-        
+
         for _ in range(50):  # Fewer iterations for transform
             numerator = X @ self.H_.T
             denominator = (W @ self.H_) @ self.H_.T + self.regularization
             W = W * (numerator / (denominator + 1e-10))
-        
+
         return W
-    
+
     def _analyze_factor_distribution(
         self,
         demographic_labels: np.ndarray
@@ -1294,16 +1291,16 @@ class EquityAwareMatrixFactorization:
         specific populations.
         """
         unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-        
+
         for component in range(self.n_components):
             factor_loadings = self.W_[:, component]
-            
+
             # Compute mean loading for each group
             group_means = {}
             for group in unique_groups:
                 group_mask = demographic_labels == group
                 group_means[str(group)] = np.mean(factor_loadings[group_mask])
-            
+
             # Check for concentration in specific groups
             means = list(group_means.values())
             if len(means) > 1:
@@ -1336,18 +1333,17 @@ Let me implement probability distribution modeling with explicit equity consider
 from scipy import stats
 from typing import Callable
 
-
 class EquityAwareProbabilityModeling:
     """
     Probability distribution fitting and analysis with explicit attention to
     whether distributions differ systematically across patient populations.
     """
-    
+
     def __init__(self):
         """Initialize probability modeling framework."""
         self.fitted_distributions_: Dict[str, Dict[str, any]] = {}
         logger.info("Initialized equity-aware probability modeling")
-    
+
     def fit_distribution(
         self,
         data: np.ndarray,
@@ -1357,22 +1353,22 @@ class EquityAwareProbabilityModeling:
     ) -> Dict[str, any]:
         """
         Fit probability distribution to data with optional group-specific fitting.
-        
+
         Args:
             data: 1D array of observed values
             distribution_type: Type of distribution ('normal', 'lognormal', 'gamma', 'beta')
             demographic_labels: Optional group labels
             group_specific: Whether to fit separate distributions for each group
-            
+
         Returns:
             Dictionary with fitted parameters and diagnostic information
         """
         # Remove missing values
         data_clean = data[~np.isnan(data)]
-        
+
         if len(data_clean) == 0:
             raise ValueError("No non-missing data to fit distribution")
-        
+
         results = {
             'distribution_type': distribution_type,
             'group_specific': group_specific,
@@ -1380,13 +1376,13 @@ class EquityAwareProbabilityModeling:
             'group_fits': {},
             'distribution_homogeneity_test': None
         }
-        
+
         # Fit global distribution
         if distribution_type == 'normal':
             mu, sigma = stats.norm.fit(data_clean)
             results['global_fit'] = {'mean': mu, 'std': sigma}
             fitted_dist = stats.norm(mu, sigma)
-            
+
         elif distribution_type == 'lognormal':
             # Data must be positive for lognormal
             if np.any(data_clean <= 0):
@@ -1394,47 +1390,47 @@ class EquityAwareProbabilityModeling:
             shape, loc, scale = stats.lognorm.fit(data_clean)
             results['global_fit'] = {'shape': shape, 'loc': loc, 'scale': scale}
             fitted_dist = stats.lognorm(shape, loc, scale)
-            
+
         elif distribution_type == 'gamma':
             if np.any(data_clean < 0):
                 raise ValueError("Gamma distribution requires non-negative data")
             alpha, loc, beta = stats.gamma.fit(data_clean)
             results['global_fit'] = {'alpha': alpha, 'loc': loc, 'beta': beta}
             fitted_dist = stats.gamma(alpha, loc, beta)
-            
+
         else:
             raise ValueError(f"Unknown distribution type: {distribution_type}")
-        
+
         # Assess goodness of fit
         results['global_fit']['goodness_of_fit'] = self._assess_goodness_of_fit(
             data_clean, fitted_dist
         )
-        
+
         # Fit group-specific distributions if requested
         if group_specific and demographic_labels is not None:
             unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-            
+
             for group in unique_groups:
                 group_mask = demographic_labels == group
                 group_data = data[group_mask]
                 group_data_clean = group_data[~np.isnan(group_data)]
-                
+
                 if len(group_data_clean) > 10:  # Need sufficient data
                     if distribution_type == 'normal':
                         mu_g, sigma_g = stats.norm.fit(group_data_clean)
                         results['group_fits'][str(group)] = {
                             'mean': mu_g, 'std': sigma_g
                         }
-                        
+
                     # Similar for other distribution types...
-            
+
             # Test for distribution homogeneity across groups
             results['distribution_homogeneity_test'] = self._test_distribution_homogeneity(
                 data, demographic_labels, distribution_type
             )
-        
+
         return results
-    
+
     def _assess_goodness_of_fit(
         self,
         data: np.ndarray,
@@ -1442,33 +1438,33 @@ class EquityAwareProbabilityModeling:
     ) -> Dict[str, float]:
         """
         Assess how well the fitted distribution matches the observed data.
-        
+
         Uses Kolmogorov-Smirnov test and Anderson-Darling test.
         """
         # Kolmogorov-Smirnov test
         ks_statistic, ks_pvalue = stats.kstest(data, fitted_distribution.cdf)
-        
+
         # Q-Q plot correlation
         theoretical_quantiles = fitted_distribution.ppf(
             np.linspace(0.01, 0.99, len(data))
         )
         sample_quantiles = np.sort(data)
         qq_correlation = np.corrcoef(theoretical_quantiles, sample_quantiles)[0, 1]
-        
+
         goodness_of_fit = {
             'ks_statistic': ks_statistic,
             'ks_pvalue': ks_pvalue,
             'qq_correlation': qq_correlation
         }
-        
+
         if ks_pvalue < 0.05:
             logger.warning(
                 f"Poor goodness of fit (KS p-value = {ks_pvalue:.4f}). "
                 f"The assumed distribution may not be appropriate for this data."
             )
-        
+
         return goodness_of_fit
-    
+
     def _test_distribution_homogeneity(
         self,
         data: np.ndarray,
@@ -1477,31 +1473,31 @@ class EquityAwareProbabilityModeling:
     ) -> Dict[str, any]:
         """
         Test whether the distribution is homogeneous across demographic groups.
-        
+
         Uses Kolmogorov-Smirnov test for comparing distributions.
         """
         unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-        
+
         if len(unique_groups) < 2:
             return {'test': 'insufficient_groups'}
-        
+
         # Pairwise KS tests
         pairwise_tests = []
-        
+
         for i, group1 in enumerate(unique_groups):
             for group2 in unique_groups[i+1:]:
                 mask1 = demographic_labels == group1
                 mask2 = demographic_labels == group2
-                
+
                 data1 = data[mask1]
                 data2 = data[mask2]
-                
+
                 data1_clean = data1[~np.isnan(data1)]
                 data2_clean = data2[~np.isnan(data2)]
-                
+
                 if len(data1_clean) > 5 and len(data2_clean) > 5:
                     ks_stat, ks_pval = stats.ks_2samp(data1_clean, data2_clean)
-                    
+
                     pairwise_tests.append({
                         'group1': str(group1),
                         'group2': str(group2),
@@ -1509,22 +1505,22 @@ class EquityAwareProbabilityModeling:
                         'ks_pvalue': ks_pval,
                         'distributions_differ': ks_pval < 0.05
                     })
-        
+
         # Check if any pairs have significantly different distributions
         n_different = sum(1 for test in pairwise_tests if test['distributions_differ'])
-        
+
         if n_different > 0:
             logger.warning(
                 f"Distribution differs significantly across {n_different} group pairs. "
                 f"Using a single distribution for all groups may introduce bias."
             )
-        
+
         return {
             'test': 'ks_2sample',
             'pairwise_comparisons': pairwise_tests,
             'n_pairs_differ': n_different
         }
-    
+
     def compute_conditional_probability(
         self,
         outcome: np.ndarray,
@@ -1536,61 +1532,61 @@ class EquityAwareProbabilityModeling:
         """
         Compute P(outcome=outcome_value | condition=condition_value) with
         optional stratification by demographic groups.
-        
+
         This is useful for computing diagnostic test sensitivities, disease
         prevalence given risk factors, etc.
-        
+
         Args:
             outcome: Array of outcome values
             condition: Array of conditioning variable values
             outcome_value: Specific outcome value of interest
             condition_value: Specific condition value
             demographic_labels: Optional group labels for stratified analysis
-            
+
         Returns:
             Dictionary with conditional probabilities overall and by group
         """
         # Overall conditional probability
         condition_mask = condition == condition_value
         n_condition = np.sum(condition_mask)
-        
+
         if n_condition == 0:
             raise ValueError(f"No observations with condition={condition_value}")
-        
+
         outcome_and_condition_mask = (outcome == outcome_value) & condition_mask
         n_outcome_and_condition = np.sum(outcome_and_condition_mask)
-        
+
         prob_overall = n_outcome_and_condition / n_condition
-        
+
         results = {
             'overall_probability': prob_overall,
             'n_condition': int(n_condition),
             'n_outcome_and_condition': int(n_outcome_and_condition)
         }
-        
+
         # Stratified probabilities
         if demographic_labels is not None:
             unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
             group_probabilities = {}
-            
+
             for group in unique_groups:
                 group_mask = demographic_labels == group
                 group_condition_mask = condition_mask & group_mask
                 n_group_condition = np.sum(group_condition_mask)
-                
+
                 if n_group_condition > 0:
                     group_outcome_mask = outcome_and_condition_mask & group_mask
                     n_group_outcome = np.sum(group_outcome_mask)
                     group_prob = n_group_outcome / n_group_condition
-                    
+
                     group_probabilities[str(group)] = {
                         'probability': float(group_prob),
                         'n_condition': int(n_group_condition),
                         'n_outcome_and_condition': int(n_group_outcome)
                     }
-            
+
             results['group_probabilities'] = group_probabilities
-            
+
             # Test for homogeneity
             probs = [v['probability'] for v in group_probabilities.values()]
             if len(probs) > 1:
@@ -1600,7 +1596,7 @@ class EquityAwareProbabilityModeling:
                         f"Conditional probability varies substantially across groups "
                         f"(range = {prob_range:.3f}). Pooled estimates may be misleading."
                     )
-        
+
         return results
 ```
 
@@ -1624,11 +1620,11 @@ class EquityAwareBayesianReasoning:
     Bayesian inference with explicit attention to bias in prior probabilities
     and sensitivity analysis for how results change with different priors.
     """
-    
+
     def __init__(self):
         """Initialize Bayesian reasoning framework."""
         logger.info("Initialized equity-aware Bayesian reasoning")
-    
+
     def diagnostic_test_interpretation(
         self,
         test_result: bool,
@@ -1641,7 +1637,7 @@ class EquityAwareBayesianReasoning:
         """
         Interpret diagnostic test result using Bayes' theorem with sensitivity
         analysis for prior probability uncertainty.
-        
+
         Args:
             test_result: Whether test was positive (True) or negative (False)
             sensitivity: P(test+ | disease)
@@ -1649,16 +1645,16 @@ class EquityAwareBayesianReasoning:
             prior_probability: P(disease) before test
             demographic_group: Optional group label for context
             prior_confidence: How confident we are in prior ('high', 'medium', 'low')
-            
+
         Returns:
             Dictionary with posterior probability and sensitivity analysis
         """
         if not (0 <= sensitivity <= 1 and 0 <= specificity <= 1):
             raise ValueError("Sensitivity and specificity must be between 0 and 1")
-        
+
         if not (0 <= prior_probability <= 1):
             raise ValueError("Prior probability must be between 0 and 1")
-        
+
         # Compute posterior using Bayes' theorem
         if test_result:  # Positive test
             # P(disease | test+) = P(test+ | disease) * P(disease) / P(test+)
@@ -1669,7 +1665,7 @@ class EquityAwareBayesianReasoning:
             # P(disease | test-) = P(test- | disease) * P(disease) / P(test-)
             p_test_neg = (1 - sensitivity) * prior_probability + specificity * (1 - prior_probability)
             posterior = ((1 - sensitivity) * prior_probability) / p_test_neg if p_test_neg > 0 else 0
-        
+
         results = {
             'test_result': 'positive' if test_result else 'negative',
             'prior_probability': prior_probability,
@@ -1677,7 +1673,7 @@ class EquityAwareBayesianReasoning:
             'probability_change': posterior - prior_probability,
             'demographic_group': demographic_group
         }
-        
+
         # Sensitivity analysis for prior uncertainty
         if prior_confidence == 'low':
             prior_range = (max(0, prior_probability - 0.2), min(1, prior_probability + 0.2))
@@ -1685,7 +1681,7 @@ class EquityAwareBayesianReasoning:
             prior_range = (max(0, prior_probability - 0.1), min(1, prior_probability + 0.1))
         else:  # high confidence
             prior_range = (max(0, prior_probability - 0.05), min(1, prior_probability + 0.05))
-        
+
         # Compute posterior range
         posterior_range = []
         for prior in prior_range:
@@ -1696,13 +1692,13 @@ class EquityAwareBayesianReasoning:
                 p_test_neg = (1 - sensitivity) * prior + specificity * (1 - prior)
                 post = ((1 - sensitivity) * prior) / p_test_neg if p_test_neg > 0 else 0
             posterior_range.append(post)
-        
+
         results['sensitivity_analysis'] = {
             'prior_confidence': prior_confidence,
             'prior_range': prior_range,
             'posterior_range': tuple(posterior_range)
         }
-        
+
         # Interpretation guidance
         uncertainty_width = posterior_range[1] - posterior_range[0]
         if uncertainty_width > 0.2:
@@ -1717,9 +1713,9 @@ class EquityAwareBayesianReasoning:
                 f"{'an increase' if posterior > prior_probability else 'a decrease'} "
                 f"from prior of {prior_probability:.3f}."
             )
-        
+
         return results
-    
+
     def adjust_prior_for_access_bias(
         self,
         observed_prevalence: float,
@@ -1727,32 +1723,32 @@ class EquityAwareBayesianReasoning:
     ) -> Dict[str, float]:
         """
         Adjust disease prevalence estimates for known access-to-care bias.
-        
+
         If certain populations have limited healthcare access, observed prevalence
         may underestimate true disease burden. This function applies an adjustment
         based on estimated diagnosis rates.
-        
+
         Args:
             observed_prevalence: Disease prevalence in diagnosed population
             access_adjustment_factor: Estimated fraction of cases that are diagnosed
                                      (1.0 = all cases diagnosed, 0.5 = half diagnosed)
-            
+
         Returns:
             Dictionary with adjusted prevalence and uncertainty bounds
         """
         if not (0 < access_adjustment_factor <= 1.0):
             raise ValueError("Access adjustment factor must be between 0 and 1")
-        
+
         # Adjusted prevalence assuming observed cases are a fraction of true cases
         adjusted_prevalence = observed_prevalence / access_adjustment_factor
-        
+
         # Cap at 1.0 (can't exceed 100% prevalence)
         adjusted_prevalence = min(adjusted_prevalence, 1.0)
-        
+
         # Uncertainty bounds - conservative estimates
         lower_bound = observed_prevalence  # At minimum, prevalence is observed rate
         upper_bound = min(observed_prevalence / (access_adjustment_factor * 0.7), 1.0)
-        
+
         results = {
             'observed_prevalence': observed_prevalence,
             'adjusted_prevalence': adjusted_prevalence,
@@ -1765,9 +1761,9 @@ class EquityAwareBayesianReasoning:
                 f"between {lower_bound:.3f} and {upper_bound:.3f}."
             )
         }
-        
+
         return results
-    
+
     def compare_bayesian_vs_frequentist(
         self,
         observed_successes: int,
@@ -1779,41 +1775,41 @@ class EquityAwareBayesianReasoning:
         """
         Compare Bayesian posterior with frequentist confidence interval for
         probability estimation, showing how prior information affects inference.
-        
+
         Uses Beta-Binomial conjugate prior for Bayesian analysis.
-        
+
         Args:
             observed_successes: Number of successful outcomes observed
             total_trials: Total number of trials
             prior_alpha: Prior Beta distribution alpha parameter (successes + 1)
             prior_beta: Prior Beta distribution beta parameter (failures + 1)
             demographic_group: Optional group label
-            
+
         Returns:
             Dictionary comparing Bayesian and frequentist estimates
         """
         if observed_successes > total_trials or observed_successes < 0:
             raise ValueError("Observed successes must be between 0 and total_trials")
-        
+
         # Frequentist estimate: maximum likelihood (observed proportion)
         freq_estimate = observed_successes / total_trials if total_trials > 0 else 0
-        
+
         # Frequentist confidence interval (Wilson score interval)
         from statsmodels.stats.proportion import proportion_confint
         freq_ci = proportion_confint(observed_successes, total_trials, alpha=0.05, method='wilson')
-        
+
         # Bayesian estimate: posterior mean of Beta distribution
         posterior_alpha = prior_alpha + observed_successes
         posterior_beta = prior_beta + (total_trials - observed_successes)
-        
+
         bayes_estimate = posterior_alpha / (posterior_alpha + posterior_beta)
-        
+
         # Bayesian credible interval (equal-tailed 95% interval)
         bayes_ci = (
             stats.beta.ppf(0.025, posterior_alpha, posterior_beta),
             stats.beta.ppf(0.975, posterior_alpha, posterior_beta)
         )
-        
+
         results = {
             'observed_successes': observed_successes,
             'total_trials': total_trials,
@@ -1833,7 +1829,7 @@ class EquityAwareBayesianReasoning:
             'difference': bayes_estimate - freq_estimate,
             'demographic_group': demographic_group
         }
-        
+
         # Interpretation of prior influence
         if abs(results['difference']) > 0.05:
             results['prior_influence'] = (
@@ -1846,7 +1842,7 @@ class EquityAwareBayesianReasoning:
                 f"Bayesian and frequentist estimates are similar, indicating that observed "
                 f"data dominates prior beliefs with this sample size."
             )
-        
+
         return results
 ```
 
@@ -1866,17 +1862,16 @@ Let me implement tools for testing and working with conditional independence ass
 from scipy.stats import chi2_contingency, pearsonr
 from itertools import combinations
 
-
 class ConditionalIndependenceAnalysis:
     """
     Tools for testing conditional independence assumptions and detecting
     violations that may indicate confounding or model misspecification.
     """
-    
+
     def __init__(self):
         """Initialize conditional independence analysis framework."""
         logger.info("Initialized conditional independence analysis")
-    
+
     def test_conditional_independence(
         self,
         X: np.ndarray,
@@ -1886,28 +1881,28 @@ class ConditionalIndependenceAnalysis:
     ) -> Dict[str, any]:
         """
         Test whether X and Y are conditionally independent given Z.
-        
+
         Multiple test types are provided because appropriate tests depend on
         variable types (continuous, categorical) and distributional assumptions.
-        
+
         Args:
             X: First variable (n_samples,)
             Y: Second variable (n_samples,)
             Z: Conditioning variable(s) (n_samples,) or (n_samples, n_features)
             test_type: Type of test ('partial_correlation', 'cmi', 'stratified')
-            
+
         Returns:
             Dictionary with test results and interpretation
         """
         if len(X) != len(Y) or len(X) != len(Z.shape[0] if Z.ndim > 1 else len(Z)):
             raise ValueError("X, Y, and Z must have same number of samples")
-        
+
         results = {'test_type': test_type}
-        
+
         if test_type == 'partial_correlation':
             # Compute partial correlation between X and Y given Z
             partial_corr, pvalue = self._partial_correlation(X, Y, Z)
-            
+
             results['partial_correlation'] = partial_corr
             results['pvalue'] = pvalue
             results['conditionally_independent'] = pvalue > 0.05
@@ -1915,16 +1910,16 @@ class ConditionalIndependenceAnalysis:
                 f"Partial correlation is {partial_corr:.4f} (p={pvalue:.4f}). "
                 f"{'Evidence of conditional independence.' if pvalue > 0.05 else 'Conditional dependence detected.'}"
             )
-            
+
         elif test_type == 'stratified':
             # Stratify by Z and test independence within strata
             results.update(self._stratified_independence_test(X, Y, Z))
-            
+
         else:
             raise ValueError(f"Unknown test type: {test_type}")
-        
+
         return results
-    
+
     def _partial_correlation(
         self,
         X: np.ndarray,
@@ -1933,31 +1928,31 @@ class ConditionalIndependenceAnalysis:
     ) -> Tuple[float, float]:
         """
         Compute partial correlation between X and Y controlling for Z.
-        
+
         This is done by regressing X on Z and Y on Z, then computing the
         correlation between the residuals.
         """
         from sklearn.linear_model import LinearRegression
-        
+
         # Ensure Z is 2D
         if Z.ndim == 1:
             Z = Z.reshape(-1, 1)
-        
+
         # Regress X on Z
         model_x = LinearRegression()
         model_x.fit(Z, X)
         residuals_x = X - model_x.predict(Z)
-        
+
         # Regress Y on Z
         model_y = LinearRegression()
         model_y.fit(Z, Y)
         residuals_y = Y - model_y.predict(Z)
-        
+
         # Correlation of residuals is partial correlation
         partial_corr, pvalue = pearsonr(residuals_x, residuals_y)
-        
+
         return partial_corr, pvalue
-    
+
     def _stratified_independence_test(
         self,
         X: np.ndarray,
@@ -1966,25 +1961,25 @@ class ConditionalIndependenceAnalysis:
     ) -> Dict[str, any]:
         """
         Test independence of X and Y within each stratum defined by Z.
-        
+
         Appropriate when Z is categorical.
         """
         if Z.ndim > 1:
             raise ValueError("Stratified test requires Z to be 1-dimensional")
-        
+
         unique_strata = np.unique(Z[~np.isnan(Z)])
-        
+
         stratum_results = []
-        
+
         for stratum in unique_strata:
             mask = Z == stratum
             X_stratum = X[mask]
             Y_stratum = Y[mask]
-            
+
             if len(X_stratum) > 5:  # Need minimum sample size
                 # Compute correlation within stratum
                 corr, pval = pearsonr(X_stratum, Y_stratum)
-                
+
                 stratum_results.append({
                     'stratum': stratum,
                     'n': len(X_stratum),
@@ -1992,10 +1987,10 @@ class ConditionalIndependenceAnalysis:
                     'pvalue': pval,
                     'independent': pval > 0.05
                 })
-        
+
         # Overall assessment
         n_independent = sum(1 for r in stratum_results if r['independent'])
-        
+
         return {
             'stratum_results': stratum_results,
             'n_strata': len(stratum_results),
@@ -2006,7 +2001,7 @@ class ConditionalIndependenceAnalysis:
                 f"given Z. Independence holds in {n_independent}/{len(stratum_results)} strata."
             )
         }
-    
+
     def detect_confounding_structure(
         self,
         data: pd.DataFrame,
@@ -2017,93 +2012,93 @@ class ConditionalIndependenceAnalysis:
     ) -> Dict[str, any]:
         """
         Detect potential confounding structure in predictive relationships.
-        
+
         Tests whether relationships between predictors and outcome change
         substantially when controlling for potential confounders, which
         suggests confounding.
-        
+
         Args:
             data: DataFrame with all variables
             outcome_var: Name of outcome variable
             predictor_vars: Names of predictor variables
             potential_confounders: Names of potential confounding variables
             demographic_var: Optional demographic variable for stratified analysis
-            
+
         Returns:
             Dictionary with confounding analysis results
         """
         from sklearn.linear_model import LinearRegression
-        
+
         results = {
             'outcome': outcome_var,
             'confounding_detected': {},
             'demographic_heterogeneity': {}
         }
-        
+
         Y = data[outcome_var].values
-        
+
         for predictor in predictor_vars:
             X = data[[predictor]].values
-            
+
             # Marginal association (without controlling for confounders)
             model_marginal = LinearRegression()
             model_marginal.fit(X, Y)
             coef_marginal = model_marginal.coef_[0]
-            
+
             # Conditional association (controlling for confounders)
             X_with_confounders = data[[predictor] + potential_confounders].values
             model_conditional = LinearRegression()
             model_conditional.fit(X_with_confounders, Y)
             coef_conditional = model_conditional.coef_[0]
-            
+
             # Compute percent change in coefficient
             pct_change = 100 * abs(coef_conditional - coef_marginal) / abs(coef_marginal) if coef_marginal != 0 else float('inf')
-            
+
             confounding_detected = pct_change > 10  # >10% change suggests confounding
-            
+
             results['confounding_detected'][predictor] = {
                 'marginal_coefficient': coef_marginal,
                 'conditional_coefficient': coef_conditional,
                 'percent_change': pct_change,
                 'confounding_present': confounding_detected
             }
-            
+
             if confounding_detected:
                 logger.warning(
                     f"Confounding detected for {predictor}. Coefficient changed by "
                     f"{pct_change:.1f}% when controlling for {', '.join(potential_confounders)}."
                 )
-            
+
             # Check if confounding structure differs by demographic group
             if demographic_var and demographic_var in data.columns:
                 group_confounding = {}
-                
+
                 for group in data[demographic_var].unique():
                     if pd.notna(group):
                         group_data = data[data[demographic_var] == group]
-                        
+
                         if len(group_data) > 20:  # Need sufficient sample size
                             Y_group = group_data[outcome_var].values
                             X_group = group_data[[predictor]].values
                             X_conf_group = group_data[[predictor] + potential_confounders].values
-                            
+
                             model_marg_group = LinearRegression()
                             model_marg_group.fit(X_group, Y_group)
                             coef_marg_group = model_marg_group.coef_[0]
-                            
+
                             model_cond_group = LinearRegression()
                             model_cond_group.fit(X_conf_group, Y_group)
                             coef_cond_group = model_cond_group.coef_[0]
-                            
+
                             pct_change_group = 100 * abs(coef_cond_group - coef_marg_group) / abs(coef_marg_group) if coef_marg_group != 0 else 0
-                            
+
                             group_confounding[str(group)] = {
                                 'percent_change': pct_change_group,
                                 'confounding_present': pct_change_group > 10
                             }
-                
+
                 results['demographic_heterogeneity'][predictor] = group_confounding
-                
+
                 # Check for heterogeneity
                 changes = [v['percent_change'] for v in group_confounding.values()]
                 if len(changes) > 1 and max(changes) - min(changes) > 20:
@@ -2111,7 +2106,7 @@ class ConditionalIndependenceAnalysis:
                         f"Confounding structure for {predictor} differs substantially "
                         f"across demographic groups. Single model may be inappropriate."
                     )
-        
+
         return results
 ```
 
@@ -2137,11 +2132,11 @@ class EquityAwareInference:
     Statistical inference methods with explicit accounting for selection bias
     and differential sampling across populations.
     """
-    
+
     def __init__(self):
         """Initialize inference framework."""
         logger.info("Initialized equity-aware statistical inference")
-    
+
     def estimate_prevalence_with_selection(
         self,
         outcome: np.ndarray,
@@ -2151,67 +2146,67 @@ class EquityAwareInference:
     ) -> Dict[str, any]:
         """
         Estimate disease prevalence accounting for selection bias.
-        
+
         Uses inverse probability weighting to adjust for differential selection
         probabilities across populations.
-        
+
         Args:
             outcome: Binary outcome indicating disease presence (1) or absence (0)
             selected: Binary indicator of whether individual was selected into sample
             demographic_labels: Optional group labels
             inverse_probability_weights: Optional pre-computed weights
                 If None, assumes equal selection probabilities within groups
-            
+
         Returns:
             Dictionary with naive and adjusted prevalence estimates
         """
         # Naive estimate using only selected sample
         selected_outcome = outcome[selected == 1]
         naive_prevalence = np.mean(selected_outcome)
-        
+
         results = {
             'naive_prevalence': naive_prevalence,
             'n_selected': int(np.sum(selected)),
             'n_total': len(outcome)
         }
-        
+
         # Adjusted estimate using inverse probability weighting
         if inverse_probability_weights is not None:
             # Weight each observation by inverse of selection probability
             weighted_sum = np.sum(outcome[selected == 1] * inverse_probability_weights[selected == 1])
             weight_sum = np.sum(inverse_probability_weights[selected == 1])
             adjusted_prevalence = weighted_sum / weight_sum
-            
+
             results['adjusted_prevalence'] = adjusted_prevalence
             results['selection_bias'] = adjusted_prevalence - naive_prevalence
-        
+
         # Stratified analysis
         if demographic_labels is not None:
             unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-            
+
             group_estimates = {}
-            
+
             for group in unique_groups:
                 group_mask = demographic_labels == group
                 group_selected = selected[group_mask]
                 group_outcome = outcome[group_mask]
-                
+
                 # Selection rate for this group
                 selection_rate = np.mean(group_selected)
-                
+
                 # Naive prevalence in selected sample
                 if np.sum(group_selected) > 0:
                     group_selected_outcome = group_outcome[group_selected == 1]
                     group_naive_prev = np.mean(group_selected_outcome)
-                    
+
                     group_estimates[str(group)] = {
                         'selection_rate': selection_rate,
                         'naive_prevalence': group_naive_prev,
                         'n_selected': int(np.sum(group_selected))
                     }
-            
+
             results['group_estimates'] = group_estimates
-            
+
             # Check for differential selection
             selection_rates = [v['selection_rate'] for v in group_estimates.values()]
             if len(selection_rates) > 1 and max(selection_rates) / min(selection_rates) > 2:
@@ -2220,9 +2215,9 @@ class EquityAwareInference:
                     f"Selection rates vary from {min(selection_rates):.3f} to {max(selection_rates):.3f}. "
                     f"Naive estimates may be severely biased."
                 )
-        
+
         return results
-    
+
     def confidence_interval_stratified(
         self,
         data: np.ndarray,
@@ -2232,22 +2227,22 @@ class EquityAwareInference:
         """
         Compute confidence intervals for population mean with stratification
         by demographic groups.
-        
+
         Provides both overall and group-specific estimates with appropriate
         standard errors that account for potential heterogeneity.
-        
+
         Args:
             data: Continuous outcome variable
             demographic_labels: Group labels for stratification
             confidence_level: Confidence level (default 0.95 for 95% CI)
-            
+
         Returns:
             Dictionary with confidence intervals overall and by group
         """
         from scipy import stats
-        
+
         alpha = 1 - confidence_level
-        
+
         # Overall estimate
         data_clean = data[~np.isnan(data)]
         n = len(data_clean)
@@ -2255,7 +2250,7 @@ class EquityAwareInference:
         se = np.std(data_clean, ddof=1) / np.sqrt(n)
         t_crit = stats.t.ppf(1 - alpha/2, df=n-1)
         ci = (mean - t_crit * se, mean + t_crit * se)
-        
+
         results = {
             'overall': {
                 'mean': mean,
@@ -2265,53 +2260,53 @@ class EquityAwareInference:
             },
             'groups': {}
         }
-        
+
         # Group-specific estimates
         unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-        
+
         for group in unique_groups:
             group_mask = demographic_labels == group
             group_data = data[group_mask]
             group_data_clean = group_data[~np.isnan(group_data)]
-            
+
             if len(group_data_clean) > 1:
                 n_group = len(group_data_clean)
                 mean_group = np.mean(group_data_clean)
                 se_group = np.std(group_data_clean, ddof=1) / np.sqrt(n_group)
                 t_crit_group = stats.t.ppf(1 - alpha/2, df=n_group-1)
-                ci_group = (mean_group - t_crit_group * se_group, 
+                ci_group = (mean_group - t_crit_group * se_group,
                            mean_group + t_crit_group * se_group)
-                
+
                 results['groups'][str(group)] = {
                     'mean': mean_group,
                     'standard_error': se_group,
                     'confidence_interval': ci_group,
                     'n': n_group
                 }
-        
+
         # Test for heterogeneity across groups
         group_means = [v['mean'] for v in results['groups'].values()]
         if len(group_means) > 1:
             mean_range = max(group_means) - min(group_means)
             overall_se = results['overall']['standard_error']
-            
+
             # Simple heterogeneity indicator
             heterogeneity_detected = mean_range > 2 * overall_se
-            
+
             results['heterogeneity_analysis'] = {
                 'mean_range': mean_range,
                 'range_in_se_units': mean_range / overall_se if overall_se > 0 else float('inf'),
                 'heterogeneity_detected': heterogeneity_detected
             }
-            
+
             if heterogeneity_detected:
                 logger.warning(
                     f"Substantial heterogeneity detected across groups. "
                     f"Overall confidence interval may not represent all populations well."
                 )
-        
+
         return results
-    
+
     def hypothesis_test_with_multiple_comparisons(
         self,
         groups: Dict[str, np.ndarray],
@@ -2321,25 +2316,25 @@ class EquityAwareInference:
         """
         Conduct hypothesis tests across multiple demographic groups with
         appropriate correction for multiple comparisons.
-        
+
         Args:
             groups: Dictionary mapping group names to data arrays
             test_type: Type of test ('anova', 'kruskal')
             adjustment_method: Method for multiple comparison adjustment
                 ('bonferroni', 'holm', 'fdr_bh')
-            
+
         Returns:
             Dictionary with test results and adjusted p-values
         """
         from scipy.stats import f_oneway, kruskal
         from statsmodels.stats.multitest import multipletests
-        
+
         if len(groups) < 2:
             raise ValueError("Need at least 2 groups for hypothesis testing")
-        
+
         # Overall test
         group_data = [data[~np.isnan(data)] for data in groups.values()]
-        
+
         if test_type == 'anova':
             # One-way ANOVA
             statistic, pvalue = f_oneway(*group_data)
@@ -2350,7 +2345,7 @@ class EquityAwareInference:
             test_name = "Kruskal-Wallis test"
         else:
             raise ValueError(f"Unknown test type: {test_type}")
-        
+
         results = {
             'overall_test': {
                 'test_name': test_name,
@@ -2360,29 +2355,29 @@ class EquityAwareInference:
             },
             'pairwise_comparisons': []
         }
-        
+
         # Pairwise comparisons if overall test is significant
         if pvalue < 0.05:
             group_names = list(groups.keys())
             pairwise_pvalues = []
-            
+
             for i, name1 in enumerate(group_names):
                 for name2 in group_names[i+1:]:
                     data1 = groups[name1][~np.isnan(groups[name1])]
                     data2 = groups[name2][~np.isnan(groups[name2])]
-                    
+
                     # T-test for pairwise comparison
                     stat, pval = stats.ttest_ind(data1, data2)
-                    
+
                     results['pairwise_comparisons'].append({
                         'group1': name1,
                         'group2': name2,
                         'statistic': stat,
                         'pvalue_unadjusted': pval
                     })
-                    
+
                     pairwise_pvalues.append(pval)
-            
+
             # Adjust for multiple comparisons
             if pairwise_pvalues:
                 reject, pvals_adjusted, _, _ = multipletests(
@@ -2390,13 +2385,13 @@ class EquityAwareInference:
                     alpha=0.05,
                     method=adjustment_method
                 )
-                
+
                 for i, comparison in enumerate(results['pairwise_comparisons']):
                     comparison['pvalue_adjusted'] = pvals_adjusted[i]
                     comparison['reject_null_adjusted'] = reject[i]
-                
+
                 results['adjustment_method'] = adjustment_method
-        
+
         return results
 ```
 
@@ -2416,11 +2411,11 @@ class EquityAwareBootstrap:
     Bootstrap resampling methods that maintain appropriate representation
     of demographic groups and respect data structure.
     """
-    
+
     def __init__(self, n_bootstrap: int = 1000, random_seed: int = 42):
         """
         Initialize bootstrap framework.
-        
+
         Args:
             n_bootstrap: Number of bootstrap samples to generate
             random_seed: Random seed for reproducibility
@@ -2428,9 +2423,9 @@ class EquityAwareBootstrap:
         self.n_bootstrap = n_bootstrap
         self.random_seed = random_seed
         np.random.seed(random_seed)
-        
+
         logger.info(f"Initialized bootstrap with {n_bootstrap} samples")
-    
+
     def stratified_bootstrap(
         self,
         data: np.ndarray,
@@ -2439,36 +2434,36 @@ class EquityAwareBootstrap:
     ) -> Dict[str, any]:
         """
         Perform stratified bootstrap that maintains demographic group proportions.
-        
+
         Standard bootstrap can under-represent minority groups by chance.
         Stratified bootstrap samples within each group to maintain representation.
-        
+
         Args:
             data: Data array
             demographic_labels: Group labels for stratification
             statistic_func: Function that computes statistic from data array
-            
+
         Returns:
             Dictionary with bootstrap distribution and confidence intervals
         """
         unique_groups = np.unique(demographic_labels[~pd.isna(demographic_labels)])
-        
+
         # Compute observed statistic
         data_clean = data[~np.isnan(data)]
         observed_statistic = statistic_func(data_clean)
-        
+
         # Bootstrap distribution
         bootstrap_statistics = []
-        
+
         for b in range(self.n_bootstrap):
             # Stratified sampling
             bootstrap_sample = []
-            
+
             for group in unique_groups:
                 group_mask = demographic_labels == group
                 group_data = data[group_mask]
                 group_data_clean = group_data[~np.isnan(group_data)]
-                
+
                 if len(group_data_clean) > 0:
                     # Sample with replacement within group
                     group_bootstrap = np.random.choice(
@@ -2477,18 +2472,18 @@ class EquityAwareBootstrap:
                         replace=True
                     )
                     bootstrap_sample.extend(group_bootstrap)
-            
+
             # Compute statistic on bootstrap sample
             bootstrap_sample = np.array(bootstrap_sample)
             bootstrap_stat = statistic_func(bootstrap_sample)
             bootstrap_statistics.append(bootstrap_stat)
-        
+
         bootstrap_statistics = np.array(bootstrap_statistics)
-        
+
         # Confidence intervals
         ci_lower = np.percentile(bootstrap_statistics, 2.5)
         ci_upper = np.percentile(bootstrap_statistics, 97.5)
-        
+
         results = {
             'observed_statistic': observed_statistic,
             'bootstrap_mean': np.mean(bootstrap_statistics),
@@ -2496,9 +2491,9 @@ class EquityAwareBootstrap:
             'confidence_interval_95': (ci_lower, ci_upper),
             'bootstrap_distribution': bootstrap_statistics
         }
-        
+
         return results
-    
+
     def bootstrap_group_differences(
         self,
         data: np.ndarray,
@@ -2508,58 +2503,58 @@ class EquityAwareBootstrap:
     ) -> Dict[str, any]:
         """
         Bootstrap confidence interval for difference between two groups.
-        
+
         Provides inference about whether observed differences between groups
         are statistically significant.
-        
+
         Args:
             data: Data array
             demographic_labels: Group labels
             group1: Name of first group
             group2: Name of second group
-            
+
         Returns:
             Dictionary with difference estimate and confidence interval
         """
         # Extract group data
         mask1 = demographic_labels == group1
         mask2 = demographic_labels == group2
-        
+
         data1 = data[mask1]
         data2 = data[mask2]
-        
+
         data1_clean = data1[~np.isnan(data1)]
         data2_clean = data2[~np.isnan(data2)]
-        
+
         # Observed difference
         mean1 = np.mean(data1_clean)
         mean2 = np.mean(data2_clean)
         observed_difference = mean1 - mean2
-        
+
         # Bootstrap distribution of difference
         bootstrap_differences = []
-        
+
         for b in range(self.n_bootstrap):
             # Bootstrap sample from each group
             boot1 = np.random.choice(data1_clean, size=len(data1_clean), replace=True)
             boot2 = np.random.choice(data2_clean, size=len(data2_clean), replace=True)
-            
+
             boot_diff = np.mean(boot1) - np.mean(boot2)
             bootstrap_differences.append(boot_diff)
-        
+
         bootstrap_differences = np.array(bootstrap_differences)
-        
+
         # Confidence interval for difference
         ci_lower = np.percentile(bootstrap_differences, 2.5)
         ci_upper = np.percentile(bootstrap_differences, 97.5)
-        
+
         # P-value (proportion of bootstrap samples with difference crossing zero)
         if observed_difference > 0:
             pvalue = 2 * np.mean(bootstrap_differences <= 0)
         else:
             pvalue = 2 * np.mean(bootstrap_differences >= 0)
         pvalue = min(pvalue, 1.0)  # Cap at 1.0
-        
+
         results = {
             'group1': group1,
             'group2': group2,
@@ -2570,9 +2565,9 @@ class EquityAwareBootstrap:
             'pvalue': pvalue,
             'significant': ci_lower * ci_upper > 0  # CI doesn't contain zero
         }
-        
+
         return results
-    
+
     def bootstrap_correlation(
         self,
         X: np.ndarray,
@@ -2581,15 +2576,15 @@ class EquityAwareBootstrap:
     ) -> Dict[str, any]:
         """
         Bootstrap confidence interval for correlation coefficient.
-        
+
         With optional stratified analysis to detect whether correlation
         differs across demographic groups.
-        
+
         Args:
             X: First variable
             Y: Second variable
             demographic_labels: Optional group labels for stratified analysis
-            
+
         Returns:
             Dictionary with correlation estimate and confidence interval
         """
@@ -2597,53 +2592,53 @@ class EquityAwareBootstrap:
         mask = ~(np.isnan(X) | np.isnan(Y))
         X_clean = X[mask]
         Y_clean = Y[mask]
-        
+
         # Observed correlation
         observed_corr = np.corrcoef(X_clean, Y_clean)[0, 1]
-        
+
         # Bootstrap distribution
         bootstrap_corrs = []
-        
+
         for b in range(self.n_bootstrap):
             # Sample pairs jointly to preserve pairing
             indices = np.random.choice(len(X_clean), size=len(X_clean), replace=True)
             boot_corr = np.corrcoef(X_clean[indices], Y_clean[indices])[0, 1]
             bootstrap_corrs.append(boot_corr)
-        
+
         bootstrap_corrs = np.array(bootstrap_corrs)
-        
+
         ci_lower = np.percentile(bootstrap_corrs, 2.5)
         ci_upper = np.percentile(bootstrap_corrs, 97.5)
-        
+
         results = {
             'observed_correlation': observed_corr,
             'confidence_interval_95': (ci_lower, ci_upper),
             'bootstrap_std': np.std(bootstrap_corrs)
         }
-        
+
         # Stratified analysis
         if demographic_labels is not None:
             demographic_clean = demographic_labels[mask]
             unique_groups = np.unique(demographic_clean[~pd.isna(demographic_clean)])
-            
+
             group_correlations = {}
-            
+
             for group in unique_groups:
                 group_mask = demographic_clean == group
                 X_group = X_clean[group_mask]
                 Y_group = Y_clean[group_mask]
-                
+
                 if len(X_group) > 10:
                     # Bootstrap correlation for this group
                     group_boot_corrs = []
-                    
+
                     for b in range(self.n_bootstrap):
                         indices = np.random.choice(len(X_group), size=len(X_group), replace=True)
                         boot_corr = np.corrcoef(X_group[indices], Y_group[indices])[0, 1]
                         group_boot_corrs.append(boot_corr)
-                    
+
                     group_boot_corrs = np.array(group_boot_corrs)
-                    
+
                     group_correlations[str(group)] = {
                         'observed_correlation': np.corrcoef(X_group, Y_group)[0, 1],
                         'confidence_interval_95': (
@@ -2652,9 +2647,9 @@ class EquityAwareBootstrap:
                         ),
                         'n': len(X_group)
                     }
-            
+
             results['group_correlations'] = group_correlations
-            
+
             # Check for heterogeneity
             corrs = [v['observed_correlation'] for v in group_correlations.values()]
             if len(corrs) > 1 and max(corrs) - min(corrs) > 0.3:
@@ -2663,7 +2658,7 @@ class EquityAwareBootstrap:
                     f"(range = {max(corrs) - min(corrs):.3f}). "
                     f"Overall correlation may not represent all populations."
                 )
-        
+
         return results
 ```
 

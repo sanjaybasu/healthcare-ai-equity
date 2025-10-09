@@ -2,9 +2,10 @@
 layout: chapter
 title: "Chapter 29: AI for Global Health and Resource-Limited Settings"
 chapter_number: 29
+part_number: 7
+prev_chapter: /chapters/chapter-28-continual-learning/
+next_chapter: /chapters/chapter-30-research-frontiers-equity/
 ---
-
-
 # Chapter 29: AI for Global Health and Resource-Limited Settings
 
 ## Learning Objectives
@@ -55,9 +56,11 @@ These constraints require rethinking standard AI architectures. Models with hund
 
 The distillation loss combines the standard supervised loss with a term encouraging the student's predictions to match the teacher's probability distribution:
 
-$$\mathcal{L}_{distill} = \alpha \mathcal{L}_{CE}(y, f_{student}(x)) + (1-\alpha) \mathcal{L}_{KL}(f_{teacher}(x), f_{student}(x))$$
+$$
+\mathcal{L}_{distill} = \alpha \mathcal{L}_{CE}(y, f_{student}(x)) + (1-\alpha) \mathcal{L}_{KL}(f_{teacher}(x), f_{student}(x))
+$$
 
-where $$\mathcal{L}_{CE}$$ is cross-entropy loss between predictions and true labels, $$\mathcal{L}_{KL}$$$is Kullback-Leibler divergence between teacher and student prediction distributions, and$$\alpha$ weights the relative importance of these objectives. The temperature parameter in the softmax function for both teacher and student is often increased during distillation to create softer probability distributions that convey more information about the teacher's uncertainty.
+where $\mathcal{L}_{CE}$ is cross-entropy loss between predictions and true labels, $\mathcal{L}_{KL}$is Kullback-Leibler divergence between teacher and student prediction distributions, and$\alpha$ weights the relative importance of these objectives. The temperature parameter in the softmax function for both teacher and student is often increased during distillation to create softer probability distributions that convey more information about the teacher's uncertainty.
 
 **Quantization** reduces model size and inference time by representing weights and activations with lower precision. Standard deep learning uses 32-bit floating-point numbers, but many models maintain acceptable performance with 16-bit, 8-bit, or even binary representations. This dramatically reduces memory requirements and speeds inference on hardware supporting low-precision operations.
 
@@ -89,14 +92,12 @@ from enum import Enum
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class CompressionStrategy(Enum):
     """Compression strategies for model optimization."""
     DISTILLATION = "distillation"
     QUANTIZATION = "quantization"
     PRUNING = "pruning"
     COMBINED = "combined"
-
 
 @dataclass
 class ResourceConstraints:
@@ -107,11 +108,11 @@ class ResourceConstraints:
     memory_limit_mb: float  # Available RAM in megabytes
     supports_fp16: bool = False  # Hardware supports 16-bit precision
     supports_int8: bool = False  # Hardware supports 8-bit integer operations
-    
+
     def is_satisfied_by(self, model: nn.Module, batch_size: int = 1) -> bool:
         """
         Check if model satisfies resource constraints.
-        
+
         Returns True if model meets all specified constraints.
         """
         # Check model size
@@ -122,7 +123,7 @@ class ResourceConstraints:
                 f"{self.max_model_size_mb:.2f}MB"
             )
             return False
-        
+
         # Check memory requirements
         memory_mb = self._estimate_memory_usage(model, batch_size)
         if memory_mb > self.memory_limit_mb:
@@ -131,16 +132,16 @@ class ResourceConstraints:
                 f"{self.memory_limit_mb:.2f}MB"
             )
             return False
-        
+
         return True
-    
+
     @staticmethod
     def _calculate_model_size(model: nn.Module) -> float:
         """Calculate model size in megabytes."""
         param_size = sum(p.numel() * p.element_size() for p in model.parameters())
         buffer_size = sum(b.numel() * b.element_size() for b in model.buffers())
         return (param_size + buffer_size) / (1024 ** 2)
-    
+
     @staticmethod
     def _estimate_memory_usage(model: nn.Module, batch_size: int) -> float:
         """Estimate peak memory usage during inference."""
@@ -149,7 +150,6 @@ class ResourceConstraints:
         # Assume 224x224x3 images, fp32, with 2x overhead for activations
         activation_size = (batch_size * 224 * 224 * 3 * 4 * 2) / (1024 ** 2)
         return model_size + activation_size
-
 
 @dataclass
 class CompressionMetrics:
@@ -160,16 +160,16 @@ class CompressionMetrics:
     original_inference_time_ms: float
     compressed_inference_time_ms: float
     speedup_ratio: float
-    
+
     # Performance metrics overall and stratified
     overall_accuracy_original: float
     overall_accuracy_compressed: float
     accuracy_by_group: Dict[str, Tuple[float, float]]  # group -> (original, compressed)
-    
+
     # Equity metrics
     max_accuracy_degradation: float  # Worst-case accuracy loss across groups
     accuracy_disparity_change: float  # Change in disparity between groups
-    
+
     def summary(self) -> str:
         """Generate human-readable summary of compression results."""
         summary = [
@@ -182,32 +182,31 @@ class CompressionMetrics:
             f"{self.overall_accuracy_compressed:.3f}",
             f"\nPer-Group Performance:",
         ]
-        
+
         for group, (orig_acc, comp_acc) in self.accuracy_by_group.items():
             degradation = orig_acc - comp_acc
             summary.append(
                 f"  {group}: {orig_acc:.3f} → {comp_acc:.3f} "
                 f"(Δ {degradation:+.3f})"
             )
-        
+
         summary.extend([
             f"\nEquity Impact:",
             f"  Max Accuracy Degradation: {self.max_accuracy_degradation:.3f}",
             f"  Disparity Change: {self.accuracy_disparity_change:+.3f}",
         ])
-        
-        return "\n".join(summary)
 
+        return "\n".join(summary)
 
 class KnowledgeDistillation:
     """
     Knowledge distillation for model compression.
-    
+
     Trains a compact student model to match predictions of a larger
     teacher model, enabling deployment in resource-limited settings
     while maintaining clinical performance.
     """
-    
+
     def __init__(
         self,
         teacher_model: nn.Module,
@@ -218,7 +217,7 @@ class KnowledgeDistillation:
     ):
         """
         Initialize knowledge distillation.
-        
+
         Args:
             teacher_model: Large pre-trained model to distill from
             student_model: Compact model to train
@@ -231,20 +230,20 @@ class KnowledgeDistillation:
         self.temperature = temperature
         self.alpha = alpha
         self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
+
         self.teacher_model.to(self.device)
         self.student_model.to(self.device)
-        
+
         logger.info(
             f"Initialized distillation: Teacher {self._count_parameters(teacher_model)}M "
             f"params → Student {self._count_parameters(student_model)}M params"
         )
-    
+
     @staticmethod
     def _count_parameters(model: nn.Module) -> float:
         """Count model parameters in millions."""
         return sum(p.numel() for p in model.parameters() if p.requires_grad) / 1e6
-    
+
     def distillation_loss(
         self,
         student_logits: torch.Tensor,
@@ -253,34 +252,34 @@ class KnowledgeDistillation:
     ) -> torch.Tensor:
         """
         Calculate combined distillation and supervised loss.
-        
+
         Args:
             student_logits: Raw logits from student model
             teacher_logits: Raw logits from teacher model
             labels: Ground truth labels
-            
+
         Returns:
             Combined loss tensor
         """
         # Soft targets from teacher with temperature scaling
         soft_targets = F.softmax(teacher_logits / self.temperature, dim=1)
         soft_predictions = F.log_softmax(student_logits / self.temperature, dim=1)
-        
+
         # Distillation loss (KL divergence between teacher and student)
         distillation_loss = F.kl_div(
             soft_predictions,
             soft_targets,
             reduction='batchmean',
         ) * (self.temperature ** 2)  # Scale by T^2 to maintain gradient magnitude
-        
+
         # Hard label loss (standard cross-entropy)
         hard_loss = F.cross_entropy(student_logits, labels)
-        
+
         # Combined loss
         total_loss = self.alpha * distillation_loss + (1 - self.alpha) * hard_loss
-        
+
         return total_loss
-    
+
     def train_student(
         self,
         train_loader: DataLoader,
@@ -291,14 +290,14 @@ class KnowledgeDistillation:
     ) -> Dict[str, List[float]]:
         """
         Train student model via knowledge distillation.
-        
+
         Args:
             train_loader: Training data loader
             val_loader: Validation data loader
             num_epochs: Maximum training epochs
             learning_rate: Initial learning rate
             early_stopping_patience: Epochs without improvement before stopping
-            
+
         Returns:
             Dictionary containing training history
         """
@@ -306,52 +305,52 @@ class KnowledgeDistillation:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, mode='min', factor=0.5, patience=5
         )
-        
+
         history = {
             'train_loss': [],
             'val_loss': [],
             'val_accuracy': [],
         }
-        
+
         best_val_loss = float('inf')
         epochs_without_improvement = 0
-        
+
         for epoch in range(num_epochs):
             # Training phase
             self.student_model.train()
             train_loss = 0.0
-            
+
             for batch_idx, (data, labels) in enumerate(train_loader):
                 data, labels = data.to(self.device), labels.to(self.device)
-                
+
                 # Get teacher predictions (no gradients needed)
                 with torch.no_grad():
                     teacher_logits = self.teacher_model(data)
-                
+
                 # Get student predictions
                 optimizer.zero_grad()
                 student_logits = self.student_model(data)
-                
+
                 # Calculate distillation loss
                 loss = self.distillation_loss(student_logits, teacher_logits, labels)
-                
+
                 # Backpropagation
                 loss.backward()
                 optimizer.step()
-                
+
                 train_loss += loss.item()
-            
+
             avg_train_loss = train_loss / len(train_loader)
             history['train_loss'].append(avg_train_loss)
-            
+
             # Validation phase
             val_loss, val_accuracy = self._validate(val_loader)
             history['val_loss'].append(val_loss)
             history['val_accuracy'].append(val_accuracy)
-            
+
             # Learning rate scheduling
             scheduler.step(val_loss)
-            
+
             # Early stopping check
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
@@ -363,27 +362,27 @@ class KnowledgeDistillation:
                 )
             else:
                 epochs_without_improvement += 1
-            
+
             logger.info(
                 f"Epoch {epoch+1}/{num_epochs} - "
                 f"Train Loss: {avg_train_loss:.4f}, "
                 f"Val Loss: {val_loss:.4f}, "
                 f"Val Acc: {val_accuracy:.4f}"
             )
-            
+
             if epochs_without_improvement >= early_stopping_patience:
                 logger.info(f"Early stopping after {epoch+1} epochs")
                 break
-        
+
         # Load best model
         self.student_model.load_state_dict(torch.load('best_student_model.pth'))
-        
+
         return history
-    
+
     def _validate(self, val_loader: DataLoader) -> Tuple[float, float]:
         """
         Validate student model performance.
-        
+
         Returns:
             Tuple of (validation loss, validation accuracy)
         """
@@ -391,38 +390,37 @@ class KnowledgeDistillation:
         val_loss = 0.0
         correct = 0
         total = 0
-        
+
         with torch.no_grad():
             for data, labels in val_loader:
                 data, labels = data.to(self.device), labels.to(self.device)
-                
+
                 # Get predictions from both models
                 teacher_logits = self.teacher_model(data)
                 student_logits = self.student_model(data)
-                
+
                 # Calculate loss
                 loss = self.distillation_loss(student_logits, teacher_logits, labels)
                 val_loss += loss.item()
-                
+
                 # Calculate accuracy
                 predictions = student_logits.argmax(dim=1)
                 correct += (predictions == labels).sum().item()
                 total += labels.size(0)
-        
+
         avg_val_loss = val_loss / len(val_loader)
         accuracy = correct / total
-        
-        return avg_val_loss, accuracy
 
+        return avg_val_loss, accuracy
 
 class QuantizationAwareTraining:
     """
     Quantization-aware training for efficient model deployment.
-    
+
     Trains models with simulated quantization to learn weights that
     maintain performance when quantized to low precision (8-bit or 16-bit).
     """
-    
+
     def __init__(
         self,
         model: nn.Module,
@@ -433,7 +431,7 @@ class QuantizationAwareTraining:
     ):
         """
         Initialize quantization-aware training.
-        
+
         Args:
             model: Model to quantize
             quantization_bits: Number of bits for quantization (8 or 16)
@@ -446,17 +444,17 @@ class QuantizationAwareTraining:
         self.quantize_weights = quantize_weights
         self.quantize_activations = quantize_activations
         self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
+
         self.model.to(self.device)
-        
+
         # Prepare model for quantization-aware training
         self.model.qconfig = torch.quantization.get_default_qat_qconfig('fbgemm')
         torch.quantization.prepare_qat(self.model, inplace=True)
-        
+
         logger.info(
             f"Initialized {quantization_bits}-bit quantization-aware training"
         )
-    
+
     def train(
         self,
         train_loader: DataLoader,
@@ -466,71 +464,71 @@ class QuantizationAwareTraining:
     ) -> Dict[str, List[float]]:
         """
         Train model with quantization awareness.
-        
+
         During training, forward passes simulate quantization while backward
         passes use full precision, allowing model to learn weights that work
         well when quantized.
-        
+
         Args:
             train_loader: Training data loader
             val_loader: Validation data loader
             num_epochs: Number of training epochs
             learning_rate: Learning rate
-            
+
         Returns:
             Training history dictionary
         """
         optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()
-        
+
         history = {
             'train_loss': [],
             'train_accuracy': [],
             'val_loss': [],
             'val_accuracy': [],
         }
-        
+
         for epoch in range(num_epochs):
             # Training phase
             self.model.train()
             train_loss = 0.0
             correct = 0
             total = 0
-            
+
             for data, labels in train_loader:
                 data, labels = data.to(self.device), labels.to(self.device)
-                
+
                 optimizer.zero_grad()
                 outputs = self.model(data)
                 loss = criterion(outputs, labels)
-                
+
                 loss.backward()
                 optimizer.step()
-                
+
                 train_loss += loss.item()
                 predictions = outputs.argmax(dim=1)
                 correct += (predictions == labels).sum().item()
                 total += labels.size(0)
-            
+
             avg_train_loss = train_loss / len(train_loader)
             train_accuracy = correct / total
-            
+
             history['train_loss'].append(avg_train_loss)
             history['train_accuracy'].append(train_accuracy)
-            
+
             # Validation phase
             val_loss, val_accuracy = self._validate(val_loader, criterion)
             history['val_loss'].append(val_loss)
             history['val_accuracy'].append(val_accuracy)
-            
+
             logger.info(
                 f"Epoch {epoch+1}/{num_epochs} - "
                 f"Train Loss: {avg_train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
                 f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}"
             )
-        
+
         return history
-    
+
     def _validate(
         self,
         val_loader: DataLoader,
@@ -541,48 +539,47 @@ class QuantizationAwareTraining:
         val_loss = 0.0
         correct = 0
         total = 0
-        
+
         with torch.no_grad():
             for data, labels in val_loader:
                 data, labels = data.to(self.device), labels.to(self.device)
-                
+
                 outputs = self.model(data)
                 loss = criterion(outputs, labels)
-                
+
                 val_loss += loss.item()
                 predictions = outputs.argmax(dim=1)
                 correct += (predictions == labels).sum().item()
                 total += labels.size(0)
-        
+
         avg_val_loss = val_loss / len(val_loader)
         accuracy = correct / total
-        
+
         return avg_val_loss, accuracy
-    
+
     def convert_to_quantized(self) -> nn.Module:
         """
         Convert trained model to fully quantized version.
-        
+
         Returns:
             Quantized model ready for deployment
         """
         self.model.eval()
         quantized_model = torch.quantization.convert(self.model, inplace=False)
-        
-        logger.info("Converted model to fully quantized version")
-        
-        return quantized_model
 
+        logger.info("Converted model to fully quantized version")
+
+        return quantized_model
 
 class ModelCompression:
     """
     Comprehensive model compression pipeline for resource-limited deployment.
-    
+
     Combines distillation, quantization, and pruning strategies with
     equity-focused evaluation to ensure compression doesn't degrade
     performance for underrepresented populations.
     """
-    
+
     def __init__(
         self,
         model: nn.Module,
@@ -591,7 +588,7 @@ class ModelCompression:
     ):
         """
         Initialize compression pipeline.
-        
+
         Args:
             model: Model to compress
             constraints: Target deployment resource constraints
@@ -600,12 +597,12 @@ class ModelCompression:
         self.model = model
         self.constraints = constraints
         self.strategy = strategy
-        
+
         logger.info(
             f"Initialized compression with strategy {strategy.value} "
             f"targeting {constraints.target_device}"
         )
-    
+
     def compress(
         self,
         train_loader: DataLoader,
@@ -614,12 +611,12 @@ class ModelCompression:
     ) -> Tuple[nn.Module, CompressionMetrics]:
         """
         Apply compression strategy and evaluate impact.
-        
+
         Args:
             train_loader: Training data for distillation/fine-tuning
             val_loader: Validation data for hyperparameter tuning
             test_loader_by_group: Test data stratified by demographic groups
-            
+
         Returns:
             Tuple of (compressed model, compression metrics)
         """
@@ -628,7 +625,7 @@ class ModelCompression:
             self.model,
             test_loader_by_group,
         )
-        
+
         # Apply compression based on strategy
         if self.strategy == CompressionStrategy.DISTILLATION:
             compressed_model = self._apply_distillation(
@@ -649,28 +646,28 @@ class ModelCompression:
                 train_loader,
                 val_loader,
             )
-        
+
         # Evaluate compressed model
         compressed_metrics = self._evaluate_model(
             compressed_model,
             test_loader_by_group,
         )
-        
+
         # Calculate compression metrics
         metrics = self._calculate_compression_metrics(
             original_metrics,
             compressed_metrics,
         )
-        
+
         # Verify constraints are satisfied
         if not self.constraints.is_satisfied_by(compressed_model):
             logger.warning(
                 "Compressed model does not satisfy all resource constraints. "
                 "Consider more aggressive compression or relaxing constraints."
             )
-        
+
         return compressed_model, metrics
-    
+
     def _apply_distillation(
         self,
         train_loader: DataLoader,
@@ -679,7 +676,7 @@ class ModelCompression:
         """Apply knowledge distillation compression."""
         # Create smaller student architecture
         student_model = self._create_student_architecture()
-        
+
         # Distill knowledge
         distiller = KnowledgeDistillation(
             teacher_model=self.model,
@@ -687,15 +684,15 @@ class ModelCompression:
             temperature=3.0,
             alpha=0.7,
         )
-        
+
         distiller.train_student(
             train_loader=train_loader,
             val_loader=val_loader,
             num_epochs=50,
         )
-        
+
         return distiller.student_model
-    
+
     def _apply_quantization(
         self,
         train_loader: DataLoader,
@@ -710,24 +707,24 @@ class ModelCompression:
         else:
             logger.warning("Hardware doesn't support low-precision, using 16-bit")
             bits = 16
-        
+
         # Apply quantization-aware training
         qat = QuantizationAwareTraining(
             model=self.model,
             quantization_bits=bits,
         )
-        
+
         qat.train(
             train_loader=train_loader,
             val_loader=val_loader,
             num_epochs=30,
         )
-        
+
         # Convert to fully quantized model
         quantized_model = qat.convert_to_quantized()
-        
+
         return quantized_model
-    
+
     def _apply_pruning(
         self,
         val_loader: DataLoader,
@@ -739,9 +736,9 @@ class ModelCompression:
             sparsity=0.5,  # Remove 50% of parameters
             val_loader=val_loader,
         )
-        
+
         return pruned_model
-    
+
     def _apply_combined_compression(
         self,
         train_loader: DataLoader,
@@ -755,30 +752,30 @@ class ModelCompression:
             student_model=student_model,
         )
         distiller.train_student(train_loader, val_loader)
-        
+
         # Step 2: Quantization of distilled model
         qat = QuantizationAwareTraining(
             model=distiller.student_model,
             quantization_bits=8 if self.constraints.supports_int8 else 16,
         )
         qat.train(train_loader, val_loader, num_epochs=20)
-        
+
         # Step 3: Convert to quantized
         compressed_model = qat.convert_to_quantized()
-        
+
         return compressed_model
-    
+
     def _create_student_architecture(self) -> nn.Module:
         """
         Create compact student model architecture.
-        
+
         In production, use NAS or manual architecture design.
         This is a simplified placeholder.
         """
         # Simplified: create a smaller version of the teacher
         # In practice, use neural architecture search or domain expertise
         logger.info("Creating student architecture (simplified placeholder)")
-        
+
         # For demonstration, assume teacher is a CNN classifier
         # Create student with fewer filters and layers
         class CompactCNN(nn.Module):
@@ -797,14 +794,14 @@ class ModelCompression:
                     nn.Flatten(),
                     nn.Linear(64, num_classes),
                 )
-            
+
             def forward(self, x: torch.Tensor) -> torch.Tensor:
                 x = self.features(x)
                 x = self.classifier(x)
                 return x
-        
+
         return CompactCNN(num_classes=2)  # Binary classification example
-    
+
     def _prune_model(
         self,
         model: nn.Module,
@@ -813,31 +810,31 @@ class ModelCompression:
     ) -> nn.Module:
         """
         Apply magnitude-based pruning with validation.
-        
+
         This is a simplified implementation. Production systems should use
         more sophisticated pruning strategies.
         """
         import torch.nn.utils.prune as prune
-        
+
         # Identify prunable layers
         parameters_to_prune = []
         for name, module in model.named_modules():
             if isinstance(module, (nn.Conv2d, nn.Linear)):
                 parameters_to_prune.append((module, 'weight'))
-        
+
         # Apply global magnitude pruning
         prune.global_unstructured(
             parameters_to_prune,
             pruning_method=prune.L1Unstructured,
             amount=sparsity,
         )
-        
+
         # Make pruning permanent
         for module, param_name in parameters_to_prune:
             prune.remove(module, param_name)
-        
+
         return model
-    
+
     def _evaluate_model(
         self,
         model: nn.Module,
@@ -845,52 +842,52 @@ class ModelCompression:
     ) -> Dict[str, Any]:
         """
         Evaluate model performance overall and by demographic group.
-        
+
         Returns:
             Dictionary containing performance metrics
         """
         model.eval()
         device = next(model.parameters()).device
-        
+
         metrics = {
             'overall': {'correct': 0, 'total': 0},
             'by_group': {},
         }
-        
+
         # Evaluate overall and by group
         all_loaders = {'overall': self._combine_loaders(test_loader_by_group)}
         all_loaders.update(test_loader_by_group)
-        
+
         with torch.no_grad():
             for group_name, loader in all_loaders.items():
                 correct = 0
                 total = 0
-                
+
                 for data, labels in loader:
                     data, labels = data.to(device), labels.to(device)
-                    
+
                     outputs = model(data)
                     predictions = outputs.argmax(dim=1)
-                    
+
                     correct += (predictions == labels).sum().item()
                     total += labels.size(0)
-                
+
                 accuracy = correct / total if total > 0 else 0.0
-                
+
                 if group_name == 'overall':
                     metrics['overall']['accuracy'] = accuracy
                 else:
                     metrics['by_group'][group_name] = accuracy
-        
+
         return metrics
-    
+
     @staticmethod
     def _combine_loaders(loaders: Dict[str, DataLoader]) -> DataLoader:
         """Combine multiple data loaders into single loader."""
         # Simplified: just use first loader as proxy for overall
         # In production, properly combine datasets
         return next(iter(loaders.values()))
-    
+
     def _calculate_compression_metrics(
         self,
         original_metrics: Dict[str, Any],
@@ -904,27 +901,27 @@ class ModelCompression:
             # This is simplified for the example
             self.model
         )
-        
+
         # Calculate performance by group
         accuracy_by_group = {}
         for group in original_metrics['by_group']:
             orig_acc = original_metrics['by_group'][group]
             comp_acc = compressed_metrics['by_group'][group]
             accuracy_by_group[group] = (orig_acc, comp_acc)
-        
+
         # Calculate equity metrics
         degradations = [
             orig - comp for orig, comp in accuracy_by_group.values()
         ]
         max_degradation = max(degradations) if degradations else 0.0
-        
+
         # Calculate disparity change
         orig_accuracies = [orig for orig, _ in accuracy_by_group.values()]
         comp_accuracies = [comp for _, comp in accuracy_by_group.values()]
         orig_disparity = max(orig_accuracies) - min(orig_accuracies) if orig_accuracies else 0.0
         comp_disparity = max(comp_accuracies) - min(comp_accuracies) if comp_accuracies else 0.0
         disparity_change = comp_disparity - orig_disparity
-        
+
         return CompressionMetrics(
             original_size_mb=original_size,
             compressed_size_mb=compressed_size,
@@ -973,7 +970,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class PatientDiagnosis:
     """Patient diagnosis record for offline storage."""
@@ -987,16 +983,16 @@ class PatientDiagnosis:
     model_version: str = "1.0"
     synced: bool = False
     sync_timestamp: Optional[str] = None
-    
+
     def to_dict(self) -> Dict:
         """Convert to dictionary for JSON serialization."""
         return asdict(self)
-    
+
     @classmethod
     def from_dict(cls, data: Dict) -> 'PatientDiagnosis':
         """Create instance from dictionary."""
         return cls(**data)
-    
+
     def get_hash(self) -> str:
         """Generate unique hash for delta synchronization."""
         # Exclude sync-related fields from hash
@@ -1008,15 +1004,14 @@ class PatientDiagnosis:
             json.dumps(hash_data, sort_keys=True).encode()
         ).hexdigest()
 
-
 class OfflineDiagnosticSystem:
     """
     Offline-capable diagnostic AI system for resource-limited settings.
-    
+
     Provides complete diagnostic functionality without internet connectivity,
     with efficient synchronization when connectivity becomes available.
     """
-    
+
     def __init__(
         self,
         model_path: Path,
@@ -1026,7 +1021,7 @@ class OfflineDiagnosticSystem:
     ):
         """
         Initialize offline diagnostic system.
-        
+
         Args:
             model_path: Path to compressed model file
             database_path: Path to local SQLite database
@@ -1037,21 +1032,21 @@ class OfflineDiagnosticSystem:
         self.database_path = database_path
         self.device = torch.device(device)
         self.model_version = model_version
-        
+
         # Load model
         self.model = self._load_model()
-        
+
         # Initialize local database
         self._init_database()
-        
+
         logger.info(
             f"Initialized offline diagnostic system with model v{model_version}"
         )
-    
+
     def _load_model(self) -> torch.nn.Module:
         """
         Load compressed model from disk.
-        
+
         Model should be compressed to fit resource constraints.
         """
         try:
@@ -1065,17 +1060,17 @@ class OfflineDiagnosticSystem:
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             raise
-    
+
     def _init_database(self):
         """
         Initialize local SQLite database for offline storage.
-        
+
         SQLite provides reliable local storage without requiring
         database server infrastructure.
         """
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         # Create diagnoses table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS diagnoses (
@@ -1093,7 +1088,7 @@ class OfflineDiagnosticSystem:
                 record_hash TEXT UNIQUE
             )
         ''')
-        
+
         # Create sync queue table for tracking pending syncs
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS sync_queue (
@@ -1105,12 +1100,12 @@ class OfflineDiagnosticSystem:
                 FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id)
             )
         ''')
-        
+
         conn.commit()
         conn.close()
-        
+
         logger.info("Initialized local database")
-    
+
     def diagnose_patient(
         self,
         patient_id: str,
@@ -1120,27 +1115,27 @@ class OfflineDiagnosticSystem:
     ) -> PatientDiagnosis:
         """
         Perform diagnostic assessment using local AI model.
-        
+
         This function works completely offline, requiring no internet
         connectivity for core diagnostic functionality.
-        
+
         Args:
             patient_id: Unique patient identifier
             symptoms: List of reported symptoms
             vital_signs: Dictionary of vital sign measurements
             diagnostic_image: Optional medical image (e.g., X-ray)
-            
+
         Returns:
             PatientDiagnosis containing risk scores and recommendations
         """
         timestamp = datetime.utcnow().isoformat()
-        
+
         # Process clinical features
         clinical_features = self._process_clinical_features(
             symptoms,
             vital_signs,
         )
-        
+
         # Process diagnostic image if provided
         image_features = None
         image_path = None
@@ -1152,20 +1147,20 @@ class OfflineDiagnosticSystem:
                 patient_id,
                 timestamp,
             )
-        
+
         # Run AI model inference
         risk_scores = self._predict_risk_scores(
             clinical_features,
             image_features,
         )
-        
+
         # Generate recommendations based on risk scores
         recommended_actions = self._generate_recommendations(
             risk_scores,
             symptoms,
             vital_signs,
         )
-        
+
         # Create diagnosis record
         diagnosis = PatientDiagnosis(
             patient_id=patient_id,
@@ -1178,17 +1173,17 @@ class OfflineDiagnosticSystem:
             model_version=self.model_version,
             synced=False,
         )
-        
+
         # Store in local database
         self._save_diagnosis(diagnosis)
-        
+
         logger.info(
             f"Completed diagnosis for patient {patient_id} "
             f"with {len(risk_scores)} risk scores"
         )
-        
+
         return diagnosis
-    
+
     def _process_clinical_features(
         self,
         symptoms: List[str],
@@ -1196,18 +1191,18 @@ class OfflineDiagnosticSystem:
     ) -> torch.Tensor:
         """
         Process clinical features into model input format.
-        
+
         In production, implement proper feature encoding with
         medical ontology mapping for symptoms.
         """
         # Simplified feature processing
         # In production: use medical ontologies (SNOMED CT, ICD codes)
         # to encode symptoms consistently
-        
+
         # Create feature vector
         # This is a simplified placeholder
         feature_vector = np.zeros(50)  # Fixed-size feature vector
-        
+
         # Encode vital signs
         vital_sign_indices = {
             'temperature': 0,
@@ -1217,53 +1212,53 @@ class OfflineDiagnosticSystem:
             'blood_pressure_diastolic': 4,
             'oxygen_saturation': 5,
         }
-        
+
         for sign, value in vital_signs.items():
             if sign in vital_sign_indices:
                 idx = vital_sign_indices[sign]
                 # Normalize vital signs (simplified)
                 feature_vector[idx] = value / 100.0
-        
+
         # Encode symptoms as binary features
         common_symptoms = [
             'fever', 'cough', 'shortness_of_breath', 'fatigue',
             'chest_pain', 'headache', 'nausea', 'diarrhea',
         ]
-        
+
         for i, symptom in enumerate(common_symptoms):
             if i + 10 < len(feature_vector):
                 feature_vector[i + 10] = 1.0 if symptom in symptoms else 0.0
-        
+
         return torch.tensor(feature_vector, dtype=torch.float32).unsqueeze(0)
-    
+
     def _process_diagnostic_image(
         self,
         image: np.ndarray,
     ) -> torch.Tensor:
         """
         Process diagnostic image into model input format.
-        
+
         Handles preprocessing appropriate for resource-limited settings
         where image quality may vary.
         """
         # Simplified image preprocessing
         # In production: handle various image formats, qualities
-        
+
         # Convert to tensor and normalize
         image_tensor = torch.from_numpy(image).float()
-        
+
         # Ensure correct shape (B, C, H, W)
         if len(image_tensor.shape) == 2:  # Grayscale
             image_tensor = image_tensor.unsqueeze(0).unsqueeze(0)
         elif len(image_tensor.shape) == 3:  # RGB
             image_tensor = image_tensor.permute(2, 0, 1).unsqueeze(0)
-        
+
         # Normalize to [0, 1]
         if image_tensor.max() > 1.0:
             image_tensor = image_tensor / 255.0
-        
+
         return image_tensor
-    
+
     def _save_diagnostic_image(
         self,
         image: np.ndarray,
@@ -1272,24 +1267,24 @@ class OfflineDiagnosticSystem:
     ) -> str:
         """
         Save diagnostic image to local storage.
-        
+
         Uses efficient compression appropriate for storage constraints.
         """
         # Create directory structure
         image_dir = Path('diagnostic_images') / patient_id
         image_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Generate filename
         safe_timestamp = timestamp.replace(':', '-')
         image_path = image_dir / f"{safe_timestamp}.npy"
-        
+
         # Save as compressed numpy array
         # In production, use medical image formats (DICOM) or efficient
         # compression (JPEG 2000) appropriate for the image type
         np.save(image_path, image)
-        
+
         return str(image_path)
-    
+
     def _predict_risk_scores(
         self,
         clinical_features: torch.Tensor,
@@ -1297,15 +1292,15 @@ class OfflineDiagnosticSystem:
     ) -> Dict[str, float]:
         """
         Predict disease risk scores using local AI model.
-        
+
         Works entirely offline using preloaded model.
         """
         # Move inputs to device
         clinical_features = clinical_features.to(self.device)
-        
+
         if image_features is not None:
             image_features = image_features.to(self.device)
-        
+
         # Run inference
         with torch.no_grad():
             # Simplified inference - in production, handle multimodal fusion
@@ -1318,10 +1313,10 @@ class OfflineDiagnosticSystem:
                 outputs = self.model(combined_features)
             else:
                 outputs = self.model(clinical_features)
-            
+
             # Convert to probabilities
             probabilities = torch.sigmoid(outputs).cpu().numpy()[0]
-        
+
         # Map to disease categories
         # In production, use proper disease ontology
         disease_categories = [
@@ -1331,14 +1326,14 @@ class OfflineDiagnosticSystem:
             'covid19',
             'sepsis',
         ]
-        
+
         risk_scores = {}
         for i, disease in enumerate(disease_categories):
             if i < len(probabilities):
                 risk_scores[disease] = float(probabilities[i])
-        
+
         return risk_scores
-    
+
     def _generate_recommendations(
         self,
         risk_scores: Dict[str, float],
@@ -1347,13 +1342,13 @@ class OfflineDiagnosticSystem:
     ) -> List[str]:
         """
         Generate clinical recommendations based on risk assessment.
-        
+
         Uses rule-based logic appropriate for local clinical protocols.
         In production, integrate with local treatment guidelines and
         formulary availability.
         """
         recommendations = []
-        
+
         # Check for high-risk conditions requiring immediate action
         for disease, score in risk_scores.items():
             if score > 0.7:  # High risk threshold
@@ -1378,7 +1373,7 @@ class OfflineDiagnosticSystem:
                         "High malaria risk. Perform rapid diagnostic test, "
                         "initiate antimalarial therapy if positive per local guidelines."
                     )
-        
+
         # Check vital sign abnormalities
         if 'oxygen_saturation' in vital_signs:
             if vital_signs['oxygen_saturation'] < 90:
@@ -1386,30 +1381,30 @@ class OfflineDiagnosticSystem:
                     "CRITICAL: Hypoxemia detected. Provide supplemental oxygen, "
                     "monitor closely, consider transfer if severe."
                 )
-        
+
         if 'temperature' in vital_signs:
             if vital_signs['temperature'] > 38.5:
                 recommendations.append(
                     "Fever present. Consider antipyretics, ensure adequate hydration, "
                     "investigate cause."
                 )
-        
+
         # Default recommendation if no high-risk conditions
         if not recommendations:
             recommendations.append(
                 "Continue supportive care and monitoring. Reassess if symptoms worsen."
             )
-        
+
         return recommendations
-    
+
     def _save_diagnosis(self, diagnosis: PatientDiagnosis):
         """Save diagnosis to local database."""
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         # Generate hash for delta sync
         record_hash = diagnosis.get_hash()
-        
+
         try:
             cursor.execute('''
                 INSERT INTO diagnoses (
@@ -1429,9 +1424,9 @@ class OfflineDiagnosticSystem:
                 0,  # Not synced
                 record_hash,
             ))
-            
+
             diagnosis_id = cursor.lastrowid
-            
+
             # Add to sync queue
             cursor.execute('''
                 INSERT INTO sync_queue (diagnosis_id, priority)
@@ -1439,50 +1434,50 @@ class OfflineDiagnosticSystem:
             ''', (diagnosis_id, 1 if any(
                 score > 0.7 for score in diagnosis.risk_scores.values()
             ) else 0))
-            
+
             conn.commit()
             logger.info(f"Saved diagnosis for patient {diagnosis.patient_id}")
-        
+
         except sqlite3.IntegrityError:
             # Duplicate hash - diagnosis already exists
             logger.warning(f"Duplicate diagnosis detected for patient {diagnosis.patient_id}")
         finally:
             conn.close()
-    
+
     def get_pending_syncs(
         self,
         limit: Optional[int] = None,
     ) -> List[PatientDiagnosis]:
         """
         Get diagnoses pending synchronization.
-        
+
         Returns records ordered by priority (high-risk cases first)
         for efficient synchronization when connectivity available.
-        
+
         Args:
             limit: Maximum number of records to return
-            
+
         Returns:
             List of diagnoses ready to sync
         """
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         query = '''
             SELECT d.* FROM diagnoses d
             JOIN sync_queue sq ON d.id = sq.diagnosis_id
             WHERE d.synced = 0
             ORDER BY sq.priority DESC, d.timestamp ASC
         '''
-        
+
         if limit is not None:
             query += f' LIMIT {limit}'
-        
+
         cursor.execute(query)
         rows = cursor.fetchall()
-        
+
         conn.close()
-        
+
         # Convert to PatientDiagnosis objects
         diagnoses = []
         for row in rows:
@@ -1499,9 +1494,9 @@ class OfflineDiagnosticSystem:
                 sync_timestamp=row[10],
             )
             diagnoses.append(diagnosis)
-        
+
         return diagnoses
-    
+
     def mark_synced(
         self,
         diagnoses: List[PatientDiagnosis],
@@ -1509,29 +1504,29 @@ class OfflineDiagnosticSystem:
     ):
         """
         Mark diagnoses as successfully synced.
-        
+
         Args:
             diagnoses: List of synced diagnoses
             sync_timestamp: Sync completion timestamp
         """
         if sync_timestamp is None:
             sync_timestamp = datetime.utcnow().isoformat()
-        
+
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         for diagnosis in diagnoses:
             cursor.execute('''
                 UPDATE diagnoses
                 SET synced = 1, sync_timestamp = ?
                 WHERE patient_id = ? AND timestamp = ?
             ''', (sync_timestamp, diagnosis.patient_id, diagnosis.timestamp))
-        
+
         conn.commit()
         conn.close()
-        
+
         logger.info(f"Marked {len(diagnoses)} diagnoses as synced")
-    
+
     def synchronize(
         self,
         server_url: str,
@@ -1539,25 +1534,25 @@ class OfflineDiagnosticSystem:
     ) -> Dict[str, int]:
         """
         Synchronize local data with central server when connectivity available.
-        
+
         Uses efficient delta sync to minimize data transfer.
-        
+
         Args:
             server_url: Central server URL for data synchronization
             batch_size: Number of records to sync per batch
-            
+
         Returns:
             Dictionary with sync statistics
         """
         pending = self.get_pending_syncs(limit=batch_size)
-        
+
         if not pending:
             logger.info("No pending synchronizations")
             return {'synced': 0, 'failed': 0}
-        
+
         synced_count = 0
         failed_count = 0
-        
+
         # In production, implement actual HTTP sync with retry logic
         # This is a placeholder showing the sync pattern
         for diagnosis in pending:
@@ -1565,28 +1560,28 @@ class OfflineDiagnosticSystem:
                 # Simulate sync to server
                 # In production: POST to server_url with diagnosis data
                 logger.info(f"Syncing diagnosis for patient {diagnosis.patient_id}")
-                
+
                 # If image exists, sync separately with compression
                 if diagnosis.diagnostic_image_path:
                     self._sync_diagnostic_image(
                         diagnosis.diagnostic_image_path,
                         server_url,
                     )
-                
+
                 # Mark as synced
                 self.mark_synced([diagnosis])
                 synced_count += 1
-                
+
             except Exception as e:
                 logger.error(f"Failed to sync diagnosis: {e}")
                 failed_count += 1
-        
+
         logger.info(
             f"Synchronization complete: {synced_count} synced, {failed_count} failed"
         )
-        
+
         return {'synced': synced_count, 'failed': failed_count}
-    
+
     def _sync_diagnostic_image(
         self,
         image_path: str,
@@ -1594,7 +1589,7 @@ class OfflineDiagnosticSystem:
     ):
         """
         Sync diagnostic image with compression.
-        
+
         In production, implement efficient image compression
         and chunked upload for large files.
         """
@@ -1614,13 +1609,13 @@ Understanding the specific sources of domain shift between training and deployme
 
 **Covariate shift** occurs when the input distribution differs between source and target domains while the conditional distribution of outcomes given inputs remains consistent. In global health, this manifests as differences in patient demographics, disease prevalence, and clinical presentation. A model trained on elderly patients in the US encounters much younger populations in sub-Saharan Africa. A tuberculosis detection system trained in low-prevalence settings faces much higher base rates in high-prevalence regions.
 
-Under covariate shift, the conditional probability $$P(Y|X)$$ remains constant but the marginal distribution $$P(X)$$ changes: $$P_{source}(X) \neq P_{target}(X)$$ while $$P_{source}(Y|X) = P_{target}(Y|X)$$. This means the relationship between clinical features and outcomes is consistent, but the distribution of features differs. Addressing covariate shift often involves importance weighting or domain adversarial training.
+Under covariate shift, the conditional probability $P(Y|X)$ remains constant but the marginal distribution $P(X)$ changes: $P_{source}(X) \neq P_{target}(X)$ while $P_{source}(Y|X) = P_{target}(Y|X)$. This means the relationship between clinical features and outcomes is consistent, but the distribution of features differs. Addressing covariate shift often involves importance weighting or domain adversarial training.
 
 **Label shift** (or prior probability shift) occurs when the distribution of outcomes changes while the conditional distribution of inputs given outcomes remains consistent. In global health, this manifests as dramatically different disease prevalence. The probability of tuberculosis given a certain set of symptoms and chest X-ray findings may be similar across settings, but the baseline probability of tuberculosis differs dramatically.
 
-Under label shift: $$P_{source}(Y) \neq P_{target}(Y)$$ while $$P_{source}(X|Y) = P_{target}(X|Y)$$. Bayes' rule shows that when label shift occurs, we can reweight predictions based on the ratio of target to source label probabilities. If we know disease prevalence in both training and deployment settings, we can recalibrate model outputs accordingly.
+Under label shift: $P_{source}(Y) \neq P_{target}(Y)$ while $P_{source}(X|Y) = P_{target}(X|Y)$. Bayes' rule shows that when label shift occurs, we can reweight predictions based on the ratio of target to source label probabilities. If we know disease prevalence in both training and deployment settings, we can recalibrate model outputs accordingly.
 
-**Concept shift** represents the most challenging case where the actual relationship between inputs and outputs differs across domains: $$P_{source}(Y|X) \neq P_{target}(Y|X)$$. In global health, this occurs when the same clinical presentation predicts different outcomes due to systematic differences in populations or healthcare systems. A given set of vital signs might indicate higher risk in settings with limited treatment capacity. Co-morbidity patterns differ substantially between settings, changing how clinical features should be interpreted.
+**Concept shift** represents the most challenging case where the actual relationship between inputs and outputs differs across domains: $P_{source}(Y|X) \neq P_{target}(Y|X)$. In global health, this occurs when the same clinical presentation predicts different outcomes due to systematic differences in populations or healthcare systems. A given set of vital signs might indicate higher risk in settings with limited treatment capacity. Co-morbidity patterns differ substantially between settings, changing how clinical features should be interpreted.
 
 Concept shift often cannot be addressed without target domain labeled data for retraining or fine-tuning. Detecting concept shift is critical—deploying models under false assumptions of consistent relationships across settings creates substantial clinical risk.
 
@@ -1657,7 +1652,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class DomainInfo:
     """Information about data domains for adaptation."""
@@ -1667,7 +1661,7 @@ class DomainInfo:
     equipment: str  # Equipment manufacturer/type
     disease_prevalence: Dict[str, float]  # Disease -> prevalence
     sample_count: int
-    
+
     def get_description(self) -> str:
         """Get human-readable domain description."""
         return (
@@ -1675,16 +1669,15 @@ class DomainInfo:
             f"({self.equipment}, n={self.sample_count})"
         )
 
-
 class DomainAdversarialNetwork(nn.Module):
     """
     Domain-adversarial neural network for medical imaging.
-    
+
     Learns representations that are predictive of clinical outcomes
     while being invariant to domain (data source) to enable
     generalization across diverse global health contexts.
     """
-    
+
     def __init__(
         self,
         feature_extractor: nn.Module,
@@ -1695,7 +1688,7 @@ class DomainAdversarialNetwork(nn.Module):
     ):
         """
         Initialize domain-adversarial network.
-        
+
         Args:
             feature_extractor: CNN for extracting image features
             num_classes: Number of disease classes to predict
@@ -1704,15 +1697,15 @@ class DomainAdversarialNetwork(nn.Module):
             dropout_rate: Dropout probability
         """
         super().__init__()
-        
+
         self.feature_extractor = feature_extractor
-        
+
         # Get feature dimension
         with torch.no_grad():
             dummy_input = torch.randn(1, 3, 224, 224)
             features = self.feature_extractor(dummy_input)
             feature_dim = features.shape[1]
-        
+
         # Class predictor (label classifier)
         self.class_predictor = nn.Sequential(
             nn.Linear(feature_dim, hidden_dim),
@@ -1720,7 +1713,7 @@ class DomainAdversarialNetwork(nn.Module):
             nn.Dropout(dropout_rate),
             nn.Linear(hidden_dim, num_classes),
         )
-        
+
         # Domain discriminator (tries to predict source domain)
         self.domain_discriminator = nn.Sequential(
             nn.Linear(feature_dim, hidden_dim),
@@ -1728,11 +1721,11 @@ class DomainAdversarialNetwork(nn.Module):
             nn.Dropout(dropout_rate),
             nn.Linear(hidden_dim, num_domains),
         )
-        
+
         logger.info(
             f"Initialized DANN: {num_classes} classes, {num_domains} domains"
         )
-    
+
     def forward(
         self,
         x: torch.Tensor,
@@ -1740,56 +1733,54 @@ class DomainAdversarialNetwork(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass with gradient reversal for domain adversarial training.
-        
+
         Args:
             x: Input images (B, C, H, W)
             alpha: Weight for gradient reversal (controls domain adaptation strength)
-            
+
         Returns:
             Tuple of (class predictions, domain predictions)
         """
         # Extract features
         features = self.feature_extractor(x)
-        
+
         # Class predictions
         class_logits = self.class_predictor(features)
-        
+
         # Domain predictions with gradient reversal
         # During backprop, gradients from domain discriminator are reversed,
         # making feature extractor learn domain-invariant features
         reversed_features = GradientReversalLayer.apply(features, alpha)
         domain_logits = self.domain_discriminator(reversed_features)
-        
-        return class_logits, domain_logits
 
+        return class_logits, domain_logits
 
 class GradientReversalLayer(torch.autograd.Function):
     """
     Gradient reversal layer for domain-adversarial training.
-    
+
     Forward pass is identity function. Backward pass reverses gradients,
     making the feature extractor try to fool the domain discriminator.
     """
-    
+
     @staticmethod
     def forward(ctx, x: torch.Tensor, alpha: float) -> torch.Tensor:
         """Forward pass - identity function."""
         ctx.alpha = alpha
         return x.view_as(x)
-    
+
     @staticmethod
     def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
         """Backward pass - reverse and scale gradients."""
         return grad_output.neg() * ctx.alpha, None
 
-
 class MultiDomainDataset(Dataset):
     """
     Dataset combining data from multiple domains/sources.
-    
+
     Tracks domain labels for each sample to enable domain adaptation.
     """
-    
+
     def __init__(
         self,
         data_by_domain: Dict[str, Tuple[List[np.ndarray], List[int]]],
@@ -1798,7 +1789,7 @@ class MultiDomainDataset(Dataset):
     ):
         """
         Initialize multi-domain dataset.
-        
+
         Args:
             data_by_domain: Dict mapping domain_id to (images, labels)
             domain_info: Dict mapping domain_id to DomainInfo
@@ -1806,7 +1797,7 @@ class MultiDomainDataset(Dataset):
         """
         self.transform = transform
         self.domain_info = domain_info
-        
+
         # Create domain ID to index mapping
         self.domain_to_idx = {
             domain_id: idx
@@ -1816,53 +1807,52 @@ class MultiDomainDataset(Dataset):
             idx: domain_id
             for domain_id, idx in self.domain_to_idx.items()
         }
-        
+
         # Flatten data while tracking domains
         self.images = []
         self.labels = []
         self.domain_labels = []
-        
+
         for domain_id, (images, labels) in data_by_domain.items():
             domain_idx = self.domain_to_idx[domain_id]
-            
+
             for img, label in zip(images, labels):
                 self.images.append(img)
                 self.labels.append(label)
                 self.domain_labels.append(domain_idx)
-        
+
         logger.info(
             f"Created multi-domain dataset: {len(self.images)} samples "
             f"from {len(data_by_domain)} domains"
         )
-    
+
     def __len__(self) -> int:
         return len(self.images)
-    
+
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int, int]:
         """
         Get dataset item.
-        
+
         Returns:
             Tuple of (image, class_label, domain_label)
         """
         image = self.images[idx]
         label = self.labels[idx]
         domain_label = self.domain_labels[idx]
-        
+
         if self.transform:
             image = self.transform(image)
-        
-        return image, label, domain_label
 
+        return image, label, domain_label
 
 class DomainAdaptationTrainer:
     """
     Trainer for domain adaptation in global health imaging.
-    
+
     Implements domain-adversarial training with equity-focused
     evaluation across domains and demographic groups.
     """
-    
+
     def __init__(
         self,
         model: DomainAdversarialNetwork,
@@ -1872,7 +1862,7 @@ class DomainAdaptationTrainer:
     ):
         """
         Initialize domain adaptation trainer.
-        
+
         Args:
             model: Domain-adversarial network
             device: Device for training
@@ -1882,7 +1872,7 @@ class DomainAdaptationTrainer:
         self.model = model.to(device)
         self.device = device
         self.domain_adaptation_weight = domain_adaptation_weight
-        
+
         # Separate optimizers for different components
         self.optimizer_features = torch.optim.Adam(
             self.model.feature_extractor.parameters(),
@@ -1896,13 +1886,13 @@ class DomainAdaptationTrainer:
             self.model.domain_discriminator.parameters(),
             lr=learning_rate,
         )
-        
+
         # Loss functions
         self.class_criterion = nn.CrossEntropyLoss()
         self.domain_criterion = nn.CrossEntropyLoss()
-        
+
         logger.info("Initialized domain adaptation trainer")
-    
+
     def train_epoch(
         self,
         train_loader: DataLoader,
@@ -1911,78 +1901,78 @@ class DomainAdaptationTrainer:
     ) -> Dict[str, float]:
         """
         Train for one epoch with domain adaptation.
-        
+
         Args:
             train_loader: Multi-domain training data
             epoch: Current epoch number
             num_epochs: Total number of epochs
-            
+
         Returns:
             Dictionary of training metrics
         """
         self.model.train()
-        
+
         total_class_loss = 0.0
         total_domain_loss = 0.0
         correct_class = 0
         correct_domain = 0
         total_samples = 0
-        
+
         # Gradually increase domain adaptation strength over training
         # (as suggested by original DANN paper)
         p = float(epoch) / num_epochs
         alpha = 2.0 / (1.0 + np.exp(-10 * p)) - 1.0
-        
+
         for batch_idx, (images, class_labels, domain_labels) in enumerate(train_loader):
             images = images.to(self.device)
             class_labels = class_labels.to(self.device)
             domain_labels = domain_labels.to(self.device)
-            
+
             batch_size = images.size(0)
             total_samples += batch_size
-            
+
             # Forward pass
             class_logits, domain_logits = self.model(images, alpha=alpha)
-            
+
             # Class prediction loss (main task)
             class_loss = self.class_criterion(class_logits, class_labels)
-            
+
             # Domain prediction loss (adversarial)
             domain_loss = self.domain_criterion(domain_logits, domain_labels)
-            
+
             # Combined loss
             total_loss = (
                 class_loss +
                 self.domain_adaptation_weight * domain_loss
             )
-            
+
             # Backward pass
             self.optimizer_features.zero_grad()
             self.optimizer_class.zero_grad()
             self.optimizer_domain.zero_grad()
-            
+
             total_loss.backward()
-            
+
             self.optimizer_features.step()
             self.optimizer_class.step()
             self.optimizer_domain.step()
-            
+
             # Track metrics
             total_class_loss += class_loss.item() * batch_size
             total_domain_loss += domain_loss.item() * batch_size
-            
+
             class_predictions = class_logits.argmax(dim=1)
             correct_class += (class_predictions == class_labels).sum().item()
-            
+
             domain_predictions = domain_logits.argmax(dim=1)
             correct_domain += (domain_predictions == domain_labels).sum().item()
-        
+
         # Calculate averages
         avg_class_loss = total_class_loss / total_samples
         avg_domain_loss = total_domain_loss / total_samples
         class_accuracy = correct_class / total_samples
         domain_accuracy = correct_domain / total_samples
-        
+
         metrics = {
             'class_loss': avg_class_loss,
             'domain_loss': avg_domain_loss,
@@ -1990,16 +1980,16 @@ class DomainAdaptationTrainer:
             'domain_accuracy': domain_accuracy,
             'alpha': alpha,
         }
-        
+
         logger.info(
             f"Epoch {epoch+1}/{num_epochs} - "
             f"Class Loss: {avg_class_loss:.4f}, Class Acc: {class_accuracy:.4f}, "
             f"Domain Loss: {avg_domain_loss:.4f}, Domain Acc: {domain_accuracy:.4f}, "
             f"Alpha: {alpha:.4f}"
         )
-        
+
         return metrics
-    
+
     def evaluate_by_domain(
         self,
         test_loaders_by_domain: Dict[str, DataLoader],
@@ -2007,47 +1997,47 @@ class DomainAdaptationTrainer:
     ) -> Dict[str, Dict[str, float]]:
         """
         Evaluate model performance stratified by domain.
-        
+
         Critical for assessing whether domain adaptation achieves
         equitable performance across diverse deployment contexts.
-        
+
         Args:
             test_loaders_by_domain: Dict mapping domain_id to test DataLoader
             domain_info: Dict mapping domain_id to DomainInfo
-            
+
         Returns:
             Dict mapping domain_id to performance metrics
         """
         self.model.eval()
         results = {}
-        
+
         with torch.no_grad():
             for domain_id, test_loader in test_loaders_by_domain.items():
                 correct = 0
                 total = 0
                 all_predictions = []
                 all_labels = []
-                
+
                 for images, labels, _ in test_loader:
                     images = images.to(self.device)
                     labels = labels.to(self.device)
-                    
+
                     # Get class predictions only (ignore domain predictions)
                     class_logits, _ = self.model(images, alpha=0.0)
                     predictions = class_logits.argmax(dim=1)
-                    
+
                     correct += (predictions == labels).sum().item()
                     total += labels.size(0)
-                    
+
                     all_predictions.extend(predictions.cpu().numpy())
                     all_labels.extend(labels.cpu().numpy())
-                
+
                 accuracy = correct / total if total > 0 else 0.0
-                
+
                 # Calculate per-class metrics
                 all_predictions = np.array(all_predictions)
                 all_labels = np.array(all_labels)
-                
+
                 # Sensitivity and specificity for each class
                 per_class_metrics = {}
                 for class_idx in range(2):  # Binary classification example
@@ -2055,25 +2045,25 @@ class DomainAdaptationTrainer:
                     false_positives = ((all_predictions == class_idx) & (all_labels != class_idx)).sum()
                     true_negatives = ((all_predictions != class_idx) & (all_labels != class_idx)).sum()
                     false_negatives = ((all_predictions != class_idx) & (all_labels == class_idx)).sum()
-                    
+
                     sensitivity = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0.0
                     specificity = true_negatives / (true_negatives + false_positives) if (true_negatives + false_positives) > 0 else 0.0
-                    
+
                     per_class_metrics[f'class_{class_idx}_sensitivity'] = sensitivity
                     per_class_metrics[f'class_{class_idx}_specificity'] = specificity
-                
+
                 results[domain_id] = {
                     'accuracy': accuracy,
                     'sample_count': total,
                     **per_class_metrics,
                     'domain_description': domain_info[domain_id].get_description(),
                 }
-                
+
                 logger.info(
                     f"Domain {domain_id} ({domain_info[domain_id].get_description()}): "
                     f"Accuracy = {accuracy:.4f} (n={total})"
                 )
-        
+
         # Calculate cross-domain metrics
         accuracies = [metrics['accuracy'] for metrics in results.values()]
         results['cross_domain_summary'] = {
@@ -2083,14 +2073,13 @@ class DomainAdaptationTrainer:
             'max_accuracy': np.max(accuracies),
             'accuracy_gap': np.max(accuracies) - np.min(accuracies),
         }
-        
+
         logger.info(
             f"Cross-domain summary: Mean Acc = {results['cross_domain_summary']['mean_accuracy']:.4f}, "
             f"Gap = {results['cross_domain_summary']['accuracy_gap']:.4f}"
         )
-        
-        return results
 
+        return results
 
 def prevalence_calibration(
     predictions: np.ndarray,
@@ -2099,32 +2088,32 @@ def prevalence_calibration(
 ) -> np.ndarray:
     """
     Calibrate predictions for different disease prevalence (label shift).
-    
+
     Adjusts model predictions trained in one prevalence context for
     deployment in contexts with different disease prevalence using
     Bayes' rule.
-    
+
     Args:
         predictions: Model probability predictions (N,)
         source_prevalence: Disease prevalence in training data
         target_prevalence: Disease prevalence in deployment setting
-        
+
     Returns:
         Calibrated predictions accounting for prevalence shift
     """
     # Convert to odds
     source_odds = source_prevalence / (1 - source_prevalence)
     target_odds = target_prevalence / (1 - target_prevalence)
-    
+
     # Prediction odds
     pred_odds = predictions / (1 - predictions)
-    
+
     # Adjust for prevalence shift
     adjusted_odds = pred_odds * (target_odds / source_odds)
-    
+
     # Convert back to probabilities
     calibrated_predictions = adjusted_odds / (1 + adjusted_odds)
-    
+
     return calibrated_predictions
 ```
 
@@ -2173,13 +2162,11 @@ import re
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class HealthLiteracyLevel(Enum):
     """Health literacy levels for content adaptation."""
     BASIC = "basic"  # <6th grade reading level
     INTERMEDIATE = "intermediate"  # 6th-12th grade
     ADVANCED = "advanced"  # College+
-
 
 @dataclass
 class CulturalContext:
@@ -2190,15 +2177,15 @@ class CulturalContext:
     cultural_group: Optional[str] = None
     literacy_rate: Optional[float] = None
     health_literacy_level: HealthLiteracyLevel = HealthLiteracyLevel.INTERMEDIATE
-    
+
     # Cultural preferences
     individualist_vs_collectivist: float = 0.5  # 0=collectivist, 1=individualist
     direct_vs_indirect_communication: float = 0.5  # 0=indirect, 1=direct
-    
+
     # Access constraints
     has_internet_access: bool = True
     has_smartphone: bool = True
-    
+
     def get_description(self) -> str:
         """Get human-readable description."""
         desc = f"{self.primary_language} ({self.country}"
@@ -2206,7 +2193,6 @@ class CulturalContext:
             desc += f", {self.region}"
         desc += ")"
         return desc
-
 
 @dataclass
 class HealthEducationMaterial:
@@ -2217,27 +2203,26 @@ class HealthEducationMaterial:
     cultural_context: CulturalContext
     health_topic: str
     literacy_level: HealthLiteracyLevel
-    
+
     # Validation flags
     medically_accurate: bool = False
     culturally_appropriate: bool = False
     community_reviewed: bool = False
-    
+
     # Metadata
     source_content_id: Optional[str] = None
     translation_quality_score: Optional[float] = None
     created_timestamp: Optional[str] = None
 
-
 class MultilingualHealthEducation:
     """
     Multilingual patient education system with cultural adaptation.
-    
+
     Generates health education materials in multiple languages,
     adapted for local cultural contexts and health literacy levels,
     with validation to ensure medical accuracy and cultural appropriateness.
     """
-    
+
     def __init__(
         self,
         source_language: str = "en",
@@ -2245,31 +2230,31 @@ class MultilingualHealthEducation:
     ):
         """
         Initialize multilingual health education system.
-        
+
         Args:
             source_language: Source language for content (typically English)
             device: Device for model inference
         """
         self.source_language = source_language
         self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
+
         # Initialize translation models (cached for efficiency)
         self.translation_models: Dict[str, Tuple[MarianMTModel, MarianTokenizer]] = {}
-        
+
         # Initialize simplification model for literacy adaptation
         self.simplification_model_name = "facebook/bart-large-cnn"
-        
+
         # Medical term preservation list (terms that should not be translated)
         self.medical_terms_to_preserve = self._load_medical_terminology()
-        
+
         # Cultural adaptation templates
         self.cultural_templates = self._load_cultural_templates()
-        
+
         logger.info(
             f"Initialized multilingual health education system "
             f"(source: {source_language})"
         )
-    
+
     def generate_education_material(
         self,
         content: str,
@@ -2278,35 +2263,35 @@ class MultilingualHealthEducation:
     ) -> List[HealthEducationMaterial]:
         """
         Generate culturally adapted health education materials for multiple contexts.
-        
+
         Args:
             content: Source health education content (in source language)
             health_topic: Health topic (e.g., "diabetes management", "tuberculosis prevention")
             target_contexts: List of cultural contexts to generate materials for
-            
+
         Returns:
             List of adapted health education materials
         """
         materials = []
-        
+
         for context in target_contexts:
             logger.info(
                 f"Generating material for {context.get_description()}"
             )
-            
+
             # Step 1: Adapt literacy level if needed
             adapted_content = self._adapt_literacy_level(
                 content,
                 context.health_literacy_level,
             )
-            
+
             # Step 2: Cultural adaptation
             culturally_adapted = self._apply_cultural_adaptation(
                 adapted_content,
                 health_topic,
                 context,
             )
-            
+
             # Step 3: Translation if needed
             if context.primary_language != self.source_language:
                 translated = self._translate_content(
@@ -2321,18 +2306,18 @@ class MultilingualHealthEducation:
             else:
                 translated = culturally_adapted
                 translation_quality = 1.0
-            
+
             # Step 4: Validation
             medical_accuracy = self._validate_medical_accuracy(
                 original=content,
                 adapted=translated,
             )
-            
+
             cultural_appropriateness = self._validate_cultural_appropriateness(
                 translated,
                 context,
             )
-            
+
             # Create material
             material = HealthEducationMaterial(
                 title=self._generate_title(health_topic, context),
@@ -2345,17 +2330,17 @@ class MultilingualHealthEducation:
                 culturally_appropriate=cultural_appropriateness,
                 translation_quality_score=translation_quality,
             )
-            
+
             materials.append(material)
-            
+
             logger.info(
                 f"Generated material: {material.title} "
                 f"(medical accuracy: {medical_accuracy}, "
                 f"cultural appropriateness: {cultural_appropriateness})"
             )
-        
+
         return materials
-    
+
     def _adapt_literacy_level(
         self,
         content: str,
@@ -2363,13 +2348,13 @@ class MultilingualHealthEducation:
     ) -> str:
         """
         Adapt content to target health literacy level.
-        
+
         Simplifies language while maintaining medical accuracy.
         """
         if target_level == HealthLiteracyLevel.ADVANCED:
             # No simplification needed
             return content
-        
+
         # Load simplification model if not loaded
         if not hasattr(self, 'simplification_model'):
             self.simplification_model = AutoModelForSeq2SeqLM.from_pretrained(
@@ -2378,7 +2363,7 @@ class MultilingualHealthEducation:
             self.simplification_tokenizer = AutoTokenizer.from_pretrained(
                 self.simplification_model_name
             )
-        
+
         # Determine simplification parameters
         if target_level == HealthLiteracyLevel.BASIC:
             max_length = 100  # Shorter sentences
@@ -2386,7 +2371,7 @@ class MultilingualHealthEducation:
         else:  # INTERMEDIATE
             max_length = 150
             num_beams = 3
-        
+
         # Simplify content
         # In production, use medical-specific simplification models
         # trained on health literacy corpora
@@ -2396,7 +2381,7 @@ class MultilingualHealthEducation:
             max_length=512,
             truncation=True,
         ).to(self.device)
-        
+
         with torch.no_grad():
             outputs = self.simplification_model.generate(
                 **inputs,
@@ -2404,17 +2389,17 @@ class MultilingualHealthEducation:
                 num_beams=num_beams,
                 early_stopping=True,
             )
-        
+
         simplified = self.simplification_tokenizer.decode(
             outputs[0],
             skip_special_tokens=True,
         )
-        
+
         # Post-process to preserve medical terms
         simplified = self._preserve_medical_terms(content, simplified)
-        
+
         return simplified
-    
+
     def _preserve_medical_terms(
         self,
         original: str,
@@ -2422,7 +2407,7 @@ class MultilingualHealthEducation:
     ) -> str:
         """
         Ensure critical medical terms are preserved in simplified text.
-        
+
         Replaces oversimplified medical terms with accurate terminology.
         """
         # Extract medical terms from original
@@ -2430,7 +2415,7 @@ class MultilingualHealthEducation:
         for term in self.medical_terms_to_preserve:
             if term.lower() in original.lower():
                 original_terms.add(term)
-        
+
         # Check if terms are preserved in simplified version
         result = simplified
         for term in original_terms:
@@ -2441,9 +2426,9 @@ class MultilingualHealthEducation:
                 logger.warning(
                     f"Medical term '{term}' was oversimplified, attempting restoration"
                 )
-        
+
         return result
-    
+
     def _apply_cultural_adaptation(
         self,
         content: str,
@@ -2452,15 +2437,15 @@ class MultilingualHealthEducation:
     ) -> str:
         """
         Apply cultural adaptations to content.
-        
+
         Adjusts framing, examples, and communication style for cultural context.
         """
         adapted = content
-        
+
         # Apply template-based adaptations
         if health_topic in self.cultural_templates:
             templates = self.cultural_templates[health_topic]
-            
+
             # Adjust for individualist vs collectivist orientation
             if context.individualist_vs_collectivist < 0.5:
                 # Collectivist culture - emphasize family and community
@@ -2468,21 +2453,21 @@ class MultilingualHealthEducation:
             else:
                 # Individualist culture - emphasize personal control
                 adapted = self._add_individualist_framing(adapted, templates)
-            
+
             # Adjust for communication directness
             if context.direct_vs_indirect_communication < 0.5:
                 # Indirect communication preferred - soften directives
                 adapted = self._soften_directives(adapted)
-        
+
         # Add culturally relevant examples
         adapted = self._add_cultural_examples(
             adapted,
             health_topic,
             context,
         )
-        
+
         return adapted
-    
+
     def _add_collectivist_framing(
         self,
         content: str,
@@ -2495,10 +2480,10 @@ class MultilingualHealthEducation:
             "Your health is important to your community.",
             "Discuss these recommendations with your family.",
         ]
-        
+
         # Append appropriate framing
         return content + "\n\n" + collectivist_additions[0]
-    
+
     def _add_individualist_framing(
         self,
         content: str,
@@ -2510,31 +2495,31 @@ class MultilingualHealthEducation:
             "These steps empower you to manage your condition.",
             "Your choices make a difference in your health outcomes.",
         ]
-        
+
         return content + "\n\n" + individualist_additions[0]
-    
+
     def _soften_directives(self, content: str) -> str:
         """
         Soften direct commands for cultures preferring indirect communication.
-        
+
         Converts commands to suggestions and questions.
         """
         # Replace imperative verbs with softer alternatives
         # This is simplified - production systems need sophisticated NLU
         softened = content
-        
+
         replacements = {
             r'\bMust\b': 'It would be beneficial to',
             r'\bShould\b': 'You might consider',
             r'\bDo not\b': 'It is recommended to avoid',
             r'\bStop\b': 'Consider stopping',
         }
-        
+
         for pattern, replacement in replacements.items():
             softened = re.sub(pattern, replacement, softened, flags=re.IGNORECASE)
-        
+
         return softened
-    
+
     def _add_cultural_examples(
         self,
         content: str,
@@ -2543,12 +2528,12 @@ class MultilingualHealthEducation:
     ) -> str:
         """
         Add culturally relevant examples and context.
-        
+
         Uses local foods, activities, and contexts in examples.
         """
         # In production, maintain database of culturally specific examples
         # This is a simplified demonstration
-        
+
         if health_topic == "diabetes management" and "diet" in content.lower():
             # Add culture-specific dietary examples
             if context.country == "India":
@@ -2557,11 +2542,11 @@ class MultilingualHealthEducation:
                 example = "\n\nFor example, choose corn tortillas over flour, include beans and vegetables, and limit sugary drinks."
             else:
                 example = "\n\nChoose whole grains, lean proteins, and vegetables in your meals."
-            
+
             content += example
-        
+
         return content
-    
+
     def _translate_content(
         self,
         content: str,
@@ -2569,16 +2554,16 @@ class MultilingualHealthEducation:
     ) -> str:
         """
         Translate content to target language.
-        
+
         Uses neural machine translation with medical term preservation.
         """
         # Load translation model if not cached
         model_key = f"{self.source_language}-{target_language}"
-        
+
         if model_key not in self.translation_models:
             # Load appropriate MarianMT model
             model_name = f"Helsinki-NLP/opus-mt-{self.source_language}-{target_language}"
-            
+
             try:
                 model = MarianMTModel.from_pretrained(model_name).to(self.device)
                 tokenizer = MarianTokenizer.from_pretrained(model_name)
@@ -2587,12 +2572,12 @@ class MultilingualHealthEducation:
             except Exception as e:
                 logger.error(f"Failed to load translation model: {e}")
                 return f"[Translation to {target_language} unavailable: {content}]"
-        
+
         model, tokenizer = self.translation_models[model_key]
-        
+
         # Prepare text for translation (preserve medical terms)
         protected_text, term_mappings = self._protect_medical_terms_for_translation(content)
-        
+
         # Translate
         inputs = tokenizer(
             protected_text,
@@ -2601,40 +2586,40 @@ class MultilingualHealthEducation:
             truncation=True,
             max_length=512,
         ).to(self.device)
-        
+
         with torch.no_grad():
             translated_tokens = model.generate(**inputs, max_length=512)
-        
+
         translated = tokenizer.decode(translated_tokens[0], skip_special_tokens=True)
-        
+
         # Restore medical terms
         translated = self._restore_medical_terms_after_translation(
             translated,
             term_mappings,
         )
-        
+
         return translated
-    
+
     def _protect_medical_terms_for_translation(
         self,
         text: str,
     ) -> Tuple[str, Dict[str, str]]:
         """
         Replace medical terms with placeholders before translation.
-        
+
         Prevents mistranslation of critical medical terminology.
         """
         protected_text = text
         term_mappings = {}
-        
+
         for i, term in enumerate(self.medical_terms_to_preserve):
             if term in text:
                 placeholder = f"__MEDICAL_TERM_{i}__"
                 protected_text = protected_text.replace(term, placeholder)
                 term_mappings[placeholder] = term
-        
+
         return protected_text, term_mappings
-    
+
     def _restore_medical_terms_after_translation(
         self,
         translated: str,
@@ -2645,7 +2630,7 @@ class MultilingualHealthEducation:
         for placeholder, term in term_mappings.items():
             result = result.replace(placeholder, term)
         return result
-    
+
     def _assess_translation_quality(
         self,
         source: str,
@@ -2654,7 +2639,7 @@ class MultilingualHealthEducation:
     ) -> float:
         """
         Assess translation quality.
-        
+
         In production, use BLEU, COMET, or human evaluation.
         This is a simplified placeholder.
         """
@@ -2662,7 +2647,7 @@ class MultilingualHealthEducation:
         # In production: Use reference translations and automatic metrics
         # or human evaluation for medical content
         return 0.85  # Assumed good quality
-    
+
     def _validate_medical_accuracy(
         self,
         original: str,
@@ -2670,34 +2655,34 @@ class MultilingualHealthEducation:
     ) -> bool:
         """
         Validate that adapted content maintains medical accuracy.
-        
+
         Checks that critical medical information is preserved.
         In production, use medical knowledge bases and clinical review.
         """
         # Simplified validation
         # In production: Extract medical facts from both versions
         # and verify consistency using medical knowledge graphs
-        
+
         # Check for presence of key medical terms
         critical_terms = [
             term for term in self.medical_terms_to_preserve
             if term.lower() in original.lower()
         ]
-        
+
         preserved_count = sum(
             1 for term in critical_terms
             if term.lower() in adapted.lower()
         )
-        
+
         preservation_rate = (
             preserved_count / len(critical_terms)
             if critical_terms
             else 1.0
         )
-        
+
         # Require >80% preservation of critical terms
         return preservation_rate > 0.8
-    
+
     def _validate_cultural_appropriateness(
         self,
         content: str,
@@ -2705,20 +2690,20 @@ class MultilingualHealthEducation:
     ) -> bool:
         """
         Validate cultural appropriateness of content.
-        
+
         In production, requires community review by cultural experts.
         This provides automated preliminary checks only.
         """
         # Preliminary automated checks
         # Real validation requires community review
-        
+
         # Check for potentially inappropriate content
         sensitive_topics = ['death', 'sexuality', 'mental illness']
         has_sensitive_content = any(
             topic in content.lower()
             for topic in sensitive_topics
         )
-        
+
         if has_sensitive_content:
             # Flag for community review
             logger.warning(
@@ -2726,9 +2711,9 @@ class MultilingualHealthEducation:
                 f"for {context.get_description()}"
             )
             return False  # Requires manual review
-        
+
         return True  # Preliminary check passed
-    
+
     def _generate_title(
         self,
         health_topic: str,
@@ -2737,11 +2722,11 @@ class MultilingualHealthEducation:
         """Generate culturally appropriate title."""
         # In production, translate and culturally adapt title
         return f"{health_topic.title()} - Information for Patients"
-    
+
     def _load_medical_terminology(self) -> Set[str]:
         """
         Load medical terms that should be preserved in translation/simplification.
-        
+
         In production, load from medical ontologies (SNOMED CT, etc.).
         """
         # Simplified example set
@@ -2751,11 +2736,11 @@ class MultilingualHealthEducation:
             'antibiotic', 'vaccine', 'treatment', 'diagnosis',
             'medication', 'prescription', 'dosage',
         }
-    
+
     def _load_cultural_templates(self) -> Dict[str, Dict]:
         """
         Load cultural adaptation templates.
-        
+
         In production, develop through participatory design with
         communities and cultural experts.
         """
@@ -2784,17 +2769,19 @@ Federated learning enables collaborative model training without sharing raw data
 
 The standard federated learning protocol proceeds iteratively:
 
-1. A central server initializes a global model $$\theta^{(0)}$$
-2. The server distributes the current global model $$\theta^{(t)}$$ to participating clients
-3. Each client $k$ trains the model on their local data for several iterations, computing updated parameters $$\theta_k^{(t+1)}$$
-4. Clients send model updates $$\Delta\theta_k = \theta_k^{(t+1)} - \theta^{(t)}$$ to the server
-5. The server aggregates updates to create an improved global model $$\theta^{(t+1)}$$
+1. A central server initializes a global model $\theta^{(0)}$
+2. The server distributes the current global model $\theta^{(t)}$ to participating clients
+3. Each client $k$ trains the model on their local data for several iterations, computing updated parameters $\theta_k^{(t+1)}$
+4. Clients send model updates $\Delta\theta_k = \theta_k^{(t+1)} - \theta^{(t)}$ to the server
+5. The server aggregates updates to create an improved global model $\theta^{(t+1)}$
 
 The most common aggregation strategy is Federated Averaging (FedAvg), which weights each client's contribution by their dataset size:
 
-$$\theta^{(t+1)} = \theta^{(t)} + \sum_{k=1}^K \frac{n_k}{n} \Delta\theta_k$$
+$$
+\theta^{(t+1)} = \theta^{(t)} + \sum_{k=1}^K \frac{n_k}{n} \Delta\theta_k
+$$
 
-where $$n_k$$ is the number of samples at client $k$ and $$n = \sum_k n_k$$ is the total.
+where $n_k$ is the number of samples at client $k$ and $n = \sum_k n_k$ is the total.
 
 For global health applications, participating clients might be hospitals in different countries, health ministries, or regional health systems. Each maintains complete control over their data while contributing to model improvement.
 
@@ -2841,7 +2828,6 @@ from collections import OrderedDict
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class ClientInfo:
     """Information about federated learning client."""
@@ -2851,11 +2837,10 @@ class ClientInfo:
     data_size: int
     computational_capacity: str  # 'high', 'medium', 'low'
     network_bandwidth: str  # 'high', 'medium', 'low'
-    
+
     def get_description(self) -> str:
         """Get human-readable client description."""
         return f"{self.institution_name} ({self.country}, n={self.data_size})"
-
 
 @dataclass
 class FederatedRound:
@@ -2866,22 +2851,21 @@ class FederatedRound:
     client_updates: Dict[str, OrderedDict]
     aggregation_weights: Dict[str, float]
     timestamp: str
-    
+
     def get_round_hash(self) -> str:
         """Generate hash for round verification."""
         # Create deterministic representation for hashing
         round_data = f"{self.round_number}-{sorted(self.participating_clients)}"
         return hashlib.sha256(round_data.encode()).hexdigest()[:16]
 
-
 class DifferentialPrivacy:
     """
     Differential privacy mechanism for federated learning.
-    
+
     Adds calibrated noise to model updates to provide formal privacy
     guarantees while maintaining model utility.
     """
-    
+
     def __init__(
         self,
         epsilon: float = 1.0,
@@ -2890,7 +2874,7 @@ class DifferentialPrivacy:
     ):
         """
         Initialize differential privacy mechanism.
-        
+
         Args:
             epsilon: Privacy budget (smaller = more private, less accurate)
             delta: Privacy parameter (probability of privacy violation)
@@ -2899,22 +2883,22 @@ class DifferentialPrivacy:
         self.epsilon = epsilon
         self.delta = delta
         self.max_grad_norm = max_grad_norm
-        
+
         logger.info(
             f"Initialized DP with ε={epsilon}, δ={delta}, "
             f"max_norm={max_grad_norm}"
         )
-    
+
     def clip_gradients(
         self,
         model_update: OrderedDict,
     ) -> OrderedDict:
         """
         Clip gradients to bound sensitivity.
-        
+
         Args:
             model_update: Model parameter updates
-            
+
         Returns:
             Clipped model updates
         """
@@ -2923,20 +2907,20 @@ class DifferentialPrivacy:
         for param_update in model_update.values():
             total_norm += torch.sum(param_update ** 2).item()
         total_norm = np.sqrt(total_norm)
-        
+
         # Clip if necessary
         clip_coef = self.max_grad_norm / (total_norm + 1e-6)
-        
+
         if clip_coef < 1.0:
             clipped_update = OrderedDict()
             for name, param_update in model_update.items():
                 clipped_update[name] = param_update * clip_coef
-            
+
             logger.debug(f"Clipped gradients: norm {total_norm:.4f} -> {self.max_grad_norm}")
             return clipped_update
-        
+
         return model_update
-    
+
     def add_noise(
         self,
         model_update: OrderedDict,
@@ -2944,11 +2928,11 @@ class DifferentialPrivacy:
     ) -> OrderedDict:
         """
         Add Gaussian noise for differential privacy.
-        
+
         Args:
             model_update: Clipped model updates
             num_samples: Number of samples used for this update
-            
+
         Returns:
             Noised model updates
         """
@@ -2957,16 +2941,16 @@ class DifferentialPrivacy:
         # In production, use more sophisticated composition
         sensitivity = 2 * self.max_grad_norm / num_samples
         noise_scale = sensitivity * np.sqrt(2 * np.log(1.25 / self.delta)) / self.epsilon
-        
+
         noised_update = OrderedDict()
         for name, param_update in model_update.items():
             noise = torch.randn_like(param_update) * noise_scale
             noised_update[name] = param_update + noise
-        
+
         logger.debug(f"Added DP noise with scale {noise_scale:.6f}")
-        
+
         return noised_update
-    
+
     def privatize_update(
         self,
         model_update: OrderedDict,
@@ -2974,31 +2958,30 @@ class DifferentialPrivacy:
     ) -> OrderedDict:
         """
         Apply differential privacy to model update.
-        
+
         Args:
             model_update: Raw model updates
             num_samples: Number of samples in local dataset
-            
+
         Returns:
             Privacy-preserving model updates
         """
         # Step 1: Clip gradients
         clipped = self.clip_gradients(model_update)
-        
+
         # Step 2: Add noise
         private = self.add_noise(clipped, num_samples)
-        
-        return private
 
+        return private
 
 class FederatedClient:
     """
     Federated learning client for local model training.
-    
+
     Trains model locally on private data and shares only
     model updates (with optional differential privacy).
     """
-    
+
     def __init__(
         self,
         client_info: ClientInfo,
@@ -3010,7 +2993,7 @@ class FederatedClient:
     ):
         """
         Initialize federated client.
-        
+
         Args:
             client_info: Client metadata
             model: Local model (initialized with global parameters)
@@ -3023,7 +3006,7 @@ class FederatedClient:
         self.model = model.to(device)
         self.train_loader = train_loader
         self.device = device
-        
+
         # Differential privacy
         self.use_differential_privacy = use_differential_privacy
         if use_differential_privacy:
@@ -3032,12 +3015,12 @@ class FederatedClient:
                 delta=1e-5,
                 max_grad_norm=1.0,
             )
-        
+
         logger.info(
             f"Initialized federated client: {client_info.get_description()} "
             f"(DP: {use_differential_privacy})"
         )
-    
+
     def train_local_model(
         self,
         num_epochs: int = 1,
@@ -3045,11 +3028,11 @@ class FederatedClient:
     ) -> OrderedDict:
         """
         Train model on local data.
-        
+
         Args:
             num_epochs: Number of local training epochs
             learning_rate: Learning rate for local training
-            
+
         Returns:
             Model parameter updates (with optional DP)
         """
@@ -3057,58 +3040,58 @@ class FederatedClient:
         initial_params = OrderedDict()
         for name, param in self.model.named_parameters():
             initial_params[name] = param.data.clone()
-        
+
         # Local training
         optimizer = torch.optim.SGD(
             self.model.parameters(),
             lr=learning_rate,
         )
         criterion = nn.CrossEntropyLoss()
-        
+
         self.model.train()
-        
+
         for epoch in range(num_epochs):
             epoch_loss = 0.0
-            
+
             for data, labels in self.train_loader:
                 data, labels = data.to(self.device), labels.to(self.device)
-                
+
                 optimizer.zero_grad()
                 outputs = self.model(data)
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
-                
+
                 epoch_loss += loss.item()
-            
+
             avg_loss = epoch_loss / len(self.train_loader)
             logger.debug(
                 f"Client {self.client_info.client_id} - "
                 f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}"
             )
-        
+
         # Calculate parameter updates
         updates = OrderedDict()
         for name, param in self.model.named_parameters():
             updates[name] = param.data - initial_params[name]
-        
+
         # Apply differential privacy if enabled
         if self.use_differential_privacy:
             updates = self.dp_mechanism.privatize_update(
                 updates,
                 num_samples=len(self.train_loader.dataset),
             )
-        
+
         logger.info(
             f"Client {self.client_info.client_id} completed local training"
         )
-        
+
         return updates
-    
+
     def update_model(self, global_params: OrderedDict):
         """
         Update local model with new global parameters.
-        
+
         Args:
             global_params: Updated global model parameters
         """
@@ -3116,50 +3099,49 @@ class FederatedClient:
         logger.debug(
             f"Client {self.client_info.client_id} updated with global model"
         )
-    
+
     def evaluate_model(
         self,
         test_loader: DataLoader,
     ) -> Dict[str, float]:
         """
         Evaluate local model performance.
-        
+
         Args:
             test_loader: Local test data
-            
+
         Returns:
             Dictionary of performance metrics
         """
         self.model.eval()
         correct = 0
         total = 0
-        
+
         with torch.no_grad():
             for data, labels in test_loader:
                 data, labels = data.to(self.device), labels.to(self.device)
-                
+
                 outputs = self.model(data)
                 predictions = outputs.argmax(dim=1)
-                
+
                 correct += (predictions == labels).sum().item()
                 total += labels.size(0)
-        
+
         accuracy = correct / total if total > 0 else 0.0
-        
+
         return {
             'accuracy': accuracy,
             'num_samples': total,
         }
 
-
 class FederatedServer:
     """
     Federated learning server for coordinating global model training.
-    
+
     Aggregates client updates while respecting data sovereignty
     and providing equitable participation across institutions.
     """
-    
+
     def __init__(
         self,
         global_model: nn.Module,
@@ -3170,7 +3152,7 @@ class FederatedServer:
     ):
         """
         Initialize federated server.
-        
+
         Args:
             global_model: Global model to train
             clients: List of participating clients
@@ -3183,15 +3165,15 @@ class FederatedServer:
         self.device = device
         self.aggregation_strategy = aggregation_strategy
         self.min_clients_per_round = min_clients_per_round
-        
+
         self.round_history: List[FederatedRound] = []
         self.current_round = 0
-        
+
         logger.info(
             f"Initialized federated server with {len(clients)} clients "
             f"(strategy: {aggregation_strategy})"
         )
-    
+
     def train_round(
         self,
         num_local_epochs: int = 1,
@@ -3199,58 +3181,58 @@ class FederatedServer:
     ) -> FederatedRound:
         """
         Execute one round of federated training.
-        
+
         Args:
             num_local_epochs: Local training epochs per client
             client_sample_fraction: Fraction of clients to sample
-            
+
         Returns:
             FederatedRound containing round information
         """
         self.current_round += 1
-        
+
         # Sample clients for this round
         num_clients_to_sample = max(
             self.min_clients_per_round,
             int(len(self.clients) * client_sample_fraction),
         )
-        
+
         sampled_client_ids = np.random.choice(
             list(self.clients.keys()),
             size=min(num_clients_to_sample, len(self.clients)),
             replace=False,
         )
-        
+
         logger.info(
             f"\n{'='*60}\n"
             f"Starting Federated Learning Round {self.current_round}\n"
             f"Participating clients: {len(sampled_client_ids)}/{len(self.clients)}\n"
             f"{'='*60}"
         )
-        
+
         # Distribute current global model to clients
         global_params = self.global_model.state_dict()
         for client_id in sampled_client_ids:
             self.clients[client_id].update_model(global_params)
-        
+
         # Collect client updates
         client_updates = {}
         client_weights = {}
-        
+
         for client_id in sampled_client_ids:
             client = self.clients[client_id]
-            
+
             logger.info(
                 f"Training client: {client.client_info.get_description()}"
             )
-            
+
             # Local training
             updates = client.train_local_model(
                 num_epochs=num_local_epochs,
             )
-            
+
             client_updates[client_id] = updates
-            
+
             # Calculate aggregation weight
             if self.aggregation_strategy == "fedavg":
                 # Weight by dataset size
@@ -3258,23 +3240,23 @@ class FederatedServer:
             else:  # equal_weight
                 # Equal contribution regardless of data size
                 client_weights[client_id] = 1.0
-        
+
         # Normalize weights
         total_weight = sum(client_weights.values())
         aggregation_weights = {
             client_id: weight / total_weight
             for client_id, weight in client_weights.items()
         }
-        
+
         # Aggregate updates
         aggregated_update = self._aggregate_updates(
             client_updates,
             aggregation_weights,
         )
-        
+
         # Update global model
         self._update_global_model(aggregated_update)
-        
+
         # Create round record
         fed_round = FederatedRound(
             round_number=self.current_round,
@@ -3284,16 +3266,16 @@ class FederatedServer:
             aggregation_weights=aggregation_weights,
             timestamp=datetime.utcnow().isoformat(),
         )
-        
+
         self.round_history.append(fed_round)
-        
+
         logger.info(
             f"Completed round {self.current_round} - "
             f"Global model updated"
         )
-        
+
         return fed_round
-    
+
     def _aggregate_updates(
         self,
         client_updates: Dict[str, OrderedDict],
@@ -3301,21 +3283,21 @@ class FederatedServer:
     ) -> OrderedDict:
         """
         Aggregate client updates into global update.
-        
+
         Args:
             client_updates: Dict mapping client_id to model updates
             weights: Dict mapping client_id to aggregation weights
-            
+
         Returns:
             Aggregated model update
         """
         # Initialize aggregated update
         aggregated = OrderedDict()
-        
+
         # Get parameter names from first client
         first_client_id = next(iter(client_updates.keys()))
         param_names = client_updates[first_client_id].keys()
-        
+
         # Aggregate each parameter
         for param_name in param_names:
             # Weighted sum of client updates
@@ -3323,63 +3305,63 @@ class FederatedServer:
                 client_updates[client_id][param_name] * weights[client_id]
                 for client_id in client_updates.keys()
             )
-            
+
             aggregated[param_name] = weighted_sum
-        
+
         return aggregated
-    
+
     def _update_global_model(self, aggregated_update: OrderedDict):
         """
         Update global model with aggregated updates.
-        
+
         Args:
             aggregated_update: Aggregated parameter updates
         """
         current_params = self.global_model.state_dict()
-        
+
         updated_params = OrderedDict()
         for name, param in current_params.items():
             updated_params[name] = param + aggregated_update[name]
-        
+
         self.global_model.load_state_dict(updated_params)
-    
+
     def evaluate_global_model(
         self,
         test_loaders_by_client: Dict[str, DataLoader],
     ) -> Dict[str, Dict[str, float]]:
         """
         Evaluate global model performance across all clients.
-        
+
         Critical for assessing whether federated learning achieves
         equitable performance across diverse institutions.
-        
+
         Args:
             test_loaders_by_client: Test data for each client
-            
+
         Returns:
             Dict mapping client_id to performance metrics
         """
         results = {}
-        
+
         for client_id, test_loader in test_loaders_by_client.items():
             client = self.clients[client_id]
-            
+
             # Update client model with current global parameters
             client.update_model(self.global_model.state_dict())
-            
+
             # Evaluate
             metrics = client.evaluate_model(test_loader)
-            
+
             results[client_id] = {
                 **metrics,
                 'client_description': client.client_info.get_description(),
             }
-            
+
             logger.info(
                 f"Client {client_id} ({client.client_info.get_description()}): "
                 f"Accuracy = {metrics['accuracy']:.4f}"
             )
-        
+
         # Calculate summary statistics
         accuracies = [m['accuracy'] for m in results.values()]
         results['summary'] = {
@@ -3389,25 +3371,25 @@ class FederatedServer:
             'max_accuracy': np.max(accuracies),
             'accuracy_gap': np.max(accuracies) - np.min(accuracies),
         }
-        
+
         logger.info(
             f"\nGlobal Model Performance Summary:\n"
             f"  Mean Accuracy: {results['summary']['mean_accuracy']:.4f}\n"
             f"  Std Dev: {results['summary']['std_accuracy']:.4f}\n"
             f"  Min-Max Gap: {results['summary']['accuracy_gap']:.4f}\n"
         )
-        
+
         return results
-    
+
     def save_global_model(self, path: str):
         """Save global model to disk."""
         torch.save(self.global_model.state_dict(), path)
         logger.info(f"Saved global model to {path}")
-    
+
     def get_training_summary(self) -> Dict[str, Any]:
         """
         Generate training summary with equity metrics.
-        
+
         Returns:
             Dictionary containing training history and equity analysis
         """
@@ -3416,7 +3398,7 @@ class FederatedServer:
             'total_clients': len(self.clients),
             'aggregation_strategy': self.aggregation_strategy,
         }
-        
+
         # Analyze participation equity
         participation_counts = {}
         for fed_round in self.round_history:
@@ -3424,18 +3406,18 @@ class FederatedServer:
                 participation_counts[client_id] = (
                     participation_counts.get(client_id, 0) + 1
                 )
-        
+
         participation_rates = {
             client_id: count / self.current_round
             for client_id, count in participation_counts.items()
         }
-        
+
         summary['participation'] = {
             'by_client': participation_rates,
             'min_participation': min(participation_rates.values()) if participation_rates else 0,
             'max_participation': max(participation_rates.values()) if participation_rates else 0,
         }
-        
+
         return summary
 ```
 

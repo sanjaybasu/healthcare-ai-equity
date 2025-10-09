@@ -2,9 +2,10 @@
 layout: chapter
 title: "Chapter 21: Health Equity Metrics and Evaluation Frameworks"
 chapter_number: 21
+part_number: 5
+prev_chapter: /chapters/chapter-20-monitoring-maintenance/
+next_chapter: /chapters/chapter-22-clinical-decision-support/
 ---
-
-
 # Chapter 21: Clinical Risk Prediction with Fairness Constraints
 
 ## Learning Objectives
@@ -82,12 +83,12 @@ class VitalSignObservation:
     respiratory_rate: Optional[float]
     temperature: Optional[float]
     oxygen_saturation: Optional[float]
-    
-@dataclass  
+
+@dataclass
 class PatientTimeSeries:
     """
     Complete time series data for a single patient.
-    
+
     Includes vital signs, laboratory values, medications, and metadata
     about care setting and patient demographics.
     """
@@ -107,11 +108,11 @@ class PatientTimeSeries:
 class IrregularTimeSeriesDataset(Dataset):
     """
     PyTorch dataset for irregular clinical time series.
-    
+
     Handles variable-length sequences, missing values, and creates
     features encoding the observation process itself.
     """
-    
+
     def __init__(
         self,
         patient_series: List[PatientTimeSeries],
@@ -120,7 +121,7 @@ class IrregularTimeSeriesDataset(Dataset):
     ):
         """
         Initialize dataset.
-        
+
         Args:
             patient_series: List of patient time series
             max_sequence_length: Maximum number of observations to include
@@ -129,27 +130,27 @@ class IrregularTimeSeriesDataset(Dataset):
         self.patient_series = patient_series
         self.max_sequence_length = max_sequence_length
         self.max_hours_lookback = max_hours_lookback
-        
+
         # Define vital sign names for easier indexing
         self.vital_signs = [
             'heart_rate', 'systolic_bp', 'diastolic_bp',
             'respiratory_rate', 'temperature', 'oxygen_saturation'
         ]
-        
+
         # Compute normalization statistics from training data
         self._compute_normalization_stats()
-        
+
     def _compute_normalization_stats(self):
         """Compute mean and std for each vital sign."""
         all_values = {vs: [] for vs in self.vital_signs}
-        
+
         for patient in self.patient_series:
             for obs in patient.observations:
                 for vs in self.vital_signs:
                     value = getattr(obs, vs)
                     if value is not None:
                         all_values[vs].append(value)
-        
+
         self.means = {}
         self.stds = {}
         for vs in self.vital_signs:
@@ -159,14 +160,14 @@ class IrregularTimeSeriesDataset(Dataset):
             else:
                 self.means[vs] = 0.0
                 self.stds[vs] = 1.0
-    
+
     def __len__(self) -> int:
         return len(self.patient_series)
-    
+
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         """
         Get a single patient time series as tensors.
-        
+
         Returns dictionary containing:
         - vitals: (seq_len, n_vitals) tensor of vital signs
         - mask: (seq_len, n_vitals) binary tensor indicating observed values
@@ -176,32 +177,32 @@ class IrregularTimeSeriesDataset(Dataset):
         - outcome: (1,) tensor indicating deterioration
         """
         patient = self.patient_series[idx]
-        
+
         # Filter observations within lookback window
         recent_obs = [
             obs for obs in patient.observations
             if obs.timestamp <= self.max_hours_lookback
         ]
-        
+
         # Limit to max sequence length (take most recent)
         if len(recent_obs) > self.max_sequence_length:
             recent_obs = recent_obs[-self.max_sequence_length:]
-        
+
         seq_len = len(recent_obs)
         n_vitals = len(self.vital_signs)
-        
+
         # Initialize arrays
         vitals = np.zeros((seq_len, n_vitals))
         mask = np.zeros((seq_len, n_vitals))
         time_delta = np.zeros(seq_len)
-        
+
         # Fill in observations
         prev_timestamp = 0.0
         for i, obs in enumerate(recent_obs):
             # Time since last observation (informative feature)
             time_delta[i] = obs.timestamp - prev_timestamp
             prev_timestamp = obs.timestamp
-            
+
             # Extract and normalize vital signs
             for j, vs in enumerate(self.vital_signs):
                 value = getattr(obs, vs)
@@ -210,31 +211,31 @@ class IrregularTimeSeriesDataset(Dataset):
                     normalized = (value - self.means[vs]) / (self.stds[vs] + 1e-8)
                     vitals[i, j] = normalized
                     mask[i, j] = 1.0
-        
+
         # Encode care setting
         care_setting_map = {'icu': 0, 'step_down': 1, 'general_ward': 2}
         care_setting = care_setting_map.get(patient.care_setting, 2)
-        
+
         # Encode demographics
         sex_encoding = 1.0 if patient.sex == 'M' else 0.0
-        
+
         # For fairness evaluation, we encode but also track separately
         race_map = {'white': 0, 'black': 1, 'asian': 2, 'hispanic': 3, 'other': 4}
         race_encoding = race_map.get(patient.race.lower(), 4)
-        
+
         insurance_map = {'medicare': 0, 'medicaid': 1, 'commercial': 2, 'uninsured': 3}
         insurance_encoding = insurance_map.get(patient.insurance.lower(), 3)
-        
+
         # Normalize age
         normalized_age = (patient.age - 60.0) / 15.0
-        
+
         demographics = np.array([
             normalized_age,
             sex_encoding,
             float(race_encoding),  # Include but will monitor for proxy discrimination
             float(insurance_encoding)
         ])
-        
+
         return {
             'vitals': torch.FloatTensor(vitals),
             'mask': torch.FloatTensor(mask),
@@ -251,14 +252,14 @@ class IrregularTimeSeriesDataset(Dataset):
 class DeteriorationPredictionRNN(nn.Module):
     """
     Recurrent neural network for clinical deterioration prediction.
-    
+
     Architecture specifically designed for irregular clinical time series:
     - LSTM to handle variable-length sequences
     - Attention mechanism to identify important time points
     - Explicit modeling of observation times and missing data patterns
     - Care setting-specific processing branches
     """
-    
+
     def __init__(
         self,
         n_vitals: int = 6,
@@ -271,17 +272,17 @@ class DeteriorationPredictionRNN(nn.Module):
     ):
         """Initialize deterioration prediction model."""
         super().__init__()
-        
+
         self.n_vitals = n_vitals
         self.hidden_size = hidden_size
         self.use_attention = use_attention
-        
+
         # Embedding for care setting
         self.care_setting_embedding = nn.Embedding(n_care_settings, 16)
-        
+
         # Input dimension includes vitals, mask, and time delta
         lstm_input_size = n_vitals * 2 + 1  # vitals + mask + time_delta
-        
+
         # LSTM for sequential processing
         self.lstm = nn.LSTM(
             input_size=lstm_input_size,
@@ -291,7 +292,7 @@ class DeteriorationPredictionRNN(nn.Module):
             dropout=dropout if num_layers > 1 else 0.0,
             bidirectional=False
         )
-        
+
         # Attention mechanism over time steps
         if use_attention:
             self.attention = nn.Sequential(
@@ -299,10 +300,10 @@ class DeteriorationPredictionRNN(nn.Module):
                 nn.Tanh(),
                 nn.Linear(hidden_size, 1)
             )
-        
+
         # Combine LSTM output with demographics and care setting
         combined_size = hidden_size + n_demographics + 16
-        
+
         # Final prediction layers
         self.prediction_head = nn.Sequential(
             nn.Linear(combined_size, 64),
@@ -313,7 +314,7 @@ class DeteriorationPredictionRNN(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(32, 1)
         )
-        
+
     def forward(
         self,
         vitals: torch.Tensor,
@@ -324,66 +325,66 @@ class DeteriorationPredictionRNN(nn.Module):
     ) -> torch.Tensor:
         """
         Forward pass.
-        
+
         Args:
             vitals: (batch, seq_len, n_vitals)
             mask: (batch, seq_len, n_vitals)
             time_delta: (batch, seq_len)
             care_setting: (batch, 1)
             demographics: (batch, n_demographics)
-            
+
         Returns:
             predictions: (batch, 1) deterioration probabilities
         """
         batch_size, seq_len, _ = vitals.shape
-        
+
         # Concatenate vitals with mask and time information
         # The mask tells the model which values are observed vs imputed
         time_delta_expanded = time_delta.unsqueeze(-1)  # (batch, seq_len, 1)
         lstm_input = torch.cat([vitals, mask, time_delta_expanded], dim=-1)
-        
+
         # Process through LSTM
         lstm_out, (hidden, cell) = self.lstm(lstm_input)
         # lstm_out: (batch, seq_len, hidden_size)
-        
+
         if self.use_attention:
             # Compute attention weights over time steps
             attention_scores = self.attention(lstm_out)  # (batch, seq_len, 1)
             attention_weights = torch.softmax(attention_scores, dim=1)
-            
+
             # Weighted sum of LSTM outputs
             context = (lstm_out * attention_weights).sum(dim=1)  # (batch, hidden_size)
         else:
             # Use final hidden state
             context = hidden[-1]  # (batch, hidden_size)
-        
+
         # Embed care setting
         care_setting_embedded = self.care_setting_embedding(
             care_setting.squeeze(-1)
         )  # (batch, 16)
-        
+
         # Combine all features
         combined = torch.cat([
             context,
             demographics,
             care_setting_embedded
         ], dim=-1)
-        
+
         # Final prediction
         logits = self.prediction_head(combined)
         predictions = torch.sigmoid(logits)
-        
+
         return predictions
 
 class FairDeteriorationPredictor:
     """
     Complete deterioration prediction system with fairness constraints.
-    
+
     Implements training, evaluation, and threshold selection procedures
     that optimize for both overall performance and fairness across
     demographic groups.
     """
-    
+
     def __init__(
         self,
         model: DeteriorationPredictionRNN,
@@ -393,7 +394,7 @@ class FairDeteriorationPredictor:
     ):
         """
         Initialize fair deterioration predictor.
-        
+
         Args:
             model: The RNN model
             device: Device for training ('cpu' or 'cuda')
@@ -404,11 +405,11 @@ class FairDeteriorationPredictor:
         self.device = device
         self.fairness_constraint = fairness_constraint
         self.fairness_threshold = fairness_threshold
-        
+
         # Will be set during training
         self.normalization_stats = None
         self.optimal_thresholds = {}
-        
+
     def train(
         self,
         train_loader: DataLoader,
@@ -420,7 +421,7 @@ class FairDeteriorationPredictor:
     ):
         """
         Train deterioration prediction model.
-        
+
         Uses weighted binary cross-entropy to handle class imbalance
         and includes early stopping based on validation performance.
         """
@@ -429,7 +430,7 @@ class FairDeteriorationPredictor:
         for batch in train_loader:
             outcomes.extend(batch['outcome'].cpu().numpy())
         pos_weight = (len(outcomes) - sum(outcomes)) / (sum(outcomes) + 1e-8)
-        
+
         criterion = nn.BCEWithLogitsLoss(
             pos_weight=torch.tensor([pos_weight]).to(self.device)
         )
@@ -438,18 +439,18 @@ class FairDeteriorationPredictor:
             lr=learning_rate,
             weight_decay=weight_decay
         )
-        
+
         best_val_auc = 0.0
         patience_counter = 0
-        
+
         for epoch in range(num_epochs):
             # Training phase
             self.model.train()
             train_losses = []
-            
+
             for batch in train_loader:
                 optimizer.zero_grad()
-                
+
                 # Move batch to device
                 vitals = batch['vitals'].to(self.device)
                 mask = batch['mask'].to(self.device)
@@ -457,12 +458,12 @@ class FairDeteriorationPredictor:
                 care_setting = batch['care_setting'].to(self.device)
                 demographics = batch['demographics'].to(self.device)
                 outcome = batch['outcome'].to(self.device)
-                
+
                 # Forward pass
                 predictions = self.model(
                     vitals, mask, time_delta, care_setting, demographics
                 )
-                
+
                 # Compute loss (using BCELoss since model outputs sigmoid)
                 loss = nn.functional.binary_cross_entropy(
                     predictions,
@@ -473,25 +474,25 @@ class FairDeteriorationPredictor:
                         torch.tensor([1.0]).to(self.device)
                     )
                 )
-                
+
                 loss.backward()
-                
+
                 # Gradient clipping for stability
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-                
+
                 optimizer.step()
                 train_losses.append(loss.item())
-            
+
             # Validation phase
             val_metrics = self.evaluate(val_loader, return_predictions=False)
-            
+
             logger.info(
                 f"Epoch {epoch+1}/{num_epochs} - "
                 f"Train Loss: {np.mean(train_losses):.4f} - "
                 f"Val AUC: {val_metrics['overall']['auc']:.4f} - "
                 f"Val AUPRC: {val_metrics['overall']['auprc']:.4f}"
             )
-            
+
             # Early stopping
             if val_metrics['overall']['auc'] > best_val_auc:
                 best_val_auc = val_metrics['overall']['auc']
@@ -506,14 +507,14 @@ class FairDeteriorationPredictor:
                 if patience_counter >= early_stopping_patience:
                     logger.info(f"Early stopping at epoch {epoch+1}")
                     break
-        
+
         # Load best model
         self.model.load_state_dict(
             torch.load('best_deterioration_model.pt')
         )
-        
+
         logger.info("Training completed")
-    
+
     def evaluate(
         self,
         data_loader: DataLoader,
@@ -521,16 +522,16 @@ class FairDeteriorationPredictor:
     ) -> Dict:
         """
         Evaluate model with comprehensive fairness metrics.
-        
+
         Computes performance metrics overall and stratified by race,
         ethnicity, and insurance status to detect disparities.
         """
         self.model.eval()
-        
+
         all_predictions = []
         all_outcomes = []
         all_metadata = []
-        
+
         with torch.no_grad():
             for batch in data_loader:
                 vitals = batch['vitals'].to(self.device)
@@ -538,14 +539,14 @@ class FairDeteriorationPredictor:
                 time_delta = batch['time_delta'].to(self.device)
                 care_setting = batch['care_setting'].to(self.device)
                 demographics = batch['demographics'].to(self.device)
-                
+
                 predictions = self.model(
                     vitals, mask, time_delta, care_setting, demographics
                 )
-                
+
                 all_predictions.extend(predictions.cpu().numpy())
                 all_outcomes.extend(batch['outcome'].cpu().numpy())
-                
+
                 # Store metadata for stratified analysis
                 for i in range(len(batch['outcome'])):
                     all_metadata.append({
@@ -554,14 +555,14 @@ class FairDeteriorationPredictor:
                         'insurance': batch['insurance'][i],
                         'patient_id': batch['patient_id'][i]
                     })
-        
+
         predictions_array = np.array(all_predictions).flatten()
         outcomes_array = np.array(all_outcomes).flatten()
-        
+
         # Overall metrics
         overall_auc = roc_auc_score(outcomes_array, predictions_array)
         overall_auprc = average_precision_score(outcomes_array, predictions_array)
-        
+
         results = {
             'overall': {
                 'auc': overall_auc,
@@ -571,7 +572,7 @@ class FairDeteriorationPredictor:
             },
             'stratified': {}
         }
-        
+
         # Stratified analysis
         df = pd.DataFrame({
             'prediction': predictions_array,
@@ -580,13 +581,13 @@ class FairDeteriorationPredictor:
             'ethnicity': [m['ethnicity'] for m in all_metadata],
             'insurance': [m['insurance'] for m in all_metadata]
         })
-        
+
         for stratification in ['race', 'ethnicity', 'insurance']:
             results['stratified'][stratification] = {}
-            
+
             for group in df[stratification].unique():
                 group_df = df[df[stratification] == group]
-                
+
                 if len(group_df) >= 30 and group_df['outcome'].sum() >= 5:
                     try:
                         group_auc = roc_auc_score(
@@ -597,7 +598,7 @@ class FairDeteriorationPredictor:
                             group_df['outcome'],
                             group_df['prediction']
                         )
-                        
+
                         results['stratified'][stratification][group] = {
                             'auc': group_auc,
                             'auprc': group_auprc,
@@ -608,17 +609,17 @@ class FairDeteriorationPredictor:
                         logger.warning(
                             f"Could not compute metrics for {stratification}={group}: {e}"
                         )
-        
+
         # Compute fairness metrics
         results['fairness'] = self._compute_fairness_metrics(df)
-        
+
         if return_predictions:
             results['predictions'] = predictions_array
             results['outcomes'] = outcomes_array
             results['metadata'] = all_metadata
-        
+
         return results
-    
+
     def _compute_fairness_metrics(
         self,
         df: pd.DataFrame,
@@ -626,68 +627,68 @@ class FairDeteriorationPredictor:
     ) -> Dict:
         """
         Compute comprehensive fairness metrics.
-        
+
         Includes demographic parity, equalized odds, and calibration
         differences across groups.
         """
         fairness_metrics = {}
-        
+
         # Binarize predictions at threshold
         df['predicted_positive'] = (df['prediction'] >= threshold).astype(int)
-        
+
         for stratification in ['race', 'insurance']:
             metrics = {}
             groups = df[stratification].unique()
-            
+
             if len(groups) < 2:
                 continue
-            
+
             # For each pair of groups, compute disparities
             for i, group1 in enumerate(groups):
                 for group2 in groups[i+1:]:
                     df1 = df[df[stratification] == group1]
                     df2 = df[df[stratification] == group2]
-                    
+
                     if len(df1) < 30 or len(df2) < 30:
                         continue
-                    
+
                     pair_key = f"{group1}_vs_{group2}"
-                    
+
                     # Demographic parity: difference in positive rate
                     pos_rate1 = df1['predicted_positive'].mean()
                     pos_rate2 = df2['predicted_positive'].mean()
                     demographic_parity = abs(pos_rate1 - pos_rate2)
-                    
+
                     # Equalized odds: difference in TPR and FPR
                     df1_pos = df1[df1['outcome'] == 1]
                     df1_neg = df1[df1['outcome'] == 0]
                     df2_pos = df2[df2['outcome'] == 1]
                     df2_neg = df2[df2['outcome'] == 0]
-                    
+
                     if len(df1_pos) >= 5 and len(df2_pos) >= 5:
                         tpr1 = df1_pos['predicted_positive'].mean()
                         tpr2 = df2_pos['predicted_positive'].mean()
                         tpr_disparity = abs(tpr1 - tpr2)
                     else:
                         tpr_disparity = None
-                    
+
                     if len(df1_neg) >= 5 and len(df2_neg) >= 5:
                         fpr1 = df1_neg['predicted_positive'].mean()
                         fpr2 = df2_neg['predicted_positive'].mean()
                         fpr_disparity = abs(fpr1 - fpr2)
                     else:
                         fpr_disparity = None
-                    
+
                     metrics[pair_key] = {
                         'demographic_parity': demographic_parity,
                         'tpr_disparity': tpr_disparity,
                         'fpr_disparity': fpr_disparity
                     }
-            
+
             fairness_metrics[stratification] = metrics
-        
+
         return fairness_metrics
-    
+
     def select_fair_threshold(
         self,
         val_loader: DataLoader,
@@ -697,7 +698,7 @@ class FairDeteriorationPredictor:
         """
         Select decision thresholds that optimize sensitivity while
         constraining false positive rate disparities across groups.
-        
+
         This is critical for early warning systems where we want high
         sensitivity to catch deteriorating patients, but must ensure
         that false alarm rates don't differ dramatically by race or
@@ -706,59 +707,59 @@ class FairDeteriorationPredictor:
         """
         # Get predictions and metadata
         eval_results = self.evaluate(val_loader, return_predictions=True)
-        
+
         df = pd.DataFrame({
             'prediction': eval_results['predictions'],
             'outcome': eval_results['outcomes'],
             'race': [m['race'] for m in eval_results['metadata']]
         })
-        
+
         # Try thresholds from 0.1 to 0.9
         thresholds = np.arange(0.1, 0.9, 0.01)
-        
+
         best_threshold = 0.5
         best_sensitivity = 0.0
-        
+
         for threshold in thresholds:
             df['predicted_positive'] = (df['prediction'] >= threshold).astype(int)
-            
+
             # Overall sensitivity
             overall_sensitivity = (
                 df[df['outcome'] == 1]['predicted_positive'].mean()
             )
-            
+
             if overall_sensitivity < target_sensitivity:
                 continue
-            
+
             # Check FPR disparity across racial groups
             max_disparity = 0.0
             races = df['race'].unique()
-            
+
             for i, race1 in enumerate(races):
                 for race2 in races[i+1:]:
                     df1 = df[(df['race'] == race1) & (df['outcome'] == 0)]
                     df2 = df[(df['race'] == race2) & (df['outcome'] == 0)]
-                    
+
                     if len(df1) >= 10 and len(df2) >= 10:
                         fpr1 = df1['predicted_positive'].mean()
                         fpr2 = df2['predicted_positive'].mean()
                         disparity = abs(fpr1 - fpr2)
                         max_disparity = max(max_disparity, disparity)
-            
+
             # If this threshold satisfies fairness constraint and has
             # better sensitivity, update best threshold
             if max_disparity <= max_fpr_disparity:
                 if overall_sensitivity > best_sensitivity:
                     best_sensitivity = overall_sensitivity
                     best_threshold = threshold
-        
+
         logger.info(
             f"Selected threshold: {best_threshold:.3f} "
             f"(Sensitivity: {best_sensitivity:.3f})"
         )
-        
+
         self.optimal_thresholds['default'] = best_threshold
-        
+
         return {
             'threshold': best_threshold,
             'sensitivity': best_sensitivity
@@ -826,7 +827,7 @@ class PatientRiskProfile:
     race: str
     ethnicity: str
     insurance: str
-    
+
     # Clinical risk factors
     bmi: Optional[float]
     systolic_bp: Optional[float]
@@ -837,7 +838,7 @@ class PatientRiskProfile:
     smoking_status: str
     family_history_cvd: bool
     comorbidities: List[str]
-    
+
     # Social determinants
     neighborhood_poverty_rate: Optional[float]
     neighborhood_unemployment_rate: Optional[float]
@@ -846,23 +847,23 @@ class PatientRiskProfile:
     transportation_barriers: Optional[bool]
     health_literacy_score: Optional[float]
     social_isolation_score: Optional[float]
-    
+
     # Healthcare access
     has_primary_care: bool
     insurance_gaps_12mo: int
     missed_appointments_12mo: int
-    
+
     # Outcome
     incident_cvd_5yr: Optional[int]
 
 class SocialDeterminantsEnricher:
     """
     Enrich patient data with area-level social determinants.
-    
+
     Links individual patient records with neighborhood-level data
     on poverty, housing, environment, and food access.
     """
-    
+
     def __init__(
         self,
         census_data_path: str,
@@ -871,7 +872,7 @@ class SocialDeterminantsEnricher:
     ):
         """
         Initialize enricher with external data sources.
-        
+
         Args:
             census_data_path: Path to census tract-level socioeconomic data
             environmental_data_path: Path to EPA environmental exposures
@@ -882,9 +883,9 @@ class SocialDeterminantsEnricher:
         self.census_data = pd.read_csv(census_data_path)
         self.environmental_data = pd.read_csv(environmental_data_path)
         self.food_access_data = pd.read_csv(food_access_data_path)
-        
+
         logger.info("Loaded social determinants data sources")
-    
+
     def enrich_patient_data(
         self,
         patient_df: pd.DataFrame,
@@ -892,7 +893,7 @@ class SocialDeterminantsEnricher:
     ) -> pd.DataFrame:
         """
         Enrich patient data with area-level social determinants.
-        
+
         Merges individual patient records with neighborhood-level
         data based on geographic identifiers.
         """
@@ -903,7 +904,7 @@ class SocialDeterminantsEnricher:
             right_on='zip_code',
             how='left'
         )
-        
+
         # Merge with environmental exposures
         enriched = enriched.merge(
             self.environmental_data,
@@ -911,7 +912,7 @@ class SocialDeterminantsEnricher:
             right_on='zip_code',
             how='left'
         )
-        
+
         # Merge with food access data
         enriched = enriched.merge(
             self.food_access_data,
@@ -919,56 +920,56 @@ class SocialDeterminantsEnricher:
             right_on='zip_code',
             how='left'
         )
-        
+
         # Create composite scores
         enriched['sdoh_composite_score'] = self._compute_sdoh_composite(enriched)
-        
+
         return enriched
-    
+
     def _compute_sdoh_composite(self, df: pd.DataFrame) -> pd.Series:
         """
         Compute composite social determinants of health vulnerability score.
-        
+
         Higher scores indicate greater social vulnerability.
         """
         # Normalize components to 0-1 scale
         components = []
-        
+
         if 'poverty_rate' in df.columns:
             poverty_normalized = df['poverty_rate'] / 100.0
             components.append(poverty_normalized)
-        
+
         if 'unemployment_rate' in df.columns:
             unemployment_normalized = df['unemployment_rate'] / 100.0
             components.append(unemployment_normalized)
-        
+
         if 'low_food_access_pct' in df.columns:
             food_access_normalized = df['low_food_access_pct'] / 100.0
             components.append(food_access_normalized)
-        
+
         if 'pm25_annual_avg' in df.columns:
             # Normalize PM2.5 (higher is worse)
             pm25_normalized = np.clip(df['pm25_annual_avg'] / 15.0, 0, 1)
             components.append(pm25_normalized)
-        
+
         if len(components) > 0:
             # Average across available components
             composite = np.mean(components, axis=0)
         else:
             composite = np.nan
-        
+
         return composite
 
 class DecomposableRiskPredictor:
     """
     Risk prediction model that decomposes risk into clinical
     and social determinant components.
-    
+
     Enables targeted interventions by identifying whether elevated
     risk is primarily driven by clinical factors requiring medical
     treatment or social factors requiring social support.
     """
-    
+
     def __init__(
         self,
         clinical_features: List[str],
@@ -977,7 +978,7 @@ class DecomposableRiskPredictor:
     ):
         """
         Initialize decomposable predictor.
-        
+
         Args:
             clinical_features: List of clinical feature names
             social_determinant_features: List of SDOH feature names
@@ -986,15 +987,15 @@ class DecomposableRiskPredictor:
         self.clinical_features = clinical_features
         self.social_determinant_features = social_determinant_features
         self.access_features = access_features
-        
+
         # Separate models for interpretability and decomposition
         self.clinical_model = None
         self.social_model = None
         self.integrated_model = None
-        
+
         # For SHAP-based risk decomposition
         self.shap_explainer = None
-        
+
     def fit(
         self,
         X: pd.DataFrame,
@@ -1003,7 +1004,7 @@ class DecomposableRiskPredictor:
     ):
         """
         Fit decomposable risk prediction models.
-        
+
         Trains separate models on clinical and social determinant
         features, then an integrated model combining both, enabling
         risk decomposition.
@@ -1015,10 +1016,10 @@ class DecomposableRiskPredictor:
             learning_rate=0.1,
             random_state=42
         )
-        
+
         X_clinical = X[self.clinical_features]
         self.clinical_model.fit(X_clinical, y)
-        
+
         logger.info("Training social determinants model...")
         self.social_model = GradientBoostingClassifier(
             n_estimators=100,
@@ -1026,10 +1027,10 @@ class DecomposableRiskPredictor:
             learning_rate=0.1,
             random_state=42
         )
-        
+
         X_social = X[self.social_determinant_features + self.access_features]
         self.social_model.fit(X_social, y)
-        
+
         logger.info("Training integrated model...")
         self.integrated_model = GradientBoostingClassifier(
             n_estimators=200,
@@ -1037,7 +1038,7 @@ class DecomposableRiskPredictor:
             learning_rate=0.05,
             random_state=42
         )
-        
+
         all_features = (
             self.clinical_features +
             self.social_determinant_features +
@@ -1045,7 +1046,7 @@ class DecomposableRiskPredictor:
         )
         X_all = X[all_features]
         self.integrated_model.fit(X_all, y)
-        
+
         if calibrate:
             logger.info("Calibrating integrated model...")
             self.integrated_model = CalibratedClassifierCV(
@@ -1054,16 +1055,16 @@ class DecomposableRiskPredictor:
                 cv=5
             )
             self.integrated_model.fit(X_all, y)
-        
+
         # Initialize SHAP explainer for risk decomposition
         logger.info("Initializing SHAP explainer...")
         self.shap_explainer = shap.TreeExplainer(
             self.integrated_model.estimators_[0]
             if calibrate else self.integrated_model
         )
-        
+
         logger.info("Training completed")
-    
+
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Predict risk probabilities using integrated model."""
         all_features = (
@@ -1072,13 +1073,13 @@ class DecomposableRiskPredictor:
             self.access_features
         )
         X_all = X[all_features]
-        
+
         if hasattr(self.integrated_model, 'predict_proba'):
             return self.integrated_model.predict_proba(X_all)[:, 1]
         else:
             # For non-calibrated model
             return self.integrated_model.predict_proba(X_all)[:, 1]
-    
+
     def decompose_risk(
         self,
         X: pd.DataFrame,
@@ -1086,27 +1087,27 @@ class DecomposableRiskPredictor:
     ) -> pd.DataFrame:
         """
         Decompose predicted risk into clinical and social components.
-        
+
         Uses SHAP values to attribute risk to different feature groups,
         enabling identification of intervention targets.
-        
+
         Returns:
             DataFrame with columns for total risk, clinical risk component,
             social determinant risk component, and access risk component
         """
         if patient_indices is None:
             patient_indices = range(len(X))
-        
+
         all_features = (
             self.clinical_features +
             self.social_determinant_features +
             self.access_features
         )
         X_all = X[all_features].iloc[patient_indices]
-        
+
         # Get SHAP values
         shap_values = self.shap_explainer.shap_values(X_all)
-        
+
         # Attribute to feature groups
         clinical_shap = shap_values[:, :len(self.clinical_features)].sum(axis=1)
         social_shap = shap_values[
@@ -1117,10 +1118,10 @@ class DecomposableRiskPredictor:
             :,
             len(self.clinical_features) + len(self.social_determinant_features):
         ].sum(axis=1)
-        
+
         # Get total risk predictions
         total_risk = self.predict_proba(X.iloc[patient_indices])
-        
+
         # Create decomposition dataframe
         decomposition = pd.DataFrame({
             'patient_id': X.index[patient_indices],
@@ -1130,29 +1131,29 @@ class DecomposableRiskPredictor:
             'access_contribution': access_shap,
             'base_risk': self.shap_explainer.expected_value
         })
-        
+
         # Determine primary driver of risk
         def classify_risk_driver(row):
             abs_clinical = abs(row['clinical_contribution'])
             abs_social = abs(row['social_contribution'])
             abs_access = abs(row['access_contribution'])
-            
+
             max_contributor = max(abs_clinical, abs_social, abs_access)
-            
+
             if abs_clinical == max_contributor:
                 return 'clinical'
             elif abs_social == max_contributor:
                 return 'social_determinants'
             else:
                 return 'access'
-        
+
         decomposition['primary_risk_driver'] = decomposition.apply(
             classify_risk_driver,
             axis=1
         )
-        
+
         return decomposition
-    
+
     def evaluate_fairness(
         self,
         X: pd.DataFrame,
@@ -1161,16 +1162,16 @@ class DecomposableRiskPredictor:
     ) -> Dict:
         """
         Evaluate model fairness across demographic groups.
-        
+
         Computes performance metrics stratified by race, ethnicity,
         and insurance status to detect disparities.
         """
         predictions = self.predict_proba(X)
-        
+
         # Overall performance
         overall_auc = roc_auc_score(y, predictions)
         overall_brier = brier_score_loss(y, predictions)
-        
+
         results = {
             'overall': {
                 'auc': overall_auc,
@@ -1180,14 +1181,14 @@ class DecomposableRiskPredictor:
             },
             'stratified': {}
         }
-        
+
         # Stratified analysis
         for attr_name, attr_values in sensitive_attributes.items():
             results['stratified'][attr_name] = {}
-            
+
             for group in attr_values.unique():
                 group_mask = (attr_values == group)
-                
+
                 if group_mask.sum() >= 30 and y[group_mask].sum() >= 5:
                     group_auc = roc_auc_score(
                         y[group_mask],
@@ -1197,14 +1198,14 @@ class DecomposableRiskPredictor:
                         y[group_mask],
                         predictions[group_mask]
                     )
-                    
+
                     results['stratified'][attr_name][group] = {
                         'auc': group_auc,
                         'brier_score': group_brier,
                         'n': group_mask.sum(),
                         'prevalence': y[group_mask].mean()
                     }
-        
+
         # Compute disparity metrics
         results['disparities'] = {}
         for attr_name in sensitive_attributes.keys():
@@ -1218,17 +1219,17 @@ class DecomposableRiskPredictor:
                         'max_auc_difference': max(aucs) - min(aucs),
                         'auc_range': (min(aucs), max(aucs))
                     }
-        
+
         return results
 
 class FairPopulationHealthSystem:
     """
     Complete population health management system with fairness constraints.
-    
+
     Implements risk prediction, risk decomposition, and intervention
     prioritization that accounts for both clinical and social factors.
     """
-    
+
     def __init__(
         self,
         risk_predictor: DecomposableRiskPredictor,
@@ -1236,14 +1237,14 @@ class FairPopulationHealthSystem:
     ):
         """
         Initialize population health system.
-        
+
         Args:
             risk_predictor: Trained risk prediction model
             intervention_capacity: Maximum number of patients for enrollment
         """
         self.risk_predictor = risk_predictor
         self.intervention_capacity = intervention_capacity
-    
+
     def prioritize_for_intervention(
         self,
         patient_data: pd.DataFrame,
@@ -1251,23 +1252,23 @@ class FairPopulationHealthSystem:
     ) -> pd.DataFrame:
         """
         Prioritize patients for population health interventions.
-        
+
         Args:
             patient_data: Complete patient dataset
             prioritization_method: How to prioritize
                 'risk_only': Highest predicted risk
                 'risk_and_benefit': Risk weighted by expected benefit
                 'equity_aware': Ensures representation from all groups
-                
+
         Returns:
             DataFrame with prioritization scores and recommendations
         """
         # Get risk predictions
         risks = self.risk_predictor.predict_proba(patient_data)
-        
+
         # Get risk decomposition
         decomposition = self.risk_predictor.decompose_risk(patient_data)
-        
+
         # Merge results
         results = patient_data.copy()
         results['predicted_risk'] = risks
@@ -1276,16 +1277,16 @@ class FairPopulationHealthSystem:
             on='patient_id',
             how='left'
         )
-        
+
         if prioritization_method == 'risk_only':
             results['priority_score'] = risks
-            
+
         elif prioritization_method == 'risk_and_benefit':
             # Estimate expected benefit from intervention
             # Patients with high risk but also high modifiability get priority
             # This is a simplified version; production systems would use
             # causal effect estimates from trials or observational studies
-            
+
             # Social determinants are more modifiable than genetics
             social_modifiability = (
                 decomposition['social_contribution'].abs() +
@@ -1296,73 +1297,73 @@ class FairPopulationHealthSystem:
                 decomposition['access_contribution'].abs() +
                 1e-8
             )
-            
+
             # Priority is risk * modifiability
             results['modifiability'] = social_modifiability.values
             results['priority_score'] = risks * social_modifiability.values
-            
+
         elif prioritization_method == 'equity_aware':
             # Ensure proportional representation from all demographic groups
             # This prevents concentration of resources on easy-to-reach populations
-            
+
             results['priority_score'] = risks
-            
+
             # Within each demographic group, select top N proportional to
             # population size
             racial_groups = results['race'].unique()
             selected = []
-            
+
             for race in racial_groups:
                 race_subset = results[results['race'] == race]
                 race_proportion = len(race_subset) / len(results)
                 race_capacity = int(self.intervention_capacity * race_proportion)
-                
+
                 # Select top-risk patients from this group
                 top_in_group = race_subset.nlargest(
                     race_capacity,
                     'priority_score'
                 )
                 selected.append(top_in_group)
-            
+
             selected_df = pd.concat(selected)
-            
+
             # Mark selected patients
             results['selected_for_intervention'] = results['patient_id'].isin(
                 selected_df['patient_id']
             )
-            
+
             return results
-        
+
         # For non-equity-aware methods, select top N by priority score
         results = results.sort_values('priority_score', ascending=False)
         results['selected_for_intervention'] = False
         results.iloc[:self.intervention_capacity, results.columns.get_loc('selected_for_intervention')] = True
-        
+
         # Generate intervention recommendations based on risk driver
         def generate_recommendation(row):
             if not row['selected_for_intervention']:
                 return 'No intervention needed'
-            
+
             driver = row['primary_risk_driver']
             risk = row['predicted_risk']
-            
+
             if driver == 'clinical':
                 if risk > 0.7:
                     return 'Intensive clinical management: Specialist referral, frequent monitoring'
                 else:
                     return 'Standard clinical management: PCP follow-up, medication optimization'
-            
+
             elif driver == 'social_determinants':
                 return 'Social support intervention: Community health worker, resource navigation'
-            
+
             else:  # access
                 return 'Access intervention: Transportation assistance, appointment reminders, telehealth'
-        
+
         results['intervention_recommendation'] = results.apply(
             generate_recommendation,
             axis=1
         )
-        
+
         return results
 ```
 
@@ -1402,11 +1403,11 @@ logger = logging.getLogger(__name__)
 class ReadmissionRiskNetwork(nn.Module):
     """
     Multi-task neural network for readmission prediction.
-    
+
     Predicts both readmission risk and likely primary driver
     (clinical vs social) to enable targeted interventions.
     """
-    
+
     def __init__(
         self,
         n_clinical_features: int,
@@ -1417,13 +1418,13 @@ class ReadmissionRiskNetwork(nn.Module):
     ):
         """Initialize readmission prediction network."""
         super().__init__()
-        
+
         n_features = (
             n_clinical_features +
             n_social_features +
             n_utilization_features
         )
-        
+
         # Shared representation learning
         self.shared_layers = nn.Sequential(
             nn.Linear(n_features, hidden_size),
@@ -1433,9 +1434,9 @@ class ReadmissionRiskNetwork(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout)
         )
-        
+
         # Task-specific heads
-        
+
         # Task 1: Overall readmission risk
         self.readmission_head = nn.Sequential(
             nn.Linear(hidden_size, 64),
@@ -1443,7 +1444,7 @@ class ReadmissionRiskNetwork(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(64, 1)
         )
-        
+
         # Task 2: Primary driver classification
         # Classes: clinical, social, both
         self.driver_head = nn.Sequential(
@@ -1452,32 +1453,32 @@ class ReadmissionRiskNetwork(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(64, 3)
         )
-        
+
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass.
-        
+
         Returns:
             readmission_prob: (batch, 1) readmission probabilities
             driver_logits: (batch, 3) logits for driver classification
         """
         shared = self.shared_layers(x)
-        
+
         readmission_logits = self.readmission_head(shared)
         readmission_prob = torch.sigmoid(readmission_logits)
-        
+
         driver_logits = self.driver_head(shared)
-        
+
         return readmission_prob, driver_logits
 
 class FairReadmissionPredictor:
     """
     Complete readmission prediction system with fairness constraints.
-    
+
     Implements multi-task learning to predict both readmission risk
     and primary drivers, enabling targeted interventions.
     """
-    
+
     def __init__(
         self,
         model: ReadmissionRiskNetwork,
@@ -1486,7 +1487,7 @@ class FairReadmissionPredictor:
         """Initialize predictor."""
         self.model = model.to(device)
         self.device = device
-        
+
     def train(
         self,
         train_loader: torch.utils.data.DataLoader,
@@ -1496,7 +1497,7 @@ class FairReadmissionPredictor:
     ):
         """
         Train readmission prediction model.
-        
+
         Uses multi-task loss combining readmission prediction
         and driver classification.
         """
@@ -1504,79 +1505,79 @@ class FairReadmissionPredictor:
             self.model.parameters(),
             lr=learning_rate
         )
-        
+
         best_val_auc = 0.0
-        
+
         for epoch in range(num_epochs):
             self.model.train()
             train_losses = []
-            
+
             for batch in train_loader:
                 optimizer.zero_grad()
-                
+
                 features = batch['features'].to(self.device)
                 readmission = batch['readmission'].to(self.device)
                 driver = batch['driver'].to(self.device)
-                
+
                 # Forward pass
                 readmission_pred, driver_logits = self.model(features)
-                
+
                 # Multi-task loss
                 readmission_loss = nn.functional.binary_cross_entropy(
                     readmission_pred.squeeze(),
                     readmission.float()
                 )
-                
+
                 driver_loss = nn.functional.cross_entropy(
                     driver_logits,
                     driver
                 )
-                
+
                 # Combined loss (can weight differently)
                 loss = readmission_loss + 0.5 * driver_loss
-                
+
                 loss.backward()
                 optimizer.step()
-                
+
                 train_losses.append(loss.item())
-            
+
             # Validation
             val_metrics = self.evaluate(val_loader)
-            
+
             logger.info(
                 f"Epoch {epoch+1}/{num_epochs} - "
                 f"Train Loss: {np.mean(train_losses):.4f} - "
                 f"Val AUC: {val_metrics['overall_auc']:.4f}"
             )
-            
+
             if val_metrics['overall_auc'] > best_val_auc:
                 best_val_auc = val_metrics['overall_auc']
                 torch.save(
                     self.model.state_dict(),
                     'best_readmission_model.pt'
                 )
-        
+
         self.model.load_state_dict(
             torch.load('best_readmission_model.pt')
         )
-    
+
     def evaluate(
         self,
         data_loader: torch.utils.data.DataLoader
     ) -> Dict:
         """Evaluate model with fairness metrics."""
         self.model.eval()
-        
+
         all_preds = []
         all_outcomes = []
         all_metadata = []
-        
+
         with torch.no_grad():
             for batch in data_loader:
                 features = batch['features'].to(self.device)
-                
+
                 readmission_pred, _ = self.model(features)
-                
+
                 all_preds.extend(
                     readmission_pred.squeeze().cpu().numpy()
                 )
@@ -1584,26 +1585,26 @@ class FairReadmissionPredictor:
                     batch['readmission'].cpu().numpy()
                 )
                 all_metadata.extend(batch['metadata'])
-        
+
         preds = np.array(all_preds)
         outcomes = np.array(all_outcomes)
-        
+
         # Overall AUC
         overall_auc = roc_auc_score(outcomes, preds)
-        
+
         # Stratified by hospital type
         results = {
             'overall_auc': overall_auc,
             'stratified': {}
         }
-        
+
         df = pd.DataFrame({
             'prediction': preds,
             'outcome': outcomes,
             'hospital_type': [m['hospital_type'] for m in all_metadata],
             'race': [m['race'] for m in all_metadata]
         })
-        
+
         for hospital_type in df['hospital_type'].unique():
             subset = df[df['hospital_type'] == hospital_type]
             if len(subset) >= 30:
@@ -1618,7 +1619,7 @@ class FairReadmissionPredictor:
                     }
                 except:
                     pass
-        
+
         return results
 ```
 

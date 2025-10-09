@@ -2,9 +2,10 @@
 layout: chapter
 title: "Chapter 22: Clinical Decision Support Systems"
 chapter_number: 22
+part_number: 6
+prev_chapter: /chapters/chapter-21-health-equity-metrics/
+next_chapter: /chapters/chapter-23-precision-medicine-genomics/
 ---
-
-
 # Chapter 22: Diagnostic AI with Attention to Disparities
 
 ## Learning Objectives
@@ -38,49 +39,65 @@ Diagnostic reasoning in clinical medicine fundamentally involves probabilistic i
 
 The basic framework for diagnostic inference begins with Bayes' theorem applied to diagnosis. For a particular disease $D$ and observed clinical data $X$, we compute the posterior probability:
 
-$$P(D|X) = \frac{P(X|D) \cdot P(D)}{P(X)}$$
+$$
+P(D|X) = \frac{P(X|D) \cdot P(D)}{P(X)}
+$$
 
-where $$P(D)$$ represents the prior probability (disease prevalence), $$P(X|D)$$ represents the likelihood (probability of observing the clinical data given the disease), and $$P(X)$$ is the marginal likelihood serving as a normalization constant. For differential diagnosis involving multiple possible diseases $$\{D_1, D_2, \ldots, D_K\}$$, we compute posterior probabilities for each:
+where $P(D)$ represents the prior probability (disease prevalence), $P(X|D)$ represents the likelihood (probability of observing the clinical data given the disease), and $P(X)$ is the marginal likelihood serving as a normalization constant. For differential diagnosis involving multiple possible diseases $\{D_1, D_2, \ldots, D_K\}$, we compute posterior probabilities for each:
 
-$$P(D_k|X) = \frac{P(X|D_k) \cdot P(D_k)}{\sum_{j=1}^K P(X|D_j) \cdot P(D_j)}$$
+$$
+P(D_k|X) = \frac{P(X|D_k) \cdot P(D_k)}{\sum_{j=1}^K P(X|D_j) \cdot P(D_j)}
+$$
 
-The critical equity issue arises when we recognize that both priors $$P(D_k)$$ and likelihoods $$P(X|D_k)$$ can vary substantially across population groups. Let $G$ represent demographic group membership (which might encode race, ethnicity, age, sex, socioeconomic status, or intersections thereof). The group-conditional diagnostic probability becomes:
+The critical equity issue arises when we recognize that both priors $P(D_k)$ and likelihoods $P(X|D_k)$ can vary substantially across population groups. Let $G$ represent demographic group membership (which might encode race, ethnicity, age, sex, socioeconomic status, or intersections thereof). The group-conditional diagnostic probability becomes:
 
-$$P(D_k|X, G) = \frac{P(X|D_k, G) \cdot P(D_k|G)}{\sum_{j=1}^K P(X|D_j, G) \cdot P(D_j|G)}$$
+$$
+P(D_k|X, G) = \frac{P(X|D_k, G) \cdot P(D_k|G)}{\sum_{j=1}^K P(X|D_j, G) \cdot P(D_j|G)}
+$$
 
-This formulation reveals two distinct sources of population heterogeneity. First, disease prevalence varies across groups: $$P(D_k|G_1) \neq P(D_k|G_2)$$ for different groups $$G_1$$ and $$G_2$$. For example, sickle cell disease has dramatically different prevalence across racial and ethnic groups, while certain genetic variants affecting cardiovascular disease risk show strong population stratification. Second, disease presentation can differ: $$P(X|D_k, G_1) \neq P(X|D_k, G_2)$$, meaning that the same disease may manifest with different symptoms, signs, or biomarker profiles across populations. Classic examples include the higher prevalence of silent myocardial infarction in diabetic patients and the different presentation patterns of autoimmune diseases across racial groups.
+This formulation reveals two distinct sources of population heterogeneity. First, disease prevalence varies across groups: $P(D_k|G_1) \neq P(D_k|G_2)$ for different groups $G_1$ and $G_2$. For example, sickle cell disease has dramatically different prevalence across racial and ethnic groups, while certain genetic variants affecting cardiovascular disease risk show strong population stratification. Second, disease presentation can differ: $P(X|D_k, G_1) \neq P(X|D_k, G_2)$, meaning that the same disease may manifest with different symptoms, signs, or biomarker profiles across populations. Classic examples include the higher prevalence of silent myocardial infarction in diabetic patients and the different presentation patterns of autoimmune diseases across racial groups.
 
-A naive diagnostic AI system that ignores group membership $G$ and uses population-average estimates $$P(D_k)$$ and $$P(X|D_k)$$ will systematically underperform for groups where true prevalence or presentation patterns differ from the population average. However, explicitly conditioning on group membership raises important ethical questions about when and how demographic information should enter diagnostic models. Three distinct approaches have been proposed in the literature.
+A naive diagnostic AI system that ignores group membership $G$ and uses population-average estimates $P(D_k)$ and $P(X|D_k)$ will systematically underperform for groups where true prevalence or presentation patterns differ from the population average. However, explicitly conditioning on group membership raises important ethical questions about when and how demographic information should enter diagnostic models. Three distinct approaches have been proposed in the literature.
 
-The first approach, which we term population-stratified modeling, builds separate diagnostic models for different demographic groups, allowing all parameters to vary: $$f_G(X) \to P(D_k|X, G)$$. This maximizes predictive accuracy by fully adapting to group-specific patterns but requires sufficient training data for each group and may reinforce essentialist views of demographic categories. The second approach, which we call prior-adjusted modeling, uses a shared diagnostic model for the likelihood $$P(X|D_k)$$ but adjusts priors based on group membership: $$P(D_k|X, G) \propto P(X|D_k) \cdot P(D_k|G)$$. This accounts for known prevalence differences while avoiding assumptions about differential presentation. The third approach, universalist modeling, aims to learn representations that are invariant to group membership while still achieving high diagnostic accuracy through careful feature engineering and fairness constraints.
+The first approach, which we term population-stratified modeling, builds separate diagnostic models for different demographic groups, allowing all parameters to vary: $f_G(X) \to P(D_k|X, G)$. This maximizes predictive accuracy by fully adapting to group-specific patterns but requires sufficient training data for each group and may reinforce essentialist views of demographic categories. The second approach, which we call prior-adjusted modeling, uses a shared diagnostic model for the likelihood $P(X|D_k)$ but adjusts priors based on group membership: $P(D_k|X, G) \propto P(X|D_k) \cdot P(D_k|G)$. This accounts for known prevalence differences while avoiding assumptions about differential presentation. The third approach, universalist modeling, aims to learn representations that are invariant to group membership while still achieving high diagnostic accuracy through careful feature engineering and fairness constraints.
 
 Each approach has merits and limitations depending on the specific clinical context. For conditions where prevalence differences are well-established and presentation patterns are genuinely different across groups (for example, genetic diseases with strong population stratification), population-stratified or prior-adjusted approaches may be both more accurate and more equitable. For conditions where apparent group differences may primarily reflect social rather than biological factors, or where conditioning on demographics might perpetuate discriminatory practices, universalist approaches that learn invariant representations may be preferable. The key is to make these modeling choices explicitly and transparently, with careful consideration of both predictive performance and equity implications.
 
-Beyond population heterogeneity in disease characteristics, we must also account for systematic differences in data availability and quality across groups. Let $M$ denote a missingness indicator, where $$M_i = 1$$ if feature $i$ is observed and $$M_i = 0$$ if missing. If missingness patterns are not missing completely at random (MCAR) but instead missing at random (MAR) or missing not at random (MNAR) in ways that correlate with group membership, diagnostic models must explicitly account for this. The observed likelihood becomes:
+Beyond population heterogeneity in disease characteristics, we must also account for systematic differences in data availability and quality across groups. Let $M$ denote a missingness indicator, where $M_i = 1$ if feature $i$ is observed and $M_i = 0$ if missing. If missingness patterns are not missing completely at random (MCAR) but instead missing at random (MAR) or missing not at random (MNAR) in ways that correlate with group membership, diagnostic models must explicitly account for this. The observed likelihood becomes:
 
-$$P(X_{\text{obs}}|D_k, G, M) = \int P(X_{\text{obs}}, X_{\text{miss}}|D_k, G) \cdot P(M|X, D_k, G) dX_{\text{miss}}$$
+$$
+P(X_{\text{obs}}|D_k, G, M) = \int P(X_{\text{obs}}, X_{\text{miss}}|D_k, G) \cdot P(M|X, D_k, G) dX_{\text{miss}}
+$$
 
-where $$X_{\text{obs}}$$ represents observed features and $$X_{\text{miss}}$$ represents missing features. If certain diagnostic tests are systematically less available for some populations—for example, advanced imaging studies in rural areas or genetic testing in communities without nearby specialized centers—then models that implicitly assume complete data will perform poorly for groups with more missingness. Approaches for handling this include multiple imputation methods that account for missingness mechanisms, models that explicitly represent uncertainty over missing features, and fairness constraints that ensure predictions remain calibrated even when certain features are unavailable.
+where $X_{\text{obs}}$ represents observed features and $X_{\text{miss}}$ represents missing features. If certain diagnostic tests are systematically less available for some populations—for example, advanced imaging studies in rural areas or genetic testing in communities without nearby specialized centers—then models that implicitly assume complete data will perform poorly for groups with more missingness. Approaches for handling this include multiple imputation methods that account for missingness mechanisms, models that explicitly represent uncertainty over missing features, and fairness constraints that ensure predictions remain calibrated even when certain features are unavailable.
 
-The evaluation of diagnostic AI systems also requires careful attention to equity considerations. Standard metrics like accuracy, sensitivity, and specificity can mask substantial disparities across groups. For a diagnostic task with true disease labels $Y$ and model predictions $$\hat{Y}$$, we define group-conditional sensitivity and specificity:
+The evaluation of diagnostic AI systems also requires careful attention to equity considerations. Standard metrics like accuracy, sensitivity, and specificity can mask substantial disparities across groups. For a diagnostic task with true disease labels $Y$ and model predictions $\hat{Y}$, we define group-conditional sensitivity and specificity:
 
-$$\text{Sensitivity}_G = P(\hat{Y} = 1 | Y = 1, G) \quad \text{Specificity}_G = P(\hat{Y} = 0 | Y = 0, G)$$
+$$
+\text{Sensitivity}_G = P(\hat{Y} = 1 | Y = 1, G) \quad \text{Specificity}_G = P(\hat{Y} = 0 | Y = 0, G)
+$$
 
 Equitable diagnostic performance requires that these metrics be comparable across groups, not just averaged over the entire population. However, even this is insufficient when disease prevalence varies across groups, as positive and negative predictive values (PPV and NPV) will differ even with equal sensitivity and specificity:
 
-$$\text{PPV}_G = \frac{\text{Sensitivity}_G \cdot P(Y=1|G)}{\text{Sensitivity}_G \cdot P(Y=1|G) + (1-\text{Specificity}_G) \cdot P(Y=0|G)}$$
+$$
+\text{PPV}_G = \frac{\text{Sensitivity}_G \cdot P(Y=1|G)}{\text{Sensitivity}_G \cdot P(Y=1|G) + (1-\text{Specificity}_G) \cdot P(Y=0|G)}
+$$
 
 This fundamental relationship means that achieving equal PPV across groups with different disease prevalence requires different sensitivity-specificity tradeoffs, creating tension between different notions of fairness. The appropriate resolution depends on the clinical context: for screening tests where false positives carry significant burden (for example, unnecessary biopsies), equal PPV may be more important; for diagnostic tests where missing true positives has severe consequences (for example, sepsis detection), equal sensitivity may be paramount.
 
 A comprehensive fairness evaluation framework for diagnostic AI must assess multiple metrics simultaneously and examine their distribution across relevant demographic groups. We define a fairness audit that computes, for each group $G$ and at various operating points (thresholds):
 
-$$\mathcal{F}(G) = \{\text{Sensitivity}_G(\tau), \text{Specificity}_G(\tau), \text{PPV}_G(\tau), \text{NPV}_G(\tau), \text{AUC}_G, \text{Calibration}_G\}$$
+$$
+\mathcal{F}(G) = \{\text{Sensitivity}_G(\tau), \text{Specificity}_G(\tau), \text{PPV}_G(\tau), \text{NPV}_G(\tau), \text{AUC}_G, \text{Calibration}_G\}
+$$
 
-where $$\tau$$ represents different classification thresholds. Calibration is particularly important, as it measures whether predicted probabilities match true outcome frequencies: a well-calibrated model with $$P(\hat{Y}=1|X,G) = 0.7$$ should have approximately seventy percent of patients with that prediction actually having the disease. Poor calibration can lead to misplaced clinical confidence in predictions, with particularly severe consequences when it systematically differs across groups. We measure calibration through the expected calibration error:
+where $\tau$ represents different classification thresholds. Calibration is particularly important, as it measures whether predicted probabilities match true outcome frequencies: a well-calibrated model with $P(\hat{Y}=1|X,G) = 0.7$ should have approximately seventy percent of patients with that prediction actually having the disease. Poor calibration can lead to misplaced clinical confidence in predictions, with particularly severe consequences when it systematically differs across groups. We measure calibration through the expected calibration error:
 
-$$\text{ECE}_G = \sum_{b=1}^B \frac{|G_b|}{|G|} \left| \frac{1}{|G_b|} \sum_{i \in G_b} y_i - \frac{1}{|G_b|} \sum_{i \in G_b} \hat{p}_i \right|$$
+$$
+\text{ECE}_G = \sum_{b=1}^B \frac{|G_b|}{|G|} \left| \frac{1}{|G_b|} \sum_{i \in G_b} y_i - \frac{1}{|G_b|} \sum_{i \in G_b} \hat{p}_i \right|
+$$
 
-where $$G_b$$ represents samples in group $G$ falling into the $b$-th probability bin, $$y_i$$ is the true label, and $$\hat{p}_i$$ is the predicted probability.
+where $G_b$ represents samples in group $G$ falling into the $b$-th probability bin, $y_i$ is the true label, and $\hat{p}_i$ is the predicted probability.
 
 ## Clinical Presentation and Differential Diagnosis Generation
 
@@ -88,31 +105,39 @@ The generation of differential diagnoses from clinical presentations represents 
 
 Traditional approaches to differential diagnosis generation have relied on rule-based expert systems encoding clinical knowledge about disease presentations. Modern neural approaches instead learn latent representations of clinical presentations and diseases from large datasets of electronic health records, mapping from presenting features to probability distributions over possible diagnoses. The challenge lies in ensuring these learned representations capture genuine clinical relationships rather than spurious correlations or historical biases.
 
-A neural differential diagnosis system typically consists of an encoder that maps clinical presentation $X$ (symptoms, vital signs, initial lab results) to a latent representation $$h = f_{\text{enc}}(X)$$, followed by a decoder that maps from the latent space to a probability distribution over diseases: $$P(D_1, \ldots, D_K|X) = \text{softmax}(W h + b)$$ where $W$ and $b$ are learned parameters. Attention mechanisms allow the model to identify which clinical features are most relevant for each diagnostic consideration:
+A neural differential diagnosis system typically consists of an encoder that maps clinical presentation $X$ (symptoms, vital signs, initial lab results) to a latent representation $h = f_{\text{enc}}(X)$, followed by a decoder that maps from the latent space to a probability distribution over diseases: $P(D_1, \ldots, D_K|X) = \text{softmax}(W h + b)$ where $W$ and $b$ are learned parameters. Attention mechanisms allow the model to identify which clinical features are most relevant for each diagnostic consideration:
 
-$$\alpha_{k,i} = \frac{\exp(e_{k,i})}{\sum_{j=1}^n \exp(e_{k,j})} \quad \text{where} \quad e_{k,i} = v_k^T \tanh(W_1 h_i + W_2 h_k)$$
+$$
+\alpha_{k,i} = \frac{\exp(e_{k,i})}{\sum_{j=1}^n \exp(e_{k,j})} \quad \text{where} \quad e_{k,i} = v_k^T \tanh(W_1 h_i + W_2 h_k)
+$$
 
-Here $$\alpha_{k,i}$$ represents the attention weight from disease $k$ to clinical feature $i$, allowing interpretation of which features drive each diagnostic consideration. This interpretability is crucial for clinical adoption and for detecting potential biases, for example, if the model systematically attends to different features for patients from different demographic groups in ways not justified by clinical knowledge.
+Here $\alpha_{k,i}$ represents the attention weight from disease $k$ to clinical feature $i$, allowing interpretation of which features drive each diagnostic consideration. This interpretability is crucial for clinical adoption and for detecting potential biases, for example, if the model systematically attends to different features for patients from different demographic groups in ways not justified by clinical knowledge.
 
 Equity considerations in differential diagnosis systems require addressing both representation bias in training data and population heterogeneity in disease characteristics. Electronic health record data used for training reflects the patient population seen at particular healthcare systems, which may systematically underrepresent certain racial and ethnic minorities, rural populations, uninsured patients, and other marginalized groups. When a differential diagnosis model is then deployed in a more diverse population or different clinical setting, its performance may degrade for underrepresented groups. This is not simply a matter of having fewer training examples from certain groups, but rather that the feature-disease relationships learned from the training population may not generalize.
 
 To address these challenges, we implement a population-aware differential diagnosis system with several key components. First, we augment standard cross-entropy training with a fairness penalty that encourages comparable performance across demographic groups:
 
-$$\mathcal{L} = \mathcal{L}_{\text{CE}} + \lambda \sum_{g=1}^G \left(\text{AUC}_g - \overline{\text{AUC}}\right)^2$$
+$$
+\mathcal{L} = \mathcal{L}_{\text{CE}} + \lambda \sum_{g=1}^G \left(\text{AUC}_g - \overline{\text{AUC}}\right)^2
+$$
 
-where $$\mathcal{L}_{\text{CE}}$$$is the standard cross-entropy loss,$$\text{AUC}_g$$is the area under the ROC curve for group$$g$, and $$\overline{\text{AUC}}$$ is the average AUC across all groups. This penalty encourages the model to maintain diagnostic accuracy across populations rather than optimizing for average performance.
+where $\mathcal{L}_{\text{CE}}$is the standard cross-entropy loss,$\text{AUC}_g$is the area under the ROC curve for group$g$, and $\overline{\text{AUC}}$ is the average AUC across all groups. This penalty encourages the model to maintain diagnostic accuracy across populations rather than optimizing for average performance.
 
-Second, we incorporate disease prevalence adjustment that allows the system to adapt to different patient populations. Given population-specific prevalence estimates $$P(D_k|G)$$, we adjust the model's output probabilities:
+Second, we incorporate disease prevalence adjustment that allows the system to adapt to different patient populations. Given population-specific prevalence estimates $P(D_k|G)$, we adjust the model's output probabilities:
 
-$$P_{\text{adj}}(D_k|X, G) = \frac{P_{\text{model}}(D_k|X) \cdot \frac{P(D_k|G)}{P(D_k)}}{\sum_{j=1}^K P_{\text{model}}(D_j|X) \cdot \frac{P(D_j|G)}{P(D_j)}}$$
+$$
+P_{\text{adj}}(D_k|X, G) = \frac{P_{\text{model}}(D_k|X) \cdot \frac{P(D_k|G)}{P(D_k)}}{\sum_{j=1}^K P_{\text{model}}(D_j|X) \cdot \frac{P(D_j|G)}{P(D_j)}}
+$$
 
 This adjustment accounts for known prevalence differences without requiring the model to directly condition on demographic group membership, avoiding potential misuse of demographic information.
 
 Third, we implement uncertainty quantification that explicitly represents epistemic uncertainty arising from limited training data for certain presentations or populations. Using a Bayesian neural network approach or ensemble methods, we compute not just point predictions but distributions over predictions, with higher uncertainty for cases dissimilar to the training data:
 
-$$P(D_k|X) = \int P(D_k|X, \theta) P(\theta|\mathcal{D}) d\theta \approx \frac{1}{M} \sum_{m=1}^M P(D_k|X, \theta^{(m)})$$
+$$
+P(D_k|X) = \int P(D_k|X, \theta) P(\theta|\mathcal{D}) d\theta \approx \frac{1}{M} \sum_{m=1}^M P(D_k|X, \theta^{(m)})
+$$
 
-where $$\theta$$ represents model parameters, $$\mathcal{D}$$$is the training data, and$$\theta^{(m)}$ are samples from the posterior distribution over parameters. High uncertainty signals that the model should defer to human clinical judgment rather than providing potentially unreliable predictions.
+where $\theta$ represents model parameters, $\mathcal{D}$is the training data, and$\theta^{(m)}$ are samples from the posterior distribution over parameters. High uncertainty signals that the model should defer to human clinical judgment rather than providing potentially unreliable predictions.
 
 Here is a production-ready implementation of a population-aware differential diagnosis system:
 
@@ -130,31 +155,29 @@ from sklearn.metrics import roc_auc_score
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class PopulationPrevalence:
     """Store population-specific disease prevalence rates."""
     disease_names: List[str]
     population_groups: List[str]
     prevalence: Dict[Tuple[str, str], float]  # (disease, population) -> prevalence
-    
+
     def get_prevalence(self, disease: str, population: str) -> float:
         """Get prevalence for a specific disease-population pair."""
-        return self.prevalence.get((disease, population), 
+        return self.prevalence.get((disease, population),
                                    self._global_prevalence(disease))
-    
+
     def _global_prevalence(self, disease: str) -> float:
         """Compute global prevalence across all populations."""
         prevalences = [v for (d, p), v in self.prevalence.items() if d == disease]
         return np.mean(prevalences) if prevalences else 0.01
-
 
 class AttentionDifferentialDiagnosisModel(nn.Module):
     """
     Neural differential diagnosis model with attention mechanism for interpretability
     and fairness-aware training for equitable performance across populations.
     """
-    
+
     def __init__(
         self,
         n_features: int,
@@ -166,7 +189,7 @@ class AttentionDifferentialDiagnosisModel(nn.Module):
     ):
         """
         Initialize differential diagnosis model.
-        
+
         Args:
             n_features: Number of input clinical features
             n_diseases: Number of possible diagnoses
@@ -176,11 +199,11 @@ class AttentionDifferentialDiagnosisModel(nn.Module):
             n_ensemble: Number of ensemble members for uncertainty quantification
         """
         super().__init__()
-        
+
         self.n_features = n_features
         self.n_diseases = n_diseases
         self.n_ensemble = n_ensemble
-        
+
         # Feature encoder
         self.encoder = nn.Sequential(
             nn.Linear(n_features, hidden_dim),
@@ -192,7 +215,7 @@ class AttentionDifferentialDiagnosisModel(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout)
         )
-        
+
         # Multi-head attention for interpretability
         self.attention = nn.MultiheadAttention(
             embed_dim=hidden_dim,
@@ -200,7 +223,7 @@ class AttentionDifferentialDiagnosisModel(nn.Module):
             dropout=dropout,
             batch_first=True
         )
-        
+
         # Disease-specific attention mechanisms for interpretability
         self.disease_attention = nn.ModuleList([
             nn.Sequential(
@@ -209,68 +232,68 @@ class AttentionDifferentialDiagnosisModel(nn.Module):
                 nn.Linear(hidden_dim // 2, 1)
             ) for _ in range(n_diseases)
         ])
-        
+
         # Final classification head
         self.classifier = nn.Linear(hidden_dim, n_diseases)
-        
+
         # Ensemble members for uncertainty quantification
         self.ensemble_classifiers = nn.ModuleList([
-            nn.Linear(hidden_dim, n_diseases) 
+            nn.Linear(hidden_dim, n_diseases)
             for _ in range(n_ensemble - 1)
         ])
-        
+
         logger.info(f"Initialized differential diagnosis model with {n_diseases} diseases")
-    
+
     def forward(
-        self, 
+        self,
         x: torch.Tensor,
         return_attention: bool = False
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
         Forward pass through the model.
-        
+
         Args:
             x: Clinical features tensor of shape (batch_size, n_features)
             return_attention: Whether to return attention weights
-            
+
         Returns:
             predictions: Probability distribution over diseases (batch_size, n_diseases)
             attention_weights: Optional attention weights for interpretability
         """
         # Encode clinical features
         h = self.encoder(x)  # (batch_size, hidden_dim)
-        
+
         # Apply self-attention
         h_attended, attention_weights = self.attention(
             h.unsqueeze(1), h.unsqueeze(1), h.unsqueeze(1)
         )
         h_attended = h_attended.squeeze(1)
-        
+
         # Primary predictions
         logits = self.classifier(h_attended)
-        
+
         if return_attention:
             # Compute disease-specific attention for interpretability
             disease_attention_weights = []
             for disease_idx in range(self.n_diseases):
                 attn = self.disease_attention[disease_idx](h_attended)
                 disease_attention_weights.append(attn)
-            
+
             disease_attention_weights = torch.cat(disease_attention_weights, dim=1)
             return F.softmax(logits, dim=1), disease_attention_weights
-        
+
         return F.softmax(logits, dim=1), None
-    
+
     def predict_with_uncertainty(
-        self, 
+        self,
         x: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Make predictions with uncertainty quantification using ensemble.
-        
+
         Args:
             x: Clinical features tensor
-            
+
         Returns:
             mean_predictions: Mean probability across ensemble
             uncertainty: Standard deviation across ensemble (epistemic uncertainty)
@@ -278,26 +301,25 @@ class AttentionDifferentialDiagnosisModel(nn.Module):
         h = self.encoder(x)
         h_attended, _ = self.attention(h.unsqueeze(1), h.unsqueeze(1), h.unsqueeze(1))
         h_attended = h_attended.squeeze(1)
-        
+
         # Collect predictions from all ensemble members
         predictions = [F.softmax(self.classifier(h_attended), dim=1)]
         for ensemble_classifier in self.ensemble_classifiers:
             predictions.append(F.softmax(ensemble_classifier(h_attended), dim=1))
-        
+
         predictions = torch.stack(predictions)  # (n_ensemble, batch_size, n_diseases)
-        
+
         mean_predictions = predictions.mean(dim=0)
         uncertainty = predictions.std(dim=0)
-        
-        return mean_predictions, uncertainty
 
+        return mean_predictions, uncertainty
 
 class FairnessAwareDifferentialDiagnosisTrainer:
     """
     Trainer for differential diagnosis model with fairness constraints
     to ensure equitable performance across demographic groups.
     """
-    
+
     def __init__(
         self,
         model: AttentionDifferentialDiagnosisModel,
@@ -307,7 +329,7 @@ class FairnessAwareDifferentialDiagnosisTrainer:
     ):
         """
         Initialize fairness-aware trainer.
-        
+
         Args:
             model: Differential diagnosis model
             prevalence_data: Population-specific prevalence information
@@ -318,22 +340,22 @@ class FairnessAwareDifferentialDiagnosisTrainer:
         self.prevalence_data = prevalence_data
         self.fairness_weight = fairness_weight
         self.device = device
-        
+
         self.optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=1e-4,
             weight_decay=0.01
         )
-        
+
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.optimizer,
             mode='min',
             factor=0.5,
             patience=5
         )
-        
+
         logger.info(f"Initialized fairness-aware trainer on {device}")
-    
+
     def compute_fairness_penalty(
         self,
         predictions: torch.Tensor,
@@ -342,32 +364,32 @@ class FairnessAwareDifferentialDiagnosisTrainer:
     ) -> torch.Tensor:
         """
         Compute fairness penalty encouraging equal AUC across groups.
-        
+
         Args:
             predictions: Model predictions (batch_size, n_diseases)
             labels: True labels (batch_size, n_diseases)
             groups: Group membership indicators (batch_size,)
-            
+
         Returns:
             fairness_penalty: Penalty term for fairness constraint
         """
         unique_groups = torch.unique(groups)
-        
+
         if len(unique_groups) < 2:
             return torch.tensor(0.0, device=self.device)
-        
+
         group_aucs = []
-        
+
         # Compute AUC for each group
         for group_id in unique_groups:
             group_mask = groups == group_id
-            
+
             if group_mask.sum() < 2:  # Need at least 2 samples for AUC
                 continue
-            
+
             group_preds = predictions[group_mask].detach().cpu().numpy()
             group_labels = labels[group_mask].detach().cpu().numpy()
-            
+
             try:
                 # Average AUC across diseases
                 aucs = []
@@ -378,23 +400,23 @@ class FairnessAwareDifferentialDiagnosisTrainer:
                             group_preds[:, disease_idx]
                         )
                         aucs.append(auc)
-                
+
                 if aucs:
                     group_aucs.append(np.mean(aucs))
             except Exception as e:
                 logger.warning(f"Could not compute AUC for group {group_id}: {e}")
                 continue
-        
+
         if len(group_aucs) < 2:
             return torch.tensor(0.0, device=self.device)
-        
+
         # Penalty is variance of AUCs across groups
         group_aucs = torch.tensor(group_aucs, device=self.device)
         mean_auc = group_aucs.mean()
         fairness_penalty = ((group_aucs - mean_auc) ** 2).mean()
-        
+
         return fairness_penalty
-    
+
     def train_epoch(
         self,
         train_loader: DataLoader,
@@ -402,67 +424,67 @@ class FairnessAwareDifferentialDiagnosisTrainer:
     ) -> Dict[str, float]:
         """
         Train for one epoch with fairness-aware objective.
-        
+
         Args:
             train_loader: DataLoader for training data
             epoch: Current epoch number
-            
+
         Returns:
             metrics: Dictionary of training metrics
         """
         self.model.train()
-        
+
         total_loss = 0.0
         total_ce_loss = 0.0
         total_fairness_penalty = 0.0
         n_batches = 0
-        
+
         for batch_idx, batch in enumerate(train_loader):
             features = batch['features'].to(self.device)
             labels = batch['labels'].to(self.device)
             groups = batch['groups'].to(self.device)
-            
+
             self.optimizer.zero_grad()
-            
+
             # Forward pass
             predictions, _ = self.model(features)
-            
+
             # Standard cross-entropy loss
             ce_loss = F.binary_cross_entropy(predictions, labels)
-            
+
             # Fairness penalty encouraging equal performance across groups
             fairness_penalty = self.compute_fairness_penalty(
                 predictions, labels, groups
             )
-            
+
             # Combined loss
             loss = ce_loss + self.fairness_weight * fairness_penalty
-            
+
             loss.backward()
-            
+
             # Gradient clipping for stability
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-            
+
             self.optimizer.step()
-            
+
             total_loss += loss.item()
             total_ce_loss += ce_loss.item()
             total_fairness_penalty += fairness_penalty.item()
             n_batches += 1
-            
+
             if batch_idx % 50 == 0:
                 logger.info(
                     f"Epoch {epoch}, Batch {batch_idx}/{len(train_loader)}: "
                     f"Loss={loss.item():.4f}, CE={ce_loss.item():.4f}, "
                     f"Fairness={fairness_penalty.item():.4f}"
                 )
-        
+
         return {
             'loss': total_loss / n_batches,
             'ce_loss': total_ce_loss / n_batches,
             'fairness_penalty': total_fairness_penalty / n_batches
         }
-    
+
     def evaluate(
         self,
         eval_loader: DataLoader,
@@ -470,75 +492,75 @@ class FairnessAwareDifferentialDiagnosisTrainer:
     ) -> Dict[str, Any]:
         """
         Evaluate model with comprehensive fairness metrics.
-        
+
         Args:
             eval_loader: DataLoader for evaluation data
             compute_group_metrics: Whether to compute stratified metrics by group
-            
+
         Returns:
             metrics: Dictionary containing overall and group-specific metrics
         """
         self.model.eval()
-        
+
         all_predictions = []
         all_uncertainties = []
         all_labels = []
         all_groups = []
-        
+
         with torch.no_grad():
             for batch in eval_loader:
                 features = batch['features'].to(self.device)
                 labels = batch['labels'].to(self.device)
                 groups = batch['groups'].to(self.device)
-                
+
                 # Get predictions with uncertainty
                 predictions, uncertainty = self.model.predict_with_uncertainty(features)
-                
+
                 all_predictions.append(predictions.cpu().numpy())
                 all_uncertainties.append(uncertainty.cpu().numpy())
                 all_labels.append(labels.cpu().numpy())
                 all_groups.append(groups.cpu().numpy())
-        
+
         predictions = np.vstack(all_predictions)
         uncertainties = np.vstack(all_uncertainties)
         labels = np.vstack(all_labels)
         groups = np.concatenate(all_groups)
-        
+
         # Compute overall metrics
         metrics = {
             'overall_auc': self._compute_average_auc(predictions, labels),
             'mean_uncertainty': uncertainties.mean()
         }
-        
+
         # Compute group-specific metrics
         if compute_group_metrics:
             unique_groups = np.unique(groups)
             group_metrics = {}
-            
+
             for group_id in unique_groups:
                 group_mask = groups == group_id
                 group_preds = predictions[group_mask]
                 group_labels = labels[group_mask]
                 group_uncertainty = uncertainties[group_mask]
-                
+
                 group_metrics[f'group_{int(group_id)}'] = {
                     'auc': self._compute_average_auc(group_preds, group_labels),
                     'n_samples': group_mask.sum(),
                     'mean_uncertainty': group_uncertainty.mean()
                 }
-            
+
             metrics['group_metrics'] = group_metrics
-            
+
             # Compute fairness metrics
             aucs = [gm['auc'] for gm in group_metrics.values()]
             metrics['auc_std'] = np.std(aucs)
             metrics['auc_range'] = np.max(aucs) - np.min(aucs)
-        
+
         return metrics
-    
+
     def _compute_average_auc(
-        self, 
-        predictions: np.ndarray, 
+        self,
+        predictions: np.ndarray,
         labels: np.ndarray
     ) -> float:
         """Compute average AUC across all diseases."""
@@ -554,7 +576,7 @@ class FairnessAwareDifferentialDiagnosisTrainer:
                 except:
                     continue
         return np.mean(aucs) if aucs else 0.0
-    
+
     def adjust_for_population_prevalence(
         self,
         predictions: torch.Tensor,
@@ -563,40 +585,39 @@ class FairnessAwareDifferentialDiagnosisTrainer:
     ) -> torch.Tensor:
         """
         Adjust predictions based on population-specific disease prevalence.
-        
+
         Args:
             predictions: Raw model predictions (batch_size, n_diseases)
             population: Population identifier
             disease_names: List of disease names corresponding to predictions
-            
+
         Returns:
             adjusted_predictions: Prevalence-adjusted predictions
         """
         if self.prevalence_data is None:
             return predictions
-        
+
         # Get global and population-specific prevalence
         adjustments = []
         for disease in disease_names:
             pop_prevalence = self.prevalence_data.get_prevalence(disease, population)
             global_prevalence = self.prevalence_data._global_prevalence(disease)
-            
+
             # Prevalence ratio for adjustment
             ratio = pop_prevalence / (global_prevalence + 1e-8)
             adjustments.append(ratio)
-        
+
         adjustments = torch.tensor(adjustments, device=predictions.device)
-        
+
         # Apply adjustment and renormalize
         adjusted = predictions * adjustments
         adjusted = adjusted / adjusted.sum(dim=1, keepdim=True)
-        
-        return adjusted
 
+        return adjusted
 
 class ClinicalPresentationDataset(Dataset):
     """Dataset for clinical presentations with demographic information."""
-    
+
     def __init__(
         self,
         features: np.ndarray,
@@ -605,7 +626,7 @@ class ClinicalPresentationDataset(Dataset):
     ):
         """
         Initialize dataset.
-        
+
         Args:
             features: Clinical features (n_samples, n_features)
             labels: Disease labels (n_samples, n_diseases)
@@ -614,17 +635,16 @@ class ClinicalPresentationDataset(Dataset):
         self.features = torch.FloatTensor(features)
         self.labels = torch.FloatTensor(labels)
         self.groups = torch.LongTensor(groups)
-    
+
     def __len__(self) -> int:
         return len(self.features)
-    
+
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         return {
             'features': self.features[idx],
             'labels': self.labels[idx],
             'groups': self.groups[idx]
         }
-
 
 # Example usage demonstrating fairness-aware differential diagnosis
 def train_equitable_differential_diagnosis_system():
@@ -637,11 +657,11 @@ def train_equitable_differential_diagnosis_system():
     n_features = 50
     n_diseases = 20
     n_groups = 4
-    
+
     # Generate synthetic data with group-specific patterns
     features = np.random.randn(n_samples, n_features)
     groups = np.random.randint(0, n_groups, n_samples)
-    
+
     # Create labels with group-specific disease prevalence
     labels = np.zeros((n_samples, n_diseases))
     for i in range(n_samples):
@@ -651,13 +671,13 @@ def train_equitable_differential_diagnosis_system():
         n_diseases_present = np.random.binomial(n_diseases, prevalence)
         disease_indices = np.random.choice(n_diseases, n_diseases_present, replace=False)
         labels[i, disease_indices] = 1
-    
+
     # Split data
     train_size = int(0.8 * n_samples)
     train_features, test_features = features[:train_size], features[train_size:]
     train_labels, test_labels = labels[:train_size], labels[train_size:]
     train_groups, test_groups = groups[:train_size], groups[train_size:]
-    
+
     # Create datasets and loaders
     train_dataset = ClinicalPresentationDataset(
         train_features, train_labels, train_groups
@@ -665,10 +685,10 @@ def train_equitable_differential_diagnosis_system():
     test_dataset = ClinicalPresentationDataset(
         test_features, test_labels, test_groups
     )
-    
+
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
-    
+
     # Initialize model and trainer
     model = AttentionDifferentialDiagnosisModel(
         n_features=n_features,
@@ -676,28 +696,27 @@ def train_equitable_differential_diagnosis_system():
         hidden_dim=256,
         n_attention_heads=4
     )
-    
+
     trainer = FairnessAwareDifferentialDiagnosisTrainer(
         model=model,
         fairness_weight=0.1
     )
-    
+
     # Training loop
     n_epochs = 20
     best_auc = 0.0
-    
+
     for epoch in range(n_epochs):
         train_metrics = trainer.train_epoch(train_loader, epoch)
         eval_metrics = trainer.evaluate(test_loader)
-        
+
         logger.info(f"Epoch {epoch}: {eval_metrics}")
-        
+
         if eval_metrics['overall_auc'] > best_auc:
             best_auc = eval_metrics['overall_auc']
             logger.info(f"New best AUC: {best_auc:.4f}")
-    
-    return model, trainer
 
+    return model, trainer
 
 if __name__ == "__main__":
     model, trainer = train_equitable_differential_diagnosis_system()
@@ -721,13 +740,17 @@ Data augmentation specifically designed to increase effective diversity deserves
 
 Model architecture and training procedures also substantially impact fairness. Standard empirical risk minimization optimizes average performance across the training distribution, which can lead to poor performance on minority groups if the model learns spurious correlations present in the training data. Several approaches have been proposed to encourage more equitable learning. Group distributionally robust optimization (Group DRO) minimizes the maximum loss across demographic groups rather than the average loss:
 
-$$\min_{\theta} \max_{g \in \mathcal{G}} \mathbb{E}_{(x,y) \sim \mathcal{D}_g}[\ell(f_{\theta}(x), y)]$$
+$$
+\min_{\theta} \max_{g \in \mathcal{G}} \mathbb{E}_{(x,y) \sim \mathcal{D}_g}[\ell(f_{\theta}(x), y)]
+$$
 
 This objective ensures that the model performs reasonably well on all groups, not just those well-represented in training data. However, it requires group labels during training and can lead to worse average performance as the model focuses on difficult minority groups.
 
 An alternative approach uses domain adaptation techniques to learn representations that are invariant to demographic factors while preserving disease-relevant information. The objective function combines classification accuracy with an adversarial penalty that prevents a domain classifier from identifying the demographic group:
 
-$$\mathcal{L} = \mathcal{L}_{\text{classification}} - \lambda \mathcal{L}_{\text{domain}}$$
+$$
+\mathcal{L} = \mathcal{L}_{\text{classification}} - \lambda \mathcal{L}_{\text{domain}}
+$$
 
 where the domain classifier attempts to predict group membership from the learned representations and the representation learner attempts to fool the domain classifier. This encourages the model to learn features that are useful for diagnosis but not predictive of demographic group, reducing reliance on group-specific spurious correlations.
 
@@ -746,29 +769,27 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class GradientReversalLayer(torch.autograd.Function):
     """
     Gradient reversal layer for domain-adversarial training.
     Forward pass acts as identity, backward pass reverses gradients.
     """
-    
+
     @staticmethod
     def forward(ctx, x: torch.Tensor, lambda_param: float) -> torch.Tensor:
         ctx.lambda_param = lambda_param
         return x.view_as(x)
-    
+
     @staticmethod
     def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
         return grad_output.neg() * ctx.lambda_param, None
-
 
 class DomainAdversarialImageClassifier(nn.Module):
     """
     Medical image classifier with domain adaptation for fairness.
     Uses adversarial training to learn demographic-invariant representations.
     """
-    
+
     def __init__(
         self,
         n_classes: int,
@@ -780,7 +801,7 @@ class DomainAdversarialImageClassifier(nn.Module):
     ):
         """
         Initialize domain-adversarial image classifier.
-        
+
         Args:
             n_classes: Number of diagnostic classes
             n_domains: Number of demographic domains/groups
@@ -790,10 +811,10 @@ class DomainAdversarialImageClassifier(nn.Module):
             dropout: Dropout rate
         """
         super().__init__()
-        
+
         self.n_classes = n_classes
         self.n_domains = n_domains
-        
+
         # Feature extractor backbone
         if backbone == "resnet50":
             base_model = models.resnet50(pretrained=pretrained)
@@ -807,9 +828,9 @@ class DomainAdversarialImageClassifier(nn.Module):
             feature_dim = 1280
         else:
             raise ValueError(f"Unsupported backbone: {backbone}")
-        
+
         self.feature_dim = feature_dim
-        
+
         # Disease classifier
         self.classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
@@ -820,7 +841,7 @@ class DomainAdversarialImageClassifier(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(512, n_classes)
         )
-        
+
         # Domain classifier (adversarial)
         self.domain_classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
@@ -833,12 +854,12 @@ class DomainAdversarialImageClassifier(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(256, n_domains)
         )
-        
+
         logger.info(
             f"Initialized domain-adversarial classifier with {n_classes} classes "
             f"and {n_domains} domains"
         )
-    
+
     def forward(
         self,
         x: torch.Tensor,
@@ -847,12 +868,12 @@ class DomainAdversarialImageClassifier(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
         """
         Forward pass with domain adaptation.
-        
+
         Args:
             x: Input images (batch_size, channels, height, width)
             lambda_param: Weight for gradient reversal
             return_features: Whether to return learned features
-            
+
         Returns:
             class_logits: Disease classification logits
             domain_logits: Domain classification logits (for adversarial loss)
@@ -860,27 +881,26 @@ class DomainAdversarialImageClassifier(nn.Module):
         """
         # Extract features
         features = self.feature_extractor(x)
-        
+
         # Disease classification
         class_logits = self.classifier(features)
-        
+
         # Domain classification with gradient reversal
         reversed_features = GradientReversalLayer.apply(features, lambda_param)
         domain_logits = self.domain_classifier(reversed_features)
-        
+
         if return_features:
             pooled_features = F.adaptive_avg_pool2d(features, 1).squeeze()
             return class_logits, domain_logits, pooled_features
-        
-        return class_logits, domain_logits, None
 
+        return class_logits, domain_logits, None
 
 class SkinToneAugmentation:
     """
     Data augmentation for dermatology images across skin tones.
     Simulates variation in melanin content and lighting conditions.
     """
-    
+
     def __init__(
         self,
         melanin_range: Tuple[float, float] = (0.7, 1.3),
@@ -889,7 +909,7 @@ class SkinToneAugmentation:
     ):
         """
         Initialize skin tone augmentation.
-        
+
         Args:
             melanin_range: Range for melanin concentration adjustment
             brightness_range: Range for brightness adjustment
@@ -898,14 +918,14 @@ class SkinToneAugmentation:
         self.melanin_range = melanin_range
         self.brightness_range = brightness_range
         self.contrast_range = contrast_range
-    
+
     def __call__(self, image: torch.Tensor) -> torch.Tensor:
         """
         Apply skin tone augmentation to image.
-        
+
         Args:
             image: Input image tensor (C, H, W) in range [0, 1]
-            
+
         Returns:
             augmented_image: Augmented image
         """
@@ -916,30 +936,29 @@ class SkinToneAugmentation:
             melanin_factor ** 0.7,  # G
             melanin_factor ** 0.9   # B
         ]).view(3, 1, 1).to(image.device)
-        
+
         image = image * melanin_adjustment
-        
+
         # Brightness adjustment
         brightness = np.random.uniform(*self.brightness_range)
         image = image * brightness
-        
+
         # Contrast adjustment
         contrast = np.random.uniform(*self.contrast_range)
         mean = image.mean(dim=(1, 2), keepdim=True)
         image = (image - mean) * contrast + mean
-        
+
         # Clip to valid range
         image = torch.clamp(image, 0, 1)
-        
-        return image
 
+        return image
 
 class FairnessAwareImageTrainer:
     """
     Trainer for domain-adversarial medical image classification
     with comprehensive fairness evaluation.
     """
-    
+
     def __init__(
         self,
         model: DomainAdversarialImageClassifier,
@@ -949,7 +968,7 @@ class FairnessAwareImageTrainer:
     ):
         """
         Initialize fairness-aware trainer.
-        
+
         Args:
             model: Domain-adversarial classifier
             domain_weight: Weight for domain adaptation loss
@@ -960,23 +979,23 @@ class FairnessAwareImageTrainer:
         self.domain_weight = domain_weight
         self.lambda_schedule = lambda_schedule
         self.device = device
-        
+
         # Separate optimizers for feature extractor and classifiers
         self.optimizer = torch.optim.Adam([
             {'params': self.model.feature_extractor.parameters(), 'lr': 1e-4},
             {'params': self.model.classifier.parameters(), 'lr': 1e-3},
             {'params': self.model.domain_classifier.parameters(), 'lr': 1e-3}
         ])
-        
+
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             self.optimizer, T_max=100
         )
-        
+
         self.classification_criterion = nn.CrossEntropyLoss()
         self.domain_criterion = nn.CrossEntropyLoss()
-        
+
         logger.info(f"Initialized fairness-aware image trainer on {device}")
-    
+
     def get_lambda(self, epoch: int, max_epochs: int) -> float:
         """Get gradient reversal lambda based on schedule."""
         if self.lambda_schedule == "constant":
@@ -987,7 +1006,7 @@ class FairnessAwareImageTrainer:
             return 2.0 / (1.0 + np.exp(-10 * progress)) - 1.0
         else:
             return 1.0
-    
+
     def train_epoch(
         self,
         train_loader: DataLoader,
@@ -996,66 +1015,66 @@ class FairnessAwareImageTrainer:
     ) -> Dict[str, float]:
         """
         Train for one epoch with domain adaptation.
-        
+
         Args:
             train_loader: Training data loader
             epoch: Current epoch
             max_epochs: Total epochs for lambda scheduling
-            
+
         Returns:
             metrics: Training metrics
         """
         self.model.train()
-        
+
         total_loss = 0.0
         total_class_loss = 0.0
         total_domain_loss = 0.0
         correct = 0
         total = 0
-        
+
         lambda_param = self.get_lambda(epoch, max_epochs)
-        
+
         for batch_idx, batch in enumerate(train_loader):
             images = batch['image'].to(self.device)
             labels = batch['label'].to(self.device)
             domains = batch['domain'].to(self.device)
-            
+
             self.optimizer.zero_grad()
-            
+
             # Forward pass
             class_logits, domain_logits, _ = self.model(
                 images, lambda_param=lambda_param
             )
-            
+
             # Classification loss
             class_loss = self.classification_criterion(class_logits, labels)
-            
+
             # Domain adaptation loss
             domain_loss = self.domain_criterion(domain_logits, domains)
-            
+
             # Combined loss
             loss = class_loss + self.domain_weight * domain_loss
-            
+
             loss.backward()
             self.optimizer.step()
-            
+
             # Track metrics
             total_loss += loss.item()
             total_class_loss += class_loss.item()
             total_domain_loss += domain_loss.item()
-            
+
             _, predicted = class_logits.max(1)
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
-            
+
             if batch_idx % 50 == 0:
                 logger.info(
                     f"Epoch {epoch}, Batch {batch_idx}: "
                     f"Loss={loss.item():.4f}, Acc={100.0 * correct / total:.2f}%"
                 )
-        
+
         self.scheduler.step()
-        
+
         return {
             'loss': total_loss / len(train_loader),
             'class_loss': total_class_loss / len(train_loader),
@@ -1063,83 +1082,83 @@ class FairnessAwareImageTrainer:
             'accuracy': 100.0 * correct / total,
             'lambda': lambda_param
         }
-    
+
     def evaluate_with_fairness_metrics(
         self,
         eval_loader: DataLoader
     ) -> Dict[str, Any]:
         """
         Comprehensive evaluation including fairness metrics.
-        
+
         Args:
             eval_loader: Evaluation data loader
-            
+
         Returns:
             metrics: Overall and group-stratified metrics
         """
         self.model.eval()
-        
+
         all_predictions = []
         all_labels = []
         all_domains = []
         all_probabilities = []
-        
+
         with torch.no_grad():
             for batch in eval_loader:
                 images = batch['image'].to(self.device)
                 labels = batch['label'].to(self.device)
                 domains = batch['domain'].to(self.device)
-                
+
                 class_logits, _, _ = self.model(images, lambda_param=0.0)
                 probabilities = F.softmax(class_logits, dim=1)
-                
+
                 _, predicted = class_logits.max(1)
-                
+
                 all_predictions.append(predicted.cpu().numpy())
                 all_labels.append(labels.cpu().numpy())
                 all_domains.append(domains.cpu().numpy())
                 all_probabilities.append(probabilities.cpu().numpy())
-        
+
         predictions = np.concatenate(all_predictions)
         labels = np.concatenate(all_labels)
         domains = np.concatenate(all_domains)
         probabilities = np.vstack(all_probabilities)
-        
+
         # Overall metrics
         overall_acc = (predictions == labels).mean()
-        
+
         try:
             overall_auc = roc_auc_score(
                 labels, probabilities, multi_class='ovr', average='macro'
             )
         except:
             overall_auc = 0.0
-        
+
         metrics = {
             'overall_accuracy': overall_acc,
             'overall_auc': overall_auc
         }
-        
+
         # Group-stratified metrics
         unique_domains = np.unique(domains)
         domain_metrics = {}
-        
+
         for domain_id in unique_domains:
             domain_mask = domains == domain_id
             domain_preds = predictions[domain_mask]
             domain_labels = labels[domain_mask]
             domain_probs = probabilities[domain_mask]
-            
+
             domain_acc = (domain_preds == domain_labels).mean()
-            
+
             try:
                 domain_auc = roc_auc_score(
-                    domain_labels, domain_probs, 
+                    domain_labels, domain_probs,
                     multi_class='ovr', average='macro'
                 )
             except:
                 domain_auc = 0.0
-            
+
             # Compute sensitivity and specificity for binary case
             if self.model.n_classes == 2:
                 tn, fp, fn, tp = confusion_matrix(
@@ -1149,7 +1168,7 @@ class FairnessAwareImageTrainer:
                 specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
             else:
                 sensitivity = specificity = 0.0
-            
+
             domain_metrics[f'domain_{int(domain_id)}'] = {
                 'accuracy': domain_acc,
                 'auc': domain_auc,
@@ -1157,19 +1176,19 @@ class FairnessAwareImageTrainer:
                 'specificity': specificity,
                 'n_samples': domain_mask.sum()
             }
-        
+
         metrics['domain_metrics'] = domain_metrics
-        
+
         # Compute fairness metrics
         accs = [dm['accuracy'] for dm in domain_metrics.values()]
         aucs = [dm['auc'] for dm in domain_metrics.values() if dm['auc'] > 0]
-        
+
         metrics['accuracy_std'] = np.std(accs)
         metrics['accuracy_range'] = np.max(accs) - np.min(accs)
         if aucs:
             metrics['auc_std'] = np.std(aucs)
             metrics['auc_range'] = np.max(aucs) - np.min(aucs)
-        
+
         return metrics
 ```
 
@@ -1209,26 +1228,25 @@ class PopulationReferenceRange:
     sample_size: int
     uncertainty: float  # Standard error of range estimate
 
-
 class BayesianLabInterpreter:
     """
     Bayesian laboratory result interpreter with population-aware
     reference ranges and explicit uncertainty quantification.
     """
-    
+
     def __init__(
         self,
         reference_ranges: Dict[str, Dict[str, PopulationReferenceRange]]
     ):
         """
         Initialize Bayesian laboratory interpreter.
-        
+
         Args:
             reference_ranges: Nested dict of test_name -> population -> range
         """
         self.reference_ranges = reference_ranges
         logger.info("Initialized Bayesian laboratory interpreter")
-    
+
     def interpret_result(
         self,
         test_name: str,
@@ -1238,19 +1256,19 @@ class BayesianLabInterpreter:
     ) -> Dict[str, float]:
         """
         Interpret laboratory result with population-aware references.
-        
+
         Args:
             test_name: Name of laboratory test
             result_value: Measured result value
             patient_population: Patient's population group
             patient_characteristics: Additional characteristics (age, sex, etc.)
-            
+
         Returns:
             interpretation: Dictionary with probability of abnormality and bounds
         """
         if test_name not in self.reference_ranges:
             raise ValueError(f"Unknown test: {test_name}")
-        
+
         # Get population-specific reference range
         if patient_population in self.reference_ranges[test_name]:
             ref_range = self.reference_ranges[test_name][patient_population]
@@ -1261,24 +1279,24 @@ class BayesianLabInterpreter:
                 "using pooled estimate"
             )
             ref_range = self._get_pooled_reference(test_name)
-        
+
         # Compute probability of abnormality
         # Assume reference range represents 95% central interval of normal distribution
         mean = (ref_range.lower_bound + ref_range.upper_bound) / 2
         std = (ref_range.upper_bound - ref_range.lower_bound) / (2 * 1.96)
-        
+
         # Account for uncertainty in reference range itself
         std_with_uncertainty = np.sqrt(std**2 + ref_range.uncertainty**2)
-        
+
         # Z-score
         z_score = (result_value - mean) / std_with_uncertainty
-        
+
         # Probability of abnormality (two-tailed)
         from scipy.stats import norm
         p_normal = norm.cdf(ref_range.upper_bound, mean, std_with_uncertainty) - \
                    norm.cdf(ref_range.lower_bound, mean, std_with_uncertainty)
         p_abnormal = 1 - p_normal
-        
+
         # Classify as low, normal, or high
         if result_value < ref_range.lower_bound:
             classification = "low"
@@ -1289,7 +1307,7 @@ class BayesianLabInterpreter:
         else:
             classification = "normal"
             p_abnormal_directional = 0.0
-        
+
         return {
             'classification': classification,
             'z_score': z_score,
@@ -1300,14 +1318,14 @@ class BayesianLabInterpreter:
             'population': patient_population,
             'sample_size': ref_range.sample_size
         }
-    
+
     def _get_pooled_reference(
-        self, 
+        self,
         test_name: str
     ) -> PopulationReferenceRange:
         """Compute pooled reference range across all populations."""
         all_ranges = self.reference_ranges[test_name].values()
-        
+
         # Weighted average by sample size
         total_n = sum(r.sample_size for r in all_ranges)
         weighted_lower = sum(
@@ -1316,12 +1334,12 @@ class BayesianLabInterpreter:
         weighted_upper = sum(
             r.upper_bound * r.sample_size for r in all_ranges
         ) / total_n
-        
+
         # Pool uncertainty
         pooled_uncertainty = np.sqrt(
             sum((r.uncertainty ** 2) * r.sample_size for r in all_ranges) / total_n
         )
-        
+
         return PopulationReferenceRange(
             test_name=test_name,
             population="pooled",
@@ -1330,7 +1348,7 @@ class BayesianLabInterpreter:
             sample_size=total_n,
             uncertainty=pooled_uncertainty
         )
-    
+
     def interpret_panel(
         self,
         test_results: Dict[str, float],
@@ -1339,34 +1357,34 @@ class BayesianLabInterpreter:
     ) -> Dict[str, Any]:
         """
         Interpret a panel of related laboratory tests jointly.
-        
+
         Args:
             test_results: Dictionary of test_name -> result_value
             patient_population: Patient's population group
             consider_correlations: Whether to account for test correlations
-            
+
         Returns:
             panel_interpretation: Joint interpretation of all tests
         """
         individual_interpretations = {}
         abnormal_tests = []
-        
+
         for test_name, result_value in test_results.items():
             interp = self.interpret_result(
                 test_name, result_value, patient_population
             )
             individual_interpretations[test_name] = interp
-            
+
             if interp['classification'] != 'normal':
                 abnormal_tests.append(test_name)
-        
+
         # For correlated tests, joint probability of abnormality
         # differs from product of individual probabilities
         if consider_correlations and len(abnormal_tests) > 1:
             # Simplified model: assume moderate positive correlation
             correlation = 0.3
             p_joint = self._compute_joint_probability(
-                [individual_interpretations[t]['p_abnormal'] 
+                [individual_interpretations[t]['p_abnormal']
                  for t in abnormal_tests],
                 correlation
             )
@@ -1375,14 +1393,14 @@ class BayesianLabInterpreter:
                 individual_interpretations[t]['p_abnormal']
                 for t in abnormal_tests
             ]) if abnormal_tests else 0.0
-        
+
         return {
             'individual_tests': individual_interpretations,
             'abnormal_tests': abnormal_tests,
             'n_abnormal': len(abnormal_tests),
             'p_any_abnormal': p_joint if abnormal_tests else 0.0
         }
-    
+
     def _compute_joint_probability(
         self,
         individual_probs: List[float],
@@ -1394,15 +1412,15 @@ class BayesianLabInterpreter:
         """
         from scipy.stats import multivariate_normal
         from scipy.stats import norm
-        
+
         # Convert probabilities to z-scores
         z_scores = [norm.ppf(p) if p < 1 else 3.0 for p in individual_probs]
-        
+
         # Construct correlation matrix
         n = len(z_scores)
         corr_matrix = np.full((n, n), correlation)
         np.fill_diagonal(corr_matrix, 1.0)
-        
+
         # Joint probability
         try:
             p_joint = 1 - multivariate_normal.cdf(
@@ -1411,20 +1429,19 @@ class BayesianLabInterpreter:
         except:
             # Fall back to independence assumption
             p_joint = 1 - np.prod(individual_probs)
-        
-        return p_joint
 
+        return p_joint
 
 class EquitableEGFRCalculator:
     """
     Equitable eGFR calculation without race-based adjustments.
     Implements multiple equations and provides uncertainty estimates.
     """
-    
+
     def __init__(self):
         """Initialize eGFR calculator."""
         logger.info("Initialized race-free eGFR calculator")
-    
+
     def calculate_egfr_ckd_epi_2021(
         self,
         creatinine_mg_dl: float,
@@ -1433,28 +1450,28 @@ class EquitableEGFRCalculator:
     ) -> Dict[str, float]:
         """
         Calculate eGFR using 2021 CKD-EPI equation (race-free).
-        
+
         Args:
             creatinine_mg_dl: Serum creatinine in mg/dL
             age_years: Patient age in years
             is_female: Whether patient is female
-            
+
         Returns:
             result: Dictionary with eGFR and interpretation
         """
         # 2021 CKD-EPI equation (no race term)
         kappa = 0.7 if is_female else 0.9
         alpha = -0.241 if is_female else -0.302
-        
+
         min_ratio = min(creatinine_mg_dl / kappa, 1.0)
         max_ratio = max(creatinine_mg_dl / kappa, 1.0)
-        
+
         egfr = 142 * (min_ratio ** alpha) * (max_ratio ** (-1.200)) * \
                (0.9938 ** age_years)
-        
+
         if is_female:
             egfr *= 1.012
-        
+
         # Classify CKD stage
         if egfr >= 90:
             stage = "G1 (Normal or high)"
@@ -1474,14 +1491,14 @@ class EquitableEGFRCalculator:
         else:
             stage = "G5 (Kidney failure)"
             interpretation = "Kidney failure"
-        
+
         return {
             'egfr': egfr,
             'ckd_stage': stage,
             'interpretation': interpretation,
             'equation': 'CKD-EPI 2021 (race-free)'
         }
-    
+
     def calculate_with_uncertainty(
         self,
         creatinine_mg_dl: float,
@@ -1492,14 +1509,14 @@ class EquitableEGFRCalculator:
     ) -> Dict[str, Any]:
         """
         Calculate eGFR with uncertainty propagation.
-        
+
         Args:
             creatinine_mg_dl: Measured serum creatinine
             creatinine_uncertainty: Measurement uncertainty (SD)
             age_years: Patient age
             is_female: Whether patient is female
             n_samples: Number of Monte Carlo samples
-            
+
         Returns:
             result: eGFR estimate with confidence interval
         """
@@ -1510,16 +1527,16 @@ class EquitableEGFRCalculator:
             n_samples
         )
         creatinine_samples = np.maximum(creatinine_samples, 0.1)  # Avoid invalid values
-        
+
         egfr_samples = []
         for creat in creatinine_samples:
             result = self.calculate_egfr_ckd_epi_2021(
                 creat, age_years, is_female
             )
             egfr_samples.append(result['egfr'])
-        
+
         egfr_samples = np.array(egfr_samples)
-        
+
         return {
             'egfr_mean': egfr_samples.mean(),
             'egfr_median': np.median(egfr_samples),
@@ -1552,14 +1569,12 @@ from dataclasses import dataclass
 from enum import Enum
 import re
 
-
 class SymptomSeverity(Enum):
     """Standardized symptom severity levels."""
     MILD = 1
     MODERATE = 2
     SEVERE = 3
     EMERGENCY = 4
-
 
 @dataclass
 class Symptom:
@@ -1570,7 +1585,6 @@ class Symptom:
     follow_up_questions: List[str]
     severity_indicators: Dict[SymptomSeverity, List[str]]
     cultural_variations: Dict[str, str]  # language/culture -> description
-
 
 @dataclass
 class Diagnosis:
@@ -1583,13 +1597,12 @@ class Diagnosis:
     recommended_action: str
     accessible_explanation: str
 
-
 class AccessibleSymptomChecker:
     """
     Symptom checker designed for diverse health literacy levels
     with cultural sensitivity and accessibility features.
     """
-    
+
     def __init__(
         self,
         symptom_database: Dict[str, Symptom],
@@ -1598,7 +1611,7 @@ class AccessibleSymptomChecker:
     ):
         """
         Initialize accessible symptom checker.
-        
+
         Args:
             symptom_database: Database of symptoms with plain language
             diagnosis_database: Database of diagnoses with explanations
@@ -1607,14 +1620,14 @@ class AccessibleSymptomChecker:
         self.symptom_database = symptom_database
         self.diagnosis_database = diagnosis_database
         self.reading_level = reading_level
-        
+
         # Build symptom-diagnosis association matrix
         self.symptom_diagnosis_matrix = self._build_association_matrix()
-        
+
         logger.info(
             f"Initialized accessible symptom checker at {reading_level} level"
         )
-    
+
     def _build_association_matrix(self) -> np.ndarray:
         """
         Build symptom-diagnosis association matrix from databases.
@@ -1622,14 +1635,14 @@ class AccessibleSymptomChecker:
         """
         n_symptoms = len(self.symptom_database)
         n_diagnoses = len(self.diagnosis_database)
-        
+
         # Placeholder: random associations for demonstration
         # In production, this would be learned from EHR data
         matrix = np.random.rand(n_symptoms, n_diagnoses)
         matrix = (matrix > 0.7).astype(float)  # Sparse associations
-        
+
         return matrix
-    
+
     def simplify_language(
         self,
         text: str,
@@ -1637,11 +1650,11 @@ class AccessibleSymptomChecker:
     ) -> str:
         """
         Simplify medical language to target reading level.
-        
+
         Args:
             text: Original text
             target_level: Target reading level
-            
+
         Returns:
             simplified_text: Simplified version
         """
@@ -1663,7 +1676,7 @@ class AccessibleSymptomChecker:
             'palpitations': 'feeling your heartbeat',
             'dyspepsia': 'indigestion'
         }
-        
+
         simplified = text.lower()
         for medical, plain in simplifications.items():
             simplified = re.sub(
@@ -1672,18 +1685,18 @@ class AccessibleSymptomChecker:
                 simplified,
                 flags=re.IGNORECASE
             )
-        
+
         # Simplify complex sentence structures
         # Remove parenthetical medical terms
         simplified = re.sub(r'\([^)]*\)', '', simplified)
-        
+
         # Capitalize first letter
         simplified = simplified.strip()
         if simplified:
             simplified = simplified[0].upper() + simplified[1:]
-        
+
         return simplified
-    
+
     def elicit_symptoms(
         self,
         initial_complaint: str,
@@ -1692,18 +1705,18 @@ class AccessibleSymptomChecker:
     ) -> Dict[str, any]:
         """
         Elicit symptoms through accessible questioning.
-        
+
         Args:
             initial_complaint: Patient's initial description
             language: Preferred language
             use_voice: Whether to optimize for voice interaction
-            
+
         Returns:
             symptoms: Structured symptom information
         """
         # Parse initial complaint to identify potential symptoms
         mentioned_symptoms = self._parse_chief_complaint(initial_complaint)
-        
+
         # Generate follow-up questions in plain language
         questions = []
         for symptom_id in mentioned_symptoms:
@@ -1718,13 +1731,13 @@ class AccessibleSymptomChecker:
                         'voice_optimized': self._optimize_for_voice(simplified_q)
                                           if use_voice else simplified_q
                     })
-        
+
         return {
             'identified_symptoms': mentioned_symptoms,
             'follow_up_questions': questions[:5],  # Limit to avoid overwhelm
             'language': language
         }
-    
+
     def _parse_chief_complaint(self, complaint: str) -> List[str]:
         """
         Parse natural language complaint to identify symptoms.
@@ -1732,24 +1745,24 @@ class AccessibleSymptomChecker:
         """
         complaint = complaint.lower()
         identified = []
-        
+
         # Keyword matching for common symptoms
         symptom_keywords = {
             'chest_pain': ['chest pain', 'chest hurts', 'pain in chest'],
-            'shortness_breath': ['can\'t breathe', 'short of breath', 
+            'shortness_breath': ['can\'t breathe', 'short of breath',
                                'breathing hard', 'trouble breathing'],
             'headache': ['headache', 'head hurts', 'head pain'],
             'fever': ['fever', 'hot', 'temperature'],
             'cough': ['cough', 'coughing'],
             'abdominal_pain': ['stomach pain', 'belly hurts', 'abdominal pain']
         }
-        
+
         for symptom_id, keywords in symptom_keywords.items():
             if any(kw in complaint for kw in keywords):
                 identified.append(symptom_id)
-        
+
         return identified
-    
+
     def _optimize_for_voice(self, question: str) -> str:
         """
         Optimize question phrasing for voice interaction.
@@ -1758,12 +1771,12 @@ class AccessibleSymptomChecker:
         # Convert yes/no questions to more natural voice format
         if question.startswith("Do you have"):
             question = question.replace("Do you have", "Tell me if you have", 1)
-        
+
         # Add conversational transitions
         voice_question = f"Okay. {question}"
-        
+
         return voice_question
-    
+
     def generate_differential_diagnosis(
         self,
         symptom_profile: Dict[str, SymptomSeverity],
@@ -1772,54 +1785,54 @@ class AccessibleSymptomChecker:
     ) -> List[Tuple[Diagnosis, float, str]]:
         """
         Generate differential diagnosis with accessible explanations.
-        
+
         Args:
             symptom_profile: Dictionary of symptom_id -> severity
             patient_age: Optional patient age
             patient_sex: Optional patient sex
-            
+
         Returns:
             differential: List of (diagnosis, probability, explanation) tuples
         """
         # Convert symptoms to vector
         symptom_vector = np.zeros(len(self.symptom_database))
         symptom_ids = list(self.symptom_database.keys())
-        
+
         for symptom_id, severity in symptom_profile.items():
             if symptom_id in symptom_ids:
                 idx = symptom_ids.index(symptom_id)
                 # Weight by severity
                 symptom_vector[idx] = severity.value
-        
+
         # Compute diagnosis probabilities
         diagnosis_scores = self.symptom_diagnosis_matrix.T @ symptom_vector
-        
+
         # Normalize to probabilities
         if diagnosis_scores.sum() > 0:
             diagnosis_probs = diagnosis_scores / diagnosis_scores.sum()
         else:
             diagnosis_probs = np.ones_like(diagnosis_scores) / len(diagnosis_scores)
-        
+
         # Get top diagnoses
         diagnosis_ids = list(self.diagnosis_database.keys())
         top_indices = np.argsort(diagnosis_probs)[::-1][:5]
-        
+
         differential = []
         for idx in top_indices:
             if diagnosis_probs[idx] > 0.05:  # Threshold for inclusion
                 diagnosis_id = diagnosis_ids[idx]
                 diagnosis = self.diagnosis_database[diagnosis_id]
                 probability = diagnosis_probs[idx]
-                
+
                 # Generate accessible explanation
                 explanation = self._generate_accessible_explanation(
                     diagnosis, symptom_profile, probability
                 )
-                
+
                 differential.append((diagnosis, probability, explanation))
-        
+
         return differential
-    
+
     def _generate_accessible_explanation(
         self,
         diagnosis: Diagnosis,
@@ -1838,13 +1851,13 @@ class AccessibleSymptomChecker:
             likelihood = "less likely but still possible"
         else:
             likelihood = "not very likely"
-        
+
         # Explain symptom match
         matching_symptoms = [
             s for s in symptoms.keys()
             if s in diagnosis.typical_symptoms
         ]
-        
+
         if matching_symptoms:
             symptom_explanation = (
                 f"This is {likelihood} because you have symptoms that "
@@ -1855,13 +1868,13 @@ class AccessibleSymptomChecker:
                 f"This is {likelihood} based on your symptoms, but "
                 f"other tests might be needed to be sure."
             )
-        
+
         full_explanation = (
             f"{diagnosis.accessible_explanation} {symptom_explanation}"
         )
-        
+
         return self.simplify_language(full_explanation)
-    
+
     def provide_triage_recommendation(
         self,
         differential: List[Tuple[Diagnosis, float, str]],
@@ -1869,11 +1882,11 @@ class AccessibleSymptomChecker:
     ) -> Dict[str, any]:
         """
         Provide clear, actionable triage recommendation.
-        
+
         Args:
             differential: List of diagnostic possibilities
             max_severity: Maximum severity from symptoms
-            
+
         Returns:
             recommendation: Structured triage guidance
         """
@@ -1882,9 +1895,9 @@ class AccessibleSymptomChecker:
             [d[0].urgency for d in differential],
             default=SymptomSeverity.MILD
         )
-        
+
         urgency = max(max_severity, max_diagnosis_urgency)
-        
+
         # Generate recommendation based on urgency
         if urgency == SymptomSeverity.EMERGENCY:
             action = "Call 911 or go to the emergency room right away"
@@ -1902,7 +1915,7 @@ class AccessibleSymptomChecker:
             action = "Monitor your symptoms and see a doctor if they get worse"
             timeframe = "within a week if symptoms continue"
             icon = "👁️"
-        
+
         return {
             'urgency_level': urgency.name,
             'action': action,
@@ -1910,7 +1923,7 @@ class AccessibleSymptomChecker:
             'icon': icon,
             'explanation': self._explain_urgency(urgency, differential)
         }
-    
+
     def _explain_urgency(
         self,
         urgency: SymptomSeverity,
@@ -1959,13 +1972,12 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 
-
 class TypicalityDetector(nn.Module):
     """
     Neural network component for detecting atypical clinical presentations
     that may require special handling or human review.
     """
-    
+
     def __init__(
         self,
         feature_dim: int,
@@ -1974,22 +1986,22 @@ class TypicalityDetector(nn.Module):
     ):
         """
         Initialize typicality detector using prototype learning.
-        
+
         Args:
             feature_dim: Dimension of clinical feature representations
             hidden_dim: Hidden layer dimension
             n_prototypes: Number of prototype representations to learn
         """
         super().__init__()
-        
+
         self.feature_dim = feature_dim
         self.n_prototypes = n_prototypes
-        
+
         # Learn prototype representations of typical presentations
         self.prototypes = nn.Parameter(
             torch.randn(n_prototypes, feature_dim)
         )
-        
+
         # Network to compute typicality score
         self.typicality_network = nn.Sequential(
             nn.Linear(feature_dim + n_prototypes, hidden_dim),
@@ -1999,7 +2011,7 @@ class TypicalityDetector(nn.Module):
             nn.Linear(hidden_dim // 2, 1),
             nn.Sigmoid()  # Output between 0 (atypical) and 1 (typical)
         )
-    
+
     def compute_prototype_distances(
         self,
         features: torch.Tensor
@@ -2010,44 +2022,43 @@ class TypicalityDetector(nn.Module):
             features.unsqueeze(0),
             self.prototypes.unsqueeze(0)
         ).squeeze(0)
-        
+
         # Convert to similarities (smaller distance = higher similarity)
         similarities = torch.exp(-distances / distances.std())
-        
+
         return similarities
-    
+
     def forward(
         self,
         features: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Compute typicality scores for clinical presentations.
-        
+
         Args:
             features: Clinical feature representations (batch_size, feature_dim)
-            
+
         Returns:
             typicality_scores: Score between 0-1 for each sample
             prototype_similarities: Similarity to each prototype
         """
         # Compute similarity to prototypes
         prototype_sims = self.compute_prototype_distances(features)
-        
+
         # Concatenate features and prototype similarities
         combined = torch.cat([features, prototype_sims], dim=1)
-        
+
         # Compute typicality score
         typicality_scores = self.typicality_network(combined)
-        
-        return typicality_scores.squeeze(), prototype_sims
 
+        return typicality_scores.squeeze(), prototype_sims
 
 class AtypicalityAwareDiagnosticSystem:
     """
     Diagnostic system that explicitly identifies and handles
     atypical presentations requiring special attention.
     """
-    
+
     def __init__(
         self,
         diagnostic_model: nn.Module,
@@ -2057,7 +2068,7 @@ class AtypicalityAwareDiagnosticSystem:
     ):
         """
         Initialize atypicality-aware diagnostic system.
-        
+
         Args:
             diagnostic_model: Primary diagnostic model
             typicality_detector: Module for detecting atypical cases
@@ -2068,19 +2079,19 @@ class AtypicalityAwareDiagnosticSystem:
         self.typicality_detector = typicality_detector
         self.atypicality_threshold = atypicality_threshold
         self.use_ensemble = use_ensemble
-        
+
         # Secondary models for handling atypical cases
         if use_ensemble:
             self.ensemble_models = self._initialize_ensemble()
-        
+
         logger.info("Initialized atypicality-aware diagnostic system")
-    
+
     def _initialize_ensemble(self) -> List[nn.Module]:
         """Initialize ensemble of models for atypical cases."""
         # In practice, these would be separately trained models
         # Here we use copies for demonstration
         return [self.diagnostic_model]  # Placeholder
-    
+
     def diagnose_with_atypicality_detection(
         self,
         features: torch.Tensor,
@@ -2088,20 +2099,20 @@ class AtypicalityAwareDiagnosticSystem:
     ) -> Dict[str, any]:
         """
         Make diagnosis with explicit atypicality detection.
-        
+
         Args:
             features: Clinical features
             return_explanation: Whether to return explanation
-            
+
         Returns:
             result: Diagnostic prediction with atypicality information
         """
         # Detect atypicality
         with torch.no_grad():
             typicality_scores, prototype_sims = self.typicality_detector(features)
-        
+
         is_atypical = (typicality_scores < self.atypicality_threshold).cpu().numpy()
-        
+
         # Make diagnostic predictions
         with torch.no_grad():
             predictions = self.diagnostic_model(features)
@@ -2110,7 +2121,7 @@ class AtypicalityAwareDiagnosticSystem:
             else:
                 predictions = torch.softmax(predictions, dim=-1)
                 uncertainty = None
-        
+
         results = []
         for i in range(len(features)):
             result = {
@@ -2120,21 +2131,21 @@ class AtypicalityAwareDiagnosticSystem:
                 'requires_review': bool(is_atypical[i]),
                 'confidence': 'low' if is_atypical[i] else 'normal'
             }
-            
+
             if uncertainty is not None:
                 result['uncertainty'] = uncertainty[i].cpu().numpy()
-            
+
             if return_explanation and is_atypical[i]:
                 result['explanation'] = self._explain_atypicality(
                     features[i],
                     prototype_sims[i],
                     typicality_scores[i]
                 )
-            
+
             results.append(result)
-        
+
         return results if len(results) > 1 else results[0]
-    
+
     def _explain_atypicality(
         self,
         features: torch.Tensor,
@@ -2145,7 +2156,7 @@ class AtypicalityAwareDiagnosticSystem:
         # Find most similar prototype
         most_similar_idx = prototype_sims.argmax().item()
         max_similarity = prototype_sims[most_similar_idx].item()
-        
+
         if max_similarity < 0.3:
             explanation = (
                 "This case appears quite different from typical presentations "
@@ -2157,9 +2168,9 @@ class AtypicalityAwareDiagnosticSystem:
                 f"similarity to known presentation patterns, expert review "
                 f"is recommended to ensure accurate diagnosis."
             )
-        
+
         return explanation
-    
+
     def update_with_atypical_case(
         self,
         features: torch.Tensor,
@@ -2167,14 +2178,14 @@ class AtypicalityAwareDiagnosticSystem:
     ):
         """
         Update model with confirmed atypical case to improve future performance.
-        
+
         Args:
             features: Features from atypical case
             true_diagnosis: Confirmed diagnosis for this case
         """
         # Add to training data for model updates
         # In practice, this would trigger retraining or fine-tuning
-        
+
         # Update prototype representations to include atypical patterns
         with torch.no_grad():
             # Find least representative prototype
@@ -2182,25 +2193,24 @@ class AtypicalityAwareDiagnosticSystem:
                 features.unsqueeze(0),
                 self.typicality_detector.prototypes
             ).squeeze()
-            
+
             least_similar_idx = prototype_sims.argmax()
-            
+
             # Update this prototype toward the new case
             learning_rate = 0.1
             self.typicality_detector.prototypes[least_similar_idx] = (
                 (1 - learning_rate) * self.typicality_detector.prototypes[least_similar_idx] +
                 learning_rate * features
             )
-        
-        logger.info("Updated model with atypical case")
 
+        logger.info("Updated model with atypical case")
 
 class ClinicalContextIntegrator:
     """
     Integrates social determinants and clinical context to better
     handle atypical presentations in underserved populations.
     """
-    
+
     def __init__(self):
         """Initialize clinical context integrator."""
         self.sdoh_risk_factors = [
@@ -2211,7 +2221,7 @@ class ClinicalContextIntegrator:
             'financial_strain',
             'social_isolation'
         ]
-    
+
     def assess_sdoh_risk(
         self,
         patient_data: Dict[str, any]
@@ -2219,23 +2229,23 @@ class ClinicalContextIntegrator:
         """
         Assess social determinants of health risk factors
         that may affect disease presentation.
-        
+
         Args:
             patient_data: Patient information including SDOH screening
-            
+
         Returns:
             risk_assessment: Risk scores for each SDOH factor
         """
         risk_scores = {}
-        
+
         for factor in self.sdoh_risk_factors:
             # Extract relevant information
             # In practice, this would use validated SDOH screening tools
             score = patient_data.get(factor, 0.0)
             risk_scores[factor] = score
-        
+
         return risk_scores
-    
+
     def adjust_diagnostic_interpretation(
         self,
         diagnostic_result: Dict[str, any],
@@ -2244,12 +2254,12 @@ class ClinicalContextIntegrator:
     ) -> Dict[str, any]:
         """
         Adjust diagnostic interpretation based on SDOH context.
-        
+
         Args:
             diagnostic_result: Initial diagnostic prediction
             sdoh_risks: Social determinant risk factors
             access_history: Healthcare access history
-            
+
         Returns:
             adjusted_result: Context-aware diagnostic interpretation
         """
@@ -2259,7 +2269,7 @@ class ClinicalContextIntegrator:
             sdoh_risks.get('financial_strain', 0) > 0.5 or
             access_history.get('months_since_last_visit', 0) > 12
         )
-        
+
         if delayed_presentation_risk:
             # Increase consideration of advanced disease stages
             diagnostic_result['consider_advanced_stage'] = True
@@ -2267,7 +2277,7 @@ class ClinicalContextIntegrator:
                 "Consider that patient may have delayed seeking care due to "
                 "access barriers. Evaluate for more advanced disease stages."
             )
-        
+
         # Check for factors affecting symptom reporting
         if sdoh_risks.get('language_barriers', 0) > 0.5:
             diagnostic_result['language_accommodation_needed'] = True
@@ -2276,7 +2286,7 @@ class ClinicalContextIntegrator:
                 " Language barriers may affect symptom history. Consider "
                 "professional interpretation and careful physical examination."
             )
-        
+
         return diagnostic_result
 ```
 
@@ -2301,7 +2311,6 @@ import matplotlib.pyplot as plt
 from dataclasses import dataclass
 import json
 
-
 @dataclass
 class FairnessMetrics:
     """Container for fairness metrics across groups."""
@@ -2317,13 +2326,12 @@ class FairnessMetrics:
     calibration_error: float
     confidence_interval: Dict[str, Tuple[float, float]]
 
-
 class DiagnosticFairnessAuditor:
     """
     Comprehensive fairness auditing for diagnostic AI systems.
     Computes stratified metrics and statistical tests for disparities.
     """
-    
+
     def __init__(
         self,
         group_definitions: Dict[str, str],
@@ -2331,18 +2339,18 @@ class DiagnosticFairnessAuditor:
     ):
         """
         Initialize fairness auditor.
-        
+
         Args:
             group_definitions: Mapping of group IDs to descriptions
             intersectional: Whether to analyze intersectional groups
         """
         self.group_definitions = group_definitions
         self.intersectional = intersectional
-        
+
         logger.info(
             f"Initialized fairness auditor for {len(group_definitions)} groups"
         )
-    
+
     def compute_group_metrics(
         self,
         y_true: np.ndarray,
@@ -2352,40 +2360,40 @@ class DiagnosticFairnessAuditor:
     ) -> Dict[str, FairnessMetrics]:
         """
         Compute comprehensive metrics for each demographic group.
-        
+
         Args:
             y_true: True labels (n_samples,)
             y_pred_proba: Predicted probabilities (n_samples,)
             groups: Group membership indicators (n_samples,)
             threshold: Classification threshold
-            
+
         Returns:
             metrics_by_group: Metrics for each group
         """
         y_pred = (y_pred_proba >= threshold).astype(int)
         unique_groups = np.unique(groups)
-        
+
         metrics_by_group = {}
-        
+
         for group_id in unique_groups:
             group_mask = (groups == group_id)
-            
+
             if group_mask.sum() < 10:
                 logger.warning(
                     f"Group {group_id} has only {group_mask.sum()} samples, "
                     "metrics may be unreliable"
                 )
                 continue
-            
+
             y_true_group = y_true[group_mask]
             y_pred_group = y_pred[group_mask]
             y_pred_proba_group = y_pred_proba[group_mask]
-            
+
             # Compute confusion matrix elements
             tn, fp, fn, tp = confusion_matrix(
                 y_true_group, y_pred_group
             ).ravel()
-            
+
             # Compute metrics
             n_samples = group_mask.sum()
             prevalence = y_true_group.mean()
@@ -2394,23 +2402,23 @@ class DiagnosticFairnessAuditor:
             specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
             ppv = tp / (tp + fp) if (tp + fp) > 0 else 0.0
             npv = tn / (tn + fn) if (tn + fn) > 0 else 0.0
-            
+
             # Compute AUC if possible
             if len(np.unique(y_true_group)) > 1:
                 auc = roc_auc_score(y_true_group, y_pred_proba_group)
             else:
                 auc = np.nan
-            
+
             # Compute calibration error
             calibration_error = self._compute_calibration_error(
                 y_true_group, y_pred_proba_group
             )
-            
+
             # Compute confidence intervals using bootstrap
             ci = self._compute_confidence_intervals(
                 y_true_group, y_pred_proba_group, threshold
             )
-            
+
             metrics_by_group[str(group_id)] = FairnessMetrics(
                 group_id=str(group_id),
                 n_samples=int(n_samples),
@@ -2424,9 +2432,9 @@ class DiagnosticFairnessAuditor:
                 calibration_error=float(calibration_error),
                 confidence_interval=ci
             )
-        
+
         return metrics_by_group
-    
+
     def _compute_calibration_error(
         self,
         y_true: np.ndarray,
@@ -2437,7 +2445,7 @@ class DiagnosticFairnessAuditor:
         bins = np.linspace(0, 1, n_bins + 1)
         bin_indices = np.digitize(y_pred_proba, bins) - 1
         bin_indices = np.clip(bin_indices, 0, n_bins - 1)
-        
+
         calibration_error = 0.0
         for bin_idx in range(n_bins):
             mask = bin_indices == bin_idx
@@ -2447,9 +2455,9 @@ class DiagnosticFairnessAuditor:
                 calibration_error += (
                     mask.sum() / len(y_true)
                 ) * abs(bin_accuracy - bin_confidence)
-        
+
         return calibration_error
-    
+
     def _compute_confidence_intervals(
         self,
         y_true: np.ndarray,
@@ -2460,27 +2468,27 @@ class DiagnosticFairnessAuditor:
     ) -> Dict[str, Tuple[float, float]]:
         """Compute bootstrap confidence intervals for metrics."""
         n_samples = len(y_true)
-        
+
         metrics = {
             'accuracy': [],
             'sensitivity': [],
             'specificity': [],
             'auc': []
         }
-        
+
         for _ in range(n_bootstrap):
             # Bootstrap sample
             indices = np.random.choice(n_samples, n_samples, replace=True)
             y_true_boot = y_true[indices]
             y_pred_proba_boot = y_pred_proba[indices]
             y_pred_boot = (y_pred_proba_boot >= threshold).astype(int)
-            
+
             # Compute metrics
             try:
                 tn, fp, fn, tp = confusion_matrix(
                     y_true_boot, y_pred_boot
                 ).ravel()
-                
+
                 metrics['accuracy'].append((tp + tn) / n_samples)
                 metrics['sensitivity'].append(
                     tp / (tp + fn) if (tp + fn) > 0 else 0
@@ -2488,14 +2496,14 @@ class DiagnosticFairnessAuditor:
                 metrics['specificity'].append(
                     tn / (tn + fp) if (tn + fp) > 0 else 0
                 )
-                
+
                 if len(np.unique(y_true_boot)) > 1:
                     metrics['auc'].append(
                         roc_auc_score(y_true_boot, y_pred_proba_boot)
                     )
             except:
                 continue
-        
+
         # Compute confidence intervals
         ci = {}
         for metric_name, values in metrics.items():
@@ -2505,9 +2513,9 @@ class DiagnosticFairnessAuditor:
                 ci[metric_name] = (lower, upper)
             else:
                 ci[metric_name] = (np.nan, np.nan)
-        
+
         return ci
-    
+
     def test_for_disparities(
         self,
         metrics_by_group: Dict[str, FairnessMetrics],
@@ -2516,12 +2524,12 @@ class DiagnosticFairnessAuditor:
     ) -> Dict[str, Any]:
         """
         Statistical test for significant disparities across groups.
-        
+
         Args:
             metrics_by_group: Computed metrics for each group
             metric_name: Which metric to test
             alpha: Significance level
-            
+
         Returns:
             test_results: Results of disparity tests
         """
@@ -2533,21 +2541,21 @@ class DiagnosticFairnessAuditor:
             if not np.isnan(metric_value):
                 values.append(metric_value)
                 groups.append(group_id)
-        
+
         if len(values) < 2:
             return {
                 'test': 'insufficient_groups',
                 'significant_disparity': False
             }
-        
+
         # Compute range and standard deviation
         metric_range = np.max(values) - np.min(values)
         metric_std = np.std(values)
-        
+
         # Kruskal-Wallis test for differences across groups
         # Note: This is approximate as we only have aggregate statistics
         # Proper test would use individual predictions
-        
+
         results = {
             'metric': metric_name,
             'group_values': {g: v for g, v in zip(groups, values)},
@@ -2557,9 +2565,9 @@ class DiagnosticFairnessAuditor:
             'max_group': groups[np.argmax(values)],
             'significant_disparity': metric_range > 0.05  # Practical significance threshold
         }
-        
+
         return results
-    
+
     def generate_fairness_report(
         self,
         metrics_by_group: Dict[str, FairnessMetrics],
@@ -2568,12 +2576,12 @@ class DiagnosticFairnessAuditor:
     ) -> str:
         """
         Generate comprehensive fairness report.
-        
+
         Args:
             metrics_by_group: Computed metrics
             disparity_tests: Results of disparity tests
             output_path: Optional path to save report
-            
+
         Returns:
             report: Formatted report text
         """
@@ -2590,7 +2598,7 @@ class DiagnosticFairnessAuditor:
             "=" * 80,
             ""
         ]
-        
+
         # Create summary table
         summary_data = []
         for group_id, metrics in metrics_by_group.items():
@@ -2607,11 +2615,11 @@ class DiagnosticFairnessAuditor:
                 'AUC': f"{metrics.auc:.3f}",
                 'Calibration Error': f"{metrics.calibration_error:.3f}"
             })
-        
+
         summary_df = pd.DataFrame(summary_data)
         report_lines.append(summary_df.to_string(index=False))
         report_lines.append("")
-        
+
         # Disparity analysis
         report_lines.extend([
             "=" * 80,
@@ -2619,7 +2627,7 @@ class DiagnosticFairnessAuditor:
             "=" * 80,
             ""
         ])
-        
+
         for metric_name, test_results in disparity_tests.items():
             report_lines.append(f"Metric: {metric_name.upper()}")
             report_lines.append(f"  Range: {test_results['range']:.4f}")
@@ -2637,7 +2645,7 @@ class DiagnosticFairnessAuditor:
                 f"{'YES' if test_results['significant_disparity'] else 'NO'}"
             )
             report_lines.append("")
-        
+
         # Recommendations
         report_lines.extend([
             "=" * 80,
@@ -2645,22 +2653,22 @@ class DiagnosticFairnessAuditor:
             "=" * 80,
             ""
         ])
-        
+
         recommendations = self._generate_recommendations(
             metrics_by_group, disparity_tests
         )
         for i, rec in enumerate(recommendations, 1):
             report_lines.append(f"{i}. {rec}")
-        
+
         report = "\n".join(report_lines)
-        
+
         if output_path:
             with open(output_path, 'w') as f:
                 f.write(report)
             logger.info(f"Fairness report saved to {output_path}")
-        
+
         return report
-    
+
     def _generate_recommendations(
         self,
         metrics_by_group: Dict[str, FairnessMetrics],
@@ -2668,7 +2676,7 @@ class DiagnosticFairnessAuditor:
     ) -> List[str]:
         """Generate actionable recommendations based on audit results."""
         recommendations = []
-        
+
         # Check for significant AUC disparities
         if 'auc' in disparity_tests and disparity_tests['auc']['range'] > 0.05:
             recommendations.append(
@@ -2676,7 +2684,7 @@ class DiagnosticFairnessAuditor:
                 "training data from underperforming groups or using fairness-aware "
                 "training objectives."
             )
-        
+
         # Check for calibration issues
         calibration_errors = [
             m.calibration_error for m in metrics_by_group.values()
@@ -2686,7 +2694,7 @@ class DiagnosticFairnessAuditor:
                 "High calibration error detected in some groups. Consider "
                 "post-hoc calibration techniques or temperature scaling."
             )
-        
+
         # Check for small sample sizes
         small_groups = [
             g for g, m in metrics_by_group.items()
@@ -2697,7 +2705,7 @@ class DiagnosticFairnessAuditor:
                 f"Groups {', '.join(small_groups)} have small sample sizes. "
                 "Metrics may be unreliable; consider collecting more data."
             )
-        
+
         # Check for sensitivity disparities
         sensitivities = [m.sensitivity for m in metrics_by_group.values()]
         if max(sensitivities) - min(sensitivities) > 0.1:
@@ -2706,15 +2714,15 @@ class DiagnosticFairnessAuditor:
                 "missed diagnoses in some populations. Consider adjusting "
                 "decision thresholds by group or implementing group-specific models."
             )
-        
+
         if not recommendations:
             recommendations.append(
                 "No major fairness concerns detected. Continue monitoring "
                 "performance across groups during deployment."
             )
-        
+
         return recommendations
-    
+
     def visualize_fairness_metrics(
         self,
         metrics_by_group: Dict[str, FairnessMetrics],
@@ -2725,19 +2733,19 @@ class DiagnosticFairnessAuditor:
         group_names = [
             self.group_definitions.get(g, f"Group {g}") for g in groups
         ]
-        
+
         metrics_to_plot = ['accuracy', 'sensitivity', 'specificity', 'auc']
-        
+
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
         axes = axes.ravel()
-        
+
         for idx, metric_name in enumerate(metrics_to_plot):
             ax = axes[idx]
-            
+
             values = [
                 getattr(metrics_by_group[g], metric_name) for g in groups
             ]
-            
+
             bars = ax.bar(range(len(groups)), values)
             ax.set_xlabel('Group')
             ax.set_ylabel(metric_name.capitalize())
@@ -2745,10 +2753,10 @@ class DiagnosticFairnessAuditor:
             ax.set_xticks(range(len(groups)))
             ax.set_xticklabels(group_names, rotation=45, ha='right')
             ax.set_ylim(0, 1)
-            ax.axhline(y=np.mean(values), color='r', linestyle='--', 
+            ax.axhline(y=np.mean(values), color='r', linestyle='--',
                       label='Mean')
             ax.legend()
-            
+
             # Color bars by performance
             for bar, value in zip(bars, values):
                 if value < 0.7:
@@ -2757,28 +2765,27 @@ class DiagnosticFairnessAuditor:
                     bar.set_color('orange')
                 else:
                     bar.set_color('green')
-        
+
         plt.tight_layout()
-        
+
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             logger.info(f"Fairness visualizations saved to {save_path}")
         else:
             plt.show()
 
-
 # Example usage
 def perform_comprehensive_fairness_audit():
     """Example of conducting a comprehensive fairness audit."""
-    
+
     # Simulate diagnostic predictions
     np.random.seed(42)
     n_samples = 5000
-    
+
     # Create synthetic groups with different characteristics
-    groups = np.random.choice([0, 1, 2, 3], n_samples, 
+    groups = np.random.choice([0, 1, 2, 3], n_samples,
                              p=[0.4, 0.3, 0.2, 0.1])
-    
+
     # True labels with varying prevalence by group
     y_true = np.zeros(n_samples, dtype=int)
     for g in range(4):
@@ -2787,13 +2794,13 @@ def perform_comprehensive_fairness_audit():
         y_true[group_mask] = np.random.binomial(
             1, prevalence, group_mask.sum()
         )
-    
+
     # Predictions with varying performance by group
     y_pred_proba = np.zeros(n_samples)
     for g in range(4):
         group_mask = groups == g
         auc = 0.85 - 0.05 * g  # Declining AUC for later groups
-        
+
         # Generate predictions with target AUC
         for label in [0, 1]:
             label_mask = group_mask & (y_true == label)
@@ -2805,7 +2812,7 @@ def perform_comprehensive_fairness_audit():
                 y_pred_proba[label_mask] = np.random.beta(
                     1, 2, label_mask.sum()
                 ) * (1 - auc) + auc * 0.5
-    
+
     # Initialize auditor
     group_definitions = {
         '0': 'Group A (Well-represented)',
@@ -2813,38 +2820,37 @@ def perform_comprehensive_fairness_audit():
         '2': 'Group C (Underrepresented)',
         '3': 'Group D (Severely underrepresented)'
     }
-    
+
     auditor = DiagnosticFairnessAuditor(group_definitions)
-    
+
     # Compute metrics
     metrics_by_group = auditor.compute_group_metrics(
         y_true, y_pred_proba, groups
     )
-    
+
     # Test for disparities
     disparity_tests = {}
     for metric in ['accuracy', 'sensitivity', 'specificity', 'auc']:
         disparity_tests[metric] = auditor.test_for_disparities(
             metrics_by_group, metric
         )
-    
+
     # Generate report
     report = auditor.generate_fairness_report(
         metrics_by_group,
         disparity_tests,
         output_path='/mnt/user-data/outputs/fairness_report.txt'
     )
-    
+
     print(report)
-    
+
     # Visualize
     auditor.visualize_fairness_metrics(
         metrics_by_group,
         save_path='/mnt/user-data/outputs/fairness_metrics.png'
     )
-    
-    return auditor, metrics_by_group, disparity_tests
 
+    return auditor, metrics_by_group, disparity_tests
 
 if __name__ == "__main__":
     auditor, metrics, tests = perform_comprehensive_fairness_audit()

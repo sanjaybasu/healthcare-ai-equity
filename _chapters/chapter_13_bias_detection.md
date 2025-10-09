@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 13: Bias Detection and Measurement"
 chapter_number: 13
+part_number: 3
+prev_chapter: /chapters/chapter-12-federated-learning-privacy/
+next_chapter: /chapters/chapter-14-interpretability-explainability/
 ---
-
 # Chapter 13: Bias Detection and Measurement
 
 ## Learning Objectives
@@ -42,7 +44,7 @@ Formalizing fairness requires translating intuitive notions of equitable treatme
 
 ### 13.2.1 Theoretical Foundations of Fairness Metrics
 
-We begin by establishing notation and core concepts. Consider a predictive model that takes patient features $X$ and produces predictions $$\hat{Y}$$ for some outcome of interest $Y$. Patients are characterized by protected attributes $A$ that might include race, ethnicity, sex, age, or other demographic characteristics we wish to ensure receive fair treatment. In healthcare, we often care about fairness with respect to multiple protected attributes simultaneously and must consider intersectional identities where patients belong to multiple potentially disadvantaged groups.
+We begin by establishing notation and core concepts. Consider a predictive model that takes patient features $X$ and produces predictions $\hat{Y}$ for some outcome of interest $Y$. Patients are characterized by protected attributes $A$ that might include race, ethnicity, sex, age, or other demographic characteristics we wish to ensure receive fair treatment. In healthcare, we often care about fairness with respect to multiple protected attributes simultaneously and must consider intersectional identities where patients belong to multiple potentially disadvantaged groups.
 
 The fundamental tension in fairness metrics arises from different intuitions about what constitutes fair treatment. One perspective emphasizes treating similar individuals similarly regardless of protected attributes, which leads naturally to fairness through unawareness, requiring that protected attributes not directly influence predictions. However, fairness through unawareness is widely recognized as insufficient because models can rely on features correlated with protected attributes to effectively use information about group membership even when the protected attributes themselves are excluded from model inputs. Furthermore, in healthcare contexts, demographic characteristics may have legitimate clinical relevance for example, sex affects disease presentation and medication metabolism through biological mechanisms that should inform clinical decision-making, making complete unawareness both infeasible and potentially harmful.
 
@@ -50,7 +52,7 @@ An alternative perspective emphasizes equalizing outcomes or treatment across gr
 
 These different fairness notions formalize distinct ethical principles about what constitutes fair treatment, and they often conflict with each other in ways that require explicit choices about priorities. Understanding these metrics, their relationships, and their implications for healthcare applications is essential for developing models that advance rather than undermine health equity.
 
-Demographic parity, also called statistical parity or independence, requires that the prediction $$\hat{Y}$$ be independent of the protected attribute $A$. Formally: $$P(\hat{Y}=1|A=a) = P(\hat{Y}=1|A=a')$$ for all groups $$a, a'$$. This means that positive predictions should occur at equal rates across groups regardless of their membership in protected classes. In a healthcare context, demographic parity would require that a model predicting referral to a care management program selects patients from different racial groups at equal rates.
+Demographic parity, also called statistical parity or independence, requires that the prediction $\hat{Y}$ be independent of the protected attribute $A$. Formally: $P(\hat{Y}=1|A=a) = P(\hat{Y}=1|A=a')$ for all groups $a, a'$. This means that positive predictions should occur at equal rates across groups regardless of their membership in protected classes. In a healthcare context, demographic parity would require that a model predicting referral to a care management program selects patients from different racial groups at equal rates.
 
 The appeal of demographic parity is its simplicity and its alignment with anti-discrimination law in many jurisdictions, which prohibits disparate impact where policies with facially neutral rules have substantially different effects on protected groups. However, demographic parity has substantial limitations in healthcare applications. If the actual prevalence of a condition or the actual need for an intervention differs across groups due to factors including biological differences, social determinants of health affecting disease risk, or differential exposure to health-harming environmental conditions, then demographic parity would require either treating dissimilar patients similarly or allowing the model to be less accurate for some groups in order to equalize selection rates.
 
@@ -58,17 +60,17 @@ Consider a model predicting which patients should receive intensive blood pressu
 
 Despite these limitations, demographic parity remains relevant in healthcare contexts where there is strong reason to believe that outcome prevalence should not differ across groups but observed differences reflect measurement bias or structural barriers rather than true differences in clinical need. The algorithm that systematically underestimated illness severity for Black patients provided a compelling example where demographic parity was appropriate. The algorithm used healthcare costs as a proxy for illness severity, and demographic parity in predicted costs would have revealed that Black and white patients with equivalent actual health needs had systematically different predicted costs due to Black patients receiving less intensive care for the same conditions, leading to lower costs that reflected discrimination in care delivery rather than differences in health needs.
 
-Equalized odds, also called separation, requires that the prediction $$\hat{Y}$$ be independent of the protected attribute $A$ conditional on the true outcome $Y$. Formally: $$P(\hat{Y}=1|A=a, Y=y) = P(\hat{Y}=1|A=a', Y=y)$$ for all groups $$a, a'$$ and outcomes $y$. This means that the true positive rate (sensitivity) and false positive rate (1 minus specificity) must be equal across groups. Patients with the same true outcome should have equal probability of being predicted to have that outcome regardless of their group membership.
+Equalized odds, also called separation, requires that the prediction $\hat{Y}$ be independent of the protected attribute $A$ conditional on the true outcome $Y$. Formally: $P(\hat{Y}=1|A=a, Y=y) = P(\hat{Y}=1|A=a', Y=y)$ for all groups $a, a'$ and outcomes $y$. This means that the true positive rate (sensitivity) and false positive rate (1 minus specificity) must be equal across groups. Patients with the same true outcome should have equal probability of being predicted to have that outcome regardless of their group membership.
 
 In healthcare applications, equalized odds has strong appeal because it ensures that the model's errors are distributed equally across groups. A diagnostic model satisfying equalized odds would have equal sensitivity for detecting disease in different racial groups, ensuring that all patients with the condition have equal probability of being correctly diagnosed regardless of race. Similarly, equal false positive rates ensure that healthy patients from different groups face equal risk of being incorrectly diagnosed and subjected to unnecessary follow-up testing or treatment.
 
 However, equalized odds can be challenging to achieve in practice, particularly when groups differ in their distribution of features or when the optimal decision boundaries differ across groups due to heterogeneous treatment effects or risk-benefit tradeoffs. Recent theoretical work has established that perfect equalized odds is generally impossible when groups have different feature distributions, and attempting to enforce it can require substantial accuracy sacrifices that may ultimately harm all patients. Furthermore, equal error rates do not guarantee equal outcomes. A model with equal sensitivity across groups but substantial differences in disease prevalence would lead to very different numbers of patients correctly diagnosed in each group, raising questions about whether equalized odds alone ensures fairness.
 
-Equal opportunity is a relaxation of equalized odds that requires only equal true positive rates across groups, allowing false positive rates to differ. Formally: $$P(\hat{Y}=1|A=a, Y=1) = P(\hat{Y}=1|A=a', Y=1)$$ for all groups $$a, a'$$. This metric focuses specifically on ensuring that patients who actually have the condition or need the intervention receive equal probability of being correctly identified regardless of group membership.
+Equal opportunity is a relaxation of equalized odds that requires only equal true positive rates across groups, allowing false positive rates to differ. Formally: $P(\hat{Y}=1|A=a, Y=1) = P(\hat{Y}=1|A=a', Y=1)$ for all groups $a, a'$. This metric focuses specifically on ensuring that patients who actually have the condition or need the intervention receive equal probability of being correctly identified regardless of group membership.
 
 For healthcare applications, equal opportunity is particularly appealing when false negatives are substantially more harmful than false positives. A model predicting need for cancer screening that satisfies equal opportunity would have equal sensitivity for identifying patients who actually have cancer across racial groups, ensuring that all patients with cancer have equal probability of being detected and treated regardless of race. If false positives result in additional screening that carries low risk and moderate cost, while false negatives lead to delayed cancer diagnosis with potentially fatal consequences, we may accept differential false positive rates to ensure equal true positive rates across groups.
 
-Calibration within groups requires that predicted probabilities be reliable within each group defined by protected attributes. Formally, a model is calibrated within group $a$ if $$P(Y=1|\hat{P}=p, A=a) = p$$ for all predicted probabilities $p$. This means that among patients in group $a$ who are assigned a predicted probability $p$, the actual outcome rate should equal $p$.
+Calibration within groups requires that predicted probabilities be reliable within each group defined by protected attributes. Formally, a model is calibrated within group $a$ if $P(Y=1|\hat{P}=p, A=a) = p$ for all predicted probabilities $p$. This means that among patients in group $a$ who are assigned a predicted probability $p$, the actual outcome rate should equal $p$.
 
 Calibration has particular importance in clinical decision-making because predicted probabilities directly inform treatment decisions through expected utility calculations that balance benefits and harms of interventions. When a model predicts a 30 percent probability that a patient will experience an adverse event, clinicians use this probability estimate to decide whether the expected benefits of a preventive intervention outweigh its risks and costs. If the model is poorly calibrated for certain patient subgroups, clinicians making treatment decisions for these patients are working with misleading probability estimates that can lead to both overtreatment of low-risk patients and undertreatment of high-risk patients.
 
@@ -76,7 +78,7 @@ Research has documented numerous examples of models exhibiting good overall cali
 
 However, calibration alone is insufficient to ensure fairness. A model that always predicts base rate probabilities for each group (predicting 10 percent risk for all members of a group with 10 percent outcome prevalence) achieves perfect calibration within groups but provides no individual-level discrimination and would be clinically useless. Furthermore, calibration can be satisfied while substantial disparities exist in other fairness metrics. Recent theoretical work has proven that calibration, separation (equalized odds), and independence (demographic parity) cannot all be satisfied simultaneously except in degenerate cases, requiring explicit prioritization among these competing fairness criteria.
 
-Predictive value parity focuses on positive predictive value and negative predictive value being equal across groups. Formally: $$P(Y=1|\hat{Y}=1, A=a) = P(Y=1|\hat{Y}=1, A=a')$$ and $$P(Y=0|\hat{Y}=0, A=a) = P(Y=0|\hat{Y}=0, A=a')$$ for all groups $$a, a'$$. This means that among patients predicted to be positive, the actual positive rate should be equal across groups, and similarly for negative predictions.
+Predictive value parity focuses on positive predictive value and negative predictive value being equal across groups. Formally: $P(Y=1|\hat{Y}=1, A=a) = P(Y=1|\hat{Y}=1, A=a')$ and $P(Y=0|\hat{Y}=0, A=a) = P(Y=0|\hat{Y}=0, A=a')$ for all groups $a, a'$. This means that among patients predicted to be positive, the actual positive rate should be equal across groups, and similarly for negative predictions.
 
 Predictive value parity has intuitive appeal because it ensures that a positive prediction means the same thing regardless of patient characteristics. A model predicting likelihood of hospital readmission that satisfies predictive value parity would have equal positive predictive value across racial groups, meaning that among patients predicted to be high risk for readmission, the actual readmission rate is the same whether the patient is Black, white, Hispanic, or Asian. This ensures that interventions targeted based on model predictions would serve populations with equal need across different racial groups.
 
@@ -107,7 +109,7 @@ from collections import defaultdict
 import warnings
 from scipy import stats
 from sklearn.metrics import (
-    confusion_matrix, 
+    confusion_matrix,
     roc_auc_score,
     brier_score_loss,
     calibration_curve
@@ -117,11 +119,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class FairnessMetrics:
     """Container for fairness metric results."""
-    
+
     group: str
     demographic_parity_diff: float
     equalized_odds_diff: float
@@ -130,13 +131,13 @@ class FairnessMetrics:
     calibration_error: float
     auc: float
     brier_score: float
-    
+
     # Confusion matrix elements
     true_positives: int
     true_negatives: int
     false_positives: int
     false_negatives: int
-    
+
     # Rates
     positive_rate: float
     true_positive_rate: float  # sensitivity/recall
@@ -145,27 +146,26 @@ class FairnessMetrics:
     false_negative_rate: float
     positive_predictive_value: float  # precision
     negative_predictive_value: float
-    
+
     # Sample sizes
     n_total: int
     n_positive: int
     n_negative: int
-    
+
     # Calibration details
     calibration_bins: Optional[np.ndarray] = None
     calibration_fractions: Optional[np.ndarray] = None
     calibration_bin_means: Optional[np.ndarray] = None
 
-
 class FairnessEvaluator:
     """
     Comprehensive fairness evaluation framework for healthcare models.
-    
+
     Computes multiple fairness metrics across demographic subgroups
     including demographic parity, equalized odds, calibration, and
     predictive parity. Provides detailed analysis of where and how
     models exhibit bias.
-    
+
     This implementation is designed for production use with:
     - Extensive input validation and error handling
     - Clear warnings about statistical power and interpretation
@@ -173,7 +173,7 @@ class FairnessEvaluator:
     - Support for both binary predictions and probability scores
     - Stratified analysis across intersectional identities
     """
-    
+
     def __init__(
         self,
         min_group_size: int = 50,
@@ -184,7 +184,7 @@ class FairnessEvaluator:
     ):
         """
         Initialize fairness evaluator.
-        
+
         Parameters
         ----------
         min_group_size : int, default=50
@@ -205,10 +205,10 @@ class FairnessEvaluator:
         self.calibration_bins = calibration_bins
         self.bootstrap_iterations = bootstrap_iterations
         self.random_state = random_state
-        
+
         self.results: Dict[str, FairnessMetrics] = {}
         self.warnings: List[str] = []
-        
+
     def evaluate(
         self,
         y_true: np.ndarray,
@@ -219,7 +219,7 @@ class FairnessEvaluator:
     ) -> Dict[str, FairnessMetrics]:
         """
         Compute comprehensive fairness metrics across demographic groups.
-        
+
         Parameters
         ----------
         y_true : np.ndarray
@@ -236,7 +236,7 @@ class FairnessEvaluator:
         group_names : List[str], optional
             Names of groups to analyze. If None, analyzes all
             unique values in protected_attributes.
-            
+
         Returns
         -------
         Dict[str, FairnessMetrics]
@@ -244,13 +244,13 @@ class FairnessEvaluator:
         """
         # Input validation
         self._validate_inputs(y_true, y_pred, y_prob, protected_attributes)
-        
+
         # Compute overall metrics as baseline
         overall_metrics = self._compute_metrics(
             y_true, y_pred, y_prob, "Overall"
         )
         self.results["Overall"] = overall_metrics
-        
+
         # If no protected attributes provided, return overall only
         if protected_attributes is None:
             logger.warning(
@@ -258,15 +258,15 @@ class FairnessEvaluator:
                 "Computing overall metrics only."
             )
             return self.results
-        
+
         # Compute metrics for each demographic group
         for col in protected_attributes.columns:
             unique_groups = protected_attributes[col].unique()
-            
+
             for group_val in unique_groups:
                 group_mask = protected_attributes[col] == group_val
                 group_label = f"{col}={group_val}"
-                
+
                 # Check minimum sample size
                 n_group = group_mask.sum()
                 if n_group < self.min_group_size:
@@ -277,7 +277,7 @@ class FairnessEvaluator:
                     )
                     self.warnings.append(warning_msg)
                     logger.warning(warning_msg)
-                
+
                 # Compute metrics for this group
                 group_metrics = self._compute_metrics(
                     y_true[group_mask],
@@ -286,16 +286,16 @@ class FairnessEvaluator:
                     group_label
                 )
                 self.results[group_label] = group_metrics
-        
+
         # Compute fairness disparities
         self._compute_fairness_disparities()
-        
+
         logger.info(
             f"Completed fairness evaluation for {len(self.results)} groups"
         )
-        
+
         return self.results
-    
+
     def _validate_inputs(
         self,
         y_true: np.ndarray,
@@ -304,20 +304,20 @@ class FairnessEvaluator:
         protected_attributes: Optional[pd.DataFrame]
     ) -> None:
         """Validate input arrays and raise informative errors."""
-        
+
         # Check y_true and y_pred same length
         if len(y_true) != len(y_pred):
             raise ValueError(
                 f"y_true and y_pred must have same length. "
                 f"Got {len(y_true)} and {len(y_pred)}"
             )
-        
+
         # Check binary values
         if not np.all(np.isin(y_true, [0, 1])):
             raise ValueError("y_true must contain only 0 and 1")
         if not np.all(np.isin(y_pred, [0, 1])):
             raise ValueError("y_pred must contain only 0 and 1")
-        
+
         # Check y_prob if provided
         if y_prob is not None:
             if len(y_prob) != len(y_true):
@@ -327,7 +327,7 @@ class FairnessEvaluator:
                 )
             if not np.all((y_prob >= 0) & (y_prob <= 1)):
                 raise ValueError("y_prob must contain probabilities in [0, 1]")
-        
+
         # Check protected_attributes if provided
         if protected_attributes is not None:
             if len(protected_attributes) != len(y_true):
@@ -335,7 +335,7 @@ class FairnessEvaluator:
                     f"protected_attributes must have same length as y_true. "
                     f"Got {len(protected_attributes)} and {len(y_true)}"
                 )
-    
+
     def _compute_metrics(
         self,
         y_true: np.ndarray,
@@ -345,7 +345,7 @@ class FairnessEvaluator:
     ) -> FairnessMetrics:
         """
         Compute all metrics for a single group.
-        
+
         Parameters
         ----------
         y_true : np.ndarray
@@ -356,7 +356,7 @@ class FairnessEvaluator:
             Predicted probabilities for this group
         group_label : str
             Name of this group for logging
-            
+
         Returns
         -------
         FairnessMetrics
@@ -364,15 +364,15 @@ class FairnessEvaluator:
         """
         # Compute confusion matrix
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-        
+
         n_total = len(y_true)
         n_positive = (y_true == 1).sum()
         n_negative = (y_true == 0).sum()
-        
+
         # Compute rates with division by zero handling
         def safe_divide(numerator, denominator, default=0.0):
             return numerator / denominator if denominator > 0 else default
-        
+
         positive_rate = (y_pred == 1).sum() / n_total
         true_positive_rate = safe_divide(tp, tp + fn)
         true_negative_rate = safe_divide(tn, tn + fp)
@@ -380,7 +380,7 @@ class FairnessEvaluator:
         false_negative_rate = safe_divide(fn, fn + tp)
         positive_predictive_value = safe_divide(tp, tp + fp)
         negative_predictive_value = safe_divide(tn, tn + fn)
-        
+
         # Compute AUC and Brier score if probabilities provided
         if y_prob is not None and len(np.unique(y_true)) > 1:
             try:
@@ -395,44 +395,44 @@ class FairnessEvaluator:
         else:
             auc = np.nan
             brier = np.nan
-        
+
         # Compute calibration if probabilities provided
         calibration_error = np.nan
         calibration_fracs = None
         calibration_bin_means = None
         calibration_bins_array = None
-        
+
         if y_prob is not None:
             try:
                 fraction_of_positives, mean_predicted_value = calibration_curve(
                     y_true, y_prob, n_bins=self.calibration_bins, strategy='uniform'
                 )
-                
+
                 # Expected calibration error (ECE)
                 # Weight each bin by proportion of samples
                 bin_indices = np.digitize(
-                    y_prob, 
+                    y_prob,
                     bins=np.linspace(0, 1, self.calibration_bins + 1)[1:-1]
                 )
                 bin_counts = np.bincount(
                     bin_indices, minlength=self.calibration_bins
                 )
                 bin_weights = bin_counts / len(y_prob)
-                
+
                 calibration_error = np.sum(
-                    bin_weights[:len(fraction_of_positives)] * 
+                    bin_weights[:len(fraction_of_positives)] *
                     np.abs(fraction_of_positives - mean_predicted_value)
                 )
-                
+
                 calibration_fracs = fraction_of_positives
                 calibration_bin_means = mean_predicted_value
                 calibration_bins_array = bin_counts
-                
+
             except (ValueError, IndexError) as e:
                 logger.warning(
                     f"Could not compute calibration for {group_label}: {e}"
                 )
-        
+
         return FairnessMetrics(
             group=group_label,
             demographic_parity_diff=np.nan,  # Computed later
@@ -460,28 +460,28 @@ class FairnessEvaluator:
             calibration_fractions=calibration_fracs,
             calibration_bin_means=calibration_bin_means
         )
-    
+
     def _compute_fairness_disparities(self) -> None:
         """
         Compute fairness disparity metrics by comparing each group to overall.
-        
+
         Updates FairnessMetrics objects in self.results with disparity measures.
         """
         if "Overall" not in self.results:
             logger.warning("No overall metrics found, cannot compute disparities")
             return
-        
+
         overall = self.results["Overall"]
-        
+
         for group_label, metrics in self.results.items():
             if group_label == "Overall":
                 continue
-            
+
             # Demographic parity: difference in positive prediction rates
             metrics.demographic_parity_diff = (
                 metrics.positive_rate - overall.positive_rate
             )
-            
+
             # Equalized odds: max difference in TPR and FPR
             tpr_diff = abs(
                 metrics.true_positive_rate - overall.true_positive_rate
@@ -490,28 +490,28 @@ class FairnessEvaluator:
                 metrics.false_positive_rate - overall.false_positive_rate
             )
             metrics.equalized_odds_diff = max(tpr_diff, fpr_diff)
-            
+
             # Equal opportunity: difference in TPR only
             metrics.equal_opportunity_diff = abs(
                 metrics.true_positive_rate - overall.true_positive_rate
             )
-            
+
             # Predictive parity: difference in PPV
             metrics.predictive_parity_diff = abs(
-                metrics.positive_predictive_value - 
+                metrics.positive_predictive_value -
                 overall.positive_predictive_value
             )
-    
+
     def get_summary_report(self, max_disparity_threshold: float = 0.05) -> str:
         """
         Generate human-readable summary report of fairness evaluation.
-        
+
         Parameters
         ----------
         max_disparity_threshold : float, default=0.05
             Maximum acceptable disparity before flagging as concerning.
             Common thresholds are 0.05 (5%) or 0.10 (10%).
-            
+
         Returns
         -------
         str
@@ -521,7 +521,7 @@ class FairnessEvaluator:
         lines.append("FAIRNESS EVALUATION SUMMARY REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Overall metrics
         if "Overall" in self.results:
             overall = self.results["Overall"]
@@ -535,17 +535,17 @@ class FairnessEvaluator:
             lines.append(f"  Specificity (TNR): {overall.true_negative_rate:.3f}")
             lines.append(f"  PPV: {overall.positive_predictive_value:.3f}")
             lines.append("")
-        
+
         # Group-wise metrics
         lines.append("GROUP-WISE FAIRNESS METRICS")
         lines.append("-" * 80)
-        
+
         flagged_groups = []
-        
+
         for group_label, metrics in self.results.items():
             if group_label == "Overall":
                 continue
-            
+
             lines.append(f"\n{group_label}")
             lines.append(f"  Sample size: {metrics.n_total}")
             lines.append(f"  Demographic parity disparity: "
@@ -557,7 +557,7 @@ class FairnessEvaluator:
             lines.append(f"  Predictive parity disparity: "
                         f"{metrics.predictive_parity_diff:.3f}")
             lines.append(f"  Calibration error: {metrics.calibration_error:.3f}")
-            
+
             # Flag groups exceeding threshold
             max_disparity = max([
                 abs(metrics.demographic_parity_diff),
@@ -565,11 +565,11 @@ class FairnessEvaluator:
                 metrics.equal_opportunity_diff,
                 metrics.predictive_parity_diff
             ])
-            
+
             if max_disparity > max_disparity_threshold:
                 flagged_groups.append((group_label, max_disparity))
                 lines.append(f"  ⚠️  FLAGGED: Disparity exceeds threshold")
-        
+
         # Summary of flagged groups
         if flagged_groups:
             lines.append("\n" + "=" * 80)
@@ -583,7 +583,7 @@ class FairnessEvaluator:
             lines.append("\n" + "=" * 80)
             lines.append("✓ All groups within fairness threshold")
             lines.append("=" * 80)
-        
+
         # Warnings
         if self.warnings:
             lines.append("\n" + "=" * 80)
@@ -591,9 +591,9 @@ class FairnessEvaluator:
             lines.append("=" * 80)
             for warning in self.warnings:
                 lines.append(f"  • {warning}")
-        
+
         return "\n".join(lines)
-    
+
     def plot_fairness_metrics(
         self,
         metric_name: str = "equalized_odds_diff",
@@ -601,7 +601,7 @@ class FairnessEvaluator:
     ):
         """
         Create visualization of fairness metrics across groups.
-        
+
         Parameters
         ----------
         metric_name : str
@@ -619,16 +619,16 @@ class FairnessEvaluator:
         except ImportError:
             logger.error("matplotlib required for plotting")
             return
-        
+
         groups = []
         values = []
-        
+
         for group_label, metrics in self.results.items():
             if group_label == "Overall":
                 continue
             groups.append(group_label)
             values.append(getattr(metrics, metric_name))
-        
+
         fig, ax = plt.subplots(figsize=figsize)
         ax.barh(groups, values)
         ax.axvline(x=0, color='black', linestyle='--', linewidth=0.5)
@@ -637,7 +637,7 @@ class FairnessEvaluator:
         ax.set_xlabel(metric_name.replace('_', ' ').title())
         ax.set_title(f'Fairness Metric: {metric_name.replace("_", " ").title()}')
         ax.grid(axis='x', alpha=0.3)
-        
+
         plt.tight_layout()
         return fig
 ```
@@ -679,11 +679,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-@dataclass 
+@dataclass
 class FeatureImportanceResults:
     """Container for feature importance analysis results."""
-    
+
     feature_name: str
     overall_importance: float
     group_importances: Dict[str, float]
@@ -692,22 +691,21 @@ class FeatureImportanceResults:
     potentially_problematic: bool
     notes: List[str]
 
-
 class ProxyDiscriminationDetector:
     """
     Framework for detecting proxy discrimination through feature analysis.
-    
+
     Analyzes whether models rely on features differently across demographic
     groups, which may indicate proxy discrimination even when protected
     attributes are not directly used as model inputs.
-    
+
     Implements multiple complementary approaches:
     - Permutation importance stratified by demographics
     - SHAP value analysis across groups
     - Contribution distribution comparisons
     - Correlation analysis between features and protected attributes
     """
-    
+
     def __init__(
         self,
         model: BaseEstimator,
@@ -718,7 +716,7 @@ class ProxyDiscriminationDetector:
     ):
         """
         Initialize proxy discrimination detector.
-        
+
         Parameters
         ----------
         model : BaseEstimator
@@ -739,16 +737,16 @@ class ProxyDiscriminationDetector:
         self.disparity_threshold = disparity_threshold
         self.n_permutations = n_permutations
         self.random_state = random_state
-        
+
         self.results: Dict[str, FeatureImportanceResults] = {}
         self.warnings: List[str] = []
-        
+
         # Check if model supports predict_proba for binary classification
         if hasattr(model, 'predict_proba'):
             self.scoring = 'neg_log_loss'
         else:
             self.scoring = 'accuracy'
-    
+
     def analyze_feature_importance(
         self,
         X: pd.DataFrame,
@@ -758,7 +756,7 @@ class ProxyDiscriminationDetector:
     ) -> Dict[str, FeatureImportanceResults]:
         """
         Analyze feature importance overall and stratified by demographics.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -770,14 +768,14 @@ class ProxyDiscriminationDetector:
         potentially_problematic_features : List[str], optional
             List of features that may serve as proxies (e.g., ZIP code,
             prior healthcare utilization). These receive additional scrutiny.
-            
+
         Returns
         -------
         Dict[str, FeatureImportanceResults]
             Results for each feature
         """
         logger.info("Computing overall feature importance...")
-        
+
         # Compute overall importance using permutation
         overall_importance = permutation_importance(
             self.model,
@@ -787,23 +785,23 @@ class ProxyDiscriminationDetector:
             random_state=self.random_state,
             scoring=self.scoring
         )
-        
+
         # Store overall importance
         overall_importance_dict = {
             feature: overall_importance.importances_mean[i]
             for i, feature in enumerate(self.feature_names)
         }
-        
+
         # Compute importance stratified by each protected attribute
         logger.info("Computing stratified feature importance...")
-        
+
         for col in protected_attributes.columns:
             unique_groups = protected_attributes[col].unique()
-            
+
             for group_val in unique_groups:
                 group_mask = protected_attributes[col] == group_val
                 group_label = f"{col}={group_val}"
-                
+
                 # Skip groups that are too small
                 if group_mask.sum() < 50:
                     warning = (
@@ -813,7 +811,7 @@ class ProxyDiscriminationDetector:
                     self.warnings.append(warning)
                     logger.warning(warning)
                     continue
-                
+
                 # Compute importance for this group
                 group_importance = permutation_importance(
                     self.model,
@@ -823,7 +821,7 @@ class ProxyDiscriminationDetector:
                     random_state=self.random_state,
                     scoring=self.scoring
                 )
-                
+
                 # Store group-specific importance
                 for i, feature in enumerate(self.feature_names):
                     if feature not in self.results:
@@ -836,24 +834,24 @@ class ProxyDiscriminationDetector:
                             potentially_problematic=False,
                             notes=[]
                         )
-                    
+
                     self.results[feature].group_importances[group_label] = (
                         group_importance.importances_mean[i]
                     )
-        
+
         # Analyze disparities
         logger.info("Analyzing importance disparities...")
         self._analyze_disparities(potentially_problematic_features)
-        
+
         return self.results
-    
+
     def _analyze_disparities(
         self,
         potentially_problematic_features: Optional[List[str]] = None
     ) -> None:
         """
         Analyze importance disparities and flag concerning patterns.
-        
+
         Parameters
         ----------
         potentially_problematic_features : List[str], optional
@@ -862,20 +860,20 @@ class ProxyDiscriminationDetector:
         for feature_name, result in self.results.items():
             if len(result.group_importances) < 2:
                 continue
-            
+
             # Compute disparity metrics
             importances = list(result.group_importances.values())
             max_importance = max(importances)
             min_importance = min(importances)
-            
+
             # Avoid division by zero
             if min_importance > 0:
                 result.disparity_ratio = max_importance / min_importance
             else:
                 result.disparity_ratio = np.inf
-            
+
             result.max_disparity = max_importance - min_importance
-            
+
             # Flag if disparity exceeds threshold
             if result.disparity_ratio > (1 + self.disparity_threshold):
                 result.potentially_problematic = True
@@ -883,24 +881,24 @@ class ProxyDiscriminationDetector:
                     f"Importance varies by {result.disparity_ratio:.2f}x "
                     "across demographic groups"
                 )
-            
+
             # Additional scrutiny for pre-specified problematic features
-            if (potentially_problematic_features and 
+            if (potentially_problematic_features and
                 feature_name in potentially_problematic_features):
-                
+
                 if result.disparity_ratio > 1.1:
                     result.potentially_problematic = True
                     result.notes.append(
                         "Feature flagged as potentially problematic proxy "
                         "and shows importance variation across groups"
                     )
-                
+
                 # Check correlation with protected attributes
                 result.notes.append(
                     "Feature identified as potentially serving as proxy "
                     "for protected attributes - requires clinical review"
                 )
-    
+
     def analyze_shap_values(
         self,
         X: pd.DataFrame,
@@ -909,12 +907,12 @@ class ProxyDiscriminationDetector:
     ) -> Dict[str, Dict[str, np.ndarray]]:
         """
         Compute SHAP values stratified by demographic groups.
-        
+
         SHAP values provide individual-level feature attributions that
         explain how each feature contributed to each prediction. Analyzing
         SHAP value distributions across demographics can reveal if the
         model relies on features differently for different patient groups.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -923,14 +921,14 @@ class ProxyDiscriminationDetector:
             Protected attributes for stratification
         background_samples : int, default=100
             Number of background samples for SHAP estimation
-            
+
         Returns
         -------
         Dict[str, Dict[str, np.ndarray]]
             SHAP values organized by {group_label: {feature: values}}
         """
         logger.info("Computing SHAP values...")
-        
+
         # Create SHAP explainer
         # For tree models, use TreeExplainer; otherwise use KernelExplainer
         try:
@@ -940,43 +938,43 @@ class ProxyDiscriminationDetector:
                 # Sample background for kernel explainer
                 background = shap.sample(X, background_samples)
                 explainer = shap.KernelExplainer(
-                    self.model.predict, 
+                    self.model.predict,
                     background
                 )
         except Exception as e:
             logger.error(f"Could not create SHAP explainer: {e}")
             return {}
-        
+
         shap_by_group = {}
-        
+
         # Compute SHAP values for each demographic group
         for col in protected_attributes.columns:
             unique_groups = protected_attributes[col].unique()
-            
+
             for group_val in unique_groups:
                 group_mask = protected_attributes[col] == group_val
                 group_label = f"{col}={group_val}"
-                
+
                 if group_mask.sum() < 50:
                     continue
-                
+
                 try:
                     # Compute SHAP values for this group
                     shap_values = explainer.shap_values(X[group_mask])
-                    
+
                     # Organize by feature
                     shap_by_group[group_label] = {
                         feature: shap_values[:, i]
                         for i, feature in enumerate(self.feature_names)
                     }
-                    
+
                 except Exception as e:
                     logger.warning(
                         f"Could not compute SHAP values for {group_label}: {e}"
                     )
-        
+
         return shap_by_group
-    
+
     def detect_feature_correlations(
         self,
         X: pd.DataFrame,
@@ -985,11 +983,11 @@ class ProxyDiscriminationDetector:
     ) -> pd.DataFrame:
         """
         Detect correlations between features and protected attributes.
-        
+
         High correlations indicate features that may serve as proxies
         for protected attributes even when the protected attributes
         themselves are not used as model inputs.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -998,7 +996,7 @@ class ProxyDiscriminationDetector:
             Protected attributes
         correlation_threshold : float, default=0.3
             Threshold for flagging high correlations
-            
+
         Returns
         -------
         pd.DataFrame
@@ -1006,25 +1004,25 @@ class ProxyDiscriminationDetector:
         """
         # Combine features and protected attributes
         combined = pd.concat([X, protected_attributes], axis=1)
-        
+
         # Compute correlations
         correlations = combined.corr()
-        
+
         # Extract correlations between features and protected attributes
         feature_protected_corr = correlations.loc[
             self.feature_names,
             protected_attributes.columns
         ]
-        
+
         # Flag high correlations
         high_corr = feature_protected_corr.abs() > correlation_threshold
-        
+
         if high_corr.any().any():
             logger.warning(
                 f"Found {high_corr.sum().sum()} feature-attribute pairs "
                 f"with correlation > {correlation_threshold}"
             )
-            
+
             for feature in self.feature_names:
                 for attr in protected_attributes.columns:
                     if high_corr.loc[feature, attr]:
@@ -1034,32 +1032,32 @@ class ProxyDiscriminationDetector:
                             f"{corr_value:.3f} with '{attr}' - "
                             "may serve as proxy"
                         )
-        
+
         return feature_protected_corr
-    
+
     def generate_report(self) -> str:
         """Generate comprehensive proxy discrimination analysis report."""
-        
+
         lines = ["=" * 80]
         lines.append("PROXY DISCRIMINATION ANALYSIS REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Summary statistics
         n_features = len(self.results)
         n_flagged = sum(
             1 for r in self.results.values() if r.potentially_problematic
         )
-        
+
         lines.append(f"Total features analyzed: {n_features}")
         lines.append(f"Features flagged as potentially problematic: {n_flagged}")
         lines.append("")
-        
+
         # Detailed results for flagged features
         if n_flagged > 0:
             lines.append("FLAGGED FEATURES")
             lines.append("-" * 80)
-            
+
             for feature_name, result in sorted(
                 self.results.items(),
                 key=lambda x: x[1].disparity_ratio,
@@ -1067,21 +1065,21 @@ class ProxyDiscriminationDetector:
             ):
                 if not result.potentially_problematic:
                     continue
-                
+
                 lines.append(f"\n{feature_name}")
                 lines.append(f"  Overall importance: {result.overall_importance:.4f}")
                 lines.append(f"  Disparity ratio: {result.disparity_ratio:.2f}x")
                 lines.append(f"  Max disparity: {result.max_disparity:.4f}")
                 lines.append("  Group-specific importances:")
-                
+
                 for group, importance in result.group_importances.items():
                     lines.append(f"    {group}: {importance:.4f}")
-                
+
                 if result.notes:
                     lines.append("  Notes:")
                     for note in result.notes:
                         lines.append(f"    - {note}")
-        
+
         # Warnings
         if self.warnings:
             lines.append("\n" + "=" * 80)
@@ -1089,7 +1087,7 @@ class ProxyDiscriminationDetector:
             lines.append("=" * 80)
             for warning in self.warnings:
                 lines.append(f"  • {warning}")
-        
+
         # Interpretation guidance
         lines.append("\n" + "=" * 80)
         lines.append("INTERPRETATION GUIDANCE")
@@ -1111,7 +1109,7 @@ class ProxyDiscriminationDetector:
             "preprocessing approaches could reduce proxy discrimination while "
             "maintaining clinical utility."
         )
-        
+
         return "\n".join(lines)
 ```
 
@@ -1150,11 +1148,10 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class AuditResult:
     """Result from a single bias audit test."""
-    
+
     test_name: str
     test_description: str
     passed: bool
@@ -1164,18 +1161,17 @@ class AuditResult:
     details: Dict[str, Any]
     interpretation: str
 
-
 class ModelAuditor:
     """
     Comprehensive framework for auditing models for harmful associations.
-    
+
     Implements multiple complementary approaches:
     - Counterfactual analysis varying protected attributes
     - Systematic testing with hand-crafted test cases
     - Statistical tests for unexpected associations
     - Clinical scenario probing
     """
-    
+
     def __init__(
         self,
         model: Any,
@@ -1185,7 +1181,7 @@ class ModelAuditor:
     ):
         """
         Initialize model auditor.
-        
+
         Parameters
         ----------
         model : Any
@@ -1201,9 +1197,9 @@ class ModelAuditor:
         self.feature_names = feature_names
         self.protected_attributes = protected_attributes
         self.alpha = alpha
-        
+
         self.audit_results: List[AuditResult] = []
-        
+
         # Check prediction method
         if hasattr(model, 'predict_proba'):
             self.predict_fn = lambda X: model.predict_proba(X)[:, 1]
@@ -1211,7 +1207,7 @@ class ModelAuditor:
             self.predict_fn = model.predict
         else:
             raise ValueError("Model must implement predict or predict_proba")
-    
+
     def audit_counterfactual_fairness(
         self,
         X: pd.DataFrame,
@@ -1223,11 +1219,11 @@ class ModelAuditor:
     ) -> AuditResult:
         """
         Test counterfactual fairness by modifying protected attribute.
-        
+
         Creates counterfactual pairs where protected attribute is changed
         while other features are held constant, then tests whether predictions
         change more than expected by chance.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -1243,7 +1239,7 @@ class ModelAuditor:
             If None, holds all features except protected attribute constant.
         sample_size : int, default=1000
             Number of samples to use for analysis
-            
+
         Returns
         -------
         AuditResult
@@ -1254,9 +1250,9 @@ class ModelAuditor:
             f"Testing if predictions change when {protected_attr_col} "
             f"changes from {reference_value} to {alternative_value}"
         )
-        
+
         logger.info(f"Running test: {test_name}")
-        
+
         # Sample observations with reference value
         reference_mask = X[protected_attr_col] == reference_value
         if reference_mask.sum() < sample_size:
@@ -1265,35 +1261,35 @@ class ModelAuditor:
                 f"Only {sample_size} samples with {protected_attr_col}="
                 f"{reference_value}, using all available"
             )
-        
+
         reference_sample = X[reference_mask].sample(
-            n=sample_size, 
+            n=sample_size,
             random_state=42
         ).copy()
-        
+
         # Get original predictions
         original_preds = self.predict_fn(reference_sample)
-        
+
         # Create counterfactuals by changing protected attribute
         counterfactual_sample = reference_sample.copy()
         counterfactual_sample[protected_attr_col] = alternative_value
-        
+
         # Get counterfactual predictions
         counterfactual_preds = self.predict_fn(counterfactual_sample)
-        
+
         # Compute prediction differences
         pred_diffs = counterfactual_preds - original_preds
-        
+
         # Test if mean difference is significantly different from zero
         t_stat, p_value = stats.ttest_1samp(pred_diffs, 0)
         mean_diff = np.mean(pred_diffs)
-        
+
         # Compute effect size (Cohen's d)
         effect_size = mean_diff / np.std(pred_diffs) if np.std(pred_diffs) > 0 else 0
-        
+
         # Determine if test passed
         passed = p_value > self.alpha or abs(effect_size) < 0.2
-        
+
         # Interpretation
         if passed:
             interpretation = (
@@ -1313,7 +1309,7 @@ class ModelAuditor:
                 "model may have learned associations with the protected "
                 "attribute that warrant clinical review."
             )
-        
+
         return AuditResult(
             test_name=test_name,
             test_description=test_description,
@@ -1332,7 +1328,7 @@ class ModelAuditor:
             },
             interpretation=interpretation
         )
-    
+
     def audit_scenario_pairs(
         self,
         scenario_pairs: List[Tuple[pd.DataFrame, pd.DataFrame, str]],
@@ -1340,11 +1336,11 @@ class ModelAuditor:
     ) -> List[AuditResult]:
         """
         Test model behavior on hand-crafted scenario pairs.
-        
+
         Scenario pairs consist of two cases that should produce similar
         predictions (if expected_relationship='equal') or predictions in
         a specific direction (if expected_relationship='greater' or 'less').
-        
+
         Parameters
         ----------
         scenario_pairs : List[Tuple[pd.DataFrame, pd.DataFrame, str]]
@@ -1354,32 +1350,32 @@ class ModelAuditor:
             - 'equal': predictions should be similar
             - 'greater': scenario_a should predict higher than scenario_b
             - 'less': scenario_a should predict lower than scenario_b
-            
+
         Returns
         -------
         List[AuditResult]
             Results for each scenario pair
         """
         results = []
-        
+
         for i, (scenario_a, scenario_b, description) in enumerate(scenario_pairs):
             test_name = f"Scenario Pair {i+1}"
             test_description = description
-            
+
             logger.info(f"Testing: {description}")
-            
+
             # Get predictions
             pred_a = self.predict_fn(scenario_a)
             pred_b = self.predict_fn(scenario_b)
-            
+
             # Ensure arrays
             if np.isscalar(pred_a):
                 pred_a = np.array([pred_a])
             if np.isscalar(pred_b):
                 pred_b = np.array([pred_b])
-            
+
             diff = pred_a - pred_b
-            
+
             # Determine if test passed based on expected relationship
             if expected_relationship == 'equal':
                 # Predictions should be similar (within 0.05)
@@ -1407,7 +1403,7 @@ class ModelAuditor:
                 raise ValueError(
                     f"Unknown expected_relationship: {expected_relationship}"
                 )
-            
+
             results.append(AuditResult(
                 test_name=test_name,
                 test_description=test_description,
@@ -1422,9 +1418,9 @@ class ModelAuditor:
                 },
                 interpretation=interpretation
             ))
-        
+
         return results
-    
+
     def audit_unexpected_associations(
         self,
         X: pd.DataFrame,
@@ -1434,11 +1430,11 @@ class ModelAuditor:
     ) -> List[AuditResult]:
         """
         Test for unexpected associations between predictions and features.
-        
+
         Uses partial correlation analysis to test whether test_features are
         associated with predictions after controlling for control_features.
         Strong associations may indicate problematic proxy discrimination.
-        
+
         Parameters
         ----------
         X : pd.DataFrame
@@ -1449,52 +1445,52 @@ class ModelAuditor:
             Features to test for unexpected associations
         control_features : List[str]
             Features to control for in partial correlation analysis
-            
+
         Returns
         -------
         List[AuditResult]
             Results for each tested feature
         """
         results = []
-        
+
         # Get model predictions
         predictions = self.predict_fn(X)
-        
+
         for test_feature in test_features:
             test_name = f"Association Test: {test_feature}"
             test_description = (
                 f"Testing if {test_feature} is associated with predictions "
                 f"after controlling for {', '.join(control_features)}"
             )
-            
+
             logger.info(f"Testing: {test_description}")
-            
+
             # Compute partial correlation
             # This is a simplified version; production systems should use
             # more sophisticated partial correlation methods
-            
+
             # Fit linear model with control features to predict test feature
             from sklearn.linear_model import LinearRegression
-            
+
             control_X = X[control_features].values
             test_y = X[test_feature].values
-            
+
             # Residualize test feature
             model_feature = LinearRegression()
             model_feature.fit(control_X, test_y)
             test_residuals = test_y - model_feature.predict(control_X)
-            
+
             # Residualize predictions
             model_pred = LinearRegression()
             model_pred.fit(control_X, predictions)
             pred_residuals = predictions - model_pred.predict(control_X)
-            
+
             # Compute correlation between residuals
             corr, p_value = stats.pearsonr(test_residuals, pred_residuals)
-            
+
             # Test passes if correlation is not significant or very small
             passed = p_value > self.alpha or abs(corr) < 0.1
-            
+
             if passed:
                 interpretation = (
                     f"{test_feature} is not significantly associated with "
@@ -1509,7 +1505,7 @@ class ModelAuditor:
                     "model may be using this feature as a proxy in ways that "
                     "warrant clinical review."
                 )
-            
+
             results.append(AuditResult(
                 test_name=test_name,
                 test_description=test_description,
@@ -1523,50 +1519,50 @@ class ModelAuditor:
                 },
                 interpretation=interpretation
             ))
-        
+
         return results
-    
+
     def generate_audit_report(self) -> str:
         """Generate comprehensive audit report."""
-        
+
         lines = ["=" * 80]
         lines.append("MODEL BIAS AUDIT REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Summary
         total_tests = len(self.audit_results)
         passed_tests = sum(1 for r in self.audit_results if r.passed)
         failed_tests = total_tests - passed_tests
-        
+
         lines.append("SUMMARY")
         lines.append(f"  Total tests conducted: {total_tests}")
         lines.append(f"  Tests passed: {passed_tests}")
         lines.append(f"  Tests failed: {failed_tests}")
-        
+
         if failed_tests > 0:
             lines.append("\n  ⚠️  Model failed some bias audits")
         else:
             lines.append("\n  ✓ Model passed all bias audits")
-        
+
         # Detailed results
         lines.append("\n" + "=" * 80)
         lines.append("DETAILED RESULTS")
         lines.append("=" * 80)
-        
+
         for result in self.audit_results:
             lines.append(f"\n{result.test_name}")
             lines.append(f"  {result.test_description}")
             lines.append(f"  Status: {'PASSED' if result.passed else 'FAILED'}")
-            
+
             if result.p_value is not None:
                 lines.append(f"  P-value: {result.p_value:.4f}")
             if result.effect_size is not None:
                 lines.append(f"  Effect size: {result.effect_size:.3f}")
-            
+
             lines.append(f"\n  Interpretation:")
             lines.append(f"  {result.interpretation}")
-            
+
             if result.details:
                 lines.append("\n  Additional details:")
                 for key, value in result.details.items():
@@ -1574,12 +1570,12 @@ class ModelAuditor:
                         lines.append(f"    {key}: {value:.4f}")
                     else:
                         lines.append(f"    {key}: {value}")
-        
+
         # Recommendations
         lines.append("\n" + "=" * 80)
         lines.append("RECOMMENDATIONS")
         lines.append("=" * 80)
-        
+
         if failed_tests == 0:
             lines.append(
                 "Model passed all bias audits. Continue monitoring in production "
@@ -1606,7 +1602,7 @@ class ModelAuditor:
             lines.append(
                 "  5. Implement enhanced monitoring for identified biases"
             )
-        
+
         return "\n".join(lines)
 ```
 
@@ -1628,15 +1624,17 @@ Furthermore, disparities that are statistically detectable may not be clinically
 
 We now develop practical approaches for validation study design that account for fairness evaluation, including sample size calculations stratified by demographics, adjustment for multiple testing, and frameworks for defining clinically meaningful disparity thresholds.
 
-Power calculations for fairness metrics depend on the specific metric, expected performance levels, and disparity magnitude we want to detect. For sensitivity differences between two groups, we can use standard two-proportion z-tests. The required sample size per group for detecting a difference $$\delta$$ in sensitivity with power $$1-\beta$$ at significance level $$\alpha$$ is approximately:
+Power calculations for fairness metrics depend on the specific metric, expected performance levels, and disparity magnitude we want to detect. For sensitivity differences between two groups, we can use standard two-proportion z-tests. The required sample size per group for detecting a difference $\delta$ in sensitivity with power $1-\beta$ at significance level $\alpha$ is approximately:
 
-$$n = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 (\bar{p}(1-\bar{p}))}{\delta^2}$$
+$$
+n = \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 (\bar{p}(1-\bar{p}))}{\delta^2}
+$$
 
-where $$\bar{p}$$ is the average sensitivity across groups and $z$ denotes standard normal quantiles. For AUC comparisons, power calculations are more complex but can be approximated using methods developed by DeLong and colleagues that account for AUC variance and correlation between curves estimated on the same test set.
+where $\bar{p}$ is the average sensitivity across groups and $z$ denotes standard normal quantiles. For AUC comparisons, power calculations are more complex but can be approximated using methods developed by DeLong and colleagues that account for AUC variance and correlation between curves estimated on the same test set.
 
 For calibration metrics including expected calibration error, power calculations must account for calibration bin structure and error distributions. Simulation-based power analysis provides flexible approaches that accommodate complex calibration metrics and validation study designs while properly accounting for clustering, missing data, and other practical complications.
 
-Comprehensive validation for fairness across multiple subgroups and metrics requires corrections for multiple testing to control family-wise error rates or false discovery rates. Without such corrections, we expect to find spurious significant disparities purely by chance when testing many hypotheses. Bonferroni corrections provide conservative control of family-wise error rates by testing each hypothesis at level $$\alpha/m$$ where $m$ is the number of tests, but may be overly conservative when tests are not independent. False discovery rate controlling procedures including Benjamini-Hochberg provide less conservative approaches that may be more appropriate when we expect some true disparities to exist and want to balance discovery against false positives.
+Comprehensive validation for fairness across multiple subgroups and metrics requires corrections for multiple testing to control family-wise error rates or false discovery rates. Without such corrections, we expect to find spurious significant disparities purely by chance when testing many hypotheses. Bonferroni corrections provide conservative control of family-wise error rates by testing each hypothesis at level $\alpha/m$ where $m$ is the number of tests, but may be overly conservative when tests are not independent. False discovery rate controlling procedures including Benjamini-Hochberg provide less conservative approaches that may be more appropriate when we expect some true disparities to exist and want to balance discovery against false positives.
 
 An alternative to multiple testing corrections is hierarchical testing strategies that first test for any disparity across groups using omnibus tests, then conduct pairwise comparisons only if the omnibus test is significant. This approach focuses power on detecting whether disparities exist rather than precisely localizing them to specific subgroups, which may be more appropriate when the primary goal is determining whether a model is suitable for deployment rather than understanding exact patterns of bias.
 

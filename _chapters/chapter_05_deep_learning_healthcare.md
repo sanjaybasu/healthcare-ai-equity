@@ -2,11 +2,10 @@
 layout: chapter
 title: "Chapter 5: Deep Learning for Healthcare with Equity Considerations"
 chapter_number: 5
+part_number: 2
+prev_chapter: /chapters/chapter-04-machine-learning-fundamentals/
+next_chapter: /chapters/chapter-06-clinical-nlp/
 ---
-
-
-
-
 # Chapter 5: Deep Learning for Healthcare with Equity Considerations
 
 ## Learning Objectives
@@ -47,29 +46,37 @@ Before developing specialized architectures for healthcare applications, we must
 
 The simplest deep learning architecture is the multilayer perceptron or feedforward neural network, which learns hierarchical representations by composing nonlinear transformations. For a network with $L$ layers, the forward pass computes:
 
-$$h^{(0)} = x$$
-$$h^{(l)} = f(W^{(l)} h^{(l-1)} + b^{(l)}) \text{ for } l = 1, \ldots, L-1$$
-$$\hat{y} = g(W^{(L)} h^{(L-1)} + b^{(L)})$$
+$$
+h^{(0)} = x
+$$
 
-where $x$ is the input, $$h^{(l)}$$ represents the hidden activations at layer $l$, $$W^{(l)}$$ and $$b^{(l)}$$ are weight matrices and bias vectors, $f$ is a nonlinear activation function, and $g$ is the output activation function appropriate for the task (sigmoid for binary classification, softmax for multiclass classification, identity for regression).
+$$
+h^{(l)} = f(W^{(l)} h^{(l-1)} + b^{(l)}) \text{ for } l = 1, \ldots, L-1
+$$
 
-From a fairness perspective, several aspects of this basic architecture merit careful consideration. The learned representations $$h^{(l)}$$ at intermediate layers may encode information about protected attributes even when those attributes are not directly provided as inputs. This phenomenon, known as representation bias, occurs because proxy variables correlated with demographic characteristics allow the model to indirectly learn protected attributes. For instance, a model predicting hospital readmission might learn that certain zip codes or insurance types are associated with protected race or ethnicity, leading to disparate predictions even without explicit demographic inputs.
+$$
+\hat{y} = g(W^{(L)} h^{(L-1)} + b^{(L)})
+$$
+
+where $x$ is the input, $h^{(l)}$ represents the hidden activations at layer $l$, $W^{(l)}$ and $b^{(l)}$ are weight matrices and bias vectors, $f$ is a nonlinear activation function, and $g$ is the output activation function appropriate for the task (sigmoid for binary classification, softmax for multiclass classification, identity for regression).
+
+From a fairness perspective, several aspects of this basic architecture merit careful consideration. The learned representations $h^{(l)}$ at intermediate layers may encode information about protected attributes even when those attributes are not directly provided as inputs. This phenomenon, known as representation bias, occurs because proxy variables correlated with demographic characteristics allow the model to indirectly learn protected attributes. For instance, a model predicting hospital readmission might learn that certain zip codes or insurance types are associated with protected race or ethnicity, leading to disparate predictions even without explicit demographic inputs.
 
 The depth and width of the network affect its capacity to learn complex patterns, but also its tendency toward overfitting and its ability to generalize across population subgroups. Deeper networks with more parameters can potentially learn group-specific patterns that improve fairness, but only if training data provides adequate representation of all groups. When certain populations are underrepresented in training data, increased model capacity may simply lead to overfitting on the majority group while failing to learn robust patterns for minority groups.
 
-Regularization techniques that constrain model complexity have differential effects on fairness. $$L_2$$ regularization (weight decay) encourages smaller parameter values, potentially reducing reliance on features that are proxies for protected attributes. Dropout randomly zeros activations during training, forcing the network to learn redundant representations that may be more robust across population subgroups. However, these techniques can also harm fairness if applied uniformly, as they may disproportionately constrain the model's ability to learn patterns specific to underrepresented groups that require more parameters to capture.
+Regularization techniques that constrain model complexity have differential effects on fairness. $L_2$ regularization (weight decay) encourages smaller parameter values, potentially reducing reliance on features that are proxies for protected attributes. Dropout randomly zeros activations during training, forcing the network to learn redundant representations that may be more robust across population subgroups. However, these techniques can also harm fairness if applied uniformly, as they may disproportionately constrain the model's ability to learn patterns specific to underrepresented groups that require more parameters to capture.
 
 ### 5.2.2 Activation Functions and Their Equity Implications
 
 The choice of activation function $f$ in neural networks has both computational and fairness implications. The most common activation functions in modern deep learning are:
 
-**Rectified Linear Unit (ReLU):** $$f(z) = \max(0, z)$$. This simple activation provides computational efficiency and helps mitigate vanishing gradient problems in deep networks. However, ReLU neurons can "die" during training when their weights receive updates that cause them to output zero for all inputs, potentially eliminating capacity needed to learn patterns for minority groups.
+**Rectified Linear Unit (ReLU):** $f(z) = \max(0, z)$. This simple activation provides computational efficiency and helps mitigate vanishing gradient problems in deep networks. However, ReLU neurons can "die" during training when their weights receive updates that cause them to output zero for all inputs, potentially eliminating capacity needed to learn patterns for minority groups.
 
-**Leaky ReLU:** $$f(z) = \max(\alpha z, z)$$ for small $$\alpha > 0$$. This addresses the dying ReLU problem by maintaining a small gradient for negative inputs, but introduces an additional hyperparameter that may require population-specific tuning.
+**Leaky ReLU:** $f(z) = \max(\alpha z, z)$ for small $\alpha > 0$. This addresses the dying ReLU problem by maintaining a small gradient for negative inputs, but introduces an additional hyperparameter that may require population-specific tuning.
 
-**Exponential Linear Unit (ELU):** $$f(z) = z$$ if $$z > 0$$, else $$\alpha(e^z - 1)$$. ELU activations have negative outputs with bounded magnitude, potentially providing more robust learned representations across diverse data distributions.
+**Exponential Linear Unit (ELU):** $f(z) = z$ if $z > 0$, else $\alpha(e^z - 1)$. ELU activations have negative outputs with bounded magnitude, potentially providing more robust learned representations across diverse data distributions.
 
-**Gaussian Error Linear Unit (GELU):** $$f(z) = z \Phi(z)$$ where $$\Phi$$ is the standard normal cumulative distribution function. GELU has become popular in transformer architectures and provides smooth nonlinearity, though its computational cost is higher than ReLU variants.
+**Gaussian Error Linear Unit (GELU):** $f(z) = z \Phi(z)$ where $\Phi$ is the standard normal cumulative distribution function. GELU has become popular in transformer architectures and provides smooth nonlinearity, though its computational cost is higher than ReLU variants.
 
 From a fairness perspective, the choice among these activations affects how the network responds to inputs from different distributions. If certain patient populations systematically produce activations in different ranges (for instance, due to different laboratory test ranges or measurement protocols), the activation function's behavior in those ranges directly affects model fairness. Activation functions with asymmetric behavior around zero (like ReLU and its variants) may introduce systematic biases when input distributions differ across groups.
 
@@ -77,29 +84,37 @@ From a fairness perspective, the choice among these activations affects how the 
 
 The loss function defines what the model optimizes during training, making it a critical leverage point for incorporating fairness constraints. The standard cross-entropy loss for binary classification is:
 
-$$\mathcal{L}_{CE} = -\frac{1}{n} \sum_{i=1}^n [y_i \log(\hat{y}_i) + (1-y_i) \log(1-\hat{y}_i)]$$
+$$
+\mathcal{L}_{CE} = -\frac{1}{n} \sum_{i=1}^n [y_i \log(\hat{y}_i) + (1-y_i) \log(1-\hat{y}_i)]
+$$
 
-where $$y_i$$ is the true label and $$\hat{y}_i$$ is the predicted probability. This loss treats all misclassifications equally regardless of the patient's demographic characteristics or the type of error (false positive versus false negative).
+where $y_i$ is the true label and $\hat{y}_i$ is the predicted probability. This loss treats all misclassifications equally regardless of the patient's demographic characteristics or the type of error (false positive versus false negative).
 
 To encourage fairness, we can augment the standard loss with fairness penalty terms. One approach is to add a demographic parity term that penalizes differences in predicted risk across protected groups:
 
-$$\mathcal{L}_{DP} = \mathcal{L}_{CE} + \lambda_{DP} \left| \frac{1}{n_0} \sum_{i: a_i=0} \hat{y}_i - \frac{1}{n_1} \sum_{i: a_i=1} \hat{y}_i \right|$$
+$$
+\mathcal{L}_{DP} = \mathcal{L}_{CE} + \lambda_{DP} \left| \frac{1}{n_0} \sum_{i: a_i=0} \hat{y}_i - \frac{1}{n_1} \sum_{i: a_i=1} \hat{y}_i \right|
+$$
 
-where $$a_i$$ indicates group membership, $$n_0$$ and $$n_1$$ are group sizes, and $$\lambda_{DP} > 0$$ is a hyperparameter controlling the fairness-accuracy tradeoff.
+where $a_i$ indicates group membership, $n_0$ and $n_1$ are group sizes, and $\lambda_{DP} > 0$ is a hyperparameter controlling the fairness-accuracy tradeoff.
 
 Alternatively, for settings where we have ground truth outcomes, we can enforce equalized odds by penalizing differences in true positive and false positive rates:
 
-$$\mathcal{L}_{EO} = \mathcal{L}_{CE} + \lambda_{TPR} |TPR_0 - TPR_1| + \lambda_{FPR} |FPR_0 - FPR_1|$$
+$$
+\mathcal{L}_{EO} = \mathcal{L}_{CE} + \lambda_{TPR} |TPR_0 - TPR_1| + \lambda_{FPR} |FPR_0 - FPR_1|
+$$
 
-where $$TPR_g$$ and $$FPR_g$$ are the true positive and false positive rates for group $g$.
+where $TPR_g$ and $FPR_g$ are the true positive and false positive rates for group $g$.
 
-These fairness-augmented loss functions enable end-to-end training of models that explicitly balance predictive accuracy with fairness constraints. However, they require careful tuning of the penalty weights $$\lambda$$ and may face optimization challenges, particularly when fairness constraints conflict with accuracy on underrepresented groups with limited training data.
+These fairness-augmented loss functions enable end-to-end training of models that explicitly balance predictive accuracy with fairness constraints. However, they require careful tuning of the penalty weights $\lambda$ and may face optimization challenges, particularly when fairness constraints conflict with accuracy on underrepresented groups with limited training data.
 
 Another approach is to use group-specific loss weighting that upweights examples from underrepresented groups:
 
-$$\mathcal{L}_{weighted} = -\sum_{i=1}^n w_i [y_i \log(\hat{y}_i) + (1-y_i) \log(1-\hat{y}_i)]$$
+$$
+\mathcal{L}_{weighted} = -\sum_{i=1}^n w_i [y_i \log(\hat{y}_i) + (1-y_i) \log(1-\hat{y}_i)]
+$$
 
-where $$w_i$$ is chosen inversely proportional to the frequency of patient $i$'s demographic group in the training data. This prevents the model from ignoring minority groups to minimize overall loss.
+where $w_i$ is chosen inversely proportional to the frequency of patient $i$'s demographic group in the training data. This prevents the model from ignoring minority groups to minimize overall loss.
 
 ### 5.2.4 Production Implementation: Fair Multilayer Perceptron
 
@@ -134,11 +149,11 @@ logger = logging.getLogger(__name__)
 class ClinicalDataset(Dataset):
     """
     PyTorch dataset for clinical data with support for protected attributes.
-    
+
     Handles both feature data and optional sensitive attributes for fairness
     evaluation during training and validation.
     """
-    
+
     def __init__(
         self,
         X: np.ndarray,
@@ -147,7 +162,7 @@ class ClinicalDataset(Dataset):
     ):
         """
         Initialize clinical dataset.
-        
+
         Args:
             X: Feature matrix of shape (n_samples, n_features)
             y: Labels of shape (n_samples,)
@@ -155,32 +170,31 @@ class ClinicalDataset(Dataset):
         """
         self.X = torch.FloatTensor(X)
         self.y = torch.FloatTensor(y)
-        
+
         if sensitive_features is not None:
             self.sensitive_features = torch.FloatTensor(sensitive_features)
         else:
             self.sensitive_features = None
-    
+
     def __len__(self) -> int:
         return len(self.y)
-    
+
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         """Get a single sample with optional sensitive features."""
         sample = {
             'features': self.X[idx],
             'label': self.y[idx]
         }
-        
+
         if self.sensitive_features is not None:
             sample['sensitive'] = self.sensitive_features[idx]
-        
-        return sample
 
+        return sample
 
 class FairMLP(nn.Module):
     """
     Fairness-aware multilayer perceptron for clinical prediction tasks.
-    
+
     This implementation includes:
     - Configurable architecture with multiple hidden layers
     - Dropout regularization for uncertainty quantification
@@ -188,7 +202,7 @@ class FairMLP(nn.Module):
     - Support for fairness-aware loss functions
     - Calibrated probability outputs
     """
-    
+
     def __init__(
         self,
         input_dim: int,
@@ -200,7 +214,7 @@ class FairMLP(nn.Module):
     ):
         """
         Initialize fair MLP.
-        
+
         Args:
             input_dim: Number of input features
             hidden_dims: List of hidden layer dimensions
@@ -210,13 +224,13 @@ class FairMLP(nn.Module):
             activation: Activation function ('relu', 'elu', or 'gelu')
         """
         super(FairMLP, self).__init__()
-        
+
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.output_dim = output_dim
         self.dropout_rate = dropout_rate
         self.use_batch_norm = use_batch_norm
-        
+
         # Select activation function
         if activation == 'relu':
             self.activation = nn.ReLU()
@@ -226,41 +240,41 @@ class FairMLP(nn.Module):
             self.activation = nn.GELU()
         else:
             raise ValueError(f"Unknown activation: {activation}")
-        
+
         # Build network layers
         self.layers = nn.ModuleList()
         self.batch_norms = nn.ModuleList() if use_batch_norm else None
         self.dropouts = nn.ModuleList()
-        
+
         # Input layer
         prev_dim = input_dim
         for hidden_dim in hidden_dims:
             self.layers.append(nn.Linear(prev_dim, hidden_dim))
-            
+
             if use_batch_norm:
                 self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
-            
+
             self.dropouts.append(nn.Dropout(dropout_rate))
             prev_dim = hidden_dim
-        
+
         # Output layer
         self.output_layer = nn.Linear(prev_dim, output_dim)
-        
+
         # Initialize weights using He initialization
         self._initialize_weights()
-        
+
         logger.info(f"Initialized FairMLP with architecture: {input_dim} -> "
                    f"{' -> '.join(map(str, hidden_dims))} -> {output_dim}")
-    
+
     def _initialize_weights(self):
         """Initialize network weights using He initialization."""
         for layer in self.layers:
             nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='relu')
             nn.init.constant_(layer.bias, 0)
-        
+
         nn.init.xavier_normal_(self.output_layer.weight)
         nn.init.constant_(self.output_layer.bias, 0)
-    
+
     def forward(
         self,
         x: torch.Tensor,
@@ -268,38 +282,38 @@ class FairMLP(nn.Module):
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Forward pass through the network.
-        
+
         Args:
             x: Input tensor of shape (batch_size, input_dim)
             return_features: If True, also return penultimate layer activations
-        
+
         Returns:
             Output predictions of shape (batch_size, output_dim)
             If return_features=True, also returns features from penultimate layer
         """
         h = x
-        
+
         # Pass through hidden layers
         for i, layer in enumerate(self.layers):
             h = layer(h)
-            
+
             if self.use_batch_norm:
                 h = self.batch_norms[i](h)
-            
+
             h = self.activation(h)
             h = self.dropouts[i](h)
-        
+
         # Store penultimate features if requested
         if return_features:
             features = h
-        
+
         # Output layer
         output = self.output_layer(h)
-        
+
         if return_features:
             return output, features
         return output
-    
+
     def predict_proba(
         self,
         x: torch.Tensor,
@@ -307,11 +321,11 @@ class FairMLP(nn.Module):
     ) -> torch.Tensor:
         """
         Predict class probabilities with optional Monte Carlo dropout.
-        
+
         Args:
             x: Input tensor
             num_samples: Number of MC dropout samples for uncertainty estimation
-        
+
         Returns:
             Predicted probabilities
         """
@@ -322,25 +336,24 @@ class FairMLP(nn.Module):
             # Monte Carlo dropout for uncertainty quantification
             self.train()  # Enable dropout
             probs_samples = []
-            
+
             with torch.no_grad():
                 for _ in range(num_samples):
                     logits = self.forward(x)
                     probs = torch.sigmoid(logits)
                     probs_samples.append(probs)
-            
+
             self.eval()  # Restore eval mode
             return torch.stack(probs_samples).mean(dim=0)
-
 
 class FairMLPTrainer:
     """
     Trainer for fair multilayer perceptrons with equity-aware training and evaluation.
-    
+
     Supports multiple fairness constraints, comprehensive stratified evaluation,
     and production-ready training procedures.
     """
-    
+
     def __init__(
         self,
         model: FairMLP,
@@ -352,7 +365,7 @@ class FairMLPTrainer:
     ):
         """
         Initialize trainer.
-        
+
         Args:
             model: FairMLP model to train
             fairness_constraint: Type of fairness constraint ('none', 'demographic_parity',
@@ -366,14 +379,14 @@ class FairMLPTrainer:
         self.device = device
         self.fairness_constraint = fairness_constraint
         self.fairness_lambda = fairness_lambda
-        
+
         # Initialize optimizer
         self.optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=learning_rate,
             weight_decay=weight_decay
         )
-        
+
         # Learning rate scheduler
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.optimizer,
@@ -382,7 +395,7 @@ class FairMLPTrainer:
             patience=5,
             verbose=True
         )
-        
+
         # Training history
         self.history = {
             'train_loss': [],
@@ -391,9 +404,9 @@ class FairMLPTrainer:
             'val_auc': [],
             'fairness_metric': []
         }
-        
+
         logger.info(f"Initialized trainer with {fairness_constraint} fairness constraint")
-    
+
     def _compute_loss(
         self,
         logits: torch.Tensor,
@@ -402,41 +415,41 @@ class FairMLPTrainer:
     ) -> Tuple[torch.Tensor, Dict[str, float]]:
         """
         Compute loss with optional fairness penalty.
-        
+
         Args:
             logits: Model predictions
             labels: True labels
             sensitive: Protected attributes for fairness constraints
-        
+
         Returns:
             Total loss and dictionary of loss components
         """
         # Base binary cross-entropy loss
         bce_loss = F.binary_cross_entropy_with_logits(logits, labels.unsqueeze(1))
-        
+
         loss_components = {'bce': bce_loss.item()}
         total_loss = bce_loss
-        
+
         # Add fairness penalty if using fairness constraints
         if self.fairness_constraint != 'none' and sensitive is not None:
             probs = torch.sigmoid(logits)
-            
+
             if self.fairness_constraint == 'demographic_parity':
                 # Penalize difference in predicted risk across groups
                 fairness_penalty = self._demographic_parity_penalty(probs, sensitive)
-                
+
             elif self.fairness_constraint == 'equalized_odds':
                 # Penalize difference in TPR and FPR across groups
                 fairness_penalty = self._equalized_odds_penalty(probs, labels, sensitive)
-            
+
             else:
                 fairness_penalty = torch.tensor(0.0, device=self.device)
-            
+
             loss_components['fairness'] = fairness_penalty.item()
             total_loss = bce_loss + self.fairness_lambda * fairness_penalty
-        
+
         return total_loss, loss_components
-    
+
     def _demographic_parity_penalty(
         self,
         probs: torch.Tensor,
@@ -444,21 +457,21 @@ class FairMLPTrainer:
     ) -> torch.Tensor:
         """
         Compute demographic parity penalty.
-        
+
         Penalizes absolute difference in average predicted risk between groups.
         """
         # Assume binary sensitive attribute
         mask_0 = (sensitive == 0).squeeze()
         mask_1 = (sensitive == 1).squeeze()
-        
+
         if mask_0.sum() == 0 or mask_1.sum() == 0:
             return torch.tensor(0.0, device=self.device)
-        
+
         mean_pred_0 = probs[mask_0].mean()
         mean_pred_1 = probs[mask_1].mean()
-        
+
         return torch.abs(mean_pred_0 - mean_pred_1)
-    
+
     def _equalized_odds_penalty(
         self,
         probs: torch.Tensor,
@@ -467,44 +480,44 @@ class FairMLPTrainer:
     ) -> torch.Tensor:
         """
         Compute equalized odds penalty.
-        
+
         Penalizes differences in TPR and FPR across groups.
         """
         # Assume binary sensitive attribute
         mask_0 = (sensitive == 0).squeeze()
         mask_1 = (sensitive == 1).squeeze()
-        
+
         # Threshold at 0.5 for binary predictions
         preds = (probs > 0.5).float()
-        
+
         # Compute TPR and FPR for each group
         def compute_rates(pred, label, mask):
             if mask.sum() == 0:
                 return 0.0, 0.0
-            
+
             positives = (label == 1) & mask
             negatives = (label == 0) & mask
-            
+
             if positives.sum() == 0:
                 tpr = 0.0
             else:
                 tpr = ((pred == 1) & positives).float().sum() / positives.sum()
-            
+
             if negatives.sum() == 0:
                 fpr = 0.0
             else:
                 fpr = ((pred == 1) & negatives).float().sum() / negatives.sum()
-            
+
             return tpr, fpr
-        
+
         tpr_0, fpr_0 = compute_rates(preds, labels.unsqueeze(1), mask_0)
         tpr_1, fpr_1 = compute_rates(preds, labels.unsqueeze(1), mask_1)
-        
+
         tpr_diff = torch.abs(torch.tensor(tpr_0 - tpr_1, device=self.device))
         fpr_diff = torch.abs(torch.tensor(fpr_0 - fpr_1, device=self.device))
-        
+
         return tpr_diff + fpr_diff
-    
+
     def train_epoch(
         self,
         train_loader: DataLoader,
@@ -512,58 +525,58 @@ class FairMLPTrainer:
     ) -> Dict[str, float]:
         """
         Train for one epoch.
-        
+
         Args:
             train_loader: DataLoader for training data
             use_fairness: Whether to apply fairness constraints
-        
+
         Returns:
             Dictionary of training metrics
         """
         self.model.train()
-        
+
         total_loss = 0.0
         all_labels = []
         all_probs = []
-        
+
         for batch in train_loader:
             features = batch['features'].to(self.device)
             labels = batch['label'].to(self.device)
             sensitive = batch.get('sensitive', None)
-            
+
             if sensitive is not None:
                 sensitive = sensitive.to(self.device)
-            
+
             # Forward pass
             logits = self.model(features)
-            
+
             # Compute loss
             if use_fairness and sensitive is not None:
                 loss, _ = self._compute_loss(logits, labels, sensitive)
             else:
                 loss, _ = self._compute_loss(logits, labels)
-            
+
             # Backward pass
             self.optimizer.zero_grad()
             loss.backward()
-            
+
             # Gradient clipping for stability
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-            
+
             self.optimizer.step()
-            
+
             # Track metrics
             total_loss += loss.item() * len(labels)
             probs = torch.sigmoid(logits).detach().cpu().numpy()
             all_probs.extend(probs.flatten())
             all_labels.extend(labels.cpu().numpy())
-        
+
         # Compute epoch metrics
         avg_loss = total_loss / len(train_loader.dataset)
         auc = roc_auc_score(all_labels, all_probs)
-        
+
         return {'loss': avg_loss, 'auc': auc}
-    
+
     def evaluate(
         self,
         eval_loader: DataLoader,
@@ -571,47 +584,47 @@ class FairMLPTrainer:
     ) -> Dict[str, Any]:
         """
         Evaluate model on validation or test data.
-        
+
         Args:
             eval_loader: DataLoader for evaluation data
             stratify_by_sensitive: Whether to compute stratified metrics
-        
+
         Returns:
             Dictionary of evaluation metrics including overall and stratified performance
         """
         self.model.eval()
-        
+
         all_labels = []
         all_probs = []
         all_sensitive = []
         total_loss = 0.0
-        
+
         with torch.no_grad():
             for batch in eval_loader:
                 features = batch['features'].to(self.device)
                 labels = batch['label'].to(self.device)
                 sensitive = batch.get('sensitive', None)
-                
+
                 if sensitive is not None:
                     sensitive = sensitive.to(self.device)
                     all_sensitive.extend(sensitive.cpu().numpy())
-                
+
                 # Forward pass
                 logits = self.model(features)
-                
+
                 # Compute loss
                 loss, _ = self._compute_loss(logits, labels, sensitive)
                 total_loss += loss.item() * len(labels)
-                
+
                 # Store predictions
                 probs = torch.sigmoid(logits).cpu().numpy()
                 all_probs.extend(probs.flatten())
                 all_labels.extend(labels.cpu().numpy())
-        
+
         # Convert to arrays
         all_labels = np.array(all_labels)
         all_probs = np.array(all_probs)
-        
+
         # Overall metrics
         metrics = {
             'loss': total_loss / len(eval_loader.dataset),
@@ -619,58 +632,58 @@ class FairMLPTrainer:
             'auc_pr': average_precision_score(all_labels, all_probs),
             'brier_score': brier_score_loss(all_labels, all_probs)
         }
-        
+
         # Stratified metrics if sensitive attributes available
         if stratify_by_sensitive and len(all_sensitive) > 0:
             all_sensitive = np.array(all_sensitive)
             unique_groups = np.unique(all_sensitive)
-            
+
             stratified_metrics = {}
             for group in unique_groups:
                 mask = (all_sensitive == group)
                 if mask.sum() > 0:
                     group_labels = all_labels[mask]
                     group_probs = all_probs[mask]
-                    
+
                     # Only compute if we have both classes
                     if len(np.unique(group_labels)) > 1:
                         stratified_metrics[f'group_{int(group)}_auc'] = roc_auc_score(
                             group_labels, group_probs
                         )
                         stratified_metrics[f'group_{int(group)}_n'] = mask.sum()
-            
+
             metrics['stratified'] = stratified_metrics
-            
+
             # Compute fairness metrics
             if len(unique_groups) == 2:
                 # Demographic parity: difference in positive prediction rates
                 pos_rate_0 = (all_probs[all_sensitive == unique_groups[0]] > 0.5).mean()
                 pos_rate_1 = (all_probs[all_sensitive == unique_groups[1]] > 0.5).mean()
                 metrics['demographic_parity_diff'] = abs(pos_rate_0 - pos_rate_1)
-                
+
                 # Equalized odds: difference in TPR and FPR
                 mask_0 = (all_sensitive == unique_groups[0])
                 mask_1 = (all_sensitive == unique_groups[1])
-                
+
                 preds_0 = (all_probs[mask_0] > 0.5).astype(int)
                 preds_1 = (all_probs[mask_1] > 0.5).astype(int)
                 labels_0 = all_labels[mask_0]
                 labels_1 = all_labels[mask_1]
-                
+
                 # TPR difference
                 if (labels_0 == 1).sum() > 0 and (labels_1 == 1).sum() > 0:
                     tpr_0 = (preds_0[labels_0 == 1] == 1).mean()
                     tpr_1 = (preds_1[labels_1 == 1] == 1).mean()
                     metrics['tpr_diff'] = abs(tpr_0 - tpr_1)
-                
+
                 # FPR difference
                 if (labels_0 == 0).sum() > 0 and (labels_1 == 0).sum() > 0:
                     fpr_0 = (preds_0[labels_0 == 0] == 1).mean()
                     fpr_1 = (preds_1[labels_1 == 0] == 1).mean()
                     metrics['fpr_diff'] = abs(fpr_0 - fpr_1)
-        
+
         return metrics
-    
+
     def fit(
         self,
         train_loader: DataLoader,
@@ -681,42 +694,42 @@ class FairMLPTrainer:
     ) -> Dict[str, List[float]]:
         """
         Train model with early stopping and validation monitoring.
-        
+
         Args:
             train_loader: DataLoader for training data
             val_loader: DataLoader for validation data
             num_epochs: Maximum number of training epochs
             early_stopping_patience: Epochs to wait before early stopping
             verbose: Whether to print training progress
-        
+
         Returns:
             Training history dictionary
         """
         best_val_loss = float('inf')
         patience_counter = 0
         best_model_state = None
-        
+
         logger.info(f"Starting training for up to {num_epochs} epochs...")
-        
+
         for epoch in range(num_epochs):
             # Train
             train_metrics = self.train_epoch(train_loader)
-            
+
             # Validate
             val_metrics = self.evaluate(val_loader)
-            
+
             # Update learning rate scheduler
             self.scheduler.step(val_metrics['loss'])
-            
+
             # Store history
             self.history['train_loss'].append(train_metrics['loss'])
             self.history['val_loss'].append(val_metrics['loss'])
             self.history['train_auc'].append(train_metrics['auc'])
             self.history['val_auc'].append(val_metrics['auc_roc'])
-            
+
             if 'demographic_parity_diff' in val_metrics:
                 self.history['fairness_metric'].append(val_metrics['demographic_parity_diff'])
-            
+
             # Verbose logging
             if verbose and (epoch + 1) % 5 == 0:
                 logger.info(
@@ -725,12 +738,12 @@ class FairMLPTrainer:
                     f"Val Loss: {val_metrics['loss']:.4f}, "
                     f"Val AUC: {val_metrics['auc_roc']:.4f}"
                 )
-                
+
                 if 'stratified' in val_metrics:
                     for key, value in val_metrics['stratified'].items():
                         if 'auc' in key:
                             logger.info(f"  {key}: {value:.4f}")
-            
+
             # Early stopping check
             if val_metrics['loss'] < best_val_loss:
                 best_val_loss = val_metrics['loss']
@@ -738,27 +751,27 @@ class FairMLPTrainer:
                 best_model_state = self.model.state_dict().copy()
             else:
                 patience_counter += 1
-            
+
             if patience_counter >= early_stopping_patience:
                 logger.info(f"Early stopping triggered at epoch {epoch+1}")
                 break
-        
+
         # Restore best model
         if best_model_state is not None:
             self.model.load_state_dict(best_model_state)
             logger.info("Restored best model from validation")
-        
+
         return self.history
-    
+
     def plot_training_history(self, save_path: Optional[str] = None):
         """
         Plot training history including loss, AUC, and fairness metrics.
-        
+
         Args:
             save_path: Optional path to save figure
         """
         fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-        
+
         # Loss plot
         axes[0].plot(self.history['train_loss'], label='Train', linewidth=2)
         axes[0].plot(self.history['val_loss'], label='Validation', linewidth=2)
@@ -767,7 +780,7 @@ class FairMLPTrainer:
         axes[0].set_title('Training and Validation Loss', fontsize=14)
         axes[0].legend()
         axes[0].grid(True, alpha=0.3)
-        
+
         # AUC plot
         axes[1].plot(self.history['train_auc'], label='Train', linewidth=2)
         axes[1].plot(self.history['val_auc'], label='Validation', linewidth=2)
@@ -776,7 +789,7 @@ class FairMLPTrainer:
         axes[1].set_title('Training and Validation AUC', fontsize=14)
         axes[1].legend()
         axes[1].grid(True, alpha=0.3)
-        
+
         # Fairness metric plot
         if len(self.history['fairness_metric']) > 0:
             axes[2].plot(self.history['fairness_metric'], linewidth=2, color='red')
@@ -788,15 +801,14 @@ class FairMLPTrainer:
             axes[2].text(0.5, 0.5, 'No fairness metric tracked',
                         ha='center', va='center', fontsize=12)
             axes[2].axis('off')
-        
+
         plt.tight_layout()
-        
+
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             logger.info(f"Saved training history plot to {save_path}")
-        
-        plt.show()
 
+        plt.show()
 
 def create_sample_clinical_data(
     n_samples: int = 1000,
@@ -807,58 +819,57 @@ def create_sample_clinical_data(
 ) -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
     Create synthetic clinical data for demonstration.
-    
+
     This generates realistic clinical prediction data with optional
     systematic bias across demographic groups.
-    
+
     Args:
         n_samples: Number of samples to generate
         n_features: Number of clinical features
         outcome_rate: Base rate of positive outcomes
         add_bias: Whether to add systematic demographic bias
         random_state: Random seed for reproducibility
-    
+
     Returns:
         Tuple of (features DataFrame, labels Series, sensitive features Series)
     """
     np.random.seed(random_state)
-    
+
     # Generate features
     X = np.random.randn(n_samples, n_features)
-    
+
     # Generate sensitive attribute (0 or 1)
     sensitive = np.random.binomial(1, 0.5, n_samples)
-    
+
     # Generate outcomes based on features
     # True model: linear combination plus nonlinear interactions
     true_coef = np.random.randn(n_features) * 0.3
     linear_score = X @ true_coef
-    
+
     # Add nonlinear effects
     nonlinear_score = 0.5 * np.sin(X[:, 0]) + 0.3 * (X[:, 1] ** 2)
-    
+
     # Combine scores
     logits = linear_score + nonlinear_score
-    
+
     # Add bias if requested
     if add_bias:
         # Group 1 has systematically lower scores (simulating healthcare disparities)
         logits[sensitive == 1] -= 0.5
-    
+
     # Convert to probabilities and sample outcomes
     probs = 1 / (1 + np.exp(-logits))
     # Adjust to achieve desired outcome rate
     threshold = np.percentile(probs, (1 - outcome_rate) * 100)
     y = (probs >= threshold).astype(int)
-    
+
     # Create DataFrames
     feature_names = [f'feature_{i}' for i in range(n_features)]
     X_df = pd.DataFrame(X, columns=feature_names)
     y_series = pd.Series(y, name='outcome')
     sensitive_series = pd.Series(sensitive, name='sensitive_group')
-    
-    return X_df, y_series, sensitive_series
 
+    return X_df, y_series, sensitive_series
 
 # Example usage demonstrating fair MLP training
 if __name__ == '__main__':
@@ -871,22 +882,22 @@ if __name__ == '__main__':
         add_bias=True,
         random_state=42
     )
-    
+
     # Split data
     X_train, X_test, y_train, y_test, sens_train, sens_test = train_test_split(
         X, y, sensitive, test_size=0.2, random_state=42, stratify=y
     )
-    
+
     X_train, X_val, y_train, y_val, sens_train, sens_val = train_test_split(
         X_train, y_train, sens_train, test_size=0.2, random_state=42, stratify=y_train
     )
-    
+
     # Standardize features
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_val_scaled = scaler.transform(X_val)
     X_test_scaled = scaler.transform(X_test)
-    
+
     # Create datasets and dataloaders
     train_dataset = ClinicalDataset(
         X_train_scaled,
@@ -903,16 +914,16 @@ if __name__ == '__main__':
         y_test.values,
         sens_test.values.reshape(-1, 1)
     )
-    
+
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
-    
+
     # Train model without fairness constraints
     logger.info("\n" + "="*80)
     logger.info("Training baseline model WITHOUT fairness constraints...")
     logger.info("="*80)
-    
+
     baseline_model = FairMLP(
         input_dim=30,
         hidden_dims=[128, 64, 32],
@@ -921,14 +932,14 @@ if __name__ == '__main__':
         use_batch_norm=True,
         activation='relu'
     )
-    
+
     baseline_trainer = FairMLPTrainer(
         model=baseline_model,
         fairness_constraint='none',
         learning_rate=0.001,
         weight_decay=0.01
     )
-    
+
     baseline_history = baseline_trainer.fit(
         train_loader=train_loader,
         val_loader=val_loader,
@@ -936,7 +947,7 @@ if __name__ == '__main__':
         early_stopping_patience=10,
         verbose=True
     )
-    
+
     # Evaluate baseline
     baseline_test_metrics = baseline_trainer.evaluate(test_loader)
     logger.info("\nBaseline model test metrics:")
@@ -946,12 +957,12 @@ if __name__ == '__main__':
         logger.info(f"  TPR Difference: {baseline_test_metrics['tpr_diff']:.4f}")
     if 'fpr_diff' in baseline_test_metrics:
         logger.info(f"  FPR Difference: {baseline_test_metrics['fpr_diff']:.4f}")
-    
+
     # Train model WITH fairness constraints
     logger.info("\n" + "="*80)
     logger.info("Training fair model WITH demographic parity constraint...")
     logger.info("="*80)
-    
+
     fair_model = FairMLP(
         input_dim=30,
         hidden_dims=[128, 64, 32],
@@ -960,7 +971,7 @@ if __name__ == '__main__':
         use_batch_norm=True,
         activation='relu'
     )
-    
+
     fair_trainer = FairMLPTrainer(
         model=fair_model,
         fairness_constraint='demographic_parity',
@@ -968,7 +979,7 @@ if __name__ == '__main__':
         learning_rate=0.001,
         weight_decay=0.01
     )
-    
+
     fair_history = fair_trainer.fit(
         train_loader=train_loader,
         val_loader=val_loader,
@@ -976,7 +987,7 @@ if __name__ == '__main__':
         early_stopping_patience=10,
         verbose=True
     )
-    
+
     # Evaluate fair model
     fair_test_metrics = fair_trainer.evaluate(test_loader)
     logger.info("\nFair model test metrics:")
@@ -986,7 +997,7 @@ if __name__ == '__main__':
         logger.info(f"  TPR Difference: {fair_test_metrics['tpr_diff']:.4f}")
     if 'fpr_diff' in fair_test_metrics:
         logger.info(f"  FPR Difference: {fair_test_metrics['fpr_diff']:.4f}")
-    
+
     # Compare results
     logger.info("\n" + "="*80)
     logger.info("COMPARISON: Baseline vs Fair Model")
@@ -996,7 +1007,7 @@ if __name__ == '__main__':
     logger.info(f"AUC Change: {fair_test_metrics['auc_roc'] - baseline_test_metrics['auc_roc']:.4f}")
     logger.info(f"\nBaseline DP Diff: {baseline_test_metrics.get('demographic_parity_diff', 'N/A'):.4f}")
     logger.info(f"Fair Model DP Diff: {fair_test_metrics.get('demographic_parity_diff', 'N/A'):.4f}")
-    
+
     # Plot training history
     fair_trainer.plot_training_history()
 ```
@@ -1013,21 +1024,27 @@ Medical imaging represents one of the most promising application areas for deep 
 
 Convolutional neural networks leverage spatial structure in image data through operations that are translation equivariant. A convolutional layer applies learned filters across the spatial dimensions of an image:
 
-$$h^{(l)}_{ij} = f\left(\sum_{a,b} W^{(l)}_{ab} h^{(l-1)}_{i+a,j+b} + b^{(l)}\right)$$
+$$
+h^{(l)}_{ij} = f\left(\sum_{a,b} W^{(l)}_{ab} h^{(l-1)}_{i+a,j+b} + b^{(l)}\right)
+$$
 
-where $$h^{(l)}_{ij}$$ is the activation at spatial position $$(i,j)$$ in layer $l$, $$W^{(l)}$$ is the convolutional kernel, and $f$ is the nonlinear activation function.
+where $h^{(l)}_{ij}$ is the activation at spatial position $(i,j)$ in layer $l$, $W^{(l)}$ is the convolutional kernel, and $f$ is the nonlinear activation function.
 
 Pooling operations reduce spatial dimensions while providing local translation invariance:
 
-$$h^{(pool)}_{ij} = \max_{a,b \in \mathcal{N}_{ij}} h_{ab}$$
+$$
+h^{(pool)}_{ij} = \max_{a,b \in \mathcal{N}_{ij}} h_{ab}
+$$
 
-for max pooling over neighborhood $$\mathcal{N}_{ij}$$.
+for max pooling over neighborhood $\mathcal{N}_{ij}$.
 
 Modern CNN architectures for medical imaging often build on successful designs from natural image classification, including residual connections that enable training very deep networks:
 
-$$h^{(l+1)} = f(h^{(l)} + \mathcal{F}(h^{(l)}, W^{(l)}))$$
+$$
+h^{(l+1)} = f(h^{(l)} + \mathcal{F}(h^{(l)}, W^{(l)}))
+$$
 
-where $$\mathcal{F}$$ represents a residual block of convolutional layers. These skip connections allow gradients to flow directly backward through the network, mitigating vanishing gradient problems in deep architectures.
+where $\mathcal{F}$ represents a residual block of convolutional layers. These skip connections allow gradients to flow directly backward through the network, mitigating vanishing gradient problems in deep architectures.
 
 From a fairness perspective, several architectural choices affect how CNNs generalize across diverse medical images. The receptive field size—the region of the input image that influences a particular activation—determines what scale of features the network can learn. For medical imaging tasks where the relevant pathology may appear at different scales in different patient populations or with different imaging protocols, receptive field design becomes crucial. A network with receptive fields tuned to the typical size of findings in majority training data may miss findings that appear at different scales in underrepresented populations.
 
@@ -1067,7 +1084,7 @@ Fair Convolutional Neural Network for Medical Imaging
 
 This module implements medical imaging CNNs with equity-centered design including:
 - Medical imaging-appropriate data augmentation
-- Transfer learning from pre-trained models  
+- Transfer learning from pre-trained models
 - Multi-site evaluation and fairness assessment
 - Calibrated uncertainty quantification
 """
@@ -1100,15 +1117,14 @@ import seaborn as sns
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class MedicalImageDataset(Dataset):
     """
     Dataset for medical images with metadata for fairness evaluation.
-    
+
     Supports flexible data sources and automatic loading of demographic
     and acquisition metadata for stratified evaluation.
     """
-    
+
     def __init__(
         self,
         image_paths: List[Path],
@@ -1119,7 +1135,7 @@ class MedicalImageDataset(Dataset):
     ):
         """
         Initialize medical image dataset.
-        
+
         Args:
             image_paths: List of paths to image files
             labels: Array of labels for each image
@@ -1132,15 +1148,15 @@ class MedicalImageDataset(Dataset):
         self.metadata = metadata
         self.transform = transform
         self.cache_images = cache_images
-        
+
         if cache_images:
             logger.info("Caching images in memory...")
             self.cached_images = [self._load_image(path) for path in image_paths]
         else:
             self.cached_images = None
-        
+
         logger.info(f"Initialized dataset with {len(self)} images")
-    
+
     def _load_image(self, path: Path) -> Image.Image:
         """Load and convert image to RGB."""
         try:
@@ -1150,14 +1166,14 @@ class MedicalImageDataset(Dataset):
             logger.error(f"Failed to load image {path}: {e}")
             # Return blank image as fallback
             return Image.new('RGB', (224, 224), color='black')
-    
+
     def __len__(self) -> int:
         return len(self.labels)
-    
+
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         """
         Get a single sample.
-        
+
         Returns dictionary with image, label, and optional metadata.
         """
         # Load image
@@ -1165,32 +1181,31 @@ class MedicalImageDataset(Dataset):
             img = self.cached_images[idx]
         else:
             img = self._load_image(self.image_paths[idx])
-        
+
         # Apply transforms
         if self.transform:
             img = self.transform(img)
-        
+
         sample = {
             'image': img,
             'label': self.labels[idx]
         }
-        
+
         # Add metadata if available
         if self.metadata is not None:
             for col in self.metadata.columns:
                 sample[col] = torch.tensor(self.metadata.iloc[idx][col])
-        
-        return sample
 
+        return sample
 
 class MedicalImageAugmentation:
     """
     Medical imaging-specific data augmentation.
-    
+
     Provides augmentation strategies appropriate for different medical
     imaging modalities with careful bounds to ensure realistic transforms.
     """
-    
+
     @staticmethod
     def get_train_transform(
         image_size: int = 224,
@@ -1199,19 +1214,19 @@ class MedicalImageAugmentation:
     ) -> transforms.Compose:
         """
         Get training data augmentation pipeline.
-        
+
         Args:
             image_size: Target image size after resizing
             modality: Medical imaging modality ('xray', 'fundus', 'ct', 'pathology')
             intensity_variation: Whether to include intensity augmentations
-        
+
         Returns:
             Composed transform pipeline
         """
         transform_list = [
             transforms.Resize((image_size, image_size)),
         ]
-        
+
         # Geometric augmentations appropriate for modality
         if modality in ['xray', 'fundus']:
             # Limited rotation for images with natural orientation
@@ -1234,11 +1249,11 @@ class MedicalImageAugmentation:
                     scale=(0.9, 1.1)
                 )
             ])
-        
+
         # Horizontal flip for symmetric modalities
         if modality in ['xray', 'fundus', 'pathology']:
             transform_list.append(transforms.RandomHorizontalFlip(p=0.5))
-        
+
         # Intensity augmentations if requested
         if intensity_variation:
             if modality in ['xray', 'ct']:
@@ -1261,7 +1276,7 @@ class MedicalImageAugmentation:
                         hue=0.02
                     )
                 ])
-        
+
         # Convert to tensor and normalize
         transform_list.extend([
             transforms.ToTensor(),
@@ -1270,17 +1285,17 @@ class MedicalImageAugmentation:
                 std=[0.229, 0.224, 0.225]
             )
         ])
-        
+
         return transforms.Compose(transform_list)
-    
+
     @staticmethod
     def get_eval_transform(image_size: int = 224) -> transforms.Compose:
         """
         Get evaluation data transform (no augmentation).
-        
+
         Args:
             image_size: Target image size after resizing
-        
+
         Returns:
             Composed transform pipeline
         """
@@ -1293,15 +1308,14 @@ class MedicalImageAugmentation:
             )
         ])
 
-
 class FairMedicalCNN(nn.Module):
     """
     Fair convolutional neural network for medical image classification.
-    
+
     Supports transfer learning from multiple architectures with
     configurable fine-tuning strategies.
     """
-    
+
     def __init__(
         self,
         backbone: str = 'resnet50',
@@ -1312,7 +1326,7 @@ class FairMedicalCNN(nn.Module):
     ):
         """
         Initialize medical imaging CNN.
-        
+
         Args:
             backbone: Architecture name ('resnet50', 'densenet121', 'efficientnet_b0')
             num_classes: Number of output classes
@@ -1321,35 +1335,35 @@ class FairMedicalCNN(nn.Module):
             dropout_rate: Dropout rate before classification layer
         """
         super(FairMedicalCNN, self).__init__()
-        
+
         self.backbone_name = backbone
         self.num_classes = num_classes
-        
+
         # Load pre-trained backbone
         if backbone == 'resnet50':
             self.backbone = models.resnet50(pretrained=pretrained)
             num_features = self.backbone.fc.in_features
             self.backbone.fc = nn.Identity()  # Remove classification head
-            
+
         elif backbone == 'densenet121':
             self.backbone = models.densenet121(pretrained=pretrained)
             num_features = self.backbone.classifier.in_features
             self.backbone.classifier = nn.Identity()
-            
+
         elif backbone == 'efficientnet_b0':
             self.backbone = models.efficientnet_b0(pretrained=pretrained)
             num_features = self.backbone.classifier[1].in_features
             self.backbone.classifier = nn.Identity()
-            
+
         else:
             raise ValueError(f"Unknown backbone: {backbone}")
-        
+
         # Freeze backbone if requested
         if freeze_backbone:
             for param in self.backbone.parameters():
                 param.requires_grad = False
             logger.info(f"Froze {backbone} backbone weights")
-        
+
         # Custom classification head
         self.classifier = nn.Sequential(
             nn.Dropout(dropout_rate),
@@ -1358,18 +1372,18 @@ class FairMedicalCNN(nn.Module):
             nn.Dropout(dropout_rate / 2),
             nn.Linear(512, num_classes)
         )
-        
+
         # Initialize classification head
         for m in self.classifier.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_normal_(m.weight)
                 nn.init.constant_(m.bias, 0)
-        
+
         logger.info(
             f"Initialized {backbone} with {num_classes} classes "
             f"(pretrained={pretrained}, frozen={freeze_backbone})"
         )
-    
+
     def forward(
         self,
         x: torch.Tensor,
@@ -1377,42 +1391,42 @@ class FairMedicalCNN(nn.Module):
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
         Forward pass through network.
-        
+
         Args:
             x: Input images of shape (batch_size, 3, height, width)
             return_features: Whether to also return backbone features
-        
+
         Returns:
             Class logits or tuple of (logits, features)
         """
         # Extract features from backbone
         features = self.backbone(x)
-        
+
         # Classification
         logits = self.classifier(features)
-        
+
         if return_features:
             return logits, features
         return logits
-    
+
     def unfreeze_backbone(self):
         """Unfreeze backbone for fine-tuning."""
         for param in self.backbone.parameters():
             param.requires_grad = True
         logger.info(f"Unfroze {self.backbone_name} backbone for fine-tuning")
-    
+
     def get_num_params(self) -> Dict[str, int]:
         """Get number of parameters in different parts of network."""
         backbone_params = sum(p.numel() for p in self.backbone.parameters())
         classifier_params = sum(p.numel() for p in self.classifier.parameters())
-        
+
         backbone_trainable = sum(
             p.numel() for p in self.backbone.parameters() if p.requires_grad
         )
         classifier_trainable = sum(
             p.numel() for p in self.classifier.parameters() if p.requires_grad
         )
-        
+
         return {
             'total': backbone_params + classifier_params,
             'backbone': backbone_params,
@@ -1422,15 +1436,14 @@ class FairMedicalCNN(nn.Module):
             'classifier_trainable': classifier_trainable
         }
 
-
 class FairMedicalCNNTrainer:
     """
     Trainer for fair medical imaging CNNs with comprehensive evaluation.
-    
+
     Includes stratified evaluation by demographic groups and care settings,
     calibration assessment, and uncertainty quantification.
     """
-    
+
     def __init__(
         self,
         model: FairMedicalCNN,
@@ -1441,7 +1454,7 @@ class FairMedicalCNNTrainer:
     ):
         """
         Initialize trainer.
-        
+
         Args:
             model: Medical imaging CNN model
             learning_rate: Learning rate for optimizer
@@ -1451,20 +1464,20 @@ class FairMedicalCNNTrainer:
         """
         self.model = model.to(device)
         self.device = device
-        
+
         # Loss function with optional class weights
         if class_weights is not None:
             self.criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
         else:
             self.criterion = nn.CrossEntropyLoss()
-        
+
         # Optimizer
         self.optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr=learning_rate,
             weight_decay=weight_decay
         )
-        
+
         # Learning rate scheduler
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.optimizer,
@@ -1473,7 +1486,7 @@ class FairMedicalCNNTrainer:
             patience=5,
             verbose=True
         )
-        
+
         # Training history
         self.history = {
             'train_loss': [],
@@ -1483,56 +1496,56 @@ class FairMedicalCNNTrainer:
             'train_auc': [],
             'val_auc': []
         }
-        
+
         logger.info("Initialized medical imaging CNN trainer")
-    
+
     def train_epoch(self, train_loader: DataLoader) -> Dict[str, float]:
         """Train for one epoch."""
         self.model.train()
-        
+
         total_loss = 0.0
         correct = 0
         total = 0
         all_labels = []
         all_probs = []
-        
+
         for batch in train_loader:
             images = batch['image'].to(self.device)
             labels = batch['label'].to(self.device)
-            
+
             # Forward pass
             logits = self.model(images)
             loss = self.criterion(logits, labels)
-            
+
             # Backward pass
             self.optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()
-            
+
             # Track metrics
             total_loss += loss.item() * len(labels)
             _, predicted = torch.max(logits, 1)
             correct += (predicted == labels).sum().item()
             total += labels.size(0)
-            
+
             # Store for AUC calculation
             probs = F.softmax(logits, dim=1)
             all_probs.extend(probs[:, 1].detach().cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
-        
+
         # Compute metrics
         metrics = {
             'loss': total_loss / total,
             'accuracy': correct / total
         }
-        
+
         # Compute AUC if binary classification
         if len(np.unique(all_labels)) > 1:
             metrics['auc'] = roc_auc_score(all_labels, all_probs)
-        
+
         return metrics
-    
+
     def evaluate(
         self,
         eval_loader: DataLoader,
@@ -1540,116 +1553,116 @@ class FairMedicalCNNTrainer:
     ) -> Dict[str, Any]:
         """
         Evaluate model with optional stratification.
-        
+
         Args:
             eval_loader: DataLoader for evaluation data
             stratify_by: List of metadata columns to stratify evaluation by
-        
+
         Returns:
             Dictionary of overall and stratified metrics
         """
         self.model.eval()
-        
+
         total_loss = 0.0
         correct = 0
         total = 0
         all_labels = []
         all_probs = []
         all_preds = []
-        
+
         # Storage for stratification
         if stratify_by:
             metadata_values = {col: [] for col in stratify_by}
         else:
             metadata_values = None
-        
+
         with torch.no_grad():
             for batch in eval_loader:
                 images = batch['image'].to(self.device)
                 labels = batch['label'].to(self.device)
-                
+
                 # Forward pass
                 logits = self.model(images)
                 loss = self.criterion(logits, labels)
-                
+
                 # Track metrics
                 total_loss += loss.item() * len(labels)
                 _, predicted = torch.max(logits, 1)
                 correct += (predicted == labels).sum().item()
                 total += labels.size(0)
-                
+
                 # Store predictions
                 probs = F.softmax(logits, dim=1)
                 all_probs.extend(probs[:, 1].cpu().numpy())
                 all_preds.extend(predicted.cpu().numpy())
                 all_labels.extend(labels.cpu().numpy())
-                
+
                 # Store metadata if stratifying
                 if metadata_values:
                     for col in stratify_by:
                         if col in batch:
                             metadata_values[col].extend(batch[col].cpu().numpy())
-        
+
         # Convert to arrays
         all_labels = np.array(all_labels)
         all_probs = np.array(all_probs)
         all_preds = np.array(all_preds)
-        
+
         # Overall metrics
         metrics = {
             'loss': total_loss / total,
             'accuracy': correct / total
         }
-        
+
         # Binary classification metrics
         if len(np.unique(all_labels)) > 1:
             metrics['auc_roc'] = roc_auc_score(all_labels, all_probs)
             metrics['auc_pr'] = average_precision_score(all_labels, all_probs)
-            
+
             # Confusion matrix
             cm = confusion_matrix(all_labels, all_preds)
             metrics['confusion_matrix'] = cm
-            
+
             # Sensitivity and specificity
             tn, fp, fn, tp = cm.ravel()
             metrics['sensitivity'] = tp / (tp + fn) if (tp + fn) > 0 else 0
             metrics['specificity'] = tn / (tn + fp) if (tn + fp) > 0 else 0
-        
+
         # Stratified metrics
         if metadata_values and stratify_by:
             stratified = {}
-            
+
             for col in stratify_by:
                 if col in metadata_values and len(metadata_values[col]) > 0:
                     col_values = np.array(metadata_values[col])
                     unique_values = np.unique(col_values)
-                    
+
                     for value in unique_values:
                         mask = (col_values == value)
                         if mask.sum() == 0:
                             continue
-                        
+
                         group_labels = all_labels[mask]
                         group_probs = all_probs[mask]
                         group_preds = all_preds[mask]
-                        
+
                         # Skip if only one class present
                         if len(np.unique(group_labels)) < 2:
                             continue
-                        
+
                         group_metrics = {
                             'n': mask.sum(),
                             'accuracy': (group_preds == group_labels).mean(),
                             'auc_roc': roc_auc_score(group_labels, group_probs)
                         }
-                        
+
                         stratified[f'{col}_{value}'] = group_metrics
-            
+
             if stratified:
                 metrics['stratified'] = stratified
-        
+
         return metrics
-    
+
     def fit(
         self,
         train_loader: DataLoader,
@@ -1660,44 +1673,44 @@ class FairMedicalCNNTrainer:
     ) -> Dict[str, List]:
         """
         Train model with validation monitoring.
-        
+
         Args:
             train_loader: Training data loader
             val_loader: Validation data loader
             num_epochs: Maximum number of epochs
             early_stopping_patience: Patience for early stopping
             verbose: Whether to print progress
-        
+
         Returns:
             Training history
         """
         best_val_loss = float('inf')
         patience_counter = 0
         best_model_state = None
-        
+
         logger.info(f"Starting training for up to {num_epochs} epochs...")
-        
+
         for epoch in range(num_epochs):
             # Train
             train_metrics = self.train_epoch(train_loader)
-            
+
             # Validate
             val_metrics = self.evaluate(val_loader)
-            
+
             # Update scheduler
             self.scheduler.step(val_metrics['loss'])
-            
+
             # Store history
             self.history['train_loss'].append(train_metrics['loss'])
             self.history['val_loss'].append(val_metrics['loss'])
             self.history['train_acc'].append(train_metrics['accuracy'])
             self.history['val_acc'].append(val_metrics['accuracy'])
-            
+
             if 'auc' in train_metrics:
                 self.history['train_auc'].append(train_metrics['auc'])
             if 'auc_roc' in val_metrics:
                 self.history['val_auc'].append(val_metrics['auc_roc'])
-            
+
             # Verbose logging
             if verbose and (epoch + 1) % 5 == 0:
                 logger.info(
@@ -1706,7 +1719,7 @@ class FairMedicalCNNTrainer:
                     f"Val Loss: {val_metrics['loss']:.4f}, "
                     f"Val AUC: {val_metrics.get('auc_roc', 0):.4f}"
                 )
-            
+
             # Early stopping
             if val_metrics['loss'] < best_val_loss:
                 best_val_loss = val_metrics['loss']
@@ -1714,18 +1727,17 @@ class FairMedicalCNNTrainer:
                 best_model_state = self.model.state_dict().copy()
             else:
                 patience_counter += 1
-            
+
             if patience_counter >= early_stopping_patience:
                 logger.info(f"Early stopping at epoch {epoch+1}")
                 break
-        
+
         # Restore best model
         if best_model_state:
             self.model.load_state_dict(best_model_state)
             logger.info("Restored best model")
-        
-        return self.history
 
+        return self.history
 
 # Example usage would go here demonstrating the medical imaging pipeline
 # with fairness evaluation across demographic groups and care settings
@@ -1741,30 +1753,35 @@ Clinical data is fundamentally temporal. Patient vital signs evolve over hours i
 
 ### 5.4.1 Recurrent Neural Network Architectures
 
-Recurrent neural networks process sequential data by maintaining hidden states that capture information from previous time steps. For an input sequence $$\{x_1, x_2, \ldots, x_T\}$$, a basic RNN computes:
+Recurrent neural networks process sequential data by maintaining hidden states that capture information from previous time steps. For an input sequence $\{x_1, x_2, \ldots, x_T\}$, a basic RNN computes:
 
-$$h_t = \tanh(W_h h_{t-1} + W_x x_t + b)$$
-$$y_t = W_y h_t + b_y$$
+$$
+h_t = \tanh(W_h h_{t-1} + W_x x_t + b)
+$$
 
-where $$h_t$$ is the hidden state at time $t$, $$W_h$$, $$W_x$$, and $$W_y$$ are weight matrices, and $b$, $$b_y$$ are bias vectors.
+$$
+y_t = W_y h_t + b_y
+$$
+
+where $h_t$ is the hidden state at time $t$, $W_h$, $W_x$, and $W_y$ are weight matrices, and $b$, $b_y$ are bias vectors.
 
 Basic RNNs suffer from vanishing and exploding gradient problems when processing long sequences, limiting their ability to capture long-range dependencies. Long Short-Term Memory (LSTM) networks address this through gating mechanisms that control information flow:
 
-$$f_t = \sigma(W_f [h_{t-1}, x_t] + b_f)$$  (forget gate)
-$$i_t = \sigma(W_i [h_{t-1}, x_t] + b_i)$$  (input gate)
-$$\tilde{C}_t = \tanh(W_C [h_{t-1}, x_t] + b_C)$$  (candidate values)
-$$C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t$$  (cell state update)
-$$o_t = \sigma(W_o [h_{t-1}, x_t] + b_o)$$  (output gate)
-$$h_t = o_t \odot \tanh(C_t)$$  (hidden state)
+$f_t = \sigma(W_f [h_{t-1}, x_t] + b_f)$  (forget gate)
+$i_t = \sigma(W_i [h_{t-1}, x_t] + b_i)$  (input gate)
+$\tilde{C}_t = \tanh(W_C [h_{t-1}, x_t] + b_C)$  (candidate values)
+$C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t$  (cell state update)
+$o_t = \sigma(W_o [h_{t-1}, x_t] + b_o)$  (output gate)
+$h_t = o_t \odot \tanh(C_t)$  (hidden state)
 
-where $$\sigma$$ is the sigmoid function, $$\odot$$ denotes element-wise multiplication, and $$C_t$$ is the cell state that can maintain information across many time steps.
+where $\sigma$ is the sigmoid function, $\odot$ denotes element-wise multiplication, and $C_t$ is the cell state that can maintain information across many time steps.
 
 Gated Recurrent Units (GRU) simplify the LSTM architecture while maintaining its ability to model long-range dependencies:
 
-$$z_t = \sigma(W_z [h_{t-1}, x_t])$$  (update gate)
-$$r_t = \sigma(W_r [h_{t-1}, x_t])$$  (reset gate)
-$$\tilde{h}_t = \tanh(W [r_t \odot h_{t-1}, x_t])$$  (candidate hidden state)
-$$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$$  (hidden state update)
+$z_t = \sigma(W_z [h_{t-1}, x_t])$  (update gate)
+$r_t = \sigma(W_r [h_{t-1}, x_t])$  (reset gate)
+$\tilde{h}_t = \tanh(W [r_t \odot h_{t-1}, x_t])$  (candidate hidden state)
+$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$  (hidden state update)
 
 From a fairness perspective, recurrent architectures face challenges when processing clinical sequences with varying lengths and irregular sampling. Patients in intensive care units have vital signs measured every few minutes, while outpatients may have laboratory tests every few months. Simply padding short sequences to a common length or sampling long sequences at fixed intervals discards temporally-important information and may introduce systematic biases if observation patterns differ across patient populations.
 
@@ -1772,23 +1789,35 @@ More sophisticated approaches handle irregular time series explicitly. Time-awar
 
 ### 5.4.2 Attention Mechanisms and Transformer Architectures
 
-Attention mechanisms allow models to focus on relevant parts of input sequences when making predictions, providing both improved performance and interpretability. For a sequence of hidden states $$\{h_1, \ldots, h_T\}$$ and a query state $q$, attention computes:
+Attention mechanisms allow models to focus on relevant parts of input sequences when making predictions, providing both improved performance and interpretability. For a sequence of hidden states $\{h_1, \ldots, h_T\}$ and a query state $q$, attention computes:
 
-$$\alpha_t = \frac{\exp(score(q, h_t))}{\sum_{t'=1}^T \exp(score(q, h_{t'}))}$$
-$$c = \sum_{t=1}^T \alpha_t h_t$$
+$$
+\alpha_t = \frac{\exp(score(q, h_t))}{\sum_{t'=1}^T \exp(score(q, h_{t'}))}
+$$
 
-where $$score(q, h_t)$$ measures the relevance of $$h_t$$ to query $q$ (commonly using dot product $$q^T h_t$$ or a learned function), $$\alpha_t$$ are the attention weights, and $c$ is the context vector combining relevant information from the entire sequence.
+$$
+c = \sum_{t=1}^T \alpha_t h_t
+$$
+
+where $score(q, h_t)$ measures the relevance of $h_t$ to query $q$ (commonly using dot product $q^T h_t$ or a learned function), $\alpha_t$ are the attention weights, and $c$ is the context vector combining relevant information from the entire sequence.
 
 Transformer architectures dispense with recurrence entirely, processing all sequence positions in parallel using self-attention:
 
-$$Attention(Q, K, V) = softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
+$$
+Attention(Q, K, V) = softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+$$
 
-where $Q$ (queries), $K$ (keys), and $V$ (values) are linear projections of the input sequence, and $$d_k$$ is the dimension of the key vectors used for normalization. Multi-head attention runs multiple attention operations in parallel, allowing the model to attend to different aspects of the input:
+where $Q$ (queries), $K$ (keys), and $V$ (values) are linear projections of the input sequence, and $d_k$ is the dimension of the key vectors used for normalization. Multi-head attention runs multiple attention operations in parallel, allowing the model to attend to different aspects of the input:
 
-$$MultiHead(Q, K, V) = Concat(head_1, \ldots, head_h)W^O$$
-$$head_i = Attention(QW_i^Q, KW_i^K, VW_i^V)$$
+$$
+MultiHead(Q, K, V) = Concat(head_1, \ldots, head_h)W^O
+$$
 
-where $$W_i^Q$$, $$W_i^K$$, $$W_i^V$$ are learned projection matrices for head $i$, and $$W^O$$ is the output projection.
+$$
+head_i = Attention(QW_i^Q, KW_i^K, VW_i^V)
+$$
+
+where $W_i^Q$, $W_i^K$, $W_i^V$ are learned projection matrices for head $i$, and $W^O$ is the output projection.
 
 For clinical sequences, transformers offer several advantages over recurrent architectures. The parallel processing of all sequence positions enables efficient training on long clinical histories. The explicit attention weights provide interpretability by showing which past observations most influenced a given prediction. Positional encodings can incorporate not just sequence order but also actual timestamps, naturally handling irregular observation times.
 

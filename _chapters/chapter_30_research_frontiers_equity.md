@@ -2,6 +2,9 @@
 layout: chapter
 title: "Chapter 30: Research Frontiers in Equity-Centered Health AI"
 chapter_number: 30
+part_number: 7
+prev_chapter: /chapters/chapter-29-global-health-ai/
+next_chapter: null
 ---
 # Chapter 30: Research Frontiers in Healthcare AI for Equity
 
@@ -42,11 +45,13 @@ Consider screening for a disease where follow-up diagnostic testing is invasive 
 
 Clinically-weighted fairness metrics explicitly incorporate the clinical and social costs of different error types into fairness definitions. Rather than requiring equal error rates, these metrics require that the expected harm from algorithmic errors be equalized across groups, where harm is measured using utilities that capture clinical consequences and differential vulnerabilities.
 
-Formally, let $$h(y, \hat{y}, x, z)$$ denote the harm caused by predicting $$\hat{y}$$ when the true label is $y$ for a patient with features $x$ and demographic attributes $z$. The harm function incorporates clinical factors (disease severity, treatment invasiveness, downstream consequences of correct and incorrect predictions) and social factors (financial capacity, healthcare access, social support). A clinically-weighted fairness metric requires that expected harm be approximately equal across demographic groups:
+Formally, let $h(y, \hat{y}, x, z)$ denote the harm caused by predicting $\hat{y}$ when the true label is $y$ for a patient with features $x$ and demographic attributes $z$. The harm function incorporates clinical factors (disease severity, treatment invasiveness, downstream consequences of correct and incorrect predictions) and social factors (financial capacity, healthcare access, social support). A clinically-weighted fairness metric requires that expected harm be approximately equal across demographic groups:
 
-$$\mathbb{E}[h(Y, \hat{Y}, X, Z) \mid Z = z] \approx \mathbb{E}[h(Y, \hat{Y}, X, Z) \mid Z = z']$$
+$$
+\mathbb{E}[h(Y, \hat{Y}, X, Z) \mid Z = z] \approx \mathbb{E}[h(Y, \hat{Y}, X, Z) \mid Z = z']
+$$
 
-for all demographic groups $$z, z'$$.
+for all demographic groups $z, z'$.
 
 The challenge lies in specifying appropriate harm functions. These should reflect clinical evidence about the consequences of different prediction errors, but they must also incorporate the differential vulnerabilities that make identical clinical errors cause different overall harms across populations. Participatory processes involving clinicians, patients, and community members become essential for defining these harm specifications in ways that genuinely capture stakeholder values rather than imposing researcher assumptions.
 
@@ -56,17 +61,21 @@ Healthcare is fundamentally longitudinal. Patients interact with healthcare syst
 
 Standard fairness metrics evaluate predictions at single time points, ignoring these longitudinal dynamics. Emerging longitudinal fairness metrics account for how algorithmic predictions accumulate advantage or disadvantage over time, how prediction errors at one point affect outcomes and future predictions, and how interventions triggered by predictions change the data distribution in ways that may amplify or reduce disparities.
 
-One formulation extends fairness through awareness to the longitudinal setting by requiring that algorithmic predictions not increase existing outcome disparities over time. Let $$G_t(z)$$ denote a health outcome gap between demographic group $z$ and a reference group at time $t$. Longitudinal fairness requires:
+One formulation extends fairness through awareness to the longitudinal setting by requiring that algorithmic predictions not increase existing outcome disparities over time. Let $G_t(z)$ denote a health outcome gap between demographic group $z$ and a reference group at time $t$. Longitudinal fairness requires:
 
-$$G_{t+1}(z) \leq G_t(z) + \epsilon$$
+$$
+G_{t+1}(z) \leq G_t(z) + \epsilon
+$$
 
-for all groups $z$ and some small tolerance $$\epsilon$$. This ensures that algorithmic interventions do not worsen existing disparities even if they fail to eliminate them entirely.
+for all groups $z$ and some small tolerance $\epsilon$. This ensures that algorithmic interventions do not worsen existing disparities even if they fail to eliminate them entirely.
 
 Another formulation considers the expected life course trajectory of individuals under algorithmic decision-making, requiring that expected cumulative health utility be equalized across demographic groups when accounting for the full sequence of algorithmic predictions and interventions a person receives:
 
-$$\mathbb{E}\left[\sum_{t=1}^T u_t(Y_t, \hat{Y}_t, I_t) \mid Z = z\right] \approx \mathbb{E}\left[\sum_{t=1}^T u_t(Y_t, \hat{Y}_t, I_t) \mid Z = z'\right]$$
+$$
+\mathbb{E}\left[\sum_{t=1}^T u_t(Y_t, \hat{Y}_t, I_t) \mid Z = z\right] \approx \mathbb{E}\left[\sum_{t=1}^T u_t(Y_t, \hat{Y}_t, I_t) \mid Z = z'\right]
+$$
 
-where $$u_t$$ is the utility at time $t$, $$Y_t$$ is the true outcome, $$\hat{Y}_t$$ is the prediction, and $$I_t$$ is the intervention triggered by the prediction.
+where $u_t$ is the utility at time $t$, $Y_t$ is the true outcome, $\hat{Y}_t$ is the prediction, and $I_t$ is the intervention triggered by the prediction.
 
 These longitudinal metrics require rethinking both model development and validation. Training objectives must account for long-term fairness criteria rather than optimizing single-prediction accuracy. Validation requires longitudinal data and simulation of sequential decision processes to assess cumulative impacts. Implementing these approaches is an active area of research with significant open challenges.
 
@@ -80,7 +89,9 @@ Resource-constrained fairness metrics explicitly model the allocation problem. R
 
 One formulation uses the concept of envy-freeness from economics: an allocation is envy-free if no patient would prefer another patient's allocation over their own, given their own characteristics and needs. This can be extended to require group envy-freeness, where no demographic group collectively would prefer another group's allocation. Formally, let $A$ be an allocation policy assigning limited resources to patients. The policy is group envy-free if:
 
-$$\mathbb{E}[u(A(X, Z), X, Z) \mid Z = z] \geq \mathbb{E}[u(A(X, Z'), X, Z) \mid Z = z]$$
+$$
+\mathbb{E}[u(A(X, Z), X, Z) \mid Z = z] \geq \mathbb{E}[u(A(X, Z'), X, Z) \mid Z = z]
+$$
 
 for all groups $z$ and alternative assignments $Z'$.
 
@@ -110,7 +121,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class ErrorType(Enum):
     """Types of prediction errors with different clinical implications."""
     TRUE_POSITIVE = "true_positive"
@@ -118,12 +128,11 @@ class ErrorType(Enum):
     FALSE_POSITIVE = "false_positive"
     FALSE_NEGATIVE = "false_negative"
 
-
 @dataclass
 class ClinicalHarm:
     """
     Specification of clinical and social harms for different prediction outcomes.
-    
+
     Attributes:
         clinical_harm: Direct clinical harm (medical complications, delayed diagnosis)
         financial_harm: Out-of-pocket costs and economic burden
@@ -136,14 +145,14 @@ class ClinicalHarm:
     psychological_harm: float = 0.0
     access_harm: float = 0.0
     time_harm: float = 0.0
-    
+
     def total_harm(self, weights: Optional[Dict[str, float]] = None) -> float:
         """
         Compute weighted total harm across dimensions.
-        
+
         Args:
             weights: Dictionary mapping harm types to weights
-            
+
         Returns:
             Weighted sum of harm dimensions
         """
@@ -156,7 +165,7 @@ class ClinicalHarm:
                 'access': 1.0,
                 'time': 1.0
             }
-        
+
         return (
             weights.get('clinical', 1.0) * self.clinical_harm +
             weights.get('financial', 1.0) * self.financial_harm +
@@ -165,12 +174,11 @@ class ClinicalHarm:
             weights.get('time', 1.0) * self.time_harm
         )
 
-
 @dataclass
 class HarmFunction:
     """
     Function mapping prediction outcomes to harm values.
-    
+
     This encapsulates the harm specification for a particular clinical
     context, population, and prediction task.
     """
@@ -178,7 +186,7 @@ class HarmFunction:
     description: str
     # Maps (true_label, predicted_label, demographic_group) to ClinicalHarm
     harm_map: Dict[Tuple[int, int, str], ClinicalHarm] = field(default_factory=dict)
-    
+
     def compute_harm(
         self,
         y_true: int,
@@ -188,13 +196,13 @@ class HarmFunction:
     ) -> float:
         """
         Compute harm for a specific prediction outcome.
-        
+
         Args:
             y_true: True label (0 or 1)
             y_pred: Predicted label (0 or 1)
             demographic_group: Demographic group identifier
             weights: Weights for harm dimensions
-            
+
         Returns:
             Total harm value
         """
@@ -202,17 +210,16 @@ class HarmFunction:
         if key not in self.harm_map:
             logger.warning(f"No harm specified for {key}, using default of 0")
             return 0.0
-        
+
         harm = self.harm_map[key]
         return harm.total_harm(weights)
-
 
 class ClinicallyWeightedFairnessEvaluator:
     """
     Evaluates fairness using clinically-weighted metrics that account for
     differential harms of prediction errors across populations.
     """
-    
+
     def __init__(
         self,
         harm_function: HarmFunction,
@@ -220,14 +227,14 @@ class ClinicallyWeightedFairnessEvaluator:
     ):
         """
         Initialize evaluator with harm specification.
-        
+
         Args:
             harm_function: Specification of harms for different outcomes
             harm_weights: Weights for different harm dimensions
         """
         self.harm_function = harm_function
         self.harm_weights = harm_weights
-        
+
     def evaluate_expected_harm(
         self,
         y_true: np.ndarray,
@@ -237,31 +244,31 @@ class ClinicallyWeightedFairnessEvaluator:
     ) -> Dict[str, float]:
         """
         Compute expected harm for each demographic group.
-        
+
         Args:
             y_true: True labels
-            y_pred: Predicted labels  
+            y_pred: Predicted labels
             demographic_groups: Demographic group assignments
             groups: List of groups to evaluate (None for all)
-            
+
         Returns:
             Dictionary mapping group names to expected harm
         """
         if groups is None:
             groups = list(np.unique(demographic_groups))
-        
+
         expected_harms = {}
-        
+
         for group in groups:
             group_mask = demographic_groups == group
             group_true = y_true[group_mask]
             group_pred = y_pred[group_mask]
-            
+
             if len(group_true) == 0:
                 logger.warning(f"No samples for group {group}")
                 expected_harms[group] = np.nan
                 continue
-            
+
             # Compute harm for each prediction
             harms = []
             for yt, yp in zip(group_true, group_pred):
@@ -269,11 +276,11 @@ class ClinicallyWeightedFairnessEvaluator:
                     yt, yp, group, self.harm_weights
                 )
                 harms.append(harm)
-            
+
             expected_harms[group] = np.mean(harms)
-        
+
         return expected_harms
-    
+
     def evaluate_harm_disparity(
         self,
         y_true: np.ndarray,
@@ -284,44 +291,44 @@ class ClinicallyWeightedFairnessEvaluator:
     ) -> Tuple[float, bool, Dict[str, Any]]:
         """
         Evaluate harm disparity across groups.
-        
+
         Args:
             y_true: True labels
             y_pred: Predicted labels
             demographic_groups: Demographic group assignments
             reference_group: Reference group for comparison (None for min harm)
             threshold: Acceptable disparity threshold
-            
+
         Returns:
             Tuple of (max_disparity, passes_threshold, detailed_results)
         """
         expected_harms = self.evaluate_expected_harm(
             y_true, y_pred, demographic_groups
         )
-        
+
         # Remove NaN values
-        valid_harms = {k: v for k, v in expected_harms.items() 
+        valid_harms = {k: v for k, v in expected_harms.items()
                       if not np.isnan(v)}
-        
+
         if len(valid_harms) < 2:
             return np.nan, False, {
                 'error': 'Insufficient groups for disparity evaluation'
             }
-        
+
         # Determine reference value
         if reference_group and reference_group in valid_harms:
             reference_harm = valid_harms[reference_group]
         else:
             reference_harm = min(valid_harms.values())
-        
+
         # Compute disparities
         disparities = {}
         for group, harm in valid_harms.items():
             disparities[group] = harm - reference_harm
-        
+
         max_disparity = max(disparities.values())
         passes = max_disparity <= threshold
-        
+
         results = {
             'expected_harms': expected_harms,
             'reference_harm': reference_harm,
@@ -330,15 +337,14 @@ class ClinicallyWeightedFairnessEvaluator:
             'threshold': threshold,
             'passes_threshold': passes
         }
-        
-        return max_disparity, passes, results
 
+        return max_disparity, passes, results
 
 @dataclass
 class LongitudinalPrediction:
     """
     Prediction outcome at a single time point in a longitudinal sequence.
-    
+
     Attributes:
         time_point: Time index
         y_true: True outcome
@@ -354,13 +360,12 @@ class LongitudinalPrediction:
     utility: float = 0.0
     demographic_group: str = "unknown"
 
-
 class LongitudinalFairnessEvaluator:
     """
     Evaluates fairness in longitudinal settings where predictions accumulate
     advantage or disadvantage over time.
     """
-    
+
     def __init__(
         self,
         utility_function: Callable[[int, int, Optional[str]], float],
@@ -368,24 +373,24 @@ class LongitudinalFairnessEvaluator:
     ):
         """
         Initialize longitudinal evaluator.
-        
+
         Args:
             utility_function: Function mapping (y_true, y_pred, intervention) to utility
             discount_factor: Temporal discount factor for future utilities
         """
         self.utility_function = utility_function
         self.discount_factor = discount_factor
-        
+
     def compute_cumulative_utility(
         self,
         predictions: List[LongitudinalPrediction]
     ) -> float:
         """
         Compute discounted cumulative utility for a prediction sequence.
-        
+
         Args:
             predictions: Sequence of predictions over time
-            
+
         Returns:
             Discounted cumulative utility
         """
@@ -397,38 +402,38 @@ class LongitudinalFairnessEvaluator:
                 pred.intervention
             )
             cumulative += (self.discount_factor ** pred.time_point) * utility
-        
+
         return cumulative
-    
+
     def evaluate_group_trajectories(
         self,
         patient_trajectories: Dict[str, List[LongitudinalPrediction]],
     ) -> Dict[str, Dict[str, float]]:
         """
         Evaluate cumulative utilities across patient trajectories by group.
-        
+
         Args:
             patient_trajectories: Maps patient IDs to prediction sequences
-            
+
         Returns:
             Dictionary with statistics by demographic group
         """
         # Group trajectories by demographics
         group_utilities: Dict[str, List[float]] = {}
-        
+
         for patient_id, predictions in patient_trajectories.items():
             if not predictions:
                 continue
-                
+
             # Assume all predictions for same patient have same demographic
             group = predictions[0].demographic_group
-            
+
             cumulative_utility = self.compute_cumulative_utility(predictions)
-            
+
             if group not in group_utilities:
                 group_utilities[group] = []
             group_utilities[group].append(cumulative_utility)
-        
+
         # Compute statistics for each group
         results = {}
         for group, utilities in group_utilities.items():
@@ -438,9 +443,9 @@ class LongitudinalFairnessEvaluator:
                 'median_utility': np.median(utilities),
                 'n_patients': len(utilities)
             }
-        
+
         return results
-    
+
     def evaluate_longitudinal_disparity(
         self,
         patient_trajectories: Dict[str, List[LongitudinalPrediction]],
@@ -449,42 +454,42 @@ class LongitudinalFairnessEvaluator:
     ) -> Tuple[float, bool, Dict[str, Any]]:
         """
         Evaluate disparity in cumulative utilities across groups.
-        
+
         Args:
             patient_trajectories: Maps patient IDs to prediction sequences
             reference_group: Reference group for comparison
             threshold: Acceptable disparity threshold
-            
+
         Returns:
             Tuple of (max_disparity, passes_threshold, detailed_results)
         """
         group_stats = self.evaluate_group_trajectories(patient_trajectories)
-        
+
         if len(group_stats) < 2:
             return np.nan, False, {
                 'error': 'Insufficient groups for disparity evaluation'
             }
-        
+
         # Extract mean utilities
         mean_utilities = {
-            group: stats['mean_utility'] 
+            group: stats['mean_utility']
             for group, stats in group_stats.items()
         }
-        
+
         # Determine reference
         if reference_group and reference_group in mean_utilities:
             reference_utility = mean_utilities[reference_group]
         else:
             reference_utility = max(mean_utilities.values())
-        
+
         # Compute disparities (negative values indicate disadvantage)
         disparities = {}
         for group, utility in mean_utilities.items():
             disparities[group] = utility - reference_utility
-        
+
         max_disparity = abs(min(disparities.values()))
         passes = max_disparity <= threshold
-        
+
         results = {
             'group_statistics': group_stats,
             'mean_utilities': mean_utilities,
@@ -494,9 +499,8 @@ class LongitudinalFairnessEvaluator:
             'threshold': threshold,
             'passes_threshold': passes
         }
-        
-        return max_disparity, passes, results
 
+        return max_disparity, passes, results
 
 @dataclass
 class Patient:
@@ -505,26 +509,26 @@ class Patient:
     clinical_need_score: float
     demographic_group: str
     features: Dict[str, Any] = field(default_factory=dict)
-    
+
 
 class ResourceConstrainedFairnessEvaluator:
     """
     Evaluates fairness under resource constraints where allocation to one
     patient precludes allocation to another.
     """
-    
+
     def __init__(
         self,
         utility_function: Callable[[Patient, bool], float]
     ):
         """
         Initialize resource-constrained evaluator.
-        
+
         Args:
             utility_function: Maps (patient, receives_resource) to utility
         """
         self.utility_function = utility_function
-        
+
     def optimal_allocation(
         self,
         patients: List[Patient],
@@ -533,15 +537,15 @@ class ResourceConstrainedFairnessEvaluator:
     ) -> Tuple[List[str], Dict[str, float]]:
         """
         Compute optimal allocation balancing efficiency and fairness.
-        
+
         This uses a weighted objective combining total utility (efficiency)
         and minimum group utility (fairness).
-        
+
         Args:
             patients: List of patients to consider
             n_resources: Number of resources available
             fairness_weight: Weight for fairness vs efficiency (0=pure efficiency, 1=pure fairness)
-            
+
         Returns:
             Tuple of (list of patient IDs receiving resources, metrics)
         """
@@ -551,27 +555,27 @@ class ResourceConstrainedFairnessEvaluator:
                 'total_utility': sum(self.utility_function(p, True) for p in patients),
                 'allocation_type': 'universal'
             }
-        
+
         # Get unique demographic groups
         groups = list(set(p.demographic_group for p in patients))
-        
+
         # Compute utilities for each patient if they receive resource
         patient_utilities = [
             (p, self.utility_function(p, True) - self.utility_function(p, False))
             for p in patients
         ]
-        
+
         # Sort by marginal utility (greedy for efficiency)
         patient_utilities.sort(key=lambda x: x[1], reverse=True)
-        
+
         # Start with top n_resources patients (pure efficiency)
         efficient_allocation = [p.patient_id for p, _ in patient_utilities[:n_resources]]
-        
+
         # Compute group-level metrics for efficient allocation
         group_utilities_efficient = self._compute_group_utilities(
             patients, efficient_allocation
         )
-        
+
         # If pure efficiency is used, return that
         if fairness_weight == 0.0:
             return efficient_allocation, {
@@ -579,49 +583,49 @@ class ResourceConstrainedFairnessEvaluator:
                 'group_utilities': group_utilities_efficient,
                 'allocation_type': 'efficient'
             }
-        
+
         # Otherwise, use maximin fairness weighted with efficiency
         # This is NP-hard, so we use a greedy approximation
         allocated = set()
         remaining = set(p.patient_id for p in patients)
-        
+
         for _ in range(n_resources):
             if not remaining:
                 break
-                
+
             # For each remaining patient, compute objective if allocated
             best_patient = None
             best_objective = -np.inf
-            
+
             for patient_id in remaining:
                 # Tentative allocation
                 tentative_allocation = list(allocated) + [patient_id]
-                
+
                 # Compute group utilities
                 group_utils = self._compute_group_utilities(
                     patients, tentative_allocation
                 )
-                
+
                 # Objective: weighted combination of total utility and min group utility
                 total_util = sum(group_utils.values())
                 min_group_util = min(group_utils.values()) if group_utils else 0
-                
+
                 objective = (
                     (1 - fairness_weight) * total_util +
                     fairness_weight * min_group_util * len(groups)  # Scale to match total
                 )
-                
+
                 if objective > best_objective:
                     best_objective = objective
                     best_patient = patient_id
-            
+
             if best_patient:
                 allocated.add(best_patient)
                 remaining.remove(best_patient)
-        
+
         final_allocation = list(allocated)
         group_utilities_fair = self._compute_group_utilities(patients, final_allocation)
-        
+
         return final_allocation, {
             'total_utility': sum(
                 self.utility_function(p, p.patient_id in allocated)
@@ -631,7 +635,7 @@ class ResourceConstrainedFairnessEvaluator:
             'min_group_utility': min(group_utilities_fair.values()),
             'allocation_type': 'fairness_weighted'
         }
-    
+
     def _compute_group_utilities(
         self,
         patients: List[Patient],
@@ -639,25 +643,25 @@ class ResourceConstrainedFairnessEvaluator:
     ) -> Dict[str, float]:
         """
         Compute total utility by demographic group.
-        
+
         Args:
             patients: All patients
             allocation: Patient IDs receiving resources
-            
+
         Returns:
             Dictionary mapping group to total utility
         """
         group_utilities: Dict[str, float] = {}
-        
+
         for patient in patients:
             receives_resource = patient.patient_id in allocation
             utility = self.utility_function(patient, receives_resource)
-            
+
             group = patient.demographic_group
             group_utilities[group] = group_utilities.get(group, 0.0) + utility
-        
+
         return group_utilities
-    
+
     def evaluate_envy_freeness(
         self,
         patients: List[Patient],
@@ -665,74 +669,73 @@ class ResourceConstrainedFairnessEvaluator:
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Evaluate whether allocation is group envy-free.
-        
+
         Args:
-            patients: All patients  
+            patients: All patients
             allocation: Patient IDs receiving resources
-            
+
         Returns:
             Tuple of (is_envy_free, detailed_results)
         """
         groups = list(set(p.demographic_group for p in patients))
-        
+
         # Compute actual utility each group receives
         actual_utilities = self._compute_group_utilities(patients, allocation)
-        
+
         # Compute counterfactual utilities if each group received another group's allocation
         envy_matrix = {}
-        
+
         for group1 in groups:
             envy_matrix[group1] = {}
             group1_patients = [p for p in patients if p.demographic_group == group1]
-            
+
             for group2 in groups:
                 # How much utility would group1 get if they received group2's allocation pattern?
                 group2_allocation_rate = (
-                    sum(1 for p in patients 
+                    sum(1 for p in patients
                         if p.demographic_group == group2 and p.patient_id in allocation)
                     / max(1, sum(1 for p in patients if p.demographic_group == group2))
                 )
-                
+
                 # Apply same rate to group1
                 counterfactual_utility = (
-                    group2_allocation_rate * 
+                    group2_allocation_rate *
                     sum(self.utility_function(p, True) for p in group1_patients)
                 )
-                
+
                 envy_matrix[group1][group2] = (
                     counterfactual_utility - actual_utilities.get(group1, 0.0)
                 )
-        
+
         # Check if any group envies another
         max_envy = max(
             envy
             for group_envies in envy_matrix.values()
             for envy in group_envies.values()
         )
-        
+
         is_envy_free = max_envy <= 1e-6  # Small tolerance for numerical precision
-        
+
         results = {
             'is_envy_free': is_envy_free,
             'actual_utilities': actual_utilities,
             'envy_matrix': envy_matrix,
             'max_envy': max_envy
         }
-        
-        return is_envy_free, results
 
+        return is_envy_free, results
 
 def demonstrate_novel_fairness_metrics():
     """Demonstrate novel fairness metrics on synthetic healthcare data."""
-    
+
     print("=== Novel Fairness Metrics for Healthcare AI ===\n")
-    
+
     # Define harm function for cancer screening
     cancer_screening_harms = HarmFunction(
         name="Cancer Screening",
         description="Harms for false positives and false negatives in cancer screening"
     )
-    
+
     # False positive: unnecessary biopsy
     # Higher financial and access harms for underserved populations
     cancer_screening_harms.harm_map[(0, 1, 'PrivatelyInsured')] = ClinicalHarm(
@@ -742,7 +745,7 @@ def demonstrate_novel_fairness_metrics():
         access_harm=0.1,  # Can easily schedule follow-up
         time_harm=0.1  # Minimal disruption
     )
-    
+
     cancer_screening_harms.harm_map[(0, 1, 'Medicaid')] = ClinicalHarm(
         clinical_harm=0.1,
         financial_harm=0.6,  # Higher out-of-pocket burden
@@ -750,7 +753,7 @@ def demonstrate_novel_fairness_metrics():
         access_harm=0.5,  # Difficulty scheduling and transportation
         time_harm=0.4  # Significant disruption (hourly work)
     )
-    
+
     # False negative: missed cancer diagnosis
     # Higher clinical harm for populations with delayed presentation
     cancer_screening_harms.harm_map[(1, 0, 'PrivatelyInsured')] = ClinicalHarm(
@@ -760,7 +763,7 @@ def demonstrate_novel_fairness_metrics():
         access_harm=0.2,
         time_harm=0.2
     )
-    
+
     cancer_screening_harms.harm_map[(1, 0, 'Medicaid')] = ClinicalHarm(
         clinical_harm=1.0,  # More advanced at eventual diagnosis
         financial_harm=0.7,  # Catastrophic costs
@@ -768,23 +771,23 @@ def demonstrate_novel_fairness_metrics():
         access_harm=0.6,
         time_harm=0.5
     )
-    
+
     # True positives and negatives have minimal harm
     for group in ['PrivatelyInsured', 'Medicaid']:
         cancer_screening_harms.harm_map[(1, 1, group)] = ClinicalHarm()
         cancer_screening_harms.harm_map[(0, 0, group)] = ClinicalHarm()
-    
+
     # Generate synthetic predictions
     np.random.seed(42)
     n_samples = 1000
-    
+
     y_true = np.random.binomial(1, 0.1, n_samples)
     demographics = np.random.choice(
         ['PrivatelyInsured', 'Medicaid'],
         n_samples,
         p=[0.6, 0.4]
     )
-    
+
     # Biased model: higher false negative rate for Medicaid patients
     y_pred = y_true.copy()
     for i in range(n_samples):
@@ -796,36 +799,36 @@ def demonstrate_novel_fairness_metrics():
             # 10% false negative rate for privately insured
             if np.random.random() < 0.1:
                 y_pred[i] = 0
-    
+
     # Evaluate with clinically-weighted fairness
     print("1. Clinically-Weighted Fairness Evaluation")
     print("-" * 50)
-    
+
     evaluator = ClinicallyWeightedFairnessEvaluator(cancer_screening_harms)
-    
+
     expected_harms = evaluator.evaluate_expected_harm(
         y_true, y_pred, demographics
     )
-    
+
     print("Expected Harm by Group:")
     for group, harm in expected_harms.items():
         print(f"  {group}: {harm:.4f}")
-    
+
     max_disparity, passes, details = evaluator.evaluate_harm_disparity(
         y_true, y_pred, demographics, threshold=0.05
     )
-    
+
     print(f"\nDisparity Assessment:")
     print(f"  Max Disparity: {max_disparity:.4f}")
     print(f"  Threshold: {details['threshold']:.4f}")
     print(f"  Passes: {passes}")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Demonstrate longitudinal fairness
     print("2. Longitudinal Fairness Evaluation")
     print("-" * 50)
-    
+
     def utility_function(y_true: int, y_pred: int, intervention: Optional[str]) -> float:
         """Utility function for longitudinal evaluation."""
         if y_true == 1 and y_pred == 1:
@@ -836,37 +839,37 @@ def demonstrate_novel_fairness_metrics():
             return -0.5  # Missed diagnosis (negative utility)
         else:
             return -0.1  # False positive (small negative)
-    
+
     long_evaluator = LongitudinalFairnessEvaluator(
         utility_function=utility_function,
         discount_factor=0.95
     )
-    
+
     # Create synthetic patient trajectories
     patient_trajectories = {}
-    
+
     for patient_id in range(100):
         group = 'PrivatelyInsured' if patient_id < 60 else 'Medicaid'
         trajectory = []
-        
+
         for t in range(5):  # 5 time points
             true_outcome = np.random.binomial(1, 0.1)
-            
+
             # Biased predictions for Medicaid patients
             if group == 'Medicaid' and true_outcome == 1:
                 pred_outcome = np.random.binomial(1, 0.7)  # 30% miss rate
             else:
                 pred_outcome = np.random.binomial(1, 0.9) if true_outcome == 1 else 0
-            
+
             trajectory.append(LongitudinalPrediction(
                 time_point=t,
                 y_true=true_outcome,
                 y_pred=pred_outcome,
                 demographic_group=group
             ))
-        
+
         patient_trajectories[f"patient_{patient_id}"] = trajectory
-    
+
     # Evaluate longitudinal disparity
     max_long_disparity, long_passes, long_details = (
         long_evaluator.evaluate_longitudinal_disparity(
@@ -874,80 +877,79 @@ def demonstrate_novel_fairness_metrics():
             threshold=0.15
         )
     )
-    
+
     print("Cumulative Utility by Group:")
     for group, stats in long_details['group_statistics'].items():
         print(f"  {group}:")
         print(f"    Mean: {stats['mean_utility']:.4f}")
         print(f"    Std: {stats['std_utility']:.4f}")
         print(f"    N: {stats['n_patients']}")
-    
+
     print(f"\nLongitudinal Disparity: {max_long_disparity:.4f}")
     print(f"Passes Threshold: {long_passes}")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Demonstrate resource-constrained fairness
     print("3. Resource-Constrained Fairness Evaluation")
     print("-" * 50)
-    
+
     def patient_utility(patient: Patient, receives_resource: bool) -> float:
         """Utility function based on clinical need."""
         if receives_resource:
             return patient.clinical_need_score
         else:
             return 0.0
-    
+
     resource_evaluator = ResourceConstrainedFairnessEvaluator(patient_utility)
-    
+
     # Create synthetic patients
     patients = []
     for i in range(50):
         group = 'PrivatelyInsured' if i < 30 else 'Medicaid'
         # Medicaid patients have higher average need
         need_score = np.random.gamma(3 if group == 'Medicaid' else 2, 1.0)
-        
+
         patients.append(Patient(
             patient_id=f"patient_{i}",
             clinical_need_score=need_score,
             demographic_group=group
         ))
-    
+
     # Limited resources: only 20 available for 50 patients
     n_resources = 20
-    
+
     # Pure efficiency allocation
     efficient_allocation, efficient_metrics = resource_evaluator.optimal_allocation(
         patients, n_resources, fairness_weight=0.0
     )
-    
+
     print(f"Pure Efficiency Allocation (n={n_resources}):")
     print(f"  Total Utility: {efficient_metrics['total_utility']:.2f}")
     print(f"  Group Utilities:")
     for group, util in efficient_metrics['group_utilities'].items():
         print(f"    {group}: {util:.2f}")
-    
+
     # Fairness-weighted allocation
     fair_allocation, fair_metrics = resource_evaluator.optimal_allocation(
         patients, n_resources, fairness_weight=0.7
     )
-    
+
     print(f"\nFairness-Weighted Allocation (weight=0.7):")
     print(f"  Total Utility: {fair_metrics['total_utility']:.2f}")
     print(f"  Group Utilities:")
     for group, util in fair_metrics['group_utilities'].items():
         print(f"    {group}: {util:.2f}")
     print(f"  Min Group Utility: {fair_metrics['min_group_utility']:.2f}")
-    
+
     # Evaluate envy-freeness
     is_envy_free, envy_results = resource_evaluator.evaluate_envy_freeness(
         patients, fair_allocation
     )
-    
+
     print(f"\nEnvy-Freeness Assessment:")
     print(f"  Is Envy-Free: {is_envy_free}")
     print(f"  Max Envy: {envy_results['max_envy']:.4f}")
-
 
 if __name__ == "__main__":
     demonstrate_novel_fairness_metrics()
@@ -965,17 +967,21 @@ Few-shot learning methods train models that can rapidly adapt to new tasks with 
 
 The core challenge is ensuring that few-shot adaptation preserves fairness. Standard meta-learning optimizes for rapid adaptation without considering how performance varies across demographic groups. A model might learn to adapt quickly for majority populations while failing to effectively adapt for minority groups. Fairness-aware few-shot learning incorporates equity constraints into the meta-learning objective.
 
-One approach extends Model-Agnostic Meta-Learning (MAML) to include fairness penalties. Standard MAML learns model initialization parameters $$\theta$$ that enable rapid adaptation to new tasks. For a set of training tasks $$\{T_i\}$$, MAML minimizes:
+One approach extends Model-Agnostic Meta-Learning (MAML) to include fairness penalties. Standard MAML learns model initialization parameters $\theta$ that enable rapid adaptation to new tasks. For a set of training tasks $\{T_i\}$, MAML minimizes:
 
-$$\min_\theta \sum_i \mathcal{L}_{T_i}(\theta - \alpha \nabla_\theta \mathcal{L}_{T_i}(\theta))$$
+$$
+\min_\theta \sum_i \mathcal{L}_{T_i}(\theta - \alpha \nabla_\theta \mathcal{L}_{T_i}(\theta))
+$$
 
-where $$\alpha$$ is the adaptation learning rate. This objective encourages finding initialization parameters that require only small gradient updates to achieve good performance on new tasks.
+where $\alpha$ is the adaptation learning rate. This objective encourages finding initialization parameters that require only small gradient updates to achieve good performance on new tasks.
 
 Fairness-aware MAML adds a fairness penalty term that penalizes disparity in adaptation effectiveness across demographic groups:
 
-$$\min_\theta \sum_i \left[\mathcal{L}_{T_i}(\theta') + \lambda F(\theta', T_i)\right]$$
+$$
+\min_\theta \sum_i \left[\mathcal{L}_{T_i}(\theta') + \lambda F(\theta', T_i)\right]
+$$
 
-where $$\theta' = \theta - \alpha \nabla_\theta \mathcal{L}_{T_i}(\theta)$$$are the adapted parameters and$$F(\theta', T_i)$$measures fairness on task$$T_i$$using the adapted model. The fairness term$$F$ might measure disparity in accuracy, calibration error, or other metrics across demographic subgroups within each task.
+where $\theta' = \theta - \alpha \nabla_\theta \mathcal{L}_{T_i}(\theta)$are the adapted parameters and$F(\theta', T_i)$measures fairness on task$T_i$using the adapted model. The fairness term$F$ might measure disparity in accuracy, calibration error, or other metrics across demographic subgroups within each task.
 
 This formulation encourages the meta-learning process to find initialization parameters that enable both effective and equitable adaptation. When presented with a new clinical prediction task with limited labeled data including small sample sizes for certain demographic groups, the resulting model can adapt using those small samples while maintaining performance parity across groups.
 
@@ -985,15 +991,19 @@ Transfer learning leverages models pretrained on large datasets to improve perfo
 
 Equity-preserving transfer learning methods explicitly constrain the fine-tuning process to maintain or improve fairness while adapting to the target distribution. One approach uses constrained optimization during fine-tuning, where the objective includes both a performance term and fairness constraints:
 
-$$\min_\theta \mathcal{L}_{\text{target}}(\theta) \quad \text{subject to} \quad d(\theta, \theta_{\text{pretrain}}) \leq \delta_{\text{fair}}$$
+$$
+\min_\theta \mathcal{L}_{\text{target}}(\theta) \quad \text{subject to} \quad d(\theta, \theta_{\text{pretrain}}) \leq \delta_{\text{fair}}
+$$
 
-where $$\theta_{\text{pretrain}}$$ are the pretrained parameters, $$\mathcal{L}_{\text{target}}$$$is the loss on the target task, and$$d(\cdot, \cdot)$$measures fairness degradation. The constraint ensures that fine-tuning does not worsen fairness beyond a tolerance$$\delta_{\text{fair}}$ even as it optimizes for target task performance.
+where $\theta_{\text{pretrain}}$ are the pretrained parameters, $\mathcal{L}_{\text{target}}$is the loss on the target task, and$d(\cdot, \cdot)$measures fairness degradation. The constraint ensures that fine-tuning does not worsen fairness beyond a tolerance$\delta_{\text{fair}}$ even as it optimizes for target task performance.
 
 Another approach uses adversarial training during fine-tuning to remove demographic information from learned representations while preserving clinically relevant information. This involves training the model to perform the target task well while making predictions that cannot be used to infer demographic group membership:
 
-$$\min_\theta \max_\phi \mathcal{L}_{\text{target}}(\theta) - \lambda \mathcal{L}_{\text{demographic}}(\phi, \theta)$$
+$$
+\min_\theta \max_\phi \mathcal{L}_{\text{target}}(\theta) - \lambda \mathcal{L}_{\text{demographic}}(\phi, \theta)
+$$
 
-where $$\phi$$ parameterizes an adversarial classifier attempting to predict demographic group from model representations and $$\lambda$$ controls the tradeoff between task performance and demographic invariance.
+where $\phi$ parameterizes an adversarial classifier attempting to predict demographic group from model representations and $\lambda$ controls the tradeoff between task performance and demographic invariance.
 
 For healthcare applications, partial fine-tuning strategies can be effective. Rather than fine-tuning all model parameters, we can freeze lower layers that capture general clinical knowledge and only fine-tune higher layers that perform task-specific reasoning. This reduces the number of parameters adapted to the target domain, making fine-tuning more sample-efficient and reducing the risk of overfitting to unrepresentative target data.
 
@@ -1031,12 +1041,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class FewShotTask:
     """
     A few-shot learning task consisting of support and query sets.
-    
+
     Attributes:
         support_x: Support set features [n_support, n_features]
         support_y: Support set labels [n_support]
@@ -1054,10 +1063,9 @@ class FewShotTask:
     query_groups: torch.Tensor
     task_id: str = "unknown"
 
-
 class FairnessMetrics:
     """Utility class for computing fairness metrics."""
-    
+
     @staticmethod
     def demographic_parity_violation(
         predictions: torch.Tensor,
@@ -1066,31 +1074,31 @@ class FairnessMetrics:
     ) -> float:
         """
         Compute demographic parity violation.
-        
+
         Args:
             predictions: Predicted probabilities [n_samples]
             groups: Demographic group indicators [n_samples]
             threshold: Classification threshold
-            
+
         Returns:
             Maximum parity violation across groups
         """
         binary_preds = (predictions >= threshold).float()
-        
+
         unique_groups = torch.unique(groups)
         positive_rates = []
-        
+
         for group in unique_groups:
             group_mask = groups == group
             if group_mask.sum() > 0:
                 positive_rate = binary_preds[group_mask].mean()
                 positive_rates.append(positive_rate)
-        
+
         if len(positive_rates) < 2:
             return 0.0
-        
+
         return (max(positive_rates) - min(positive_rates)).item()
-    
+
     @staticmethod
     def equalized_odds_violation(
         predictions: torch.Tensor,
@@ -1100,53 +1108,52 @@ class FairnessMetrics:
     ) -> float:
         """
         Compute equalized odds violation (max of TPR and FPR gaps).
-        
+
         Args:
             predictions: Predicted probabilities [n_samples]
             labels: True labels [n_samples]
             groups: Demographic group indicators [n_samples]
             threshold: Classification threshold
-            
+
         Returns:
             Maximum equalized odds violation
         """
         binary_preds = (predictions >= threshold).float()
         unique_groups = torch.unique(groups)
-        
+
         tpr_gaps = []
         fpr_gaps = []
-        
+
         # Compute TPR and FPR for each group
         tprs = []
         fprs = []
-        
+
         for group in unique_groups:
             group_mask = groups == group
-            
+
             # True positive rate
             positive_mask = (labels == 1) & group_mask
             if positive_mask.sum() > 0:
                 tpr = binary_preds[positive_mask].mean()
                 tprs.append(tpr)
-            
+
             # False positive rate
             negative_mask = (labels == 0) & group_mask
             if negative_mask.sum() > 0:
                 fpr = binary_preds[negative_mask].mean()
                 fprs.append(fpr)
-        
+
         # Compute maximum gaps
         tpr_gap = (max(tprs) - min(tprs)).item() if len(tprs) > 1 else 0.0
         fpr_gap = (max(fprs) - min(fprs)).item() if len(fprs) > 1 else 0.0
-        
-        return max(tpr_gap, fpr_gap)
 
+        return max(tpr_gap, fpr_gap)
 
 class SimpleNeuralNet(nn.Module):
     """
     Simple neural network for classification tasks.
     """
-    
+
     def __init__(
         self,
         input_dim: int,
@@ -1155,17 +1162,17 @@ class SimpleNeuralNet(nn.Module):
     ):
         """
         Initialize neural network.
-        
+
         Args:
             input_dim: Input feature dimension
             hidden_dims: List of hidden layer dimensions
             output_dim: Output dimension (1 for binary classification)
         """
         super().__init__()
-        
+
         layers = []
         prev_dim = input_dim
-        
+
         for hidden_dim in hidden_dims:
             layers.extend([
                 nn.Linear(prev_dim, hidden_dim),
@@ -1173,24 +1180,23 @@ class SimpleNeuralNet(nn.Module):
                 nn.Dropout(0.1)
             ])
             prev_dim = hidden_dim
-        
+
         layers.append(nn.Linear(prev_dim, output_dim))
-        
+
         self.network = nn.Sequential(*layers)
-        
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass."""
         return self.network(x)
 
-
 class FairMAML:
     """
     Fairness-Aware Model-Agnostic Meta-Learning (FairMAML).
-    
+
     Extends MAML to include fairness constraints during meta-training
     and adaptation.
     """
-    
+
     def __init__(
         self,
         model: nn.Module,
@@ -1202,7 +1208,7 @@ class FairMAML:
     ):
         """
         Initialize FairMAML.
-        
+
         Args:
             model: Neural network model to meta-train
             inner_lr: Learning rate for inner loop (task adaptation)
@@ -1217,14 +1223,14 @@ class FairMAML:
         self.fairness_weight = fairness_weight
         self.fairness_metric = fairness_metric
         self.n_inner_steps = n_inner_steps
-        
+
         self.meta_optimizer = optim.Adam(
             self.model.parameters(),
             lr=outer_lr
         )
-        
+
         self.fairness_metrics = FairnessMetrics()
-        
+
     def inner_loop(
         self,
         task: FewShotTask,
@@ -1232,29 +1238,29 @@ class FairMAML:
     ) -> Tuple[Dict, float, float]:
         """
         Perform inner loop adaptation for a single task.
-        
+
         Args:
             task: Few-shot task to adapt to
             params: Initial parameters (None to use model's current params)
-            
+
         Returns:
             Tuple of (adapted_params, task_loss, fairness_violation)
         """
         if params is None:
             params = {name: param.clone() for name, param in self.model.named_parameters()}
-        
+
         # Perform gradient descent steps on support set
         for step in range(self.n_inner_steps):
             # Forward pass with current params
             support_logits = self._forward_with_params(task.support_x, params)
             support_probs = torch.sigmoid(support_logits.squeeze())
-            
+
             # Task loss
             task_loss = F.binary_cross_entropy(
                 support_probs,
                 task.support_y.float()
             )
-            
+
             # Fairness loss
             if self.fairness_metric == 'demographic_parity':
                 fairness_viol = self.fairness_metrics.demographic_parity_violation(
@@ -1269,10 +1275,10 @@ class FairMAML:
                 )
             else:
                 fairness_viol = 0.0
-            
+
             # Combined loss
             loss = task_loss + self.fairness_weight * fairness_viol
-            
+
             # Compute gradients with respect to params
             grads = torch.autograd.grad(
                 loss,
@@ -1280,22 +1286,22 @@ class FairMAML:
                 create_graph=True,
                 allow_unused=True
             )
-            
+
             # Update params
             params = {
                 name: param - self.inner_lr * grad if grad is not None else param
                 for (name, param), grad in zip(params.items(), grads)
             }
-        
+
         # Evaluate on query set with adapted params
         query_logits = self._forward_with_params(task.query_x, params)
         query_probs = torch.sigmoid(query_logits.squeeze())
-        
+
         query_loss = F.binary_cross_entropy(
             query_probs,
             task.query_y.float()
         )
-        
+
         if self.fairness_metric == 'demographic_parity':
             query_fairness = self.fairness_metrics.demographic_parity_violation(
                 query_probs,
@@ -1309,9 +1315,9 @@ class FairMAML:
             )
         else:
             query_fairness = 0.0
-        
+
         return params, query_loss.item(), query_fairness
-    
+
     def _forward_with_params(
         self,
         x: torch.Tensor,
@@ -1319,34 +1325,34 @@ class FairMAML:
     ) -> torch.Tensor:
         """
         Forward pass using specified parameters instead of model's stored params.
-        
+
         Args:
             x: Input tensor
             params: Dictionary of parameter tensors
-            
+
         Returns:
             Model output
         """
         # This is a simplified implementation
         # A complete implementation would handle the full network architecture
         x_current = x
-        
+
         # Extract layer parameters
         layer_idx = 0
         while True:
             weight_key = f"network.{layer_idx}.weight"
             bias_key = f"network.{layer_idx}.bias"
-            
+
             if weight_key not in params:
                 break
-            
+
             # Linear layer
             x_current = F.linear(
                 x_current,
                 params[weight_key],
                 params[bias_key]
             )
-            
+
             # Check for activation (ReLU)
             layer_idx += 1
             next_key = f"network.{layer_idx}.weight"
@@ -1354,54 +1360,54 @@ class FairMAML:
                 # There's another layer, so apply ReLU
                 x_current = F.relu(x_current)
                 layer_idx += 1  # Skip dropout layer
-            
+
             layer_idx += 1
-        
+
         return x_current
-    
+
     def meta_train_step(
         self,
         tasks: List[FewShotTask]
     ) -> Dict[str, float]:
         """
         Perform one meta-training step over a batch of tasks.
-        
+
         Args:
             tasks: Batch of few-shot tasks
-            
+
         Returns:
             Dictionary of training metrics
         """
         self.meta_optimizer.zero_grad()
-        
+
         meta_losses = []
         fairness_violations = []
-        
+
         for task in tasks:
             # Perform inner loop
             adapted_params, query_loss, query_fairness = self.inner_loop(task)
-            
+
             # Accumulate meta-loss (loss on query set with adapted params)
             meta_loss = query_loss + self.fairness_weight * query_fairness
             meta_losses.append(meta_loss)
             fairness_violations.append(query_fairness)
-        
+
         # Average meta-loss across tasks
         avg_meta_loss = sum(meta_losses) / len(meta_losses)
         avg_fairness = sum(fairness_violations) / len(fairness_violations)
-        
+
         # Backward pass for meta-optimization
         # Note: In actual implementation, we'd accumulate gradients from each task
         # This is simplified for demonstration
-        
+
         self.meta_optimizer.step()
-        
+
         return {
             'meta_loss': avg_meta_loss,
             'fairness_violation': avg_fairness,
             'task_loss': avg_meta_loss - self.fairness_weight * avg_fairness
         }
-    
+
     def adapt_to_new_task(
         self,
         task: FewShotTask,
@@ -1409,44 +1415,43 @@ class FairMAML:
     ) -> Tuple[nn.Module, Dict[str, float]]:
         """
         Adapt model to a new task.
-        
+
         Args:
             task: New task to adapt to
             n_adaptation_steps: Number of adaptation steps (None for default)
-            
+
         Returns:
             Tuple of (adapted_model, metrics)
         """
         if n_adaptation_steps is None:
             n_adaptation_steps = self.n_inner_steps
-        
+
         # Store original n_inner_steps and temporarily set new value
         original_steps = self.n_inner_steps
         self.n_inner_steps = n_adaptation_steps
-        
+
         # Perform adaptation
         adapted_params, query_loss, query_fairness = self.inner_loop(task)
-        
+
         # Restore original setting
         self.n_inner_steps = original_steps
-        
+
         # Create adapted model with new parameters
         adapted_model = type(self.model)(
             self.model.network[0].in_features,
             [layer.out_features for layer in self.model.network if isinstance(layer, nn.Linear)][:-1],
             1
         )
-        
+
         # Load adapted parameters
         adapted_model.load_state_dict(adapted_params)
-        
+
         metrics = {
             'query_loss': query_loss,
             'fairness_violation': query_fairness
         }
-        
-        return adapted_model, metrics
 
+        return adapted_model, metrics
 
 def generate_synthetic_tasks(
     n_tasks: int,
@@ -1457,35 +1462,35 @@ def generate_synthetic_tasks(
 ) -> List[FewShotTask]:
     """
     Generate synthetic few-shot learning tasks for demonstration.
-    
+
     Args:
         n_tasks: Number of tasks to generate
         n_features: Number of input features
         n_support: Support set size per task
         n_query: Query set size per task
         task_variation: Amount of variation across tasks
-        
+
     Returns:
         List of few-shot tasks
     """
     tasks = []
-    
+
     for task_idx in range(n_tasks):
         # Generate task-specific parameters with variation
         task_weights = np.random.randn(n_features) * task_variation
         task_bias = np.random.randn() * task_variation
-        
+
         # Generate support set
         support_x = torch.randn(n_support, n_features)
         support_logits = support_x @ torch.tensor(task_weights, dtype=torch.float32) + task_bias
         support_probs = torch.sigmoid(support_logits)
         support_y = torch.bernoulli(support_probs)
-        
+
         # Assign demographic groups (simulating minority group with 20% representation)
         support_groups = torch.tensor(
             np.random.choice([0, 1], n_support, p=[0.8, 0.2])
         )
-        
+
         # Generate query set
         query_x = torch.randn(n_query, n_features)
         query_logits = query_x @ torch.tensor(task_weights, dtype=torch.float32) + task_bias
@@ -1494,7 +1499,7 @@ def generate_synthetic_tasks(
         query_groups = torch.tensor(
             np.random.choice([0, 1], n_query, p=[0.8, 0.2])
         )
-        
+
         tasks.append(FewShotTask(
             support_x=support_x,
             support_y=support_y,
@@ -1504,26 +1509,25 @@ def generate_synthetic_tasks(
             query_groups=query_groups,
             task_id=f"task_{task_idx}"
         ))
-    
-    return tasks
 
+    return tasks
 
 def demonstrate_fair_few_shot_learning():
     """Demonstrate fairness-aware few-shot learning."""
-    
+
     print("=== Fairness-Aware Few-Shot Learning ===\n")
-    
+
     # Set random seeds
     torch.manual_seed(42)
     np.random.seed(42)
-    
+
     # Configuration
     n_features = 20
     hidden_dims = [64, 32]
     n_train_tasks = 100
     n_test_tasks = 20
     n_meta_epochs = 10
-    
+
     # Generate training tasks
     print("Generating training tasks...")
     train_tasks = generate_synthetic_tasks(
@@ -1532,7 +1536,7 @@ def demonstrate_fair_few_shot_learning():
         n_support=10,
         n_query=20
     )
-    
+
     # Generate test tasks
     test_tasks = generate_synthetic_tasks(
         n_test_tasks,
@@ -1540,10 +1544,10 @@ def demonstrate_fair_few_shot_learning():
         n_support=10,
         n_query=20
     )
-    
+
     # Initialize model
     model = SimpleNeuralNet(n_features, hidden_dims, output_dim=1)
-    
+
     # Initialize FairMAML
     fair_maml = FairMAML(
         model=model,
@@ -1553,47 +1557,47 @@ def demonstrate_fair_few_shot_learning():
         fairness_metric='equalized_odds',
         n_inner_steps=5
     )
-    
+
     print("Meta-training with fairness constraints...\n")
-    
+
     # Meta-training loop
     for epoch in range(n_meta_epochs):
         # Sample batch of tasks
         batch_size = 10
         batch_indices = np.random.choice(len(train_tasks), batch_size, replace=False)
         task_batch = [train_tasks[i] for i in batch_indices]
-        
+
         # Meta-train step
         metrics = fair_maml.meta_train_step(task_batch)
-        
+
         if (epoch + 1) % 2 == 0:
             print(f"Epoch {epoch + 1}/{n_meta_epochs}")
             print(f"  Meta Loss: {metrics['meta_loss']:.4f}")
             print(f"  Fairness Violation: {metrics['fairness_violation']:.4f}")
             print(f"  Task Loss: {metrics['task_loss']:.4f}")
-    
+
     # Evaluate on test tasks
     print("\nEvaluating on test tasks...")
-    
+
     test_losses = []
     test_fairness = []
-    
+
     for test_task in test_tasks[:5]:  # Evaluate on first 5 test tasks
         adapted_model, metrics = fair_maml.adapt_to_new_task(
             test_task,
             n_adaptation_steps=5
         )
-        
+
         test_losses.append(metrics['query_loss'])
         test_fairness.append(metrics['fairness_violation'])
-    
+
     print(f"\nTest Performance:")
     print(f"  Average Loss: {np.mean(test_losses):.4f} ± {np.std(test_losses):.4f}")
     print(f"  Average Fairness Violation: {np.mean(test_fairness):.4f} ± {np.std(test_fairness):.4f}")
-    
+
     # Compare with baseline (no fairness constraint)
     print("\nTraining baseline without fairness constraints...")
-    
+
     baseline_maml = FairMAML(
         model=SimpleNeuralNet(n_features, hidden_dims, output_dim=1),
         inner_lr=0.01,
@@ -1602,30 +1606,29 @@ def demonstrate_fair_few_shot_learning():
         fairness_metric='equalized_odds',
         n_inner_steps=5
     )
-    
+
     for epoch in range(n_meta_epochs):
         batch_indices = np.random.choice(len(train_tasks), batch_size, replace=False)
         task_batch = [train_tasks[i] for i in batch_indices]
         baseline_maml.meta_train_step(task_batch)
-    
+
     baseline_losses = []
     baseline_fairness = []
-    
+
     for test_task in test_tasks[:5]:
         adapted_model, metrics = baseline_maml.adapt_to_new_task(test_task)
         baseline_losses.append(metrics['query_loss'])
         baseline_fairness.append(metrics['fairness_violation'])
-    
+
     print(f"\nBaseline Performance:")
     print(f"  Average Loss: {np.mean(baseline_losses):.4f} ± {np.std(baseline_losses):.4f}")
     print(f"  Average Fairness Violation: {np.mean(baseline_fairness):.4f} ± {np.std(baseline_fairness):.4f}")
-    
+
     print(f"\nComparison:")
     loss_diff = np.mean(test_losses) - np.mean(baseline_losses)
     fairness_improvement = np.mean(baseline_fairness) - np.mean(test_fairness)
     print(f"  Loss difference: {loss_diff:+.4f} (negative = FairMAML better)")
     print(f"  Fairness improvement: {fairness_improvement:+.4f} (positive = FairMAML better)")
-
 
 if __name__ == "__main__":
     demonstrate_fair_few_shot_learning()
@@ -1645,23 +1648,29 @@ Standard machine learning optimizes for accuracy, minimizing prediction error ac
 
 One formulation defines the objective as a combination of overall health improvement and disparity reduction:
 
-$$\max_\theta \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z)] - \lambda \cdot \text{Var}_Z[\mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) | Z]]$$
+$$
+\max_\theta \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z)] - \lambda \cdot \text{Var}_Z[\mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) | Z]]
+$$
 
-where $H$ measures health utility, $$\hat{Y}_\theta$$ are model predictions, $Z$ represents demographic group, and the variance term penalizes disparities in average health utility across groups. The parameter $$\lambda$$ controls how heavily disparity reduction is weighted relative to overall health improvement.
+where $H$ measures health utility, $\hat{Y}_\theta$ are model predictions, $Z$ represents demographic group, and the variance term penalizes disparities in average health utility across groups. The parameter $\lambda$ controls how heavily disparity reduction is weighted relative to overall health improvement.
 
-This objective creates different incentives than standard accuracy optimization. A model might achieve high accuracy by performing well on the majority population while doing poorly on minorities. Disparity-reducing optimization instead prioritizes improvements for groups with worse baseline outcomes, even if this comes at some cost to overall accuracy. The choice of $$\lambda$$ reflects normative judgments about the relative importance of efficiency versus equity.
+This objective creates different incentives than standard accuracy optimization. A model might achieve high accuracy by performing well on the majority population while doing poorly on minorities. Disparity-reducing optimization instead prioritizes improvements for groups with worse baseline outcomes, even if this comes at some cost to overall accuracy. The choice of $\lambda$ reflects normative judgments about the relative importance of efficiency versus equity.
 
 Another formulation uses a maximin objective that explicitly prioritizes the worst-off group:
 
-$$\max_\theta \min_z \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) | Z = z]$$
+$$
+\max_\theta \min_z \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) | Z = z]
+$$
 
 This Rawlsian approach focuses entirely on improving outcomes for whichever group has the poorest performance, demanding that no group be left behind even if this substantially reduces average performance. While philosophically appealing for its egalitarian commitment, maximin can lead to significant efficiency losses that may be unacceptable in resource-constrained healthcare settings.
 
 Intermediate approaches use weighted objectives where underserved groups receive higher weights in the loss function:
 
-$$\min_\theta \sum_i w_{z_i} \cdot \mathcal{L}(y_i, \hat{y}_\theta(x_i))$$
+$$
+\min_\theta \sum_i w_{z_i} \cdot \mathcal{L}(y_i, \hat{y}_\theta(x_i))
+$$
 
-where $$w_{z_i}$$ is the weight for patient $i$'s demographic group $$z_i$$. Groups with historically worse outcomes receive higher weights, incentivizing the model to prioritize improving predictions for these populations. Weight specifications should reflect both historical disparities and stakeholder input about whose health improvements should be prioritized.
+where $w_{z_i}$ is the weight for patient $i$'s demographic group $z_i$. Groups with historically worse outcomes receive higher weights, incentivizing the model to prioritize improving predictions for these populations. Weight specifications should reflect both historical disparities and stakeholder input about whose health improvements should be prioritized.
 
 ### 30.4.2 Preferential Resource Allocation Policies
 
@@ -1671,9 +1680,11 @@ Preferential allocation policies must navigate challenging ethical terrain. Medi
 
 One approach builds preferential allocation into the utility function used for optimization. Rather than maximizing expected health utility treating all lives equally, the utility function could weight improvements for historically disadvantaged groups more heavily:
 
-$$U_{\text{total}} = \sum_i w_{z_i} \cdot u_i$$
+$$
+U_{\text{total}} = \sum_i w_{z_i} \cdot u_i
+$$
 
-where $$u_i$$ is the health utility for patient $i$ and $$w_{z_i}$$ is a weight that reflects both clinical need and historical disadvantage. This makes explicit that we value improvements for patients from marginalized communities more highly than equivalent improvements for those from privileged backgrounds, reflecting a commitment to disparity reduction.
+where $u_i$ is the health utility for patient $i$ and $w_{z_i}$ is a weight that reflects both clinical need and historical disadvantage. This makes explicit that we value improvements for patients from marginalized communities more highly than equivalent improvements for those from privileged backgrounds, reflecting a commitment to disparity reduction.
 
 Another approach uses explicit quotas or targets for representation of underserved populations in allocated resources. An organ allocation system might require that at least 30% of transplants go to patients from historically underserved racial groups, reflecting these groups' proportion of patients with end-stage organ failure. This creates hard constraints ensuring that resources reach marginalized populations even when efficiency-focused algorithms would allocate them elsewhere.
 
@@ -1702,19 +1713,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class DisparityMetric(Enum):
     """Types of disparity metrics for optimization."""
     VARIANCE = "variance"  # Variance in outcomes across groups
     MAX_GAP = "max_gap"  # Maximum gap between groups
     RATIO = "ratio"  # Ratio of best to worst performing group
 
-
 @dataclass
 class HistoricalDisparity:
     """
     Documentation of historical disparities to inform reparative objectives.
-    
+
     Attributes:
         group_name: Name of demographic group
         baseline_outcome: Historical baseline outcome (e.g., mortality rate)
@@ -1729,30 +1738,29 @@ class HistoricalDisparity:
     population_proportion: float
     severity_score: float = 0.5
     affected_generations: int = 1
-    
+
     def compute_reparative_weight(self, base_weight: float = 1.0) -> float:
         """
         Compute reparative weight based on historical disadvantage.
-        
+
         Args:
             base_weight: Base weight for privileged groups
-            
+
         Returns:
             Reparative weight for this group
         """
         # Weight increases with severity and duration of disadvantage
         weight_multiplier = 1.0 + (
-            self.severity_score * 
+            self.severity_score *
             np.log1p(self.affected_generations)
         )
         return base_weight * weight_multiplier
-
 
 class DisparityReducingLoss(nn.Module):
     """
     Loss function that combines task performance with disparity reduction.
     """
-    
+
     def __init__(
         self,
         task_loss_fn: Callable,
@@ -1762,7 +1770,7 @@ class DisparityReducingLoss(nn.Module):
     ):
         """
         Initialize disparity-reducing loss.
-        
+
         Args:
             task_loss_fn: Base task loss function (e.g., binary cross entropy)
             disparity_metric: Which disparity metric to optimize
@@ -1774,7 +1782,7 @@ class DisparityReducingLoss(nn.Module):
         self.disparity_metric = disparity_metric
         self.disparity_weight = disparity_weight
         self.historical_disparities = historical_disparities or {}
-        
+
     def compute_group_losses(
         self,
         predictions: torch.Tensor,
@@ -1783,18 +1791,18 @@ class DisparityReducingLoss(nn.Module):
     ) -> Dict[int, float]:
         """
         Compute loss for each demographic group.
-        
+
         Args:
             predictions: Model predictions
             targets: True targets
             groups: Demographic group indicators
-            
+
         Returns:
             Dictionary mapping group ID to loss value
         """
         unique_groups = torch.unique(groups)
         group_losses = {}
-        
+
         for group in unique_groups:
             group_mask = groups == group
             if group_mask.sum() > 0:
@@ -1802,9 +1810,9 @@ class DisparityReducingLoss(nn.Module):
                 group_targets = targets[group_mask]
                 group_loss = self.task_loss_fn(group_preds, group_targets)
                 group_losses[group.item()] = group_loss.item()
-        
+
         return group_losses
-    
+
     def compute_disparity(
         self,
         predictions: torch.Tensor,
@@ -1813,18 +1821,18 @@ class DisparityReducingLoss(nn.Module):
     ) -> torch.Tensor:
         """
         Compute disparity metric across groups.
-        
+
         Args:
             predictions: Model predictions
             targets: True targets
             groups: Demographic group indicators
-            
+
         Returns:
             Disparity value (scalar tensor)
         """
         unique_groups = torch.unique(groups)
         group_losses = []
-        
+
         for group in unique_groups:
             group_mask = groups == group
             if group_mask.sum() > 0:
@@ -1832,12 +1840,12 @@ class DisparityReducingLoss(nn.Module):
                 group_targets = targets[group_mask]
                 group_loss = self.task_loss_fn(group_preds, group_targets)
                 group_losses.append(group_loss)
-        
+
         if len(group_losses) < 2:
             return torch.tensor(0.0)
-        
+
         group_losses_tensor = torch.stack(group_losses)
-        
+
         if self.disparity_metric == DisparityMetric.VARIANCE:
             return torch.var(group_losses_tensor)
         elif self.disparity_metric == DisparityMetric.MAX_GAP:
@@ -1846,7 +1854,7 @@ class DisparityReducingLoss(nn.Module):
             return torch.max(group_losses_tensor) / (torch.min(group_losses_tensor) + 1e-8)
         else:
             return torch.tensor(0.0)
-    
+
     def forward(
         self,
         predictions: torch.Tensor,
@@ -1855,45 +1863,44 @@ class DisparityReducingLoss(nn.Module):
     ) -> Tuple[torch.Tensor, Dict[str, float]]:
         """
         Compute combined loss with disparity reduction term.
-        
+
         Args:
             predictions: Model predictions
             targets: True targets
             groups: Demographic group indicators
-            
+
         Returns:
             Tuple of (total_loss, metrics_dict)
         """
         # Task loss
         task_loss = self.task_loss_fn(predictions, targets)
-        
+
         # Disparity term
         disparity = self.compute_disparity(predictions, targets, groups)
-        
+
         # Combined loss
         total_loss = task_loss + self.disparity_weight * disparity
-        
+
         # Collect metrics
         metrics = {
             'task_loss': task_loss.item(),
             'disparity': disparity.item(),
             'total_loss': total_loss.item()
         }
-        
+
         # Add group-specific losses
         group_losses = self.compute_group_losses(predictions, targets, groups)
         for group_id, loss in group_losses.items():
             metrics[f'group_{group_id}_loss'] = loss
-        
-        return total_loss, metrics
 
+        return total_loss, metrics
 
 class ReparativeWeightedLoss(nn.Module):
     """
     Loss function that weights examples by reparative factors based on
     historical disparities.
     """
-    
+
     def __init__(
         self,
         task_loss_fn: Callable,
@@ -1902,7 +1909,7 @@ class ReparativeWeightedLoss(nn.Module):
     ):
         """
         Initialize reparative weighted loss.
-        
+
         Args:
             task_loss_fn: Base task loss function
             historical_disparities: Historical disparity info by group name
@@ -1912,13 +1919,13 @@ class ReparativeWeightedLoss(nn.Module):
         self.task_loss_fn = task_loss_fn
         self.historical_disparities = historical_disparities
         self.base_weight = base_weight
-        
+
         # Compute reparative weights
         self.group_weights = {
             group_name: disp.compute_reparative_weight(base_weight)
             for group_name, disp in historical_disparities.items()
         }
-        
+
     def forward(
         self,
         predictions: torch.Tensor,
@@ -1927,12 +1934,12 @@ class ReparativeWeightedLoss(nn.Module):
     ) -> Tuple[torch.Tensor, Dict[str, float]]:
         """
         Compute weighted loss with reparative weights.
-        
+
         Args:
             predictions: Model predictions
             targets: True targets
             group_names: List of group names for each example
-            
+
         Returns:
             Tuple of (weighted_loss, metrics_dict)
         """
@@ -1942,35 +1949,34 @@ class ReparativeWeightedLoss(nn.Module):
             targets,
             reduction='none'
         )
-        
+
         # Apply reparative weights
         weights = torch.tensor([
             self.group_weights.get(group, self.base_weight)
             for group in group_names
         ], dtype=torch.float32)
-        
+
         weighted_losses = per_example_losses * weights
         total_loss = weighted_losses.mean()
-        
+
         # Compute metrics by group
         unique_groups = list(set(group_names))
         metrics = {'total_loss': total_loss.item()}
-        
+
         for group in unique_groups:
             group_mask = np.array([g == group for g in group_names])
             if group_mask.sum() > 0:
                 group_loss = per_example_losses[group_mask].mean()
                 metrics[f'group_{group}_loss'] = group_loss.item()
                 metrics[f'group_{group}_weight'] = self.group_weights.get(group, self.base_weight)
-        
-        return total_loss, metrics
 
+        return total_loss, metrics
 
 class PreferentialAllocationPolicy:
     """
     Resource allocation policy that preferentially allocates to underserved groups.
     """
-    
+
     def __init__(
         self,
         historical_disparities: Dict[str, HistoricalDisparity],
@@ -1979,7 +1985,7 @@ class PreferentialAllocationPolicy:
     ):
         """
         Initialize preferential allocation policy.
-        
+
         Args:
             historical_disparities: Historical disparity information
             allocation_strategy: Strategy for preference ('proportional', 'quota', 'weighted')
@@ -1988,7 +1994,7 @@ class PreferentialAllocationPolicy:
         self.historical_disparities = historical_disparities
         self.allocation_strategy = allocation_strategy
         self.minimum_allocation_fraction = minimum_allocation_fraction or {}
-        
+
     def allocate_resources(
         self,
         patients: List[Dict],
@@ -1997,31 +2003,31 @@ class PreferentialAllocationPolicy:
     ) -> Tuple[List[int], Dict[str, any]]:
         """
         Allocate limited resources using preferential policy.
-        
+
         Args:
             patients: List of patient dictionaries with 'group' key
             n_resources: Number of resources available
             clinical_utility_scores: Clinical utility for each patient
-            
+
         Returns:
             Tuple of (list of selected patient indices, allocation metrics)
         """
         n_patients = len(patients)
-        
+
         if n_resources >= n_patients:
             # Enough for everyone
             return list(range(n_patients)), {
                 'strategy': 'universal',
                 'n_allocated': n_patients
             }
-        
+
         if self.allocation_strategy == 'quota':
             return self._quota_allocation(patients, n_resources, clinical_utility_scores)
         elif self.allocation_strategy == 'weighted':
             return self._weighted_allocation(patients, n_resources, clinical_utility_scores)
         else:
             return self._proportional_allocation(patients, n_resources, clinical_utility_scores)
-    
+
     def _quota_allocation(
         self,
         patients: List[Dict],
@@ -2031,45 +2037,45 @@ class PreferentialAllocationPolicy:
         """Allocate using minimum quotas for underserved groups."""
         selected = []
         remaining = list(range(len(patients)))
-        
+
         # First, meet minimum quotas
         groups_allocated = {}
-        
+
         for group, min_fraction in self.minimum_allocation_fraction.items():
             min_count = int(np.ceil(n_resources * min_fraction))
-            
+
             # Find patients from this group
             group_indices = [
-                i for i in remaining 
+                i for i in remaining
                 if patients[i]['group'] == group
             ]
-            
+
             # Select top by clinical utility
             group_scores = clinical_utility_scores[group_indices]
             top_k = min(min_count, len(group_indices))
             top_indices_in_group = np.argsort(group_scores)[-top_k:]
-            
+
             selected_from_group = [group_indices[i] for i in top_indices_in_group]
             selected.extend(selected_from_group)
-            
+
             for idx in selected_from_group:
                 remaining.remove(idx)
-            
+
             groups_allocated[group] = len(selected_from_group)
-        
+
         # Fill remaining slots with top clinical utility
         remaining_slots = n_resources - len(selected)
         if remaining_slots > 0 and remaining:
             remaining_scores = clinical_utility_scores[remaining]
             top_remaining_indices = np.argsort(remaining_scores)[-remaining_slots:]
             selected.extend([remaining[i] for i in top_remaining_indices])
-        
+
         return selected, {
             'strategy': 'quota',
             'groups_allocated': groups_allocated,
             'n_allocated': len(selected)
         }
-    
+
     def _weighted_allocation(
         self,
         patients: List[Dict],
@@ -2079,34 +2085,34 @@ class PreferentialAllocationPolicy:
         """Allocate using reparative weights combined with clinical utility."""
         # Compute combined scores
         combined_scores = np.zeros(len(patients))
-        
+
         for i, patient in enumerate(patients):
             group = patient['group']
-            
+
             # Get reparative weight
             if group in self.historical_disparities:
                 weight = self.historical_disparities[group].compute_reparative_weight()
             else:
                 weight = 1.0
-            
+
             # Combine clinical utility with reparative weight
             combined_scores[i] = clinical_utility_scores[i] * weight
-        
+
         # Select top by combined score
         top_indices = np.argsort(combined_scores)[-n_resources:]
-        
+
         # Count allocations by group
         groups_allocated = {}
         for idx in top_indices:
             group = patients[idx]['group']
             groups_allocated[group] = groups_allocated.get(group, 0) + 1
-        
+
         return list(top_indices), {
             'strategy': 'weighted',
             'groups_allocated': groups_allocated,
             'n_allocated': len(top_indices)
         }
-    
+
     def _proportional_allocation(
         self,
         patients: List[Dict],
@@ -2117,14 +2123,14 @@ class PreferentialAllocationPolicy:
         # Compute target allocation for each group
         groups = [p['group'] for p in patients]
         unique_groups = list(set(groups))
-        
+
         target_allocations = {}
         total_severity = sum(
             self.historical_disparities[g].severity_score
             for g in unique_groups
             if g in self.historical_disparities
         )
-        
+
         for group in unique_groups:
             if group in self.historical_disparities:
                 severity = self.historical_disparities[group].severity_score
@@ -2133,22 +2139,22 @@ class PreferentialAllocationPolicy:
                 )
             else:
                 target_allocations[group] = 0
-        
+
         # Allocate to each group
         selected = []
-        
+
         for group, target in target_allocations.items():
             group_indices = [i for i, p in enumerate(patients) if p['group'] == group]
-            
+
             if not group_indices:
                 continue
-            
+
             group_scores = clinical_utility_scores[group_indices]
             n_select = min(target, len(group_indices))
             top_in_group = np.argsort(group_scores)[-n_select:]
-            
+
             selected.extend([group_indices[i] for i in top_in_group])
-        
+
         # Fill remaining if under
         if len(selected) < n_resources:
             remaining = [i for i in range(len(patients)) if i not in selected]
@@ -2156,12 +2162,12 @@ class PreferentialAllocationPolicy:
             n_fill = n_resources - len(selected)
             top_remaining = np.argsort(remaining_scores)[-n_fill:]
             selected.extend([remaining[i] for i in top_remaining])
-        
+
         groups_allocated = {}
         for idx in selected:
             group = patients[idx]['group']
             groups_allocated[group] = groups_allocated.get(group, 0) + 1
-        
+
         return selected[:n_resources], {
             'strategy': 'proportional',
             'target_allocations': target_allocations,
@@ -2169,12 +2175,11 @@ class PreferentialAllocationPolicy:
             'n_allocated': len(selected)
         }
 
-
 def demonstrate_algorithmic_reparations():
     """Demonstrate algorithmic reparations approaches."""
-    
+
     print("=== Algorithmic Reparations Framework ===\n")
-    
+
     # Define historical disparities
     historical_disparities = {
         'Black': HistoricalDisparity(
@@ -2210,117 +2215,116 @@ def demonstrate_algorithmic_reparations():
             affected_generations=5
         )
     }
-    
+
     # Compute reparative weights
     print("Reparative Weights by Group:")
     for group_name, disp in historical_disparities.items():
         weight = disp.compute_reparative_weight(base_weight=1.0)
         print(f"  {group_name}: {weight:.3f} (severity={disp.severity_score}, generations={disp.affected_generations})")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Demonstrate preferential allocation
     print("Preferential Resource Allocation Example:")
     print("-" * 50)
-    
+
     # Generate synthetic patients
     np.random.seed(42)
     n_patients = 100
-    
+
     patients = []
     group_names = list(historical_disparities.keys())
     group_props = [d.population_proportion for d in historical_disparities.values()]
     group_props = np.array(group_props) / sum(group_props)
-    
+
     for i in range(n_patients):
         group = np.random.choice(group_names, p=group_props)
-        
+
         # Clinical utility varies by need
         # Higher baseline need for historically disadvantaged groups
         baseline_need = 5.0 + historical_disparities[group].severity_score * 3.0
         utility = np.random.gamma(baseline_need, 1.0)
-        
+
         patients.append({
             'id': f'patient_{i}',
             'group': group,
             'utility': utility
         })
-    
+
     clinical_utilities = np.array([p['utility'] for p in patients])
-    
+
     # Limited resources
     n_resources = 30
-    
+
     # Pure clinical utility allocation
     pure_utility_indices = np.argsort(clinical_utilities)[-n_resources:]
     pure_utility_groups = {}
     for idx in pure_utility_indices:
         group = patients[idx]['group']
         pure_utility_groups[group] = pure_utility_groups.get(group, 0) + 1
-    
+
     print(f"Pure Clinical Utility Allocation (n={n_resources}):")
     for group in group_names:
         count = pure_utility_groups.get(group, 0)
         print(f"  {group}: {count} ({count/n_resources*100:.1f}%)")
-    
+
     # Reparative weighted allocation
     policy = PreferentialAllocationPolicy(
         historical_disparities=historical_disparities,
         allocation_strategy='weighted'
     )
-    
+
     weighted_indices, weighted_metrics = policy.allocate_resources(
         patients,
         n_resources,
         clinical_utilities
     )
-    
+
     print(f"\nReparative Weighted Allocation:")
     for group in group_names:
         count = weighted_metrics['groups_allocated'].get(group, 0)
         print(f"  {group}: {count} ({count/n_resources*100:.1f}%)")
-    
+
     # Quota allocation
     minimum_fractions = {
         'Black': 0.20,  # Ensure at least 20% for Black patients
         'Hispanic': 0.15  # At least 15% for Hispanic patients
     }
-    
+
     quota_policy = PreferentialAllocationPolicy(
         historical_disparities=historical_disparities,
         allocation_strategy='quota',
         minimum_allocation_fraction=minimum_fractions
     )
-    
+
     quota_indices, quota_metrics = quota_policy.allocate_resources(
         patients,
         n_resources,
         clinical_utilities
     )
-    
+
     print(f"\nQuota-Based Allocation (min 20% Black, 15% Hispanic):")
     for group in group_names:
         count = quota_metrics['groups_allocated'].get(group, 0)
         print(f"  {group}: {count} ({count/n_resources*100:.1f}%)")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Show average utility by allocation method
     print("Average Clinical Utility Achieved:")
-    
+
     pure_util = clinical_utilities[pure_utility_indices].mean()
     weighted_util = clinical_utilities[weighted_indices].mean()
     quota_util = clinical_utilities[quota_indices].mean()
-    
+
     print(f"  Pure Utility: {pure_util:.3f}")
     print(f"  Weighted Reparative: {weighted_util:.3f} ({(weighted_util-pure_util)/pure_util*100:+.1f}%)")
     print(f"  Quota-Based: {quota_util:.3f} ({(quota_util-pure_util)/pure_util*100:+.1f}%)")
-    
+
     print("\nTradeoffs:")
     print(f"  Reparative weighting sacrifices {(pure_util-weighted_util)/pure_util*100:.1f}% efficiency")
     print(f"  Quota allocation sacrifices {(pure_util-quota_util)/pure_util*100:.1f}% efficiency")
     print("  Both substantially increase representation of historically underserved groups")
-
 
 if __name__ == "__main__":
     demonstrate_algorithmic_reparations()
@@ -2379,7 +2383,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class EngagementType(Enum):
     """Types of community engagement activities."""
     ADVISORY_BOARD = "advisory_board"
@@ -2389,7 +2392,6 @@ class EngagementType(Enum):
     DELIBERATIVE_FORUM = "deliberative_forum"
     COMMUNITY_REVIEW = "community_review"
     STAKEHOLDER_INTERVIEW = "stakeholder_interview"
-
 
 class DevelopmentStage(Enum):
     """Stages of AI development lifecycle."""
@@ -2401,7 +2403,6 @@ class DevelopmentStage(Enum):
     DEPLOYMENT = "deployment"
     MONITORING = "monitoring"
 
-
 class DecisionAuthority(Enum):
     """Level of authority community has in decision."""
     INFORM = "inform"  # Community informed of decision
@@ -2409,12 +2410,11 @@ class DecisionAuthority(Enum):
     COLLABORATE = "collaborate"  # Community partnership in decision
     EMPOWER = "empower"  # Community has veto power or makes final decision
 
-
 @dataclass
 class CommunityStakeholder:
     """
     Representation of a community stakeholder or organization.
-    
+
     Attributes:
         name: Stakeholder name or organization
         affiliation: Community affiliation
@@ -2428,12 +2428,11 @@ class CommunityStakeholder:
     contact_info: Optional[str] = None
     engagement_history: List[str] = field(default_factory=list)  # List of engagement IDs
 
-
 @dataclass
 class EngagementActivity:
     """
     Documentation of a single community engagement activity.
-    
+
     Attributes:
         activity_id: Unique identifier
         activity_type: Type of engagement
@@ -2460,7 +2459,7 @@ class EngagementActivity:
     decision_authority: DecisionAuthority = DecisionAuthority.CONSULT
     follow_up_actions: List[str] = field(default_factory=list)
     documentation_location: Optional[str] = None
-    
+
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization."""
         return {
@@ -2478,12 +2477,11 @@ class EngagementActivity:
             'documentation_location': self.documentation_location
         }
 
-
 @dataclass
 class DevelopmentDecision:
     """
     Documentation of a development decision and community involvement.
-    
+
     Attributes:
         decision_id: Unique identifier
         stage: Development stage
@@ -2506,7 +2504,7 @@ class DevelopmentDecision:
     decision_authority: DecisionAuthority = DecisionAuthority.CONSULT
     alternative_options: List[str] = field(default_factory=list)
     dissenting_opinions: List[str] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization."""
         return {
@@ -2522,12 +2520,11 @@ class DevelopmentDecision:
             'dissenting_opinions': self.dissenting_opinions
         }
 
-
 class CommunityGovernanceTracker:
     """
     Tracks community engagement and governance throughout AI development.
     """
-    
+
     def __init__(
         self,
         project_name: str,
@@ -2535,106 +2532,106 @@ class CommunityGovernanceTracker:
     ):
         """
         Initialize governance tracker.
-        
+
         Args:
             project_name: Name of AI development project
             project_description: Description of project goals
         """
         self.project_name = project_name
         self.project_description = project_description
-        
+
         self.stakeholders: Dict[str, CommunityStakeholder] = {}
         self.engagement_activities: Dict[str, EngagementActivity] = {}
         self.decisions: Dict[str, DevelopmentDecision] = {}
-        
+
         self.created_date = datetime.now()
         self.last_updated = datetime.now()
-        
+
     def register_stakeholder(
         self,
         stakeholder: CommunityStakeholder
     ) -> None:
         """
         Register a community stakeholder.
-        
+
         Args:
             stakeholder: Stakeholder to register
         """
         self.stakeholders[stakeholder.name] = stakeholder
         self.last_updated = datetime.now()
         logger.info(f"Registered stakeholder: {stakeholder.name}")
-    
+
     def record_engagement_activity(
         self,
         activity: EngagementActivity
     ) -> None:
         """
         Record a community engagement activity.
-        
+
         Args:
             activity: Engagement activity to record
         """
         self.engagement_activities[activity.activity_id] = activity
-        
+
         # Update stakeholder engagement history
         for participant in activity.participants:
             if participant in self.stakeholders:
                 self.stakeholders[participant].engagement_history.append(
                     activity.activity_id
                 )
-        
+
         self.last_updated = datetime.now()
         logger.info(f"Recorded engagement activity: {activity.activity_id}")
-    
+
     def record_decision(
         self,
         decision: DevelopmentDecision
     ) -> None:
         """
         Record a development decision.
-        
+
         Args:
             decision: Decision to record
         """
         self.decisions[decision.decision_id] = decision
         self.last_updated = datetime.now()
         logger.info(f"Recorded decision: {decision.decision_id}")
-    
+
     def get_engagement_summary(
         self,
         stage: Optional[DevelopmentStage] = None
     ) -> Dict[str, any]:
         """
         Generate summary of engagement activities.
-        
+
         Args:
             stage: Optionally filter by development stage
-            
+
         Returns:
             Summary dictionary
         """
         activities = list(self.engagement_activities.values())
-        
+
         if stage:
             activities = [a for a in activities if a.stage == stage]
-        
+
         # Count by type
         type_counts = {}
         for activity in activities:
             type_str = activity.activity_type.value
             type_counts[type_str] = type_counts.get(type_str, 0) + 1
-        
+
         # Count by authority level
         authority_counts = {}
         for activity in activities:
             auth_str = activity.decision_authority.value
             authority_counts[auth_str] = authority_counts.get(auth_str, 0) + 1
-        
+
         # Unique participants
         unique_participants = set()
         for activity in activities:
             unique_participants.update(activity.participants)
-        
+
         return {
             'total_activities': len(activities),
             'activities_by_type': type_counts,
@@ -2642,48 +2639,48 @@ class CommunityGovernanceTracker:
             'unique_participants': len(unique_participants),
             'stage_filter': stage.value if stage else 'all'
         }
-    
+
     def get_decision_summary(
         self,
         stage: Optional[DevelopmentStage] = None
     ) -> Dict[str, any]:
         """
         Generate summary of development decisions.
-        
+
         Args:
             stage: Optionally filter by development stage
-            
+
         Returns:
             Summary dictionary
         """
         decisions = list(self.decisions.values())
-        
+
         if stage:
             decisions = [d for d in decisions if d.stage == stage]
-        
+
         # Count by authority level
         authority_counts = {}
         for decision in decisions:
             auth_str = decision.decision_authority.value
             authority_counts[auth_str] = authority_counts.get(auth_str, 0) + 1
-        
+
         # Count decisions with community input
         with_input = sum(
-            1 for d in decisions 
+            1 for d in decisions
             if d.community_input_incorporated and len(d.community_input_incorporated) > 0
         )
-        
+
         return {
             'total_decisions': len(decisions),
             'decisions_by_authority': authority_counts,
             'decisions_with_community_input': with_input,
             'stage_filter': stage.value if stage else 'all'
         }
-    
+
     def assess_engagement_quality(self) -> Dict[str, any]:
         """
         Assess quality of community engagement.
-        
+
         Returns:
             Assessment with scores and recommendations
         """
@@ -2693,12 +2690,12 @@ class CommunityGovernanceTracker:
             'strengths': [],
             'concerns': []
         }
-        
+
         # Assess breadth of engagement
         engagement_summary = self.get_engagement_summary()
         n_activities = engagement_summary['total_activities']
         n_participants = engagement_summary['unique_participants']
-        
+
         if n_activities >= 10:
             assessment['strengths'].append("Extensive engagement activities conducted")
             assessment['scores']['breadth'] = 'high'
@@ -2710,12 +2707,12 @@ class CommunityGovernanceTracker:
                 "Increase frequency and variety of community engagement"
             )
             assessment['scores']['breadth'] = 'low'
-        
+
         # Assess authority sharing
         authority_counts = engagement_summary['activities_by_authority']
         empower_count = authority_counts.get('empower', 0)
         consult_count = authority_counts.get('consult', 0)
-        
+
         if empower_count > n_activities * 0.3:
             assessment['strengths'].append(
                 "Significant decision authority shared with community"
@@ -2734,12 +2731,12 @@ class CommunityGovernanceTracker:
                 "Implement mechanisms for community to have veto power or final say on key decisions"
             )
             assessment['scores']['authority'] = 'low'
-        
+
         # Assess stage coverage
         stages_covered = set()
         for activity in self.engagement_activities.values():
             stages_covered.add(activity.stage)
-        
+
         if len(stages_covered) >= 5:
             assessment['strengths'].append(
                 "Community engaged throughout development lifecycle"
@@ -2755,16 +2752,16 @@ class CommunityGovernanceTracker:
                 "Expand engagement to cover all stages from problem definition through monitoring"
             )
             assessment['scores']['coverage'] = 'low'
-        
+
         return assessment
-    
+
     def export_documentation(
         self,
         output_path: str
     ) -> None:
         """
         Export complete governance documentation to JSON.
-        
+
         Args:
             output_path: Path for output file
         """
@@ -2794,18 +2791,17 @@ class CommunityGovernanceTracker:
                 'quality_assessment': self.assess_engagement_quality()
             }
         }
-        
+
         with open(output_path, 'w') as f:
             json.dump(documentation, f, indent=2)
-        
-        logger.info(f"Exported governance documentation to {output_path}")
 
+        logger.info(f"Exported governance documentation to {output_path}")
 
 def demonstrate_community_governance():
     """Demonstrate community governance tracking."""
-    
+
     print("=== Community-Engaged AI Governance ===\n")
-    
+
     # Initialize tracker
     tracker = CommunityGovernanceTracker(
         project_name="Diabetes Risk Prediction for Underserved Communities",
@@ -2814,7 +2810,7 @@ def demonstrate_community_governance():
             "with focus on serving historically underserved urban communities"
         )
     )
-    
+
     # Register stakeholders
     stakeholders = [
         CommunityStakeholder(
@@ -2838,12 +2834,12 @@ def demonstrate_community_governance():
             represents="Clinical and research expertise"
         )
     ]
-    
+
     for stakeholder in stakeholders:
         tracker.register_stakeholder(stakeholder)
-    
+
     print(f"Registered {len(stakeholders)} stakeholders\n")
-    
+
     # Record engagement activities
     activities = [
         EngagementActivity(
@@ -2937,12 +2933,12 @@ def demonstrate_community_governance():
             ]
         )
     ]
-    
+
     for activity in activities:
         tracker.record_engagement_activity(activity)
-    
+
     print(f"Recorded {len(activities)} engagement activities\n")
-    
+
     # Record decisions
     decisions = [
         DevelopmentDecision(
@@ -2978,12 +2974,12 @@ def demonstrate_community_governance():
             decision_authority=DecisionAuthority.EMPOWER
         )
     ]
-    
+
     for decision in decisions:
         tracker.record_decision(decision)
-    
+
     print(f"Recorded {len(decisions)} decisions\n")
-    
+
     # Generate summaries
     print("="*50)
     print("Engagement Summary:")
@@ -2991,38 +2987,37 @@ def demonstrate_community_governance():
     engagement_summary = tracker.get_engagement_summary()
     for key, value in engagement_summary.items():
         print(f"  {key}: {value}")
-    
+
     print("\n" + "="*50)
     print("Decision Summary:")
     print("-"*50)
     decision_summary = tracker.get_decision_summary()
     for key, value in decision_summary.items():
         print(f"  {key}: {value}")
-    
+
     print("\n" + "="*50)
     print("Engagement Quality Assessment:")
     print("-"*50)
     assessment = tracker.assess_engagement_quality()
-    
+
     print("\nScores:")
     for dimension, score in assessment['scores'].items():
         print(f"  {dimension}: {score}")
-    
+
     if assessment['strengths']:
         print("\nStrengths:")
         for strength in assessment['strengths']:
             print(f"  • {strength}")
-    
+
     if assessment['concerns']:
         print("\nConcerns:")
         for concern in assessment['concerns']:
             print(f"  • {concern}")
-    
+
     if assessment['recommendations']:
         print("\nRecommendations:")
         for rec in assessment['recommendations']:
             print(f"  • {rec}")
-
 
 if __name__ == "__main__":
     demonstrate_community_governance()
@@ -3072,7 +3067,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class ComputeHardware(Enum):
     """Types of compute hardware with different energy profiles."""
     CPU_SERVER = "cpu_server"
@@ -3082,7 +3076,6 @@ class ComputeHardware(Enum):
     TPU_V3 = "tpu_v3"
     TPU_V4 = "tpu_v4"
 
-
 class EnergySource(Enum):
     """Energy sources with different carbon intensities."""
     COAL = "coal"
@@ -3091,12 +3084,11 @@ class EnergySource(Enum):
     RENEWABLE = "renewable"
     NUCLEAR = "nuclear"
 
-
 @dataclass
 class HardwareSpecs:
     """
     Specifications for compute hardware.
-    
+
     Attributes:
         hardware_type: Type of hardware
         tdp_watts: Thermal design power in watts
@@ -3105,17 +3097,16 @@ class HardwareSpecs:
     hardware_type: ComputeHardware
     tdp_watts: float
     efficiency_factor: float = 0.7
-    
+
     def average_power_draw(self) -> float:
         """Compute average power draw in watts."""
         return self.tdp_watts * self.efficiency_factor
-
 
 @dataclass
 class CarbonIntensity:
     """
     Carbon intensity of different energy sources.
-    
+
     Values in grams CO2 equivalent per kilowatt-hour.
     """
     coal: float = 820.0  # g CO2e / kWh
@@ -3123,11 +3114,10 @@ class CarbonIntensity:
     grid_us_average: float = 429.0  # US grid average 2023
     renewable: float = 15.0  # Solar/wind with embodied carbon
     nuclear: float = 12.0
-    
+
     def get_intensity(self, source: EnergySource) -> float:
         """Get carbon intensity for energy source."""
         return getattr(self, source.value)
-
 
 # Standard hardware specifications
 HARDWARE_SPECS = {
@@ -3139,12 +3129,11 @@ HARDWARE_SPECS = {
     ComputeHardware.TPU_V4: HardwareSpecs(ComputeHardware.TPU_V4, tdp_watts=300),
 }
 
-
 class CarbonFootprintCalculator:
     """
     Calculates carbon footprint for AI training and inference.
     """
-    
+
     def __init__(
         self,
         carbon_intensity: Optional[CarbonIntensity] = None,
@@ -3152,14 +3141,14 @@ class CarbonFootprintCalculator:
     ):
         """
         Initialize calculator.
-        
+
         Args:
             carbon_intensity: Carbon intensity values for energy sources
             pue: Power Usage Effectiveness (1.0 = perfect efficiency, typical is 1.58)
         """
         self.carbon_intensity = carbon_intensity or CarbonIntensity()
         self.pue = pue
-        
+
     def calculate_training_emissions(
         self,
         hardware_type: ComputeHardware,
@@ -3170,37 +3159,37 @@ class CarbonFootprintCalculator:
     ) -> Dict[str, float]:
         """
         Calculate emissions from model training.
-        
+
         Args:
             hardware_type: Type of compute hardware
             n_devices: Number of devices used
             training_hours: Hours of training time
             energy_source: Energy source for data center
             utilization: Device utilization factor (0-1)
-            
+
         Returns:
             Dictionary with emission metrics
         """
         # Get hardware specs
         if hardware_type not in HARDWARE_SPECS:
             raise ValueError(f"Unknown hardware type: {hardware_type}")
-        
+
         specs = HARDWARE_SPECS[hardware_type]
-        
+
         # Calculate energy consumption
         power_per_device_kw = specs.average_power_draw() / 1000.0  # Convert to kW
         total_power_kw = power_per_device_kw * n_devices * utilization
-        
+
         # Account for data center efficiency (cooling, etc.)
         total_power_with_pue_kw = total_power_kw * self.pue
-        
+
         # Total energy
         total_energy_kwh = total_power_with_pue_kw * training_hours
-        
+
         # Carbon emissions
         intensity = self.carbon_intensity.get_intensity(energy_source)
         total_co2_kg = (total_energy_kwh * intensity) / 1000.0  # Convert g to kg
-        
+
         return {
             'hardware_type': hardware_type.value,
             'n_devices': n_devices,
@@ -3212,7 +3201,7 @@ class CarbonFootprintCalculator:
             'equivalent_miles_driven': total_co2_kg * 2.5,  # Rough conversion
             'equivalent_trees_year': total_co2_kg / 21.0  # Trees needed for 1 year
         }
-    
+
     def calculate_inference_emissions(
         self,
         hardware_type: ComputeHardware,
@@ -3225,7 +3214,7 @@ class CarbonFootprintCalculator:
     ) -> Dict[str, float]:
         """
         Calculate emissions from model inference during deployment.
-        
+
         Args:
             hardware_type: Type of compute hardware
             n_devices: Number of devices
@@ -3234,7 +3223,7 @@ class CarbonFootprintCalculator:
             deployment_days: Days of deployment
             energy_source: Energy source for data center
             utilization: Average device utilization
-            
+
         Returns:
             Dictionary with emission metrics
         """
@@ -3243,25 +3232,25 @@ class CarbonFootprintCalculator:
         total_inference_hours = (
             (total_predictions * ms_per_prediction / 1000.0) / 3600.0
         )
-        
+
         # But devices are running even when not inferring (base utilization)
         # So we calculate based on deployment time with utilization factor
         specs = HARDWARE_SPECS[hardware_type]
         power_per_device_kw = specs.average_power_draw() / 1000.0
-        
+
         # Total energy over deployment period
         total_hours = deployment_days * 24
         total_power_kw = power_per_device_kw * n_devices * utilization
         total_power_with_pue_kw = total_power_kw * self.pue
         total_energy_kwh = total_power_with_pue_kw * total_hours
-        
+
         # Carbon emissions
         intensity = self.carbon_intensity.get_intensity(energy_source)
         total_co2_kg = (total_energy_kwh * intensity) / 1000.0
-        
+
         # Per-prediction emissions
         co2_per_prediction_g = (total_co2_kg * 1000.0) / total_predictions
-        
+
         return {
             'hardware_type': hardware_type.value,
             'n_devices': n_devices,
@@ -3274,7 +3263,7 @@ class CarbonFootprintCalculator:
             'co2_tons': total_co2_kg / 1000.0,
             'co2_per_prediction_g': co2_per_prediction_g
         }
-    
+
     def calculate_data_storage_emissions(
         self,
         storage_tb: float,
@@ -3284,13 +3273,13 @@ class CarbonFootprintCalculator:
     ) -> Dict[str, float]:
         """
         Calculate emissions from data storage.
-        
+
         Args:
             storage_tb: Terabytes of storage
             storage_years: Years of storage
             energy_source: Energy source
             redundancy_factor: Replication factor for reliability
-            
+
         Returns:
             Dictionary with emission metrics
         """
@@ -3298,25 +3287,25 @@ class CarbonFootprintCalculator:
         # Modern HDDs: ~5-7W per TB
         # SSDs: ~2-3W per TB (we use 3W)
         watts_per_tb = 3.0
-        
+
         # Account for redundancy
         effective_storage_tb = storage_tb * redundancy_factor
-        
+
         # Power consumption
         total_power_w = effective_storage_tb * watts_per_tb
         total_power_kw = total_power_w / 1000.0
-        
+
         # Account for data center efficiency
         total_power_with_pue_kw = total_power_kw * self.pue
-        
+
         # Energy over time
         hours = storage_years * 365.25 * 24
         total_energy_kwh = total_power_with_pue_kw * hours
-        
+
         # Emissions
         intensity = self.carbon_intensity.get_intensity(energy_source)
         total_co2_kg = (total_energy_kwh * intensity) / 1000.0
-        
+
         return {
             'storage_tb': storage_tb,
             'storage_years': storage_years,
@@ -3327,7 +3316,7 @@ class CarbonFootprintCalculator:
             'co2_kg': total_co2_kg,
             'co2_tons': total_co2_kg / 1000.0
         }
-    
+
     def compare_alternatives(
         self,
         training_scenarios: List[Dict],
@@ -3335,11 +3324,11 @@ class CarbonFootprintCalculator:
     ) -> Dict[str, any]:
         """
         Compare carbon footprint of alternative approaches.
-        
+
         Args:
             training_scenarios: List of training configurations
             deployment_scenarios: List of deployment configurations
-            
+
         Returns:
             Comparison results
         """
@@ -3348,7 +3337,7 @@ class CarbonFootprintCalculator:
             'deployment_comparisons': [],
             'recommendations': []
         }
-        
+
         # Compare training scenarios
         for scenario in training_scenarios:
             emissions = self.calculate_training_emissions(**scenario)
@@ -3356,7 +3345,7 @@ class CarbonFootprintCalculator:
                 'scenario': scenario,
                 'emissions': emissions
             })
-        
+
         # Compare deployment scenarios
         for scenario in deployment_scenarios:
             emissions = self.calculate_inference_emissions(**scenario)
@@ -3364,7 +3353,7 @@ class CarbonFootprintCalculator:
                 'scenario': scenario,
                 'emissions': emissions
             })
-        
+
         # Generate recommendations
         if results['training_comparisons']:
             min_training_co2 = min(
@@ -3375,37 +3364,36 @@ class CarbonFootprintCalculator:
                 r['emissions']['co2_kg']
                 for r in results['training_comparisons']
             )
-            
+
             if max_training_co2 > min_training_co2 * 2:
                 results['recommendations'].append(
                     "Consider more efficient training approach to reduce emissions by >50%"
                 )
-        
+
         if results['deployment_comparisons']:
             renewable_deployments = [
                 r for r in results['deployment_comparisons']
                 if r['scenario']['energy_source'] == EnergySource.RENEWABLE
             ]
-            
+
             if not renewable_deployments:
                 results['recommendations'].append(
                     "Consider deploying on infrastructure powered by renewable energy"
                 )
-        
-        return results
 
+        return results
 
 def demonstrate_carbon_footprint_estimation():
     """Demonstrate carbon footprint calculation for healthcare AI."""
-    
+
     print("=== Carbon Footprint of Healthcare AI ===\n")
-    
+
     calculator = CarbonFootprintCalculator(pue=1.58)
-    
+
     # Example 1: Training a computer vision model for medical imaging
     print("Example 1: Medical Imaging Model Training")
     print("-" * 50)
-    
+
     training_emissions = calculator.calculate_training_emissions(
         hardware_type=ComputeHardware.GPU_A100,
         n_devices=8,
@@ -3413,7 +3401,7 @@ def demonstrate_carbon_footprint_estimation():
         energy_source=EnergySource.GRID_US_AVERAGE,
         utilization=0.9
     )
-    
+
     print(f"Hardware: {training_emissions['hardware_type']}")
     print(f"Devices: {training_emissions['n_devices']}")
     print(f"Training Time: {training_emissions['training_hours']:.1f} hours")
@@ -3421,27 +3409,27 @@ def demonstrate_carbon_footprint_estimation():
     print(f"CO2 Emissions: {training_emissions['co2_kg']:.1f} kg ({training_emissions['co2_tons']:.3f} tons)")
     print(f"Equivalent to: {training_emissions['equivalent_miles_driven']:.0f} miles driven")
     print(f"Trees needed (1 year): {training_emissions['equivalent_trees_year']:.1f}")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Example 2: Compare training with different energy sources
     print("Example 2: Impact of Energy Source")
     print("-" * 50)
-    
+
     base_config = {
         'hardware_type': ComputeHardware.GPU_A100,
         'n_devices': 8,
         'training_hours': 72,
         'utilization': 0.9
     }
-    
+
     energy_sources = [
         EnergySource.COAL,
         EnergySource.NATURAL_GAS,
         EnergySource.GRID_US_AVERAGE,
         EnergySource.RENEWABLE
     ]
-    
+
     print("Training same model with different energy sources:\n")
     for source in energy_sources:
         emissions = calculator.calculate_training_emissions(
@@ -3449,13 +3437,13 @@ def demonstrate_carbon_footprint_estimation():
             energy_source=source
         )
         print(f"{source.value:20s}: {emissions['co2_kg']:8.1f} kg CO2")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Example 3: Inference emissions for deployed model
     print("Example 3: Deployment Inference Emissions")
     print("-" * 50)
-    
+
     # Sepsis prediction model deployed for 1 year
     inference_emissions = calculator.calculate_inference_emissions(
         hardware_type=ComputeHardware.GPU_V100,
@@ -3466,7 +3454,7 @@ def demonstrate_carbon_footprint_estimation():
         energy_source=EnergySource.GRID_US_AVERAGE,
         utilization=0.3
     )
-    
+
     print(f"Deployment: Sepsis risk screening")
     print(f"Daily Predictions: {inference_emissions['predictions_per_day']:.0f}")
     print(f"Deployment Period: {inference_emissions['deployment_days']:.0f} days")
@@ -3474,13 +3462,13 @@ def demonstrate_carbon_footprint_estimation():
     print(f"Annual Energy: {inference_emissions['energy_kwh']:.1f} kWh")
     print(f"Annual CO2: {inference_emissions['co2_kg']:.1f} kg ({inference_emissions['co2_tons']:.3f} tons)")
     print(f"CO2 per Prediction: {inference_emissions['co2_per_prediction_g']:.4f} g")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Example 4: Data storage emissions
     print("Example 4: Data Storage Emissions")
     print("-" * 50)
-    
+
     # EHR data storage for training dataset
     storage_emissions = calculator.calculate_data_storage_emissions(
         storage_tb=10,  # 10 TB of EHR data
@@ -3488,18 +3476,18 @@ def demonstrate_carbon_footprint_estimation():
         energy_source=EnergySource.GRID_US_AVERAGE,
         redundancy_factor=3.0
     )
-    
+
     print(f"Storage: {storage_emissions['storage_tb']:.1f} TB (effective: {storage_emissions['effective_storage_tb']:.1f} TB with redundancy)")
     print(f"Duration: {storage_emissions['storage_years']:.1f} years")
     print(f"Total Energy: {storage_emissions['energy_kwh']:.1f} kWh")
     print(f"Total CO2: {storage_emissions['co2_kg']:.1f} kg ({storage_emissions['co2_tons']:.3f} tons)")
-    
+
     print("\n" + "="*50 + "\n")
-    
+
     # Example 5: Compare model architectures
     print("Example 5: Comparing Model Architectures")
     print("-" * 50)
-    
+
     training_scenarios = [
         {
             'hardware_type': ComputeHardware.GPU_A100,
@@ -3516,7 +3504,7 @@ def demonstrate_carbon_footprint_estimation():
             'utilization': 0.8
         }
     ]
-    
+
     deployment_scenarios = [
         {
             'hardware_type': ComputeHardware.GPU_A100,
@@ -3537,31 +3525,30 @@ def demonstrate_carbon_footprint_estimation():
             'utilization': 0.25
         }
     ]
-    
+
     comparison = calculator.compare_alternatives(
         training_scenarios,
         deployment_scenarios
     )
-    
+
     print("Training Emissions:")
     for i, result in enumerate(comparison['training_comparisons'], 1):
         print(f"\n  Scenario {i}:")
         print(f"    Hardware: {result['emissions']['hardware_type']}")
         print(f"    Training: {result['emissions']['training_hours']:.0f} hours")
         print(f"    CO2: {result['emissions']['co2_kg']:.1f} kg")
-    
+
     print("\nDeployment Emissions (1 year):")
     for i, result in enumerate(comparison['deployment_comparisons'], 1):
         print(f"\n  Scenario {i}:")
         print(f"    Energy: {result['scenario']['energy_source'].value}")
         print(f"    CO2: {result['emissions']['co2_kg']:.1f} kg")
         print(f"    Per prediction: {result['emissions']['co2_per_prediction_g']:.4f} g")
-    
+
     if comparison['recommendations']:
         print("\nRecommendations:")
         for rec in comparison['recommendations']:
             print(f"  • {rec}")
-
 
 if __name__ == "__main__":
     demonstrate_carbon_footprint_estimation()

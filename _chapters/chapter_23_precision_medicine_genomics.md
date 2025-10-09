@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 23: Precision Medicine and Genomic AI"
 chapter_number: 23
+part_number: 6
+prev_chapter: /chapters/chapter-22-clinical-decision-support/
+next_chapter: /chapters/chapter-24-population-health-screening/
 ---
-
 # Chapter 23: Treatment Recommendation and Clinical Decision Support
 
 ## Learning Objectives
@@ -29,76 +31,92 @@ This chapter develops a comprehensive framework for building treatment recommend
 
 ## Mathematical Foundations of Treatment Effect Heterogeneity
 
-The fundamental challenge in treatment recommendation is estimating individual treatment effects when each patient receives only one treatment. For patient $i$, we define the potential outcomes $$Y_i(1)$$ under treatment and $$Y_i(0)$$ under control. The individual treatment effect is $$\tau_i = Y_i(1) - Y_i(0)$$, but we observe only $$Y_i = T_i Y_i(1) + (1-T_i)Y_i(0)$$ where $$T_i \in \{0,1\}$$ indicates treatment assignment. The average treatment effect (ATE) is $$\tau = \mathbb{E}[\tau_i]$$, but our goal is to estimate the conditional average treatment effect (CATE) $$\tau(x) = \mathbb{E}[Y_i(1) - Y_i(0) | X_i = x]$$$to personalize treatment recommendations based on patient characteristics$$X_i$.
+The fundamental challenge in treatment recommendation is estimating individual treatment effects when each patient receives only one treatment. For patient $i$, we define the potential outcomes $Y_i(1)$ under treatment and $Y_i(0)$ under control. The individual treatment effect is $\tau_i = Y_i(1) - Y_i(0)$, but we observe only $Y_i = T_i Y_i(1) + (1-T_i)Y_i(0)$ where $T_i \in \{0,1\}$ indicates treatment assignment. The average treatment effect (ATE) is $\tau = \mathbb{E}[\tau_i]$, but our goal is to estimate the conditional average treatment effect (CATE) $\tau(x) = \mathbb{E}[Y_i(1) - Y_i(0) | X_i = x]$to personalize treatment recommendations based on patient characteristics$X_i$.
 
-Under the assumptions of unconfoundedness $$(Y_i(0), Y_i(1)) \perp T_i | X_i$$ and positivity $$0 < P(T_i=1|X_i=x) < 1$$, the CATE can be identified from observational data. The most direct approach is the S-learner which builds a single model $$\mu(x,t)$$ to predict outcomes and estimates $$\hat{\tau}(x) = \hat{\mu}(x,1) - \hat{\mu}(x,0)$$. However, when treatment effects are small relative to baseline risk, the S-learner may perform poorly because it must learn both the prognostic function and treatment effect simultaneously.
+Under the assumptions of unconfoundedness $(Y_i(0), Y_i(1)) \perp T_i | X_i$ and positivity $0 < P(T_i=1|X_i=x) < 1$, the CATE can be identified from observational data. The most direct approach is the S-learner which builds a single model $\mu(x,t)$ to predict outcomes and estimates $\hat{\tau}(x) = \hat{\mu}(x,1) - \hat{\mu}(x,0)$. However, when treatment effects are small relative to baseline risk, the S-learner may perform poorly because it must learn both the prognostic function and treatment effect simultaneously.
 
-The T-learner addresses this by building separate models $$\mu_0(x)$$ and $$\mu_1(x)$$ for control and treatment groups, estimating $$\hat{\tau}(x) = \hat{\mu}_1(x) - \hat{\mu}_0(x)$$. This allows each model to focus on prediction within its respective group but may suffer from overfitting when one treatment group is small. The X-learner improves upon the T-learner by incorporating information across treatment groups. After fitting $$\hat{\mu}_0$$ and $$\hat{\mu}_1$$, it computes imputed treatment effects $$\tilde{\tau}_1(x) = Y_i - \hat{\mu}_0(X_i)$$ for treated patients and $$\tilde{\tau}_0(x) = \hat{\mu}_1(X_i) - Y_i$$ for controls, then builds models $$\tau_1(x)$$ and $$\tau_0(x)$$ to predict these imputed effects. The final CATE estimate is $$\hat{\tau}(x) = g(x)\hat{\tau}_0(x) + (1-g(x))\hat{\tau}_1(x)$$ where $$g(x) = P(T=1|X=x)$$ weights the estimates by propensity score.
+The T-learner addresses this by building separate models $\mu_0(x)$ and $\mu_1(x)$ for control and treatment groups, estimating $\hat{\tau}(x) = \hat{\mu}_1(x) - \hat{\mu}_0(x)$. This allows each model to focus on prediction within its respective group but may suffer from overfitting when one treatment group is small. The X-learner improves upon the T-learner by incorporating information across treatment groups. After fitting $\hat{\mu}_0$ and $\hat{\mu}_1$, it computes imputed treatment effects $\tilde{\tau}_1(x) = Y_i - \hat{\mu}_0(X_i)$ for treated patients and $\tilde{\tau}_0(x) = \hat{\mu}_1(X_i) - Y_i$ for controls, then builds models $\tau_1(x)$ and $\tau_0(x)$ to predict these imputed effects. The final CATE estimate is $\hat{\tau}(x) = g(x)\hat{\tau}_0(x) + (1-g(x))\hat{\tau}_1(x)$ where $g(x) = P(T=1|X=x)$ weights the estimates by propensity score.
 
 For more robust estimation, doubly robust methods combine outcome modeling with propensity score weighting. The augmented inverse propensity weighted (AIPW) estimator for the CATE is:
 
-$$\hat{\tau}(x) = \mathbb{E}\left[\frac{T_i(Y_i - \hat{\mu}_1(X_i))}{\hat{e}(X_i)} - \frac{(1-T_i)(Y_i - \hat{\mu}_0(X_i))}{1-\hat{e}(X_i)} + \hat{\mu}_1(X_i) - \hat{\mu}_0(X_i) \Big| X_i = x\right]$$
+$$
+\hat{\tau}(x) = \mathbb{E}\left[\frac{T_i(Y_i - \hat{\mu}_1(X_i))}{\hat{e}(X_i)} - \frac{(1-T_i)(Y_i - \hat{\mu}_0(X_i))}{1-\hat{e}(X_i)} + \hat{\mu}_1(X_i) - \hat{\mu}_0(X_i) \Big| X_i = x\right]
+$$
 
-where $$\hat{e}(x) = P(T=1|X=x)$$ is the estimated propensity score. This estimator is consistent if either the outcome models or the propensity model is correctly specified, providing protection against model misspecification. In practice, we use flexible machine learning methods for both $$\hat{\mu}_t(x)$$ and $$\hat{e}(x)$$, combining them through cross-fitting to avoid overfitting bias.
+where $\hat{e}(x) = P(T=1|X=x)$ is the estimated propensity score. This estimator is consistent if either the outcome models or the propensity model is correctly specified, providing protection against model misspecification. In practice, we use flexible machine learning methods for both $\hat{\mu}_t(x)$ and $\hat{e}(x)$, combining them through cross-fitting to avoid overfitting bias.
 
-Causal forests extend random forests to estimate CATEs by modifying the splitting criterion to maximize treatment effect heterogeneity. Each tree is built by randomly subsampling the data and features, then recursively partitioning to maximize the difference in treatment effects across resulting nodes. For a given leaf $$L(x)$$ containing patient $i$, the treatment effect estimate is:
+Causal forests extend random forests to estimate CATEs by modifying the splitting criterion to maximize treatment effect heterogeneity. Each tree is built by randomly subsampling the data and features, then recursively partitioning to maximize the difference in treatment effects across resulting nodes. For a given leaf $L(x)$ containing patient $i$, the treatment effect estimate is:
 
-$$\hat{\tau}(x) = \frac{\sum_{i: X_i \in L(x)} T_i Y_i}{\sum_{i: X_i \in L(x)} T_i} - \frac{\sum_{i: X_i \in L(x)} (1-T_i) Y_i}{\sum_{i: X_i \in L(x)} (1-T_i)}$$
+$$
+\hat{\tau}(x) = \frac{\sum_{i: X_i \in L(x)} T_i Y_i}{\sum_{i: X_i \in L(x)} T_i} - \frac{\sum_{i: X_i \in L(x)} (1-T_i) Y_i}{\sum_{i: X_i \in L(x)} (1-T_i)}
+$$
 
 Honest causal forests improve upon this by using a sample splitting approach where one subset of data is used to determine the tree structure and another independent subset is used to estimate treatment effects within leaves, reducing overfitting. The resulting estimates have desirable theoretical properties including consistency and asymptotic normality under regularity conditions.
 
-For treatment recommendations, we must account for uncertainty in CATE estimates. The variance of $$\hat{\tau}(x)$$ depends on both the variance of potential outcomes and the propensity score. Regions of covariate space with low propensity scores have high variance estimates because few patients receive treatment. This has important equity implications: if certain demographic groups are historically undertreated, their CATE estimates will be uncertain, yet they may be the populations that could benefit most from treatment. Confidence intervals for CATEs can be constructed using bootstrap methods for meta-learners or using the asymptotic distribution for causal forests. When making treatment recommendations, we should favor treatments with both high estimated benefit and sufficient precision to distinguish from null effects.
+For treatment recommendations, we must account for uncertainty in CATE estimates. The variance of $\hat{\tau}(x)$ depends on both the variance of potential outcomes and the propensity score. Regions of covariate space with low propensity scores have high variance estimates because few patients receive treatment. This has important equity implications: if certain demographic groups are historically undertreated, their CATE estimates will be uncertain, yet they may be the populations that could benefit most from treatment. Confidence intervals for CATEs can be constructed using bootstrap methods for meta-learners or using the asymptotic distribution for causal forests. When making treatment recommendations, we should favor treatments with both high estimated benefit and sufficient precision to distinguish from null effects.
 
 ## Patient Preferences and Utility Modeling
 
-Effective treatment recommendations must incorporate patient preferences and values, which often vary across populations and cultures. Utility theory provides a mathematical framework for quantifying how patients value different health outcomes. For patient $i$ with covariates $$X_i$$, we define a utility function $$U_i(h)$$ that maps health states $h$ to real numbers representing preference. Under treatment $t$, patient $i$ experiences outcome $$Y_i(t)$$ with associated health state $$h_i(t)$$. The optimal treatment maximizes expected utility:
+Effective treatment recommendations must incorporate patient preferences and values, which often vary across populations and cultures. Utility theory provides a mathematical framework for quantifying how patients value different health outcomes. For patient $i$ with covariates $X_i$, we define a utility function $U_i(h)$ that maps health states $h$ to real numbers representing preference. Under treatment $t$, patient $i$ experiences outcome $Y_i(t)$ with associated health state $h_i(t)$. The optimal treatment maximizes expected utility:
 
-$$t^* = \arg\max_{t \in \mathcal{T}} \mathbb{E}[U_i(h_i(t)) | X_i]$$
+$$
+t^* = \arg\max_{t \in \mathcal{T}} \mathbb{E}[U_i(h_i(t)) | X_i]
+$$
 
-In clinical contexts, health states are typically multidimensional, encompassing survival, quality of life, symptom burden, functional status, and treatment side effects. Quality-adjusted life years (QALYs) provide one approach to aggregate these dimensions, defining $$U_i(h) = L_i \cdot Q_i$$ where $$L_i$$ is life years and $$Q_i \in [0,1]$$ is quality of life. However, the QALY framework embeds assumptions about temporal additivity and constant proportional trade-offs that may not reflect individual preferences. More flexible approaches use multi-attribute utility functions:
+In clinical contexts, health states are typically multidimensional, encompassing survival, quality of life, symptom burden, functional status, and treatment side effects. Quality-adjusted life years (QALYs) provide one approach to aggregate these dimensions, defining $U_i(h) = L_i \cdot Q_i$ where $L_i$ is life years and $Q_i \in [0,1]$ is quality of life. However, the QALY framework embeds assumptions about temporal additivity and constant proportional trade-offs that may not reflect individual preferences. More flexible approaches use multi-attribute utility functions:
 
-$$U_i(h) = \sum_{j=1}^J w_{ij} u_{ij}(h_j)$$
+$$
+U_i(h) = \sum_{j=1}^J w_{ij} u_{ij}(h_j)
+$$
 
-where $$h_j$$ are attributes such as mobility, pain, cognitive function, and $$w_{ij}$$ are patient-specific weights reflecting the relative importance of each attribute. Eliciting these weights requires careful preference assessment through methods such as time trade-off tasks, standard gambles, or discrete choice experiments.
+where $h_j$ are attributes such as mobility, pain, cognitive function, and $w_{ij}$ are patient-specific weights reflecting the relative importance of each attribute. Eliciting these weights requires careful preference assessment through methods such as time trade-off tasks, standard gambles, or discrete choice experiments.
 
 Crucially, preferences vary systematically across populations. Research has documented cultural differences in preferences for life-extending versus symptom-relieving treatments, willingness to accept treatment side effects, and attitudes toward aggressive interventions. Older adults may prioritize quality over quantity of life, while parents of young children may accept greater treatment burden to maximize survival. Patients from collectivist cultures may weigh family preferences more heavily than those from individualistic cultures. Socioeconomic factors influence preferences through different mechanisms: patients facing financial constraints may discount treatments with high out-of-pocket costs, while those with limited social support may avoid treatments requiring intensive caregiver involvement.
 
-To model preference heterogeneity, we can estimate conditional utility functions $$U(h; x, p)$$ where $x$ represents clinical characteristics and $p$ represents patient-reported preferences. One approach uses mixed logit models to estimate preference distributions:
+To model preference heterogeneity, we can estimate conditional utility functions $U(h; x, p)$ where $x$ represents clinical characteristics and $p$ represents patient-reported preferences. One approach uses mixed logit models to estimate preference distributions:
 
-$$P(y_i = t | x_i, p_i) = \frac{\exp(\beta_t^T f(x_i, p_i))}{\sum_{t' \in \mathcal{T}} \exp(\beta_{t'}^T f(x_i, p_i))}$$
+$$
+P(y_i = t | x_i, p_i) = \frac{\exp(\beta_t^T f(x_i, p_i))}{\sum_{t' \in \mathcal{T}} \exp(\beta_{t'}^T f(x_i, p_i))}
+$$
 
-where $$f(x_i, p_i)$$ combines clinical features with preference indicators and $$\beta_t$$ captures how different attributes influence treatment choice. By allowing coefficients to vary across individuals, we capture heterogeneous preferences while still estimating population-level preference distributions.
+where $f(x_i, p_i)$ combines clinical features with preference indicators and $\beta_t$ captures how different attributes influence treatment choice. By allowing coefficients to vary across individuals, we capture heterogeneous preferences while still estimating population-level preference distributions.
 
 An equity-focused approach to preference modeling recognizes that stated preferences may be constrained by past experiences and structural inequities. Patients who have experienced discrimination in healthcare may distrust aggressive treatments or clinical trials. Those who have faced financial toxicity from previous treatments may undervalue effective but expensive therapies. Simply eliciting and implementing stated preferences may perpetuate these constraints rather than expand patient choice. Instead, we should present information about treatment options in ways that help patients understand their full range of choices, explicitly discuss how resource constraints could be addressed, and distinguish between inherent preferences versus preferences shaped by structural barriers.
 
 ## Multi-Objective Optimization for Treatment Recommendations
 
-Treatment recommendations must balance multiple competing objectives including clinical efficacy, safety, cost, patient preferences, and equity considerations. We formalize this as a multi-objective optimization problem where we seek treatment recommendations that optimize a vector of objectives $$\mathbf{f}(t, x) = (f_1(t,x), \ldots, f_K(t,x))^T$$. For example, objectives might include:
+Treatment recommendations must balance multiple competing objectives including clinical efficacy, safety, cost, patient preferences, and equity considerations. We formalize this as a multi-objective optimization problem where we seek treatment recommendations that optimize a vector of objectives $\mathbf{f}(t, x) = (f_1(t,x), \ldots, f_K(t,x))^T$. For example, objectives might include:
 
-- Efficacy: Expected improvement in clinical outcome $$f_1(t,x) = \mathbb{E}[Y_i(t) - Y_i(0) | X_i=x]$$
-- Safety: Negative expected adverse events $$f_2(t,x) = -\mathbb{E}[\text{AE}_i(t) | X_i=x]$$  
-- Cost: Negative total healthcare costs $$f_3(t,x) = -\mathbb{E}[C_i(t) | X_i=x]$$
-- Equity: Reduction in outcome disparities $$f_4(t,x) = -\text{Var}_{g \in \mathcal{G}}[\mathbb{E}[Y_i(t) | G_i=g]]$$
+- Efficacy: Expected improvement in clinical outcome $f_1(t,x) = \mathbb{E}[Y_i(t) - Y_i(0) | X_i=x]$
+- Safety: Negative expected adverse events $f_2(t,x) = -\mathbb{E}[\text{AE}_i(t) | X_i=x]$
+- Cost: Negative total healthcare costs $f_3(t,x) = -\mathbb{E}[C_i(t) | X_i=x]$
+- Equity: Reduction in outcome disparities $f_4(t,x) = -\text{Var}_{g \in \mathcal{G}}[\mathbb{E}[Y_i(t) | G_i=g]]$
 
 where $g$ indexes demographic or social groups. A solution $t$ is Pareto optimal if no other treatment is better on all objectives simultaneously. The set of Pareto optimal solutions forms the Pareto frontier, representing optimal trade-offs between competing goals.
 
-To identify a single recommended treatment, we must aggregate objectives using a scalarization function. The weighted sum approach defines $$f_{\text{agg}}(t,x) = \sum_{k=1}^K \omega_k f_k(t,x)$$ where $\omega_k \geq 0$ are weights reflecting relative importance. By varying weights, we trace out the Pareto frontier. However, this approach requires objectives to be commensurate (same units) and may miss non-convex regions of the Pareto frontier.
+To identify a single recommended treatment, we must aggregate objectives using a scalarization function. The weighted sum approach defines $f_{\text{agg}}(t,x) = \sum_{k=1}^K \omega_k f_k(t,x)$ where $\omega_k \geq 0$ are weights reflecting relative importance. By varying weights, we trace out the Pareto frontier. However, this approach requires objectives to be commensurate (same units) and may miss non-convex regions of the Pareto frontier.
 
-The constraint-based approach instead treats some objectives as hard constraints: maximize $$f_1(t,x)$$ subject to $$f_k(t,x) \geq \epsilon_k$$ for $$k=2,\ldots,K$$. This is appropriate when certain objectives represent minimum acceptable thresholds. For example, we might maximize efficacy subject to the constraints that adverse event rate is below 10%, total cost is below a budget threshold, and the treatment effect is positive for all demographic subgroups.
+The constraint-based approach instead treats some objectives as hard constraints: maximize $f_1(t,x)$ subject to $f_k(t,x) \geq \epsilon_k$ for $k=2,\ldots,K$. This is appropriate when certain objectives represent minimum acceptable thresholds. For example, we might maximize efficacy subject to the constraints that adverse event rate is below 10%, total cost is below a budget threshold, and the treatment effect is positive for all demographic subgroups.
 
 From an equity perspective, several optimization formulations explicitly promote fairness. The maximin approach seeks to maximize the minimum outcome across groups:
 
-$$t^* = \arg\max_t \min_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]$$
+$$
+t^* = \arg\max_t \min_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]
+$$
 
 This prioritizes improvements for the worst-off group but may sacrifice overall efficacy. The Nash social welfare approach instead maximizes the product of group outcomes:
 
-$$t^* = \arg\max_t \prod_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]$$
+$$
+t^* = \arg\max_t \prod_{g \in \mathcal{G}} \mathbb{E}[Y_i(t) | G_i = g, X_i]
+$$
 
 providing a balance between efficiency and equity. Disparate impact constraints require that treatment effects do not differ substantially across groups:
 
-$$\frac{\mathbb{E}[Y_i(t) | G_i = g_1, X_i]}{\mathbb{E}[Y_i(t) | G_i = g_2, X_i]} \geq 1 - \delta$$
+$$
+\frac{\mathbb{E}[Y_i(t) | G_i = g_1, X_i]}{\mathbb{E}[Y_i(t) | G_i = g_2, X_i]} \geq 1 - \delta
+$$
 
-for all pairs of groups $$(g_1, g_2)$$ and some tolerance $$\delta$$. These constraints ensure that recommendations do not exacerbate existing disparities.
+for all pairs of groups $(g_1, g_2)$ and some tolerance $\delta$. These constraints ensure that recommendations do not exacerbate existing disparities.
 
 In practice, we solve multi-objective treatment recommendation problems using mixed-integer programming when the treatment space is discrete, or constrained optimization when continuous. For complex problems with many objectives and constraints, evolutionary algorithms such as NSGA-II can approximate the Pareto frontier by maintaining a population of candidate solutions and iteratively selecting for non-dominated solutions with high diversity.
 
@@ -108,31 +126,41 @@ A critical equity consideration is that trade-offs between objectives may differ
 
 Precision dosing represents a critical application of treatment recommendation systems where the goal is to identify optimal drug dosing regimens that maximize efficacy while minimizing toxicity. Pharmacometric models describe how drug concentrations change over time (pharmacokinetics) and how concentrations relate to effects (pharmacodynamics). These models form the basis for dose individualization based on patient characteristics.
 
-The standard pharmacokinetic model describes drug concentration $$C(t)$$ over time following a dose $D$ using compartmental models. A one-compartment model with first-order elimination is:
+The standard pharmacokinetic model describes drug concentration $C(t)$ over time following a dose $D$ using compartmental models. A one-compartment model with first-order elimination is:
 
-$$C(t) = \frac{D}{V} e^{-k_e t}$$
+$$
+C(t) = \frac{D}{V} e^{-k_e t}
+$$
 
-where $V$ is volume of distribution and $$k_e$$ is elimination rate constant. Multi-compartment models extend this to describe distribution across tissue compartments. Population pharmacokinetic models allow parameters to vary across individuals:
+where $V$ is volume of distribution and $k_e$ is elimination rate constant. Multi-compartment models extend this to describe distribution across tissue compartments. Population pharmacokinetic models allow parameters to vary across individuals:
 
-$$\theta_i = \theta_{\text{pop}} \cdot e^{\eta_i}$$
+$$
+\theta_i = \theta_{\text{pop}} \cdot e^{\eta_i}
+$$
 
-where $$\theta_i$$ is an individual parameter (e.g., clearance), $$\theta_{\text{pop}}$$ is the population mean, and $$\eta_i \sim N(0, \omega^2)$$ captures between-subject variability. Covariates such as age, weight, renal function, and genetic polymorphisms can be incorporated:
+where $\theta_i$ is an individual parameter (e.g., clearance), $\theta_{\text{pop}}$ is the population mean, and $\eta_i \sim N(0, \omega^2)$ captures between-subject variability. Covariates such as age, weight, renal function, and genetic polymorphisms can be incorporated:
 
-$$\theta_i = \theta_{\text{pop}} \cdot \prod_{j} \left(\frac{X_{ij}}{X_{\text{ref},j}}\right)^{\beta_j} \cdot e^{\eta_i}$$
+$$
+\theta_i = \theta_{\text{pop}} \cdot \prod_{j} \left(\frac{X_{ij}}{X_{\text{ref},j}}\right)^{\beta_j} \cdot e^{\eta_i}
+$$
 
-allowing dose adjustment based on patient characteristics. For example, for drugs cleared renally, clearance scales with creatinine clearance: $$CL_i = CL_{\text{pop}} \cdot (CrCl_i/CrCl_{\text{ref}})^{0.75}$$.
+allowing dose adjustment based on patient characteristics. For example, for drugs cleared renally, clearance scales with creatinine clearance: $CL_i = CL_{\text{pop}} \cdot (CrCl_i/CrCl_{\text{ref}})^{0.75}$.
 
 Pharmacodynamic models link concentration to effect. The sigmoid Emax model describes how concentration $C$ produces effect $E$:
 
-$$E(C) = E_0 + \frac{E_{\max} \cdot C^\gamma}{EC_{50}^\gamma + C^\gamma}$$
+$$
+E(C) = E_0 + \frac{E_{\max} \cdot C^\gamma}{EC_{50}^\gamma + C^\gamma}
+$$
 
-where $$E_0$$ is baseline effect, $$E_{\max}$$ is maximum effect, $$EC_{50}$$ is concentration producing half-maximal effect, and $$\gamma$$ is Hill coefficient describing sigmoidicity. For many drugs, toxicity also increases with concentration, creating a therapeutic window between minimum effective concentration and maximum safe concentration.
+where $E_0$ is baseline effect, $E_{\max}$ is maximum effect, $EC_{50}$ is concentration producing half-maximal effect, and $\gamma$ is Hill coefficient describing sigmoidicity. For many drugs, toxicity also increases with concentration, creating a therapeutic window between minimum effective concentration and maximum safe concentration.
 
 To recommend optimal doses, we use model predictive control which repeatedly solves an optimization problem:
 
-$$\max_{d_1, \ldots, d_T} \sum_{t=1}^T U(E(C_t), A(C_t))$$
+$$
+\max_{d_1, \ldots, d_T} \sum_{t=1}^T U(E(C_t), A(C_t))
+$$
 
-subject to pharmacokinetic model constraints linking doses $$d_t$$ to concentrations $$C_t$$, where $$U(E,A)$$ is a utility function reflecting the benefit of therapeutic effect $E$ and harm of adverse effects $A$. This is solved at each time point using the current measured concentration and patient state, implementing only the first dose and then re-optimizing at the next time point once new measurements are available.
+subject to pharmacokinetic model constraints linking doses $d_t$ to concentrations $C_t$, where $U(E,A)$ is a utility function reflecting the benefit of therapeutic effect $E$ and harm of adverse effects $A$. This is solved at each time point using the current measured concentration and patient state, implementing only the first dose and then re-optimizing at the next time point once new measurements are available.
 
 Equity issues in precision dosing arise through multiple mechanisms. First, population pharmacokinetic models are typically developed using data from phase 2 and 3 clinical trials that systematically underrepresent certain populations including racial and ethnic minorities, older adults, patients with multimorbidity, pregnant women, and children. When these populations are excluded from model development, parameter estimates may be biased and dose recommendations may be suboptimal or unsafe. Second, some dosing algorithms have explicitly incorporated race as a covariate, most notoriously in nephrology with eGFR equations that adjusted for race. These adjustments often lack biological justification and can lead to underdosing or overdosing of specific populations. Third, implementing precision dosing requires therapeutic drug monitoring infrastructure that may not be available in under-resourced settings, creating disparities in who benefits from dose optimization.
 
@@ -142,27 +170,35 @@ Best practices for equitable dosing algorithms include: developing models using 
 
 Treatment selection systems recommend which among multiple treatment options is most appropriate for a given patient. When treatments are mutually exclusive (e.g., choosing between chemotherapy regimens), this is a classification problem with treatments as classes. When treatments can be combined, this becomes a set recommendation problem identifying optimal treatment combinations.
 
-For single treatment selection, we estimate the CATE for each available treatment $$\tau_t(x) = \mathbb{E}[Y_i(t) - Y_i(0) | X_i=x]$$ and recommend:
+For single treatment selection, we estimate the CATE for each available treatment $\tau_t(x) = \mathbb{E}[Y_i(t) - Y_i(0) | X_i=x]$ and recommend:
 
-$$t^*(x) = \arg\max_{t \in \mathcal{T}} \hat{\tau}_t(x)$$
+$$
+t^*(x) = \arg\max_{t \in \mathcal{T}} \hat{\tau}_t(x)
+$$
 
 However, this greedy approach ignores uncertainty in CATE estimates. A more robust approach uses Thompson sampling where we randomly sample from the posterior distribution of treatment effects and recommend the treatment with the highest sampled effect:
 
-$$t^*(x) \sim P(t = \arg\max_{t'} \tilde{\tau}_{t'}(x))$$
+$$
+t^*(x) \sim P(t = \arg\max_{t'} \tilde{\tau}_{t'}(x))
+$$
 
-where $$\tilde{\tau}_t(x) \sim P(\tau_t(x) | \mathcal{D})$$ is sampled from the posterior given data $$\mathcal{D}$$. This naturally incorporates exploration: treatments with uncertain effects have higher probability of being recommended, allowing the system to learn from experience.
+where $\tilde{\tau}_t(x) \sim P(\tau_t(x) | \mathcal{D})$ is sampled from the posterior given data $\mathcal{D}$. This naturally incorporates exploration: treatments with uncertain effects have higher probability of being recommended, allowing the system to learn from experience.
 
-For treatment combinations, we must consider interactions between therapies. Let $$t = (t_1, \ldots, t_J)$$ be a vector indicating which treatments are administered. The outcome with combination treatment may exhibit synergistic effects:
+For treatment combinations, we must consider interactions between therapies. Let $t = (t_1, \ldots, t_J)$ be a vector indicating which treatments are administered. The outcome with combination treatment may exhibit synergistic effects:
 
-$$Y_i(\mathbf{t}) = \mu_0(X_i) + \sum_{j=1}^J \tau_j(X_i) t_j + \sum_{j<k} \tau_{jk}(X_i) t_j t_k + \ldots$$
+$$
+Y_i(\mathbf{t}) = \mu_0(X_i) + \sum_{j=1}^J \tau_j(X_i) t_j + \sum_{j<k} \tau_{jk}(X_i) t_j t_k + \ldots
+$$
 
-where $$\tau_j(X_i)$$ are main effects and $$\tau_{jk}(X_i)$$ are pairwise interaction effects. Estimating higher-order interactions requires substantial sample sizes. In practice, we often assume limited interactions and use regularization to select sparse models.
+where $\tau_j(X_i)$ are main effects and $\tau_{jk}(X_i)$ are pairwise interaction effects. Estimating higher-order interactions requires substantial sample sizes. In practice, we often assume limited interactions and use regularization to select sparse models.
 
-An alternative approach uses reinforcement learning to learn optimal treatment policies through sequential decision-making. We model treatment selection as a contextual bandit problem where at each decision point we observe patient state $$X_i$$, choose action (treatment) $$A_i$$, and observe reward $$R_i$$. The goal is to learn a policy $$\pi(a|x)$$ that maximizes expected reward $$\mathbb{E}_{x,a \sim \pi}[R(x,a)]$$. Contextual bandit algorithms such as LinUCB maintain uncertainty estimates for each action and select actions optimistically:
+An alternative approach uses reinforcement learning to learn optimal treatment policies through sequential decision-making. We model treatment selection as a contextual bandit problem where at each decision point we observe patient state $X_i$, choose action (treatment) $A_i$, and observe reward $R_i$. The goal is to learn a policy $\pi(a|x)$ that maximizes expected reward $\mathbb{E}_{x,a \sim \pi}[R(x,a)]$. Contextual bandit algorithms such as LinUCB maintain uncertainty estimates for each action and select actions optimistically:
 
-$$a^*(x) = \arg\max_a \left[\hat{Q}(x,a) + \beta \sqrt{\text{Var}[\hat{Q}(x,a)]}\right]$$
+$$
+a^*(x) = \arg\max_a \left[\hat{Q}(x,a) + \beta \sqrt{\text{Var}[\hat{Q}(x,a)]}\right]
+$$
 
-where $$\hat{Q}(x,a)$$ is the estimated expected reward and $$\beta$$ controls exploration. This UCB approach has theoretical guarantees on regret bounds and naturally handles the exploration-exploitation trade-off.
+where $\hat{Q}(x,a)$ is the estimated expected reward and $\beta$ controls exploration. This UCB approach has theoretical guarantees on regret bounds and naturally handles the exploration-exploitation trade-off.
 
 From an equity perspective, treatment selection systems must explicitly evaluate whether recommendations differ systematically across groups and whether these differences reflect true treatment effect heterogeneity or algorithmic bias. We should stratify validation analyses by demographic groups and clinical subpopulations, examining:
 
@@ -177,33 +213,43 @@ When treatment recommendations differ across groups, we must distinguish between
 
 Clinical pathways are structured multidisciplinary care plans that specify the sequence of interventions, timing of assessments, and decision points for managing specific conditions. Optimizing clinical pathways involves identifying the sequence of interventions that maximizes patient outcomes while respecting resource constraints, care setting capabilities, and patient preferences.
 
-We model a clinical pathway as a finite-horizon Markov decision process where patient state $$S_t$$ evolves over discrete time steps, actions $$A_t$$ represent clinical interventions, and the transition dynamics $$P(S_{t+1}|S_t, A_t)$$ describe disease progression and treatment response. The reward function $$R(S_t, A_t)$$ captures both intermediate outcomes (symptom relief, functional improvement) and terminal outcomes (survival, quality of life). The optimal policy $$\pi^*(s) = \arg\max_a Q^*(s,a)$$ maximizes expected cumulative reward:
+We model a clinical pathway as a finite-horizon Markov decision process where patient state $S_t$ evolves over discrete time steps, actions $A_t$ represent clinical interventions, and the transition dynamics $P(S_{t+1}|S_t, A_t)$ describe disease progression and treatment response. The reward function $R(S_t, A_t)$ captures both intermediate outcomes (symptom relief, functional improvement) and terminal outcomes (survival, quality of life). The optimal policy $\pi^*(s) = \arg\max_a Q^*(s,a)$ maximizes expected cumulative reward:
 
-$$Q^*(s,a) = \mathbb{E}\left[\sum_{t=0}^T \gamma^t R(S_t, A_t) \Big| S_0=s, A_0=a, \pi^*\right]$$
+$$
+Q^*(s,a) = \mathbb{E}\left[\sum_{t=0}^T \gamma^t R(S_t, A_t) \Big| S_0=s, A_0=a, \pi^*\right]
+$$
 
-where $$\gamma \in [0,1]$$ is a discount factor reflecting the relative value of immediate versus future rewards.
+where $\gamma \in [0,1]$ is a discount factor reflecting the relative value of immediate versus future rewards.
 
 For pathways with moderate state and action spaces, we can solve for optimal policies using dynamic programming methods including value iteration or policy iteration. For complex pathways with high-dimensional state spaces, we use reinforcement learning with function approximation. Fitted Q-iteration builds a sequence of Q-functions:
 
-$$\hat{Q}_{k+1}(s,a) = r(s,a) + \gamma \max_{a'} \hat{Q}_k(s', a')$$
+$$
+\hat{Q}_{k+1}(s,a) = r(s,a) + \gamma \max_{a'} \hat{Q}_k(s', a')
+$$
 
-estimated using supervised learning on transition data $$(s, a, r, s')$$. Deep Q-networks use neural networks to approximate $$Q^*(s,a)$$, enabling application to high-dimensional state representations.
+estimated using supervised learning on transition data $(s, a, r, s')$. Deep Q-networks use neural networks to approximate $Q^*(s,a)$, enabling application to high-dimensional state representations.
 
 A critical challenge in clinical pathway optimization is that the state space includes not only clinical variables but also resources, care setting, and patient circumstances. For a patient in a rural setting without access to daily infusion centers, pathways requiring frequent IV therapy are infeasible regardless of clinical superiority. For patients facing transportation barriers, pathways demanding frequent clinic visits impose severe burdens. For patients with limited English proficiency, pathways requiring complex self-management may be inappropriate without language-concordant support.
 
-To incorporate these constraints, we extend the MDP formulation to include resource availability $$C \subseteq \mathcal{C}$$ as part of the state space, where $$\mathcal{C}$$ is the set of all possible resources (specialist access, imaging modalities, medication formularies, social support). The action space becomes context-dependent: $$\mathcal{A}(C) = \{a \in \mathcal{A} : \text{requirements}(a) \subseteq C\}$$ includes only actions whose required resources are available. The transition dynamics may depend on resource availability: a treatment requiring strict adherence may be less effective when administered without adherence support.
+To incorporate these constraints, we extend the MDP formulation to include resource availability $C \subseteq \mathcal{C}$ as part of the state space, where $\mathcal{C}$ is the set of all possible resources (specialist access, imaging modalities, medication formularies, social support). The action space becomes context-dependent: $\mathcal{A}(C) = \{a \in \mathcal{A} : \text{requirements}(a) \subseteq C\}$ includes only actions whose required resources are available. The transition dynamics may depend on resource availability: a treatment requiring strict adherence may be less effective when administered without adherence support.
 
 Equity-focused pathway optimization explicitly considers disparities in access and outcomes. We can formulate this as constrained optimization:
 
-$$\max_\pi \mathbb{E}_{s,a \sim \pi}[Q^\pi(s,a)]$$
+$$
+\max_\pi \mathbb{E}_{s,a \sim \pi}[Q^\pi(s,a)]
+$$
 
 subject to:
 
-$$\min_{g \in \mathcal{G}} \mathbb{E}_{s,a \sim \pi | G=g}[Q^\pi(s,a)] \geq \theta$$
+$$
+\min_{g \in \mathcal{G}} \mathbb{E}_{s,a \sim \pi | G=g}[Q^\pi(s,a)] \geq \theta
+$$
 
-ensuring that expected outcomes for all groups exceed a minimum threshold $$\theta$$. Alternatively, we can incorporate equity directly into the reward function:
+ensuring that expected outcomes for all groups exceed a minimum threshold $\theta$. Alternatively, we can incorporate equity directly into the reward function:
 
-$$R_{\text{equity}}(s,a) = R(s,a) - \lambda \cdot \text{Var}_g[\mathbb{E}[Q^\pi(s,a) | G=g]]$$
+$$
+R_{\text{equity}}(s,a) = R(s,a) - \lambda \cdot \text{Var}_g[\mathbb{E}[Q^\pi(s,a) | G=g]]
+$$
 
 penalizing policies that produce disparate outcomes across groups. This formulation incentivizes identifying pathways that work well across diverse care settings and patient circumstances.
 
@@ -211,11 +257,13 @@ penalizing policies that produce disparate outcomes across groups. This formulat
 
 Shared decision making (SDM) is an approach to clinical consultation where clinicians and patients jointly deliberate about treatment options, considering best evidence alongside patient values and preferences. Implementing SDM through clinical decision support requires systems that elicit preferences, communicate uncertainty, and support deliberation rather than dictating recommendations.
 
-Preference elicitation methods vary in cognitive demand and information requirements. Discrete choice experiments present patients with choice sets of treatment profiles defined by multiple attributes (efficacy, side effects, administration burden, cost). For two treatment options described by attributes $$x_1$$ and $$x_2$$, the probability patient $i$ chooses option 1 is modeled as:
+Preference elicitation methods vary in cognitive demand and information requirements. Discrete choice experiments present patients with choice sets of treatment profiles defined by multiple attributes (efficacy, side effects, administration burden, cost). For two treatment options described by attributes $x_1$ and $x_2$, the probability patient $i$ chooses option 1 is modeled as:
 
-$$P(y_i = 1) = \frac{\exp(\beta_i^T x_1)}{\exp(\beta_i^T x_1) + \exp(\beta_i^T x_2)}$$
+$$
+P(y_i = 1) = \frac{\exp(\beta_i^T x_1)}{\exp(\beta_i^T x_1) + \exp(\beta_i^T x_2)}
+$$
 
-where $$\beta_i$$ represents individual-specific preference weights. By presenting multiple choice tasks with systematically varied attribute levels, we can estimate $$\beta_i$$ and predict preferred treatment. Time trade-off (TTO) methods ask patients how many years of life in a disease state they would trade for fewer years in full health, quantifying quality-of-life weights. Standard gambles ask patients what mortality risk they would accept for a treatment that could restore full health, eliciting risk preferences.
+where $\beta_i$ represents individual-specific preference weights. By presenting multiple choice tasks with systematically varied attribute levels, we can estimate $\beta_i$ and predict preferred treatment. Time trade-off (TTO) methods ask patients how many years of life in a disease state they would trade for fewer years in full health, quantifying quality-of-life weights. Standard gambles ask patients what mortality risk they would accept for a treatment that could restore full health, eliciting risk preferences.
 
 However, these methods assume patients have stable, well-formed preferences that can be elicited through structured tasks. Behavioral economics research demonstrates that preferences are often constructed during elicitation, influenced by framing effects, default options, and the order in which information is presented. Patients may have limited understanding of probabilistic information, particularly when communicated using percentages rather than natural frequencies. For example, saying "20 out of 100 patients experience this side effect" is more interpretable than "there is a 20% chance of this side effect."
 
@@ -229,39 +277,53 @@ To ensure treatment recommendation systems promote rather than undermine health 
 
 Demographic parity requires that treatment recommendations are independent of protected attributes:
 
-$$P(T=1|G=g_1) = P(T=1|G=g_2)$$
+$$
+P(T=1|G=g_1) = P(T=1|G=g_2)
+$$
 
-for all groups $$g_1, g_2$$. This ensures equal treatment rates but may be inappropriate if treatment needs genuinely differ across populations. Equalized odds requires that, conditional on the outcome, recommendations are independent of group membership:
+for all groups $g_1, g_2$. This ensures equal treatment rates but may be inappropriate if treatment needs genuinely differ across populations. Equalized odds requires that, conditional on the outcome, recommendations are independent of group membership:
 
-$$P(T=1|Y=y, G=g_1) = P(T=1|Y=y, G=g_2)$$
+$$
+P(T=1|Y=y, G=g_1) = P(T=1|Y=y, G=g_2)
+$$
 
 This allows recommendation rates to differ across groups if base rates differ, but requires equal true positive and false positive rates. Predictive parity requires that the positive predictive value of recommendations is equal across groups:
 
-$$P(Y=1|T=1, G=g_1) = P(Y=1|T=1, G=g_2)$$
+$$
+P(Y=1|T=1, G=g_1) = P(Y=1|T=1, G=g_2)
+$$
 
 ensuring that a recommendation means the same thing for all groups.
 
 For treatment recommendations specifically, we should focus on outcome fairness: do recommended treatments lead to equitable outcomes? This requires that expected outcomes conditional on covariates are similar across groups:
 
-$$\mathbb{E}[Y_i(t^*(X_i)) | X_i, G_i=g_1] \approx \mathbb{E}[Y_i(t^*(X_i)) | X_i, G_i=g_2]$$
+$$
+\mathbb{E}[Y_i(t^*(X_i)) | X_i, G_i=g_1] \approx \mathbb{E}[Y_i(t^*(X_i)) | X_i, G_i=g_2]
+$$
 
-for recommended treatments $$t^*(X_i)$$. Note that this differs from requiring equal outcomes unconditionally, which would ignore that patients present with different clinical needs. Instead, we require that among patients with similar clinical presentations, recommended treatments lead to similar expected benefits regardless of group membership.
+for recommended treatments $t^*(X_i)$. Note that this differs from requiring equal outcomes unconditionally, which would ignore that patients present with different clinical needs. Instead, we require that among patients with similar clinical presentations, recommended treatments lead to similar expected benefits regardless of group membership.
 
 Calibration within groups is also critical. A recommendation system is calibrated if the predicted benefit of treatment matches the realized benefit:
 
-$$\mathbb{E}[Y_i(t) - Y_i(0) | \hat{\tau}(X_i) = \tau, G_i=g] = \tau$$
+$$
+\mathbb{E}[Y_i(t) - Y_i(0) | \hat{\tau}(X_i) = \tau, G_i=g] = \tau
+$$
 
 for all groups $g$. Poor calibration can lead to over-treatment or under-treatment of specific populations. We should validate calibration separately within each demographic subgroup and clinical population of interest.
 
 To implement fairness constraints, we can modify the optimization objective when learning recommendation policies. For example, to satisfy equalized odds constraints in a treatment recommendation setting, we add Lagrange multipliers:
 
-$$\mathcal{L}(\pi, \lambda) = -\mathbb{E}[Y_i(t^\pi(X_i))] + \sum_{g,y} \lambda_{g,y} |P(T=1|Y=y,G=g) - P(T=1|Y=y)|$$
+$$
+\mathcal{L}(\pi, \lambda) = -\mathbb{E}[Y_i(t^\pi(X_i))] + \sum_{g,y} \lambda_{g,y} |P(T=1|Y=y,G=g) - P(T=1|Y=y)|
+$$
 
 and solve:
 
-$$\max_\pi \min_\lambda \mathcal{L}(\pi, \lambda)$$
+$$
+\max_\pi \min_\lambda \mathcal{L}(\pi, \lambda)
+$$
 
-The resulting policy balances outcome maximization with fairness constraints. Fair representation learning provides an alternative approach: learn representations $$Z_i = h(X_i)$$ that are predictive of outcomes but statistically independent of sensitive attributes $$G_i$$. Treatment recommendations based on $$Z_i$$ cannot encode information about group membership beyond what is predictively relevant for outcomes.
+The resulting policy balances outcome maximization with fairness constraints. Fair representation learning provides an alternative approach: learn representations $Z_i = h(X_i)$ that are predictive of outcomes but statistically independent of sensitive attributes $G_i$. Treatment recommendations based on $Z_i$ cannot encode information about group membership beyond what is predictively relevant for outcomes.
 
 Importantly, satisfying mathematical fairness constraints does not guarantee equitable outcomes if the data used to train systems embeds historical inequities. If certain populations have historically received worse care, their outcomes under historical treatment patterns may be poor, and a system trained to replicate these patterns will perpetuate disparities even if it satisfies fairness metrics. This highlights the need for causal, not just associative, modeling: we need to estimate what outcomes would be under equitable care, not just reproduce patterns from inequitable history.
 
@@ -284,7 +346,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class TreatmentOption:
     """Represents a treatment option with attributes."""
@@ -295,14 +356,14 @@ class TreatmentOption:
     cost: float
     resource_requirements: List[str]
     administration_frequency: str
-    
+
 
 class CATEEstimator:
     """
     Estimates Conditional Average Treatment Effects using meta-learners.
     Implements S-learner, T-learner, and X-learner approaches.
     """
-    
+
     def __init__(
         self,
         method: str = "x_learner",
@@ -312,7 +373,7 @@ class CATEEstimator:
     ):
         """
         Initialize CATE estimator.
-        
+
         Args:
             method: One of "s_learner", "t_learner", "x_learner"
             base_learner: sklearn-compatible regressor for outcome modeling
@@ -321,7 +382,7 @@ class CATEEstimator:
         """
         if method not in ["s_learner", "t_learner", "x_learner"]:
             raise ValueError(f"Unknown method: {method}")
-        
+
         self.method = method
         self.base_learner = base_learner or RandomForestRegressor(
             n_estimators=100,
@@ -337,7 +398,7 @@ class CATEEstimator:
         self.models_control: List[object] = []
         self.models_treatment: List[object] = []
         self.propensity_model: Optional[object] = None
-        
+
     def fit(
         self,
         X: np.ndarray,
@@ -347,38 +408,38 @@ class CATEEstimator:
     ) -> 'CATEEstimator':
         """
         Fit CATE model using specified meta-learner.
-        
+
         Args:
             X: Covariate matrix (n_samples, n_features)
             y: Observed outcomes (n_samples,)
             treatment: Treatment indicators (n_samples,), binary 0/1
             sensitive_features: Optional sensitive attributes for fairness monitoring
-            
+
         Returns:
             Fitted estimator
         """
         if X.shape[0] != len(y) or X.shape[0] != len(treatment):
             raise ValueError("X, y, and treatment must have same number of samples")
-        
+
         treatment = treatment.astype(int)
-        
+
         if self.method == "s_learner":
             self._fit_s_learner(X, y, treatment)
         elif self.method == "t_learner":
             self._fit_t_learner(X, y, treatment)
         elif self.method == "x_learner":
             self._fit_x_learner(X, y, treatment)
-            
+
         # Fit propensity model for uncertainty quantification
         self.propensity_model = type(self.propensity_learner)()
         self.propensity_model.fit(X, treatment)
-        
+
         # Validate calibration within groups if sensitive features provided
         if sensitive_features is not None:
             self._validate_group_calibration(X, y, treatment, sensitive_features)
-        
+
         return self
-    
+
     def _fit_s_learner(
         self,
         X: np.ndarray,
@@ -390,7 +451,7 @@ class CATEEstimator:
         model = type(self.base_learner)()
         model.fit(X_augmented, y)
         self.models_treatment = [model]
-        
+
     def _fit_t_learner(
         self,
         X: np.ndarray,
@@ -403,13 +464,13 @@ class CATEEstimator:
         model_control = type(self.base_learner)()
         model_control.fit(X[control_mask], y[control_mask])
         self.models_control = [model_control]
-        
+
         # Model for treatment group
         treatment_mask = treatment == 1
         model_treatment = type(self.base_learner)()
         model_treatment.fit(X[treatment_mask], y[treatment_mask])
         self.models_treatment = [model_treatment]
-        
+
     def _fit_x_learner(
         self,
         X: np.ndarray,
@@ -422,32 +483,32 @@ class CATEEstimator:
         # Step 1: Fit outcome models for each treatment group
         control_mask = treatment == 0
         treatment_mask = treatment == 1
-        
+
         model_control = type(self.base_learner)()
         model_control.fit(X[control_mask], y[control_mask])
-        
+
         model_treatment = type(self.base_learner)()
         model_treatment.fit(X[treatment_mask], y[treatment_mask])
-        
+
         # Step 2: Impute counterfactual outcomes and compute treatment effects
         # For treated: tau = Y - mu_0(X)
         y_imputed_control = model_control.predict(X[treatment_mask])
         tau_treatment = y[treatment_mask] - y_imputed_control
-        
+
         # For controls: tau = mu_1(X) - Y
         y_imputed_treatment = model_treatment.predict(X[control_mask])
         tau_control = y_imputed_treatment - y[control_mask]
-        
+
         # Step 3: Build models to predict imputed treatment effects
         model_tau_treatment = type(self.base_learner)()
         model_tau_treatment.fit(X[treatment_mask], tau_treatment)
-        
+
         model_tau_control = type(self.base_learner)()
         model_tau_control.fit(X[control_mask], tau_control)
-        
+
         self.models_treatment = [model_tau_treatment]
         self.models_control = [model_tau_control]
-        
+
     def predict_cate(
         self,
         X: np.ndarray,
@@ -455,11 +516,11 @@ class CATEEstimator:
     ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Predict Conditional Average Treatment Effect.
-        
+
         Args:
             X: Covariate matrix (n_samples, n_features)
             return_std: Whether to return standard errors
-            
+
         Returns:
             CATE predictions and optionally standard errors
         """
@@ -469,12 +530,12 @@ class CATEEstimator:
             mu_1 = self.models_treatment[0].predict(X_treatment)
             mu_0 = self.models_treatment[0].predict(X_control)
             cate = mu_1 - mu_0
-            
+
         elif self.method == "t_learner":
             mu_1 = self.models_treatment[0].predict(X)
             mu_0 = self.models_control[0].predict(X)
             cate = mu_1 - mu_0
-            
+
         elif self.method == "x_learner":
             tau_1 = self.models_treatment[0].predict(X)
             tau_0 = self.models_control[0].predict(X)
@@ -482,21 +543,21 @@ class CATEEstimator:
             propensity = self.propensity_model.predict(X)
             propensity = np.clip(propensity, 0.01, 0.99)  # Avoid extreme values
             cate = propensity * tau_0 + (1 - propensity) * tau_1
-        
+
         if not return_std:
             return cate
-        
+
         # Estimate standard errors using bootstrap or asymptotic approximation
         # Simplified: use propensity-based variance estimate
         propensity = self.propensity_model.predict(X)
         propensity = np.clip(propensity, 0.01, 0.99)
-        
+
         # Variance scales with 1/(p*(1-p))
         variance = 1.0 / (propensity * (1 - propensity))
         std = np.sqrt(variance)
-        
+
         return cate, std
-    
+
     def _validate_group_calibration(
         self,
         X: np.ndarray,
@@ -506,37 +567,36 @@ class CATEEstimator:
     ) -> None:
         """Validate calibration within demographic groups."""
         unique_groups = np.unique(sensitive_features)
-        
+
         logger.info("Validating CATE calibration within groups:")
-        
+
         for group in unique_groups:
             group_mask = sensitive_features == group
             X_group = X[group_mask]
             y_group = y[group_mask]
             treatment_group = treatment[group_mask]
-            
+
             # Predict CATE for group
             cate_pred = self.predict_cate(X_group)
-            
+
             # Estimate realized treatment effect
             treated_mask = treatment_group == 1
             control_mask = treatment_group == 0
-            
+
             if np.sum(treated_mask) > 0 and np.sum(control_mask) > 0:
                 realized_effect = np.mean(y_group[treated_mask]) - np.mean(y_group[control_mask])
                 predicted_effect = np.mean(cate_pred)
-                
+
                 logger.info(
                     f"Group {group}: Predicted CATE = {predicted_effect:.3f}, "
                     f"Realized ATE = {realized_effect:.3f}"
                 )
 
-
 class EquityAwareTreatmentRecommender:
     """
     Treatment recommendation system with explicit equity constraints.
     """
-    
+
     def __init__(
         self,
         cate_estimator: CATEEstimator,
@@ -546,7 +606,7 @@ class EquityAwareTreatmentRecommender:
     ):
         """
         Initialize recommender.
-        
+
         Args:
             cate_estimator: Fitted CATE estimator
             treatments: List of available treatments
@@ -557,7 +617,7 @@ class EquityAwareTreatmentRecommender:
         self.treatments = treatments
         self.fairness_constraint = fairness_constraint
         self.fairness_tolerance = fairness_tolerance
-        
+
     def recommend(
         self,
         X: np.ndarray,
@@ -567,60 +627,60 @@ class EquityAwareTreatmentRecommender:
     ) -> Tuple[List[int], np.ndarray]:
         """
         Recommend treatments with equity constraints.
-        
+
         Args:
             X: Patient covariates (n_patients, n_features)
             sensitive_features: Sensitive attributes for fairness monitoring
             resource_constraints: List of available resources
             patient_preferences: Dictionary of preference weights
-            
+
         Returns:
             Recommended treatment indices and confidence scores
         """
         n_patients = X.shape[0]
-        
+
         # Predict CATE for each treatment
         cate_predictions = []
         cate_std = []
-        
+
         for treatment in self.treatments:
             cate, std = self.cate_estimator.predict_cate(X, return_std=True)
             cate_predictions.append(cate)
             cate_std.append(std)
-            
+
         cate_predictions = np.array(cate_predictions).T  # (n_patients, n_treatments)
         cate_std = np.array(cate_std).T
-        
+
         # Filter by resource constraints
         feasible_treatments = self._filter_by_resources(resource_constraints)
-        
+
         # Apply patient preferences if provided
         if patient_preferences is not None:
             cate_predictions = self._apply_preferences(
                 cate_predictions,
                 patient_preferences
             )
-        
+
         # Select treatments maximizing expected benefit
         recommendations = np.argmax(cate_predictions[:, feasible_treatments], axis=1)
         recommendations = feasible_treatments[recommendations]
-        
+
         # Check fairness constraints
         self._check_fairness_constraints(
             recommendations,
             cate_predictions,
             sensitive_features
         )
-        
+
         # Compute confidence scores
         confidence = self._compute_confidence(
             recommendations,
             cate_predictions,
             cate_std
         )
-        
+
         return recommendations, confidence
-    
+
     def _filter_by_resources(
         self,
         available_resources: Optional[List[str]]
@@ -628,12 +688,12 @@ class EquityAwareTreatmentRecommender:
         """Filter treatments by available resources."""
         if available_resources is None:
             return list(range(len(self.treatments)))
-        
+
         feasible = []
         for idx, treatment in enumerate(self.treatments):
             if all(req in available_resources for req in treatment.resource_requirements):
                 feasible.append(idx)
-                
+
         if not feasible:
             logger.warning("No treatments feasible with available resources")
             # Fall back to treatments with minimal requirements
@@ -644,9 +704,9 @@ class EquityAwareTreatmentRecommender:
                 idx for idx, t in enumerate(self.treatments)
                 if len(t.resource_requirements) == min_requirements
             ]
-            
+
         return feasible
-    
+
     def _apply_preferences(
         self,
         cate_predictions: np.ndarray,
@@ -654,25 +714,25 @@ class EquityAwareTreatmentRecommender:
     ) -> np.ndarray:
         """
         Adjust CATE predictions based on patient preferences.
-        
+
         Preferences might include:
         - side_effect_weight: Penalty for adverse events
         - cost_weight: Penalty for out-of-pocket costs
         - convenience_weight: Penalty for frequent administration
         """
         adjusted = cate_predictions.copy()
-        
+
         for idx, treatment in enumerate(self.treatments):
             # Penalty for adverse events
             if "side_effect_weight" in preferences:
                 adjusted[:, idx] -= (
                     preferences["side_effect_weight"] * treatment.adverse_event_rate
                 )
-            
+
             # Penalty for cost
             if "cost_weight" in preferences:
                 adjusted[:, idx] -= preferences["cost_weight"] * treatment.cost
-            
+
             # Penalty for inconvenient administration
             if "convenience_weight" in preferences:
                 frequency_penalty = {
@@ -681,9 +741,9 @@ class EquityAwareTreatmentRecommender:
                     "monthly": 0.0
                 }.get(treatment.administration_frequency, 0.0)
                 adjusted[:, idx] -= preferences["convenience_weight"] * frequency_penalty
-                
+
         return adjusted
-    
+
     def _check_fairness_constraints(
         self,
         recommendations: np.ndarray,
@@ -692,17 +752,17 @@ class EquityAwareTreatmentRecommender:
     ) -> None:
         """Check if recommendations satisfy fairness constraints."""
         unique_groups = np.unique(sensitive_features)
-        
+
         if self.fairness_constraint == "equalized_odds":
             # Check that treatment recommendation rates are similar across groups
             # conditional on predicted benefit
-            
+
             # Discretize predicted benefit into quartiles
             benefit_quartiles = np.percentile(
                 cate_predictions[np.arange(len(recommendations)), recommendations],
                 [25, 50, 75]
             )
-            
+
             for q_low, q_high in zip(
                 [-np.inf] + benefit_quartiles.tolist(),
                 benefit_quartiles.tolist() + [np.inf]
@@ -715,7 +775,7 @@ class EquityAwareTreatmentRecommender:
                         (cate_predictions[np.arange(len(recommendations)), recommendations] < q_high)
                     )
                     mask = group_mask & benefit_mask
-                    
+
                     if np.sum(mask) > 0:
                         # Calculate rate of recommending most beneficial treatment
                         rates[group] = np.mean(
@@ -723,7 +783,7 @@ class EquityAwareTreatmentRecommender:
                                 cate_predictions[mask], axis=1
                             )
                         )
-                
+
                 if len(rates) > 1:
                     max_disparity = max(rates.values()) - min(rates.values())
                     if max_disparity > self.fairness_tolerance:
@@ -731,11 +791,11 @@ class EquityAwareTreatmentRecommender:
                             f"Fairness constraint violation: disparity = {max_disparity:.3f} "
                             f"in benefit range [{q_low:.2f}, {q_high:.2f})"
                         )
-        
+
         elif self.fairness_constraint == "outcome_parity":
             # Check that expected outcomes are similar across groups
             expected_outcomes = {}
-            
+
             for group in unique_groups:
                 group_mask = sensitive_features == group
                 group_cate = cate_predictions[
@@ -743,19 +803,19 @@ class EquityAwareTreatmentRecommender:
                     recommendations[group_mask]
                 ]
                 expected_outcomes[group] = np.mean(group_cate)
-            
+
             if len(expected_outcomes) > 1:
                 max_disparity = (
-                    max(expected_outcomes.values()) - 
+                    max(expected_outcomes.values()) -
                     min(expected_outcomes.values())
                 )
-                
+
                 if max_disparity > self.fairness_tolerance:
                     logger.warning(
                         f"Outcome disparity detected: {max_disparity:.3f} "
                         f"across groups"
                     )
-    
+
     def _compute_confidence(
         self,
         recommendations: np.ndarray,
@@ -764,7 +824,7 @@ class EquityAwareTreatmentRecommender:
     ) -> np.ndarray:
         """
         Compute confidence scores for recommendations.
-        
+
         Confidence is high when:
         1. Predicted benefit is large
         2. Uncertainty is low
@@ -772,37 +832,36 @@ class EquityAwareTreatmentRecommender:
         """
         n_patients = len(recommendations)
         confidence = np.zeros(n_patients)
-        
+
         for i in range(n_patients):
             rec = recommendations[i]
-            
+
             # Predicted benefit
             benefit = cate_predictions[i, rec]
-            
+
             # Uncertainty
             uncertainty = cate_std[i, rec]
-            
+
             # Margin over second-best treatment
             sorted_benefits = np.sort(cate_predictions[i])
             margin = sorted_benefits[-1] - sorted_benefits[-2]
-            
+
             # Confidence is high when benefit/uncertainty ratio is large
             # and margin is large
             confidence[i] = (benefit / (uncertainty + 1e-6)) * margin
-        
+
         # Normalize to [0, 1]
         confidence = (confidence - confidence.min()) / (
             confidence.max() - confidence.min() + 1e-6
         )
-        
-        return confidence
 
+        return confidence
 
 class PharmacokineticDosingOptimizer:
     """
     Optimize medication dosing using pharmacokinetic models.
     """
-    
+
     def __init__(
         self,
         pk_model: Callable,
@@ -812,7 +871,7 @@ class PharmacokineticDosingOptimizer:
     ):
         """
         Initialize dosing optimizer.
-        
+
         Args:
             pk_model: Function mapping (dose, patient_params, time) -> concentration
             pd_model: Function mapping concentration -> effect
@@ -823,7 +882,7 @@ class PharmacokineticDosingOptimizer:
         self.pd_model = pd_model
         self.target_concentration = target_concentration
         self.safety_margin = safety_margin
-        
+
     def optimize_dose(
         self,
         patient_params: Dict[str, float],
@@ -832,16 +891,16 @@ class PharmacokineticDosingOptimizer:
     ) -> Dict[str, float]:
         """
         Optimize dosing regimen for individual patient.
-        
+
         Args:
             patient_params: Patient-specific PK/PD parameters
             dosing_interval: Time between doses (hours)
             n_doses: Number of doses to optimize
-            
+
         Returns:
             Dictionary with optimal dose and predicted concentrations
         """
-        
+
         def objective(dose: float) -> float:
             """
             Objective penalizes deviation from target and risk of toxicity.
@@ -850,18 +909,18 @@ class PharmacokineticDosingOptimizer:
             concentrations = np.array([
                 self.pk_model(dose, patient_params, t) for t in times
             ])
-            
+
             # Penalty for deviation from target
             target_penalty = np.mean((concentrations - self.target_concentration) ** 2)
-            
+
             # Penalty for exceeding safety threshold
             max_safe_concentration = self.target_concentration * self.safety_margin
             toxicity_penalty = np.sum(
                 np.maximum(0, concentrations - max_safe_concentration) ** 2
             )
-            
+
             return target_penalty + 10.0 * toxicity_penalty
-        
+
         # Optimize dose
         result = minimize(
             objective,
@@ -869,15 +928,15 @@ class PharmacokineticDosingOptimizer:
             bounds=[(10.0, 1000.0)],  # Reasonable dose range
             method='L-BFGS-B'
         )
-        
+
         optimal_dose = result.x[0]
-        
+
         # Compute steady-state concentrations
         times = np.linspace(0, n_doses * dosing_interval, 100)
         concentrations = np.array([
             self.pk_model(optimal_dose, patient_params, t) for t in times
         ])
-        
+
         return {
             'optimal_dose': optimal_dose,
             'mean_concentration': np.mean(concentrations),
@@ -889,7 +948,6 @@ class PharmacokineticDosingOptimizer:
             )
         }
 
-
 def example_pk_model(
     dose: float,
     params: Dict[str, float],
@@ -897,46 +955,44 @@ def example_pk_model(
 ) -> float:
     """
     Example one-compartment PK model with first-order elimination.
-    
+
     Args:
         dose: Administered dose (mg)
         params: Dictionary with 'volume' (L) and 'clearance' (L/h)
         time: Time since dose (hours)
-        
+
     Returns:
         Plasma concentration (mg/L)
     """
     volume = params.get('volume', 50.0)  # Default 50L
     clearance = params.get('clearance', 5.0)  # Default 5 L/h
-    
+
     # Elimination rate constant
     k_e = clearance / volume
-    
+
     # Concentration at time t
     c_0 = dose / volume  # Initial concentration
     concentration = c_0 * np.exp(-k_e * time)
-    
-    return concentration
 
+    return concentration
 
 def example_pd_model(concentration: float) -> float:
     """
     Example PD model: Emax model relating concentration to effect.
-    
+
     Args:
         concentration: Drug concentration (mg/L)
-        
+
     Returns:
         Effect (0 to 1 scale)
     """
     e_max = 1.0  # Maximum effect
     ec_50 = 10.0  # Concentration producing 50% of maximum effect
     gamma = 2.0  # Hill coefficient
-    
-    effect = e_max * (concentration ** gamma) / (ec_50 ** gamma + concentration ** gamma)
-    
-    return effect
 
+    effect = e_max * (concentration ** gamma) / (ec_50 ** gamma + concentration ** gamma)
+
+    return effect
 
 def evaluate_treatment_recommendations(
     recommendations: np.ndarray,
@@ -946,19 +1002,19 @@ def evaluate_treatment_recommendations(
 ) -> Dict[str, float]:
     """
     Comprehensive evaluation of treatment recommendations.
-    
+
     Args:
         recommendations: Recommended treatment indices (n_patients,)
         ground_truth_outcomes: Actual outcomes for each patient-treatment pair
             (n_patients, n_treatments)
         sensitive_features: Sensitive attributes (n_patients,)
         treatment_costs: Costs for each treatment (n_treatments,)
-        
+
     Returns:
         Dictionary of evaluation metrics
     """
     n_patients = len(recommendations)
-    
+
     # Regret: difference between outcome of optimal treatment and recommended treatment
     optimal_treatments = np.argmax(ground_truth_outcomes, axis=1)
     optimal_outcomes = ground_truth_outcomes[
@@ -969,21 +1025,21 @@ def evaluate_treatment_recommendations(
         np.arange(n_patients),
         recommendations
     ]
-    
+
     regret = optimal_outcomes - recommended_outcomes
     mean_regret = np.mean(regret)
-    
+
     # Accuracy: fraction of times recommending optimal treatment
     accuracy = np.mean(recommendations == optimal_treatments)
-    
+
     # Cost analysis
     recommended_costs = treatment_costs[recommendations]
     optimal_costs = treatment_costs[optimal_treatments]
-    
+
     # Group-specific metrics
     unique_groups = np.unique(sensitive_features)
     group_metrics = {}
-    
+
     for group in unique_groups:
         group_mask = sensitive_features == group
         group_regret = np.mean(regret[group_mask])
@@ -991,23 +1047,23 @@ def evaluate_treatment_recommendations(
             recommendations[group_mask] == optimal_treatments[group_mask]
         )
         group_cost = np.mean(recommended_costs[group_mask])
-        
+
         group_metrics[f"group_{group}_regret"] = group_regret
         group_metrics[f"group_{group}_accuracy"] = group_accuracy
         group_metrics[f"group_{group}_cost"] = group_cost
-    
+
     # Fairness metrics
     group_regrets = [
         np.mean(regret[sensitive_features == g]) for g in unique_groups
     ]
     regret_disparity = max(group_regrets) - min(group_regrets)
-    
+
     group_accuracies = [
         np.mean(recommendations[sensitive_features == g] == optimal_treatments[sensitive_features == g])
         for g in unique_groups
     ]
     accuracy_disparity = max(group_accuracies) - min(group_accuracies)
-    
+
     return {
         "mean_regret": mean_regret,
         "accuracy": accuracy,
@@ -1018,40 +1074,39 @@ def evaluate_treatment_recommendations(
         **group_metrics
     }
 
-
 # Example usage demonstrating complete workflow
 if __name__ == "__main__":
     # Simulate dataset
     np.random.seed(42)
     n_samples = 1000
     n_features = 10
-    
+
     # Patient covariates
     X = np.random.randn(n_samples, n_features)
-    
+
     # Sensitive attribute (e.g., demographic group)
     sensitive_features = np.random.choice([0, 1, 2], size=n_samples)
-    
+
     # Treatment assignment (binary for this example)
     treatment = np.random.binomial(1, 0.5, size=n_samples)
-    
+
     # Simulate outcomes with heterogeneous treatment effects
     # Treatment effect depends on covariates
     baseline = X[:, 0] + 0.5 * X[:, 1] + np.random.randn(n_samples) * 0.5
     treatment_effect = 0.5 + 0.3 * X[:, 2] - 0.2 * X[:, 3]
     outcomes = baseline + treatment * treatment_effect
-    
+
     # Fit CATE estimator
     print("Fitting CATE estimator...")
     cate_estimator = CATEEstimator(method="x_learner")
     cate_estimator.fit(X, outcomes, treatment, sensitive_features)
-    
+
     # Predict treatment effects
     cate_pred, cate_std = cate_estimator.predict_cate(X, return_std=True)
-    
+
     print(f"\nMean predicted CATE: {np.mean(cate_pred):.3f}")
     print(f"Mean CATE uncertainty: {np.mean(cate_std):.3f}")
-    
+
     # Define treatment options
     treatments = [
         TreatmentOption(
@@ -1073,7 +1128,7 @@ if __name__ == "__main__":
             administration_frequency="daily"
         )
     ]
-    
+
     # Initialize recommender
     print("\nInitializing treatment recommender...")
     recommender = EquityAwareTreatmentRecommender(
@@ -1082,7 +1137,7 @@ if __name__ == "__main__":
         fairness_constraint="outcome_parity",
         fairness_tolerance=0.15
     )
-    
+
     # Generate recommendations
     print("\nGenerating treatment recommendations...")
     recommendations, confidence = recommender.recommend(
@@ -1095,11 +1150,11 @@ if __name__ == "__main__":
             "convenience_weight": 0.2
         }
     )
-    
+
     print(f"Mean confidence score: {np.mean(confidence):.3f}")
     print(f"Treatment A recommended for {np.mean(recommendations == 0):.1%} of patients")
     print(f"Treatment B recommended for {np.mean(recommendations == 1):.1%} of patients")
-    
+
     # Evaluate equity
     for group in np.unique(sensitive_features):
         group_mask = sensitive_features == group
@@ -1107,12 +1162,12 @@ if __name__ == "__main__":
         print(f"  Treatment A rate: {np.mean(recommendations[group_mask] == 0):.1%}")
         print(f"  Treatment B rate: {np.mean(recommendations[group_mask] == 1):.1%}")
         print(f"  Mean confidence: {np.mean(confidence[group_mask]):.3f}")
-    
+
     # Demonstrate PK/PD dosing optimization
     print("\n" + "="*60)
     print("Pharmacokinetic Dosing Optimization Example")
     print("="*60)
-    
+
     # Patient parameters varying by demographic factors
     # For example, clearance may vary with renal function
     patient_params_examples = [
@@ -1120,14 +1175,14 @@ if __name__ == "__main__":
         {"volume": 50.0, "clearance": 2.5},  # Reduced renal function
         {"volume": 70.0, "clearance": 7.0},  # Larger patient
     ]
-    
+
     dosing_optimizer = PharmacokineticDosingOptimizer(
         pk_model=example_pk_model,
         pd_model=example_pd_model,
         target_concentration=15.0,
         safety_margin=1.5
     )
-    
+
     for i, params in enumerate(patient_params_examples):
         print(f"\nPatient {i+1}: Volume={params['volume']}L, Clearance={params['clearance']}L/h")
         result = dosing_optimizer.optimize_dose(

@@ -2,9 +2,10 @@
 layout: chapter
 title: "Chapter 4: Machine Learning Fundamentals for Clinical Data"
 chapter_number: 4
+part_number: 2
+prev_chapter: /chapters/chapter-03-healthcare-data-engineering/
+next_chapter: /chapters/chapter-05-deep-learning-healthcare/
 ---
-
-
 # Chapter 4: Machine Learning Fundamentals for Clinical Data
 
 ## Learning Objectives
@@ -55,15 +56,19 @@ From an equity perspective, logistic regression offers both advantages and chall
 
 ### 4.2.1 Mathematical Foundations and Clinical Interpretation
 
-Logistic regression models the log-odds of a binary outcome as a linear function of features. For a patient with feature vector $$\mathbf{x} = (x_1, x_2, \ldots, x_p)$$, the model predicts:
+Logistic regression models the log-odds of a binary outcome as a linear function of features. For a patient with feature vector $\mathbf{x} = (x_1, x_2, \ldots, x_p)$, the model predicts:
 
-$$P(Y = 1 \mid \mathbf{x}) = \frac{1}{1 + \exp(-(\beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p))}$$
+$$
+P(Y = 1 \mid \mathbf{x}) = \frac{1}{1 + \exp(-(\beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p))}
+$$
 
-where $$\beta_0, \beta_1, \ldots, \beta_p$$ are learned coefficients. Equivalently, the log-odds or logit is:
+where $\beta_0, \beta_1, \ldots, \beta_p$ are learned coefficients. Equivalently, the log-odds or logit is:
 
-$$\log\left(\frac{P(Y=1\mid\mathbf{x})}{P(Y=0\mid\mathbf{x})}\right) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p$$
+$$
+\log\left(\frac{P(Y=1\mid\mathbf{x})}{P(Y=0\mid\mathbf{x})}\right) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p
+$$
 
-This formulation connects naturally to how clinicians reason about risk. Each coefficient $$\beta_j$$ represents the change in log-odds of the outcome for a one-unit increase in feature $$x_j$$ holding all other features constant. When we exponentiate coefficients, we obtain odds ratios that clinicians use routinely to interpret associations between risk factors and outcomes.
+This formulation connects naturally to how clinicians reason about risk. Each coefficient $\beta_j$ represents the change in log-odds of the outcome for a one-unit increase in feature $x_j$ holding all other features constant. When we exponentiate coefficients, we obtain odds ratios that clinicians use routinely to interpret associations between risk factors and outcomes.
 
 In healthcare applications, this interpretability is crucial for several reasons. First, clinicians must understand why a model makes particular predictions to appropriately integrate algorithmic guidance into clinical judgment. When a model predicts high readmission risk for a patient, the clinician needs to understand whether that prediction is driven by clinical factors amenable to intervention or by social factors requiring different approaches. Second, regulators and payers increasingly require that risk prediction models used for resource allocation be interpretable and auditable. Third, patients have a right to understand factors driving recommendations that affect their care.
 
@@ -105,7 +110,7 @@ logger = logging.getLogger(__name__)
 class FairnessMetrics:
     """
     Container for fairness evaluation metrics across demographic groups.
-    
+
     Attributes:
         demographic_parity_difference: Max difference in positive prediction
             rates across groups
@@ -124,18 +129,18 @@ class FairnessMetrics:
 class FairLogisticRegression(BaseEstimator, ClassifierMixin):
     """
     Logistic regression with explicit fairness constraints for clinical prediction.
-    
+
     This implementation extends standard logistic regression to explicitly constrain
     disparities in model performance across demographic groups. The fairness
     constraint can be tuned to balance overall predictive accuracy against equity
     across protected populations.
-    
+
     The model optimizes:
         L = log_loss + lambda_l2 * ||beta||_2^2 + lambda_fair * fairness_penalty
-    
+
     where fairness_penalty measures disparities in specified fairness metrics
     across demographic groups.
-    
+
     Parameters:
         penalty: Regularization type ('l2', 'l1', or 'elasticnet')
         C: Inverse of regularization strength (smaller values = stronger regularization)
@@ -149,7 +154,7 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
         class_weight: Weights for handling class imbalance ('balanced' or dict)
         warm_start: Whether to reuse solution from previous fit as initialization
     """
-    
+
     def __init__(
         self,
         penalty: str = 'l2',
@@ -171,7 +176,7 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
         self.class_weight = class_weight
         self.warm_start = warm_start
         self.random_state = random_state
-        
+
         # Attributes set during fitting
         self.coef_ = None
         self.intercept_ = None
@@ -179,7 +184,7 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
         self.scaler_ = None
         self.fairness_groups_ = None
         self.n_features_in_ = None
-        
+
     def _compute_log_loss(
         self,
         beta: np.ndarray,
@@ -191,18 +196,18 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
         # Compute predicted probabilities
         z = X @ beta
         probs = expit(z)
-        
+
         # Clip probabilities to avoid log(0)
         probs = np.clip(probs, 1e-15, 1 - 1e-15)
-        
+
         # Compute log loss
         if sample_weight is not None:
             loss = -np.sum(sample_weight * (y * np.log(probs) + (1 - y) * np.log(1 - probs)))
         else:
             loss = -np.sum(y * np.log(probs) + (1 - y) * np.log(1 - probs))
-        
+
         return loss / len(y)
-    
+
     def _compute_fairness_penalty(
         self,
         beta: np.ndarray,
@@ -212,79 +217,79 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
     ) -> float:
         """
         Compute fairness penalty based on specified constraint type.
-        
+
         The penalty measures disparities in model behavior across groups
         defined by sensitive attributes. Larger penalties indicate greater
         unfairness that the optimization will attempt to reduce.
         """
         if self.fairness_constraint is None or self.fairness_penalty == 0:
             return 0.0
-        
+
         # Get predicted probabilities
         z = X @ beta
         probs = expit(z)
         preds = (probs >= 0.5).astype(int)
-        
+
         # Compute group-specific metrics
         groups = np.unique(sensitive_attr)
         group_metrics = {}
-        
+
         for group in groups:
             mask = sensitive_attr == group
             group_probs = probs[mask]
             group_preds = preds[mask]
             group_y = y[mask]
-            
+
             if len(group_y) == 0:
                 continue
-            
+
             # Positive prediction rate
             pos_pred_rate = np.mean(group_preds)
-            
+
             # True positive rate (sensitivity/recall)
             pos_actual = group_y == 1
             if np.sum(pos_actual) > 0:
                 tpr = np.mean(group_preds[pos_actual])
             else:
                 tpr = 0.0
-            
+
             # False positive rate
             neg_actual = group_y == 0
             if np.sum(neg_actual) > 0:
                 fpr = np.mean(group_preds[neg_actual])
             else:
                 fpr = 0.0
-            
+
             group_metrics[group] = {
                 'pos_pred_rate': pos_pred_rate,
                 'tpr': tpr,
                 'fpr': fpr
             }
-        
+
         # Compute penalty based on constraint type
         if self.fairness_constraint == 'demographic_parity':
             # Penalize differences in positive prediction rates
             pos_rates = [m['pos_pred_rate'] for m in group_metrics.values()]
             penalty = np.std(pos_rates)
-            
+
         elif self.fairness_constraint == 'equal_opportunity':
             # Penalize differences in true positive rates
             tprs = [m['tpr'] for m in group_metrics.values() if m['tpr'] > 0]
             penalty = np.std(tprs) if len(tprs) > 1 else 0.0
-            
+
         elif self.fairness_constraint == 'equalized_odds':
             # Penalize differences in both TPR and FPR
             tprs = [m['tpr'] for m in group_metrics.values() if m['tpr'] > 0]
             fprs = [m['fpr'] for m in group_metrics.values() if m['fpr'] > 0]
-            
+
             tpr_penalty = np.std(tprs) if len(tprs) > 1 else 0.0
             fpr_penalty = np.std(fprs) if len(fprs) > 1 else 0.0
             penalty = tpr_penalty + fpr_penalty
         else:
             raise ValueError(f"Unknown fairness constraint: {self.fairness_constraint}")
-        
+
         return penalty
-    
+
     def _objective(
         self,
         beta: np.ndarray,
@@ -295,7 +300,7 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
     ) -> float:
         """
         Combined objective function including log loss, regularization, and fairness penalty.
-        
+
         This objective balances three components:
         1. Predictive accuracy (log loss)
         2. Model complexity (regularization)
@@ -303,22 +308,22 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
         """
         # Compute log loss
         loss = self._compute_log_loss(beta, X, y, sample_weight)
-        
+
         # Add L2 regularization
         if self.penalty in ['l2', 'elasticnet']:
             loss += (1 / (2 * self.C)) * np.sum(beta[1:]**2)  # Don't penalize intercept
-        
+
         # Add L1 regularization
         if self.penalty in ['l1', 'elasticnet']:
             loss += (1 / self.C) * np.sum(np.abs(beta[1:]))
-        
+
         # Add fairness penalty
         if sensitive_attr is not None:
             fairness_loss = self._compute_fairness_penalty(beta, X, y, sensitive_attr)
             loss += self.fairness_penalty * fairness_loss
-        
+
         return loss
-    
+
     def _gradient(
         self,
         beta: np.ndarray,
@@ -329,25 +334,25 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
     ) -> np.ndarray:
         """
         Compute gradient of objective function.
-        
+
         For L2 regularization, we have closed-form gradients.
         For L1 and fairness penalties, we use numerical approximation.
         """
         # Compute gradient of log loss
         z = X @ beta
         probs = expit(z)
-        
+
         if sample_weight is not None:
             grad = X.T @ (sample_weight * (probs - y)) / len(y)
         else:
             grad = X.T @ (probs - y) / len(y)
-        
+
         # Add L2 regularization gradient
         if self.penalty in ['l2', 'elasticnet']:
             reg_grad = np.zeros_like(beta)
             reg_grad[1:] = beta[1:] / self.C  # Don't penalize intercept
             grad += reg_grad
-        
+
         # For L1 and fairness penalties, use numerical gradient
         if self.penalty in ['l1', 'elasticnet'] or (sensitive_attr is not None and self.fairness_penalty > 0):
             eps = 1e-8
@@ -357,17 +362,17 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
                 beta_plus[i] += eps
                 beta_minus = beta.copy()
                 beta_minus[i] -= eps
-                
+
                 loss_plus = self._objective(beta_plus, X, y, sample_weight, sensitive_attr)
                 loss_minus = self._objective(beta_minus, X, y, sample_weight, sensitive_attr)
-                
+
                 grad_numerical[i] = (loss_plus - loss_minus) / (2 * eps)
-            
+
             # Blend analytical and numerical gradients
             grad = 0.5 * grad + 0.5 * grad_numerical
-        
+
         return grad
-    
+
     def fit(
         self,
         X: Union[np.ndarray, pd.DataFrame],
@@ -377,13 +382,13 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
     ) -> 'FairLogisticRegression':
         """
         Fit fairness-aware logistic regression model.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
             y: Binary target variable of shape (n_samples,)
             sensitive_features: Protected attributes for fairness constraints
             sample_weight: Individual sample weights for handling class imbalance
-        
+
         Returns:
             self: Fitted model instance
         """
@@ -394,28 +399,28 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
             y = y.values
         if isinstance(sensitive_features, pd.Series):
             sensitive_features = sensitive_features.values
-        
+
         # Store number of features
         self.n_features_in_ = X.shape[1]
-        
+
         # Validate inputs
         if len(y.shape) != 1:
             raise ValueError("y must be 1-dimensional")
         if X.shape[0] != len(y):
             raise ValueError("X and y must have the same number of samples")
-        
+
         # Store classes
         self.classes_ = np.unique(y)
         if len(self.classes_) != 2:
             raise ValueError("y must be binary (two classes)")
-        
+
         # Standardize features for numerical stability
         self.scaler_ = StandardScaler()
         X_scaled = self.scaler_.fit_transform(X)
-        
+
         # Add intercept term
         X_with_intercept = np.column_stack([np.ones(len(X_scaled)), X_scaled])
-        
+
         # Handle class imbalance if requested
         if sample_weight is None and self.class_weight is not None:
             if self.class_weight == 'balanced':
@@ -423,26 +428,26 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
                 n_samples = len(y)
                 n_classes = len(self.classes_)
                 sample_weight = np.ones(n_samples)
-                
+
                 for cls in self.classes_:
                     cls_mask = y == cls
                     n_cls = np.sum(cls_mask)
                     sample_weight[cls_mask] = n_samples / (n_classes * n_cls)
             elif isinstance(self.class_weight, dict):
                 sample_weight = np.array([self.class_weight.get(cls, 1.0) for cls in y])
-        
+
         # Initialize coefficients
         if self.warm_start and self.coef_ is not None:
             beta_init = np.concatenate([[self.intercept_], self.coef_])
         else:
             beta_init = np.zeros(X_with_intercept.shape[1])
-        
+
         # Store sensitive features if provided
         if sensitive_features is not None:
             self.fairness_groups_ = np.unique(sensitive_features)
             if len(self.fairness_groups_) < 2:
                 logger.warning("Fewer than 2 groups in sensitive features. Fairness constraints will have no effect.")
-        
+
         # Optimize objective function
         result = minimize(
             fun=self._objective,
@@ -452,63 +457,63 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
             method='L-BFGS-B',
             options={'maxiter': self.max_iter, 'ftol': self.tol}
         )
-        
+
         if not result.success:
             logger.warning(f"Optimization did not converge: {result.message}")
-        
+
         # Extract learned parameters
         self.intercept_ = result.x[0]
         self.coef_ = result.x[1:]
-        
+
         logger.info(f"Model fitted successfully. Final loss: {result.fun:.4f}")
-        
+
         return self
-    
+
     def predict_proba(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
         Predict class probabilities.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
-        
+
         Returns:
             Predicted probabilities of shape (n_samples, 2) for each class
         """
         if self.coef_ is None:
             raise ValueError("Model must be fitted before prediction")
-        
+
         # Convert to numpy if needed
         if isinstance(X, pd.DataFrame):
             X = X.values
-        
+
         # Validate input
         if X.shape[1] != self.n_features_in_:
             raise ValueError(f"X has {X.shape[1]} features but model expects {self.n_features_in_}")
-        
+
         # Standardize features
         X_scaled = self.scaler_.transform(X)
-        
+
         # Compute probabilities
         z = X_scaled @ self.coef_ + self.intercept_
         probs_pos = expit(z)
         probs_neg = 1 - probs_pos
-        
+
         return np.column_stack([probs_neg, probs_pos])
-    
+
     def predict(self, X: Union[np.ndarray, pd.DataFrame], threshold: float = 0.5) -> np.ndarray:
         """
         Predict binary class labels.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
             threshold: Decision threshold for classification (default: 0.5)
-        
+
         Returns:
             Predicted class labels of shape (n_samples,)
         """
         probs = self.predict_proba(X)
         return (probs[:, 1] >= threshold).astype(int)
-    
+
     def evaluate_fairness(
         self,
         X: Union[np.ndarray, pd.DataFrame],
@@ -518,88 +523,88 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
     ) -> FairnessMetrics:
         """
         Comprehensive fairness evaluation across demographic groups.
-        
+
         This method computes multiple fairness metrics to provide a complete
         picture of how model behavior varies across protected groups. Different
         applications may prioritize different fairness definitions depending on
         the potential harms and clinical context.
-        
+
         Parameters:
             X: Feature matrix
             y: True binary labels
             sensitive_features: Protected attributes defining groups
             threshold: Classification threshold
-        
+
         Returns:
             FairnessMetrics object containing detailed fairness evaluation
         """
         # Get predictions
         probs = self.predict_proba(X)[:, 1]
         preds = (probs >= threshold).astype(int)
-        
+
         # Convert inputs to numpy
         if isinstance(y, pd.Series):
             y = y.values
         if isinstance(sensitive_features, pd.Series):
             sensitive_features = sensitive_features.values
-        
+
         # Compute metrics for each group
         groups = np.unique(sensitive_features)
         group_metrics = {}
-        
+
         for group in groups:
             mask = sensitive_features == group
             group_y = y[mask]
             group_preds = preds[mask]
             group_probs = probs[mask]
-            
+
             # Basic performance metrics
             pos_pred_rate = np.mean(group_preds)
-            
+
             # True positive rate (sensitivity)
             pos_actual = group_y == 1
             if np.sum(pos_actual) > 0:
                 tpr = np.mean(group_preds[pos_actual])
             else:
                 tpr = np.nan
-            
+
             # False positive rate
             neg_actual = group_y == 0
             if np.sum(neg_actual) > 0:
                 fpr = np.mean(group_preds[neg_actual])
             else:
                 fpr = np.nan
-            
+
             # True negative rate (specificity)
             if np.sum(neg_actual) > 0:
                 tnr = 1 - fpr
             else:
                 tnr = np.nan
-            
+
             # False negative rate
             if np.sum(pos_actual) > 0:
                 fnr = 1 - tpr
             else:
                 fnr = np.nan
-            
+
             # Positive predictive value (precision)
             if np.sum(group_preds) > 0:
                 ppv = np.mean(group_y[group_preds == 1])
             else:
                 ppv = np.nan
-            
+
             # Negative predictive value
             if np.sum(group_preds == 0) > 0:
                 npv = np.mean(1 - group_y[group_preds == 0])
             else:
                 npv = np.nan
-            
+
             # AUC if possible
             if len(np.unique(group_y)) == 2:
                 auc = roc_auc_score(group_y, group_probs)
             else:
                 auc = np.nan
-            
+
             # Calibration slope (simple linear calibration)
             if len(np.unique(group_y)) == 2 and len(group_y) > 10:
                 from sklearn.linear_model import LogisticRegression
@@ -611,7 +616,7 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
                     calibration_slope = np.nan
             else:
                 calibration_slope = np.nan
-            
+
             group_metrics[str(group)] = {
                 'n_samples': int(np.sum(mask)),
                 'prevalence': float(np.mean(group_y)),
@@ -625,27 +630,27 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
                 'auc': float(auc) if not np.isnan(auc) else None,
                 'calibration_slope': float(calibration_slope) if not np.isnan(calibration_slope) else None
             }
-        
+
         # Compute aggregate fairness metrics
         # Demographic parity: difference in positive prediction rates
         pos_pred_rates = [m['pos_pred_rate'] for m in group_metrics.values()]
         demographic_parity_diff = max(pos_pred_rates) - min(pos_pred_rates)
-        
+
         # Equal opportunity: difference in true positive rates
         tprs = [m['tpr'] for m in group_metrics.values() if m['tpr'] is not None]
         equal_opp_diff = max(tprs) - min(tprs) if len(tprs) > 1 else 0.0
-        
+
         # Equalized odds: max difference in TPR and FPR
         fprs = [m['fpr'] for m in group_metrics.values() if m['fpr'] is not None]
         tpr_diff = max(tprs) - min(tprs) if len(tprs) > 1 else 0.0
         fpr_diff = max(fprs) - min(fprs) if len(fprs) > 1 else 0.0
         equalized_odds_diff = max(tpr_diff, fpr_diff)
-        
+
         # Calibration: difference in calibration slopes
-        cal_slopes = [m['calibration_slope'] for m in group_metrics.values() 
+        cal_slopes = [m['calibration_slope'] for m in group_metrics.values()
                      if m['calibration_slope'] is not None]
         cal_diff = max(cal_slopes) - min(cal_slopes) if len(cal_slopes) > 1 else 0.0
-        
+
         return FairnessMetrics(
             demographic_parity_difference=demographic_parity_diff,
             equal_opportunity_difference=equal_opp_diff,
@@ -653,27 +658,27 @@ class FairLogisticRegression(BaseEstimator, ClassifierMixin):
             calibration_difference=cal_diff,
             group_metrics=group_metrics
         )
-    
+
     def get_feature_importance(self) -> pd.DataFrame:
         """
         Extract feature importance from model coefficients.
-        
+
         Returns DataFrame with features ranked by absolute coefficient magnitude.
         For standardized features, larger absolute coefficients indicate greater
         influence on predictions.
         """
         if self.coef_ is None:
             raise ValueError("Model must be fitted before extracting feature importance")
-        
+
         importance_df = pd.DataFrame({
             'feature_index': range(len(self.coef_)),
             'coefficient': self.coef_,
             'abs_coefficient': np.abs(self.coef_),
             'odds_ratio': np.exp(self.coef_)
         })
-        
+
         importance_df = importance_df.sort_values('abs_coefficient', ascending=False)
-        
+
         return importance_df
 ```
 
@@ -704,11 +709,11 @@ from typing import Dict, Tuple
 def load_readmission_data() -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
     Load and preprocess hospital readmission data.
-    
+
     In production, this would load from a clinical data warehouse.
     For this example, we simulate realistic clinical data with known
     disparities in readmission rates and documentation completeness.
-    
+
     Returns:
         X: Feature DataFrame
         y: Binary readmission outcome
@@ -716,7 +721,7 @@ def load_readmission_data() -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     """
     np.random.seed(42)
     n_samples = 10000
-    
+
     # Simulate demographic characteristics
     # Ensure realistic population proportions
     race = np.random.choice(
@@ -724,39 +729,39 @@ def load_readmission_data() -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
         size=n_samples,
         p=[0.60, 0.20, 0.12, 0.05, 0.03]
     )
-    
+
     # Simulate clinical features with realistic correlations
     # Features are chosen based on established readmission risk factors
-    
+
     # Age (higher for some groups due to population demographics)
     age = np.random.normal(65, 15, n_samples)
     age[race == 'White'] += 3  # Older average age
     age = np.clip(age, 18, 100)
-    
+
     # Comorbidity burden (Charlson Comorbidity Index)
     # Simulate higher burden in disadvantaged groups
     charlson_score = np.random.poisson(2.5, n_samples)
     charlson_score[race == 'Black'] += np.random.poisson(0.5, np.sum(race == 'Black'))
     charlson_score = np.clip(charlson_score, 0, 15)
-    
+
     # Length of stay (days)
     los = np.random.lognormal(1.5, 0.8, n_samples)
     los = np.clip(los, 1, 30)
-    
+
     # Number of ED visits in past year
     # Higher for groups with less access to primary care
     ed_visits = np.random.poisson(1.5, n_samples)
     ed_visits[race == 'Black'] += np.random.poisson(0.8, np.sum(race == 'Black'))
     ed_visits[race == 'Hispanic'] += np.random.poisson(0.6, np.sum(race == 'Hispanic'))
     ed_visits = np.clip(ed_visits, 0, 20)
-    
+
     # Insurance status (strong proxy for socioeconomic status)
     # Medicare: 0, Medicaid: 1, Commercial: 2, Uninsured: 3
     insurance = np.zeros(n_samples, dtype=int)
-    
+
     # Age-based Medicare eligibility
     insurance[age >= 65] = 0
-    
+
     # For younger patients, assign based on demographics
     young_mask = age < 65
     insurance[young_mask & (race == 'Black')] = np.random.choice(
@@ -768,26 +773,26 @@ def load_readmission_data() -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     insurance[young_mask & (race == 'White')] = np.random.choice(
         [1, 2], size=np.sum(young_mask & (race == 'White')), p=[0.15, 0.85]
     )
-    
+
     # Social determinants (Area Deprivation Index - higher = more deprived)
     # Simulated based on demographic patterns
     adi = np.random.uniform(1, 10, n_samples)
     adi[race == 'Black'] += np.random.uniform(0, 3, np.sum(race == 'Black'))
     adi[race == 'Hispanic'] += np.random.uniform(0, 2.5, np.sum(race == 'Hispanic'))
     adi = np.clip(adi, 1, 10)
-    
+
     # Discharge disposition (0: home, 1: SNF/rehab)
     # Correlated with both severity and insurance
     discharge_to_facility = np.random.binomial(1, 0.25, n_samples)
     discharge_to_facility[charlson_score > 5] = np.random.binomial(
         1, 0.45, np.sum(charlson_score > 5)
     )
-    
+
     # Number of medications at discharge
     n_medications = np.random.poisson(8, n_samples)
     n_medications += charlson_score  # More meds with more comorbidities
     n_medications = np.clip(n_medications, 0, 30)
-    
+
     # Follow-up appointment scheduled (proxy for care coordination)
     # Systematically lower for disadvantaged groups
     followup_scheduled = np.random.binomial(1, 0.70, n_samples)
@@ -797,10 +802,10 @@ def load_readmission_data() -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
     followup_scheduled[insurance == 1] = np.random.binomial(  # Medicaid
         1, 0.55, np.sum(insurance == 1)
     )
-    
+
     # Simulate readmission outcome
     # True readmission risk is driven by clinical and social factors
-    
+
     # Clinical risk score
     clinical_risk = (
         0.02 * (age - 65) +
@@ -810,24 +815,24 @@ def load_readmission_data() -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
         0.08 * n_medications +
         -0.30 * followup_scheduled
     )
-    
+
     # Social determinants contribution
     social_risk = (
         0.20 * adi +
         0.25 * (insurance == 3) +  # Uninsured penalty
         0.15 * (insurance == 1)    # Medicaid penalty
     )
-    
+
     # Total risk (logit scale)
     total_risk_logit = -2.5 + clinical_risk + social_risk
-    
+
     # Add random noise
     total_risk_logit += np.random.normal(0, 0.5, n_samples)
-    
+
     # Convert to probability and generate outcomes
     readmission_prob = 1 / (1 + np.exp(-total_risk_logit))
     y = np.random.binomial(1, readmission_prob)
-    
+
     # Create feature DataFrame
     X = pd.DataFrame({
         'age': age,
@@ -842,7 +847,7 @@ def load_readmission_data() -> Tuple[pd.DataFrame, pd.Series, pd.Series]:
         'insurance_uninsured': (insurance == 3).astype(int),
         'area_deprivation_index': adi
     })
-    
+
     return X, pd.Series(y), pd.Series(race)
 
 def compare_fairness_approaches(
@@ -852,12 +857,12 @@ def compare_fairness_approaches(
 ) -> Dict[str, Tuple[FairLogisticRegression, FairnessMetrics]]:
     """
     Compare standard and fairness-aware approaches for readmission prediction.
-    
+
     We train three models:
     1. Standard logistic regression (no fairness constraint)
     2. Demographic parity constrained model
     3. Equal opportunity constrained model
-    
+
     Returns:
         Dictionary mapping approach name to (fitted model, fairness metrics)
     """
@@ -865,14 +870,14 @@ def compare_fairness_approaches(
     X_train, X_test, y_train, y_test, race_train, race_test = train_test_split(
         X, y, sensitive_feature, test_size=0.3, random_state=42, stratify=sensitive_feature
     )
-    
+
     results = {}
-    
+
     # 1. Standard logistic regression (baseline)
     print("\n" + "="*80)
     print("Training standard logistic regression (no fairness constraint)...")
     print("="*80)
-    
+
     model_standard = FairLogisticRegression(
         C=1.0,
         penalty='l2',
@@ -880,23 +885,23 @@ def compare_fairness_approaches(
         random_state=42
     )
     model_standard.fit(X_train, y_train)
-    
+
     fairness_standard = model_standard.evaluate_fairness(
         X_test, y_test, race_test
     )
-    
+
     print("\nStandard Model Performance:")
     print(f"Demographic Parity Difference: {fairness_standard.demographic_parity_difference:.4f}")
     print(f"Equal Opportunity Difference: {fairness_standard.equal_opportunity_difference:.4f}")
     print(f"Equalized Odds Difference: {fairness_standard.equalized_odds_difference:.4f}")
-    
+
     results['standard'] = (model_standard, fairness_standard)
-    
+
     # 2. Demographic parity constrained
     print("\n" + "="*80)
     print("Training with demographic parity constraint...")
     print("="*80)
-    
+
     model_dp = FairLogisticRegression(
         C=1.0,
         penalty='l2',
@@ -906,23 +911,23 @@ def compare_fairness_approaches(
         random_state=42
     )
     model_dp.fit(X_train, y_train, sensitive_features=race_train)
-    
+
     fairness_dp = model_dp.evaluate_fairness(
         X_test, y_test, race_test
     )
-    
+
     print("\nDemographic Parity Model Performance:")
     print(f"Demographic Parity Difference: {fairness_dp.demographic_parity_difference:.4f}")
     print(f"Equal Opportunity Difference: {fairness_dp.equal_opportunity_difference:.4f}")
     print(f"Equalized Odds Difference: {fairness_dp.equalized_odds_difference:.4f}")
-    
+
     results['demographic_parity'] = (model_dp, fairness_dp)
-    
+
     # 3. Equal opportunity constrained
     print("\n" + "="*80)
     print("Training with equal opportunity constraint...")
     print("="*80)
-    
+
     model_eo = FairLogisticRegression(
         C=1.0,
         penalty='l2',
@@ -932,38 +937,38 @@ def compare_fairness_approaches(
         random_state=42
     )
     model_eo.fit(X_train, y_train, sensitive_features=race_train)
-    
+
     fairness_eo = model_eo.evaluate_fairness(
         X_test, y_test, race_test
     )
-    
+
     print("\nEqual Opportunity Model Performance:")
     print(f"Demographic Parity Difference: {fairness_eo.demographic_parity_difference:.4f}")
     print(f"Equal Opportunity Difference: {fairness_eo.equal_opportunity_difference:.4f}")
     print(f"Equalized Odds Difference: {fairness_eo.equalized_odds_difference:.4f}")
-    
+
     results['equal_opportunity'] = (model_eo, fairness_eo)
-    
+
     return results
 
 def visualize_fairness_comparison(results: Dict) -> None:
     """
     Create visualizations comparing fairness across modeling approaches.
-    
+
     Generates bar charts showing key fairness metrics and group-specific
     performance for each modeling approach.
     """
     # Extract data for visualization
     approaches = list(results.keys())
-    
+
     # Aggregate fairness metrics
     dp_diffs = [results[app][1].demographic_parity_difference for app in approaches]
     eo_diffs = [results[app][1].equal_opportunity_difference for app in approaches]
     eod_diffs = [results[app][1].equalized_odds_difference for app in approaches]
-    
+
     # Create figure
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    
+
     # Demographic parity
     axes[0].bar(approaches, dp_diffs, color=['#FF6B6B', '#4ECDC4', '#45B7D1'])
     axes[0].set_ylabel('Difference')
@@ -971,7 +976,7 @@ def visualize_fairness_comparison(results: Dict) -> None:
     axes[0].axhline(y=0.1, color='r', linestyle='--', label='Threshold')
     axes[0].legend()
     axes[0].set_ylim([0, max(dp_diffs) * 1.2])
-    
+
     # Equal opportunity
     axes[1].bar(approaches, eo_diffs, color=['#FF6B6B', '#4ECDC4', '#45B7D1'])
     axes[1].set_ylabel('Difference')
@@ -979,7 +984,7 @@ def visualize_fairness_comparison(results: Dict) -> None:
     axes[1].axhline(y=0.1, color='r', linestyle='--', label='Threshold')
     axes[1].legend()
     axes[1].set_ylim([0, max(eo_diffs) * 1.2])
-    
+
     # Equalized odds
     axes[2].bar(approaches, eod_diffs, color=['#FF6B6B', '#4ECDC4', '#45B7D1'])
     axes[2].set_ylabel('Difference')
@@ -987,34 +992,34 @@ def visualize_fairness_comparison(results: Dict) -> None:
     axes[2].axhline(y=0.1, color='r', linestyle='--', label='Threshold')
     axes[2].legend()
     axes[2].set_ylim([0, max(eod_diffs) * 1.2])
-    
+
     plt.tight_layout()
     plt.savefig('/mnt/user-data/outputs/readmission_fairness_comparison.png', dpi=300, bbox_inches='tight')
     print("\nFairness comparison visualization saved.")
-    
+
     # Group-specific performance
     fig, axes = plt.subplots(len(approaches), 1, figsize=(12, 4*len(approaches)))
-    
+
     for idx, approach in enumerate(approaches):
         _, fairness_metrics = results[approach]
-        
+
         groups = list(fairness_metrics.group_metrics.keys())
         aucs = [fairness_metrics.group_metrics[g]['auc'] for g in groups]
         tprs = [fairness_metrics.group_metrics[g]['tpr'] for g in groups]
-        
+
         x = np.arange(len(groups))
         width = 0.35
-        
+
         axes[idx].bar(x - width/2, aucs, width, label='AUC', color='#4ECDC4')
         axes[idx].bar(x + width/2, tprs, width, label='TPR', color='#FF6B6B')
-        
+
         axes[idx].set_ylabel('Performance')
         axes[idx].set_title(f'{approach.replace("_", " ").title()} - Group Performance')
         axes[idx].set_xticks(x)
         axes[idx].set_xticklabels(groups)
         axes[idx].legend()
         axes[idx].set_ylim([0, 1.0])
-    
+
     plt.tight_layout()
     plt.savefig('/mnt/user-data/outputs/readmission_group_performance.png', dpi=300, bbox_inches='tight')
     print("Group performance visualization saved.")
@@ -1023,7 +1028,7 @@ def visualize_fairness_comparison(results: Dict) -> None:
 if __name__ == "__main__":
     print("Loading readmission data...")
     X, y, race = load_readmission_data()
-    
+
     print(f"\nDataset statistics:")
     print(f"Total samples: {len(y)}")
     print(f"Readmission rate: {y.mean():.1%}")
@@ -1033,14 +1038,14 @@ if __name__ == "__main__":
     for r in race.unique():
         rate = y[race == r].mean()
         print(f"  {r}: {rate:.1%}")
-    
+
     print("\n" + "="*80)
     print("COMPARING FAIRNESS APPROACHES")
     print("="*80)
-    
+
     results = compare_fairness_approaches(X, y, race)
     visualize_fairness_comparison(results)
-    
+
     print("\n" + "="*80)
     print("ANALYSIS COMPLETE")
     print("="*80)
@@ -1060,15 +1065,19 @@ From an equity perspective, decision trees present both opportunities and challe
 
 A decision tree is constructed through recursive binary splitting of the feature space. Starting with the full dataset at the root node, the algorithm selects a feature and threshold that best separates the data according to some splitting criterion. The most common criteria are:
 
-**Gini impurity** measures the probability of misclassifying a randomly chosen element if it were randomly labeled according to the distribution of labels in the node. For a node with class proportions $$p_1, p_2, \ldots, p_K$$, the Gini impurity is:
+**Gini impurity** measures the probability of misclassifying a randomly chosen element if it were randomly labeled according to the distribution of labels in the node. For a node with class proportions $p_1, p_2, \ldots, p_K$, the Gini impurity is:
 
-$$\text{Gini} = 1 - \sum_{k=1}^K p_k^2 = \sum_{k=1}^K p_k(1 - p_k)$$
+$$
+\text{Gini} = 1 - \sum_{k=1}^K p_k^2 = \sum_{k=1}^K p_k(1 - p_k)
+$$
 
 The algorithm selects splits that maximize the reduction in weighted average Gini impurity across child nodes. This criterion favors splits that create pure nodes where most samples belong to a single class.
 
-**Entropy** or information gain measures the reduction in uncertainty about class labels. For a node with class proportions $$p_1, p_2, \ldots, p_K$$, the entropy is:
+**Entropy** or information gain measures the reduction in uncertainty about class labels. For a node with class proportions $p_1, p_2, \ldots, p_K$, the entropy is:
 
-$$\text{Entropy} = -\sum_{k=1}^K p_k \log_2(p_k)$$
+$$
+\text{Entropy} = -\sum_{k=1}^K p_k \log_2(p_k)
+$$
 
 Splits are chosen to maximize information gain, the difference between parent node entropy and weighted average child node entropy. Entropy and Gini impurity typically produce similar trees, though entropy is more computationally expensive due to the logarithm computation.
 
@@ -1104,7 +1113,7 @@ logger = logging.getLogger(__name__)
 class TreeNode:
     """
     Node in a decision tree.
-    
+
     Internal nodes contain a split rule (feature and threshold).
     Leaf nodes contain class predictions and probabilities.
     """
@@ -1113,15 +1122,15 @@ class TreeNode:
     threshold: Optional[float] = None
     left: Optional['TreeNode'] = None
     right: Optional['TreeNode'] = None
-    
+
     # For leaf nodes
     value: Optional[np.ndarray] = None  # Class probabilities
     n_samples: Optional[int] = None
     impurity: Optional[float] = None
-    
+
     # Fairness tracking
     group_distributions: Optional[Dict[str, np.ndarray]] = None
-    
+
     def is_leaf(self) -> bool:
         """Check if this is a leaf node."""
         return self.value is not None
@@ -1129,12 +1138,12 @@ class TreeNode:
 class FairDecisionTreeClassifier:
     """
     Decision tree classifier with fairness constraints during construction.
-    
+
     This implementation modifies the splitting criterion to explicitly penalize
     splits that create disparate outcomes across demographic groups. The fairness
     penalty is incorporated directly into split selection, ensuring that fairness
     is optimized jointly with predictive accuracy rather than added post-hoc.
-    
+
     Parameters:
         max_depth: Maximum depth of the tree (None = unlimited)
         min_samples_split: Minimum samples required to split a node
@@ -1148,7 +1157,7 @@ class FairDecisionTreeClassifier:
         max_features: Number of features to consider per split
         random_state: Random seed for reproducibility
     """
-    
+
     def __init__(
         self,
         max_depth: Optional[int] = None,
@@ -1170,35 +1179,35 @@ class FairDecisionTreeClassifier:
         self.criterion = criterion
         self.max_features = max_features
         self.random_state = random_state
-        
+
         self.tree_ = None
         self.classes_ = None
         self.n_features_ = None
-        
+
         if random_state is not None:
             np.random.seed(random_state)
-    
+
     def _gini(self, y: np.ndarray) -> float:
         """Compute Gini impurity."""
         n = len(y)
         if n == 0:
             return 0.0
-        
+
         counts = np.bincount(y)
         probs = counts / n
         return 1.0 - np.sum(probs**2)
-    
+
     def _entropy(self, y: np.ndarray) -> float:
         """Compute entropy."""
         n = len(y)
         if n == 0:
             return 0.0
-        
+
         counts = np.bincount(y)
         probs = counts / n
         probs = probs[probs > 0]  # Avoid log(0)
         return -np.sum(probs * np.log2(probs))
-    
+
     def _impurity(self, y: np.ndarray) -> float:
         """Compute impurity based on selected criterion."""
         if self.criterion == 'gini':
@@ -1207,7 +1216,7 @@ class FairDecisionTreeClassifier:
             return self._entropy(y)
         else:
             raise ValueError(f"Unknown criterion: {self.criterion}")
-    
+
     def _compute_fairness_cost(
         self,
         y_left: np.ndarray,
@@ -1217,13 +1226,13 @@ class FairDecisionTreeClassifier:
     ) -> float:
         """
         Compute fairness cost for a potential split.
-        
+
         The cost measures how much the split creates disparate outcomes
         across demographic groups. Higher costs indicate greater unfairness.
         """
         if self.fairness_penalty == 0:
             return 0.0
-        
+
         # Combine both sides to evaluate overall fairness
         y_combined = np.concatenate([y_left, y_right])
         sensitive_combined = np.concatenate([sensitive_left, sensitive_right])
@@ -1231,27 +1240,27 @@ class FairDecisionTreeClassifier:
             np.ones(len(y_left)),  # Left side gets positive prediction
             np.zeros(len(y_right))  # Right side gets negative prediction
         ])
-        
+
         # Compute group-specific metrics
         groups = np.unique(sensitive_combined)
-        
+
         if len(groups) < 2:
             return 0.0  # No fairness cost if only one group
-        
+
         group_metrics = {}
-        
+
         for group in groups:
             mask = sensitive_combined == group
             group_y = y_combined[mask]
             group_preds = preds_combined[mask]
-            
+
             if len(group_y) == 0:
                 continue
-            
+
             if self.fairness_metric == 'demographic_parity':
                 # Positive prediction rate
                 metric = np.mean(group_preds)
-            
+
             elif self.fairness_metric == 'equal_opportunity':
                 # True positive rate for positive class
                 pos_mask = group_y == 1
@@ -1261,15 +1270,15 @@ class FairDecisionTreeClassifier:
                     metric = 0.0
             else:
                 raise ValueError(f"Unknown fairness metric: {self.fairness_metric}")
-            
+
             group_metrics[group] = metric
-        
+
         # Fairness cost is variance across groups
         if len(group_metrics) > 1:
             return np.var(list(group_metrics.values()))
         else:
             return 0.0
-    
+
     def _find_best_split(
         self,
         X: np.ndarray,
@@ -1279,7 +1288,7 @@ class FairDecisionTreeClassifier:
     ) -> Tuple[Optional[int], Optional[float], float]:
         """
         Find the best split for a node.
-        
+
         Returns:
             best_feature: Index of feature to split on (None if no valid split)
             best_threshold: Threshold value for split
@@ -1287,48 +1296,48 @@ class FairDecisionTreeClassifier:
         """
         n_samples = len(y)
         parent_impurity = self._impurity(y)
-        
+
         best_gain = -np.inf
         best_feature = None
         best_threshold = None
-        
+
         # Try each candidate feature
         for feature_idx in feature_indices:
             # Get unique values for this feature
             thresholds = np.unique(X[:, feature_idx])
-            
+
             # Skip if only one unique value
             if len(thresholds) == 1:
                 continue
-            
+
             # Try each potential threshold
             # For efficiency, only consider midpoints between sorted unique values
             for i in range(len(thresholds) - 1):
                 threshold = (thresholds[i] + thresholds[i+1]) / 2
-                
+
                 # Split samples
                 left_mask = X[:, feature_idx] <= threshold
                 right_mask = ~left_mask
-                
+
                 n_left = np.sum(left_mask)
                 n_right = np.sum(right_mask)
-                
+
                 # Check minimum samples constraint
                 if n_left < self.min_samples_leaf or n_right < self.min_samples_leaf:
                     continue
-                
+
                 # Compute weighted impurity after split
                 y_left = y[left_mask]
                 y_right = y[right_mask]
-                
+
                 impurity_left = self._impurity(y_left)
                 impurity_right = self._impurity(y_right)
-                
+
                 weighted_impurity = (n_left * impurity_left + n_right * impurity_right) / n_samples
-                
+
                 # Information gain
                 gain = parent_impurity - weighted_impurity
-                
+
                 # Add fairness penalty if sensitive features provided
                 if sensitive_features is not None and self.fairness_penalty > 0:
                     fairness_cost = self._compute_fairness_cost(
@@ -1338,19 +1347,19 @@ class FairDecisionTreeClassifier:
                     )
                     # Subtract fairness cost from gain (higher cost = less desirable split)
                     gain -= self.fairness_penalty * fairness_cost
-                
+
                 # Track best split
                 if gain > best_gain:
                     best_gain = gain
                     best_feature = feature_idx
                     best_threshold = threshold
-        
+
         # Check minimum impurity decrease
         if best_gain < self.min_impurity_decrease:
             return None, None, 0.0
-        
+
         return best_feature, best_threshold, best_gain
-    
+
     def _build_tree(
         self,
         X: np.ndarray,
@@ -1360,17 +1369,17 @@ class FairDecisionTreeClassifier:
     ) -> TreeNode:
         """
         Recursively build decision tree.
-        
+
         This method implements the core tree construction algorithm with
         fairness-aware splitting decisions.
         """
         n_samples = len(y)
         n_classes = len(self.classes_)
-        
+
         # Compute class probabilities for this node
         class_counts = np.bincount(y, minlength=n_classes)
         probabilities = class_counts / n_samples
-        
+
         # Compute group distributions if sensitive features provided
         group_distributions = None
         if sensitive_features is not None:
@@ -1383,7 +1392,7 @@ class FairDecisionTreeClassifier:
                     group_counts = np.bincount(group_y, minlength=n_classes)
                     group_probs = group_counts / len(group_y)
                     group_distributions[str(group)] = group_probs
-        
+
         # Create leaf node if stopping criteria met
         if (self.max_depth is not None and depth >= self.max_depth) or \
            n_samples < self.min_samples_split or \
@@ -1394,7 +1403,7 @@ class FairDecisionTreeClassifier:
                 impurity=self._impurity(y),
                 group_distributions=group_distributions
             )
-        
+
         # Select features to consider for splitting
         if self.max_features is None:
             feature_indices = np.arange(self.n_features_)
@@ -1420,12 +1429,12 @@ class FairDecisionTreeClassifier:
             )
         else:
             raise ValueError(f"Invalid max_features: {self.max_features}")
-        
+
         # Find best split
         best_feature, best_threshold, best_gain = self._find_best_split(
             X, y, sensitive_features, feature_indices
         )
-        
+
         # Create leaf if no valid split found
         if best_feature is None:
             return TreeNode(
@@ -1434,25 +1443,25 @@ class FairDecisionTreeClassifier:
                 impurity=self._impurity(y),
                 group_distributions=group_distributions
             )
-        
+
         # Split data and recursively build subtrees
         left_mask = X[:, best_feature] <= best_threshold
         right_mask = ~left_mask
-        
+
         left_subtree = self._build_tree(
             X[left_mask],
             y[left_mask],
             sensitive_features[left_mask] if sensitive_features is not None else None,
             depth + 1
         )
-        
+
         right_subtree = self._build_tree(
             X[right_mask],
             y[right_mask],
             sensitive_features[right_mask] if sensitive_features is not None else None,
             depth + 1
         )
-        
+
         # Create internal node
         return TreeNode(
             feature=best_feature,
@@ -1463,7 +1472,7 @@ class FairDecisionTreeClassifier:
             impurity=self._impurity(y),
             group_distributions=group_distributions
         )
-    
+
     def fit(
         self,
         X: Union[np.ndarray, pd.DataFrame],
@@ -1472,12 +1481,12 @@ class FairDecisionTreeClassifier:
     ) -> 'FairDecisionTreeClassifier':
         """
         Build a decision tree from training data.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
             y: Binary target variable of shape (n_samples,)
             sensitive_features: Protected attributes for fairness constraints
-        
+
         Returns:
             self: Fitted tree instance
         """
@@ -1488,92 +1497,92 @@ class FairDecisionTreeClassifier:
             y = y.values
         if isinstance(sensitive_features, pd.Series):
             sensitive_features = sensitive_features.values
-        
+
         # Store classes and number of features
         self.classes_ = np.unique(y)
         self.n_features_ = X.shape[1]
-        
+
         if len(self.classes_) != 2:
             raise ValueError("Only binary classification is supported")
-        
+
         # Build tree
         self.tree_ = self._build_tree(X, y, sensitive_features)
-        
+
         logger.info("Decision tree fitted successfully")
-        
+
         return self
-    
+
     def _traverse(self, x: np.ndarray, node: TreeNode) -> np.ndarray:
         """Traverse tree to make prediction for a single sample."""
         if node.is_leaf():
             return node.value
-        
+
         if x[node.feature] <= node.threshold:
             return self._traverse(x, node.left)
         else:
             return self._traverse(x, node.right)
-    
+
     def predict_proba(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
         Predict class probabilities.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
-        
+
         Returns:
             Predicted probabilities of shape (n_samples, 2)
         """
         if self.tree_ is None:
             raise ValueError("Tree must be fitted before prediction")
-        
+
         if isinstance(X, pd.DataFrame):
             X = X.values
-        
+
         probabilities = np.array([self._traverse(x, self.tree_) for x in X])
         return probabilities
-    
+
     def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
         Predict class labels.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
-        
+
         Returns:
             Predicted class labels of shape (n_samples,)
         """
         probabilities = self.predict_proba(X)
         return (probabilities[:, 1] >= 0.5).astype(int)
-    
+
     def _get_tree_structure(self, node: TreeNode, feature_names: Optional[List[str]] = None, depth: int = 0) -> str:
         """
         Generate string representation of tree structure.
-        
+
         This creates a human-readable representation showing the splitting
         rules and leaf predictions, useful for interpretation and debugging.
         """
         indent = "  " * depth
-        
+
         if node.is_leaf():
             class_probs = node.value
             pred_class = np.argmax(class_probs)
             return f"{indent}Leaf: class={pred_class}, probs={class_probs}, n_samples={node.n_samples}\n"
-        
+
         feature_name = f"X[{node.feature}]" if feature_names is None else feature_names[node.feature]
-        
+
         structure = f"{indent}Node: {feature_name} <= {node.threshold:.3f} (n_samples={node.n_samples})\n"
         structure += self._get_tree_structure(node.left, feature_names, depth + 1)
         structure += f"{indent}Node: {feature_name} > {node.threshold:.3f}\n"
         structure += self._get_tree_structure(node.right, feature_names, depth + 1)
-        
+
         return structure
-    
+
     def print_tree(self, feature_names: Optional[List[str]] = None) -> None:
         """Print human-readable tree structure."""
         if self.tree_ is None:
             print("Tree not fitted yet")
             return
-        
+
         print("Decision Tree Structure:")
         print("=" * 80)
         print(self._get_tree_structure(self.tree_, feature_names))
@@ -1601,27 +1610,27 @@ import numpy as np
 class TreeInterpreter:
     """
     Extract and analyze decision rules from fitted trees.
-    
+
     This class provides methods for understanding what a tree has learned,
     including extracting decision paths, identifying important splits, and
     flagging potentially problematic rules that might encode bias.
     """
-    
+
     def __init__(self, tree: FairDecisionTreeClassifier, feature_names: List[str]):
         """
         Initialize interpreter with fitted tree and feature names.
-        
+
         Parameters:
             tree: Fitted FairDecisionTreeClassifier
             feature_names: Names corresponding to feature indices
         """
         self.tree = tree
         self.feature_names = feature_names
-    
+
     def extract_rules(self, node: Optional[TreeNode] = None, path: List[str] = None) -> List[Tuple[List[str], np.ndarray]]:
         """
         Extract all decision rules from root to leaves.
-        
+
         Returns list of (rule_path, leaf_probabilities) tuples where rule_path
         is a list of string conditions that must be satisfied to reach the leaf.
         """
@@ -1629,65 +1638,65 @@ class TreeInterpreter:
             path = []
         if node is None:
             node = self.tree.tree_
-        
+
         if node.is_leaf():
             return [(path.copy(), node.value)]
-        
+
         rules = []
-        
+
         # Left subtree (condition satisfied)
         feature_name = self.feature_names[node.feature]
         left_condition = f"{feature_name} <= {node.threshold:.3f}"
         rules.extend(self.extract_rules(node.left, path + [left_condition]))
-        
+
         # Right subtree (condition not satisfied)
         right_condition = f"{feature_name} > {node.threshold:.3f}"
         rules.extend(self.extract_rules(node.right, path + [right_condition]))
-        
+
         return rules
-    
+
     def get_decision_path(self, x: np.ndarray) -> Tuple[List[str], np.ndarray]:
         """
         Get the decision path for a specific sample.
-        
+
         Returns the sequence of conditions that led to the prediction for this
         sample along with the final predicted probabilities.
         """
         node = self.tree.tree_
         path = []
-        
+
         while not node.is_leaf():
             feature_name = self.feature_names[node.feature]
             threshold = node.threshold
             value = x[node.feature]
-            
+
             if value <= threshold:
                 path.append(f"{feature_name} <= {threshold:.3f} (value: {value:.3f})")
                 node = node.left
             else:
                 path.append(f"{feature_name} > {threshold:.3f} (value: {value:.3f})")
                 node = node.right
-        
+
         return path, node.value
-    
+
     def identify_sensitive_splits(self, sensitive_feature_names: List[str]) -> List[Dict]:
         """
         Identify splits that directly use sensitive features.
-        
+
         Such splits may be appropriate (e.g., sex-specific risk models) or
         problematic (e.g., race-based rules without clinical justification).
         Clinical review is essential.
-        
+
         Returns list of dictionaries describing each sensitive split.
         """
         sensitive_splits = []
-        
+
         def traverse(node: TreeNode, depth: int = 0):
             if node.is_leaf():
                 return
-            
+
             feature_name = self.feature_names[node.feature]
-            
+
             if feature_name in sensitive_feature_names:
                 sensitive_splits.append({
                     'depth': depth,
@@ -1695,66 +1704,66 @@ class TreeInterpreter:
                     'threshold': node.threshold,
                     'n_samples': node.n_samples
                 })
-            
+
             traverse(node.left, depth + 1)
             traverse(node.right, depth + 1)
-        
+
         traverse(self.tree.tree_)
-        
+
         return sensitive_splits
-    
+
     def get_feature_importance(self) -> pd.DataFrame:
         """
         Compute feature importance based on impurity reduction.
-        
+
         Features that appear higher in the tree and create larger impurity
         reductions are more important. This metric helps identify which
         features the model relies on most heavily.
         """
         importance = np.zeros(len(self.feature_names))
-        
+
         def traverse(node: TreeNode):
             if node.is_leaf():
                 return
-            
+
             # Impurity reduction from this split
             n_samples = node.n_samples
             parent_impurity = node.impurity
-            
+
             left_impurity = node.left.impurity
             right_impurity = node.right.impurity
-            
+
             n_left = node.left.n_samples
             n_right = node.right.n_samples
-            
+
             weighted_child_impurity = (n_left * left_impurity + n_right * right_impurity) / n_samples
-            
+
             impurity_reduction = n_samples * (parent_impurity - weighted_child_impurity)
-            
+
             importance[node.feature] += impurity_reduction
-            
+
             traverse(node.left)
             traverse(node.right)
-        
+
         traverse(self.tree.tree_)
-        
+
         # Normalize
         if importance.sum() > 0:
             importance = importance / importance.sum()
-        
+
         importance_df = pd.DataFrame({
             'feature': self.feature_names,
             'importance': importance
         })
-        
+
         importance_df = importance_df.sort_values('importance', ascending=False)
-        
+
         return importance_df
-    
+
     def generate_clinical_validation_report(self) -> str:
         """
         Generate report for clinical validation of tree structure.
-        
+
         This report extracts key information that clinical experts need to
         validate whether the tree has learned clinically appropriate rules.
         """
@@ -1763,7 +1772,7 @@ class TreeInterpreter:
         lines.append("CLINICAL VALIDATION REPORT FOR DECISION TREE")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Tree statistics
         def count_nodes(node):
             if node.is_leaf():
@@ -1771,32 +1780,32 @@ class TreeInterpreter:
             left_total, left_leaves, left_internal = count_nodes(node.left)
             right_total, right_leaves, right_internal = count_nodes(node.right)
             return left_total + right_total + 1, left_leaves + right_leaves, left_internal + right_internal + 1
-        
+
         n_total, n_leaves, n_internal = count_nodes(self.tree.tree_)
-        
+
         lines.append("TREE STRUCTURE:")
         lines.append(f"  Total nodes: {n_total}")
         lines.append(f"  Internal nodes: {n_internal}")
         lines.append(f"  Leaf nodes: {n_leaves}")
         lines.append("")
-        
+
         # Feature importance
         lines.append("FEATURE IMPORTANCE:")
         importance_df = self.get_feature_importance()
         for _, row in importance_df.head(10).iterrows():
             lines.append(f"  {row['feature']}: {row['importance']:.4f}")
         lines.append("")
-        
+
         # All decision rules
         lines.append("COMPLETE DECISION RULES:")
         lines.append("(Clinical review required to validate appropriateness)")
         lines.append("")
-        
+
         rules = self.extract_rules()
         for idx, (path, probs) in enumerate(rules, 1):
             pred_class = np.argmax(probs)
             pred_prob = probs[pred_class]
-            
+
             lines.append(f"Rule {idx}:")
             lines.append(f"  Conditions:")
             for condition in path:
@@ -1804,11 +1813,11 @@ class TreeInterpreter:
             lines.append(f"  Prediction: Class {pred_class} (probability: {pred_prob:.3f})")
             lines.append(f"  All class probabilities: {probs}")
             lines.append("")
-        
+
         lines.append("=" * 80)
         lines.append("END OF CLINICAL VALIDATION REPORT")
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
 ```
 
@@ -1824,13 +1833,15 @@ From an equity perspective, random forests offer important advantages but also n
 
 A random forest consists of $T$ decision trees, each trained on a bootstrap sample of the training data with random feature subsampling at each split. For prediction, the forest aggregates predictions across all trees, typically using majority voting for classification or averaging for probability estimates:
 
-$$\hat{p}(y=1 | \mathbf{x}) = \frac{1}{T} \sum_{t=1}^T \hat{p}_t(y=1 | \mathbf{x})$$
+$$
+\hat{p}(y=1 | \mathbf{x}) = \frac{1}{T} \sum_{t=1}^T \hat{p}_t(y=1 | \mathbf{x})
+$$
 
-where $$\hat{p}_t(y=1 | \mathbf{x})$$$is the predicted probability from tree$$t$.
+where $\hat{p}_t(y=1 | \mathbf{x})$is the predicted probability from tree$t$.
 
 The bootstrap sampling creates training subsets that differ across trees, introducing diversity that improves generalization. However, if demographic groups are unevenly represented in the full training set, bootstrap samples will maintain or exacerbate this imbalance. Trees trained on samples with very few examples from minority groups may learn poor models for those groups, and aggregating many such trees still produces poor overall performance for underrepresented populations.
 
-The random feature subsampling at each split considers only a subset of features when determining the best split. Typically $$\sqrt{p}$$$features are considered at each split for$$p$ total features, though this hyperparameter can be tuned. This randomness introduces additional diversity and reduces overfitting, but also means that features particularly informative for minority groups may be missed if they don't appear in the random subset at critical splits.
+The random feature subsampling at each split considers only a subset of features when determining the best split. Typically $\sqrt{p}$features are considered at each split for$p$ total features, though this hyperparameter can be tuned. This randomness introduces additional diversity and reduces overfitting, but also means that features particularly informative for minority groups may be missed if they don't appear in the random subset at critical splits.
 
 ### 4.4.2 Fairness-Aware Random Forest Implementation
 
@@ -1858,11 +1869,11 @@ logger = logging.getLogger(__name__)
 class FairRandomForestClassifier:
     """
     Random forest with fairness constraints for clinical prediction.
-    
+
     This implementation trains an ensemble of fairness-aware decision trees
     with stratified bootstrap sampling to ensure adequate representation of
     all demographic groups in each tree's training data.
-    
+
     Parameters:
         n_estimators: Number of trees in the forest
         max_depth: Maximum depth of each tree
@@ -1879,7 +1890,7 @@ class FairRandomForestClassifier:
         random_state: Random seed for reproducibility
         verbose: Verbosity level
     """
-    
+
     def __init__(
         self,
         n_estimators: int = 100,
@@ -1911,14 +1922,14 @@ class FairRandomForestClassifier:
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
-        
+
         self.estimators_ = []
         self.classes_ = None
         self.n_features_ = None
-        
+
         if random_state is not None:
             np.random.seed(random_state)
-    
+
     def _get_bootstrap_sample(
         self,
         X: np.ndarray,
@@ -1928,7 +1939,7 @@ class FairRandomForestClassifier:
     ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray], np.ndarray]:
         """
         Generate bootstrap sample with optional stratification.
-        
+
         If stratify_groups is True, we ensure that each bootstrap sample
         maintains approximately the same proportion of each demographic group
         as the full dataset. This prevents individual trees from being trained
@@ -1936,10 +1947,10 @@ class FairRandomForestClassifier:
         """
         np.random.seed(random_state)
         n_samples = len(y)
-        
+
         if self.max_samples is not None:
             n_samples = int(self.max_samples * n_samples)
-        
+
         if not self.stratify_groups or sensitive_features is None:
             # Standard bootstrap sampling
             indices = np.random.choice(len(y), size=n_samples, replace=self.bootstrap)
@@ -1947,14 +1958,14 @@ class FairRandomForestClassifier:
             # Stratified bootstrap by sensitive features
             groups = np.unique(sensitive_features)
             indices = []
-            
+
             for group in groups:
                 group_indices = np.where(sensitive_features == group)[0]
                 n_group = len(group_indices)
-                
+
                 # Sample proportionally from each group
                 n_group_samples = int(n_samples * n_group / len(y))
-                
+
                 if n_group_samples > 0:
                     group_sample = np.random.choice(
                         group_indices,
@@ -1962,16 +1973,16 @@ class FairRandomForestClassifier:
                         replace=self.bootstrap
                     )
                     indices.extend(group_sample)
-            
+
             indices = np.array(indices)
             np.random.shuffle(indices)
-        
+
         X_boot = X[indices]
         y_boot = y[indices]
         sensitive_boot = sensitive_features[indices] if sensitive_features is not None else None
-        
+
         return X_boot, y_boot, sensitive_boot, indices
-    
+
     def _train_single_tree(
         self,
         X: np.ndarray,
@@ -1981,16 +1992,16 @@ class FairRandomForestClassifier:
     ) -> FairDecisionTreeClassifier:
         """
         Train a single tree on a bootstrap sample.
-        
+
         This method is designed to be called in parallel across multiple trees.
         """
         # Generate bootstrap sample with tree-specific random state
         random_state = self.random_state + tree_idx if self.random_state is not None else tree_idx
-        
+
         X_boot, y_boot, sensitive_boot, _ = self._get_bootstrap_sample(
             X, y, sensitive_features, random_state
         )
-        
+
         # Train tree
         tree = FairDecisionTreeClassifier(
             max_depth=self.max_depth,
@@ -2002,14 +2013,14 @@ class FairRandomForestClassifier:
             max_features=self.max_features,
             random_state=random_state
         )
-        
+
         tree.fit(X_boot, y_boot, sensitive_boot)
-        
+
         if self.verbose > 0:
             logger.info(f"Trained tree {tree_idx + 1}/{self.n_estimators}")
-        
+
         return tree
-    
+
     def fit(
         self,
         X: Union[np.ndarray, pd.DataFrame],
@@ -2018,12 +2029,12 @@ class FairRandomForestClassifier:
     ) -> 'FairRandomForestClassifier':
         """
         Build a random forest from training data.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
             y: Binary target variable of shape (n_samples,)
             sensitive_features: Protected attributes for fairness constraints
-        
+
         Returns:
             self: Fitted forest instance
         """
@@ -2034,16 +2045,16 @@ class FairRandomForestClassifier:
             y = y.values
         if isinstance(sensitive_features, pd.Series):
             sensitive_features = sensitive_features.values
-        
+
         # Store classes and number of features
         self.classes_ = np.unique(y)
         self.n_features_ = X.shape[1]
-        
+
         if len(self.classes_) != 2:
             raise ValueError("Only binary classification is supported")
-        
+
         logger.info(f"Training random forest with {self.n_estimators} trees...")
-        
+
         # Train trees in parallel if n_jobs != 1
         if self.n_jobs == 1:
             # Sequential training
@@ -2054,119 +2065,119 @@ class FairRandomForestClassifier:
         else:
             # Parallel training
             max_workers = None if self.n_jobs == -1 else self.n_jobs
-            
+
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
                 futures = [
                     executor.submit(self._train_single_tree, X, y, sensitive_features, i)
                     for i in range(self.n_estimators)
                 ]
-                
+
                 self.estimators_ = []
                 for future in as_completed(futures):
                     tree = future.result()
                     self.estimators_.append(tree)
-        
+
         logger.info("Random forest training complete")
-        
+
         return self
-    
+
     def predict_proba(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
         Predict class probabilities by averaging across trees.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
-        
+
         Returns:
             Predicted probabilities of shape (n_samples, 2)
         """
         if not self.estimators_:
             raise ValueError("Forest must be fitted before prediction")
-        
+
         if isinstance(X, pd.DataFrame):
             X = X.values
-        
+
         # Aggregate predictions from all trees
         all_probs = np.array([tree.predict_proba(X) for tree in self.estimators_])
-        
+
         # Average across trees
         avg_probs = np.mean(all_probs, axis=0)
-        
+
         return avg_probs
-    
+
     def predict(self, X: Union[np.ndarray, pd.DataFrame], threshold: float = 0.5) -> np.ndarray:
         """
         Predict class labels.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
             threshold: Decision threshold for classification
-        
+
         Returns:
             Predicted class labels of shape (n_samples,)
         """
         probs = self.predict_proba(X)
         return (probs[:, 1] >= threshold).astype(int)
-    
+
     def get_feature_importance(self) -> pd.DataFrame:
         """
         Compute feature importance averaged across all trees.
-        
+
         Feature importance in random forests is computed by averaging the
         impurity-based importance from each tree. Features that appear
         frequently and create large impurity reductions are most important.
         """
         # Get importance from each tree
         importance_arrays = []
-        
+
         for tree in self.estimators_:
             tree_importance = np.zeros(self.n_features_)
-            
+
             def traverse(node):
                 if node.is_leaf():
                     return
-                
+
                 # Compute impurity reduction from this split
                 parent_impurity = node.impurity
                 n_samples = node.n_samples
-                
+
                 n_left = node.left.n_samples
                 n_right = node.right.n_samples
-                
+
                 left_impurity = node.left.impurity
                 right_impurity = node.right.impurity
-                
+
                 weighted_child_impurity = (n_left * left_impurity + n_right * right_impurity) / n_samples
-                
+
                 impurity_reduction = n_samples * (parent_impurity - weighted_child_impurity)
-                
+
                 tree_importance[node.feature] += impurity_reduction
-                
+
                 traverse(node.left)
                 traverse(node.right)
-            
+
             traverse(tree.tree_)
-            
+
             # Normalize tree importance
             if tree_importance.sum() > 0:
                 tree_importance = tree_importance / tree_importance.sum()
-            
+
             importance_arrays.append(tree_importance)
-        
+
         # Average across trees
         avg_importance = np.mean(importance_arrays, axis=0)
-        
+
         # Normalize final importance
         if avg_importance.sum() > 0:
             avg_importance = avg_importance / avg_importance.sum()
-        
+
         importance_df = pd.DataFrame({
             'feature_index': range(self.n_features_),
             'importance': avg_importance
         })
-        
+
         importance_df = importance_df.sort_values('importance', ascending=False)
-        
+
         return importance_df
 ```
 
@@ -2180,9 +2191,11 @@ Gradient boosting represents a fundamentally different approach to ensemble lear
 
 The gradient boosting algorithm works by iteratively adding trees that predict the residuals or gradients of the current ensemble's predictions. For binary classification with log loss, we start with a simple baseline model (often just predicting the overall prevalence) and then repeatedly add trees that move predictions in the direction that most reduces the loss function. After training $M$ trees, the final prediction is:
 
-$$f(\mathbf{x}) = f_0 + \eta \sum_{m=1}^M h_m(\mathbf{x})$$
+$$
+f(\mathbf{x}) = f_0 + \eta \sum_{m=1}^M h_m(\mathbf{x})
+$$
 
-where $$f_0$$ is the initial prediction, each $$h_m$$ is a tree, and $$\eta$$ is the learning rate that controls how much each tree contributes. A smaller learning rate requires more trees but often improves generalization.
+where $f_0$ is the initial prediction, each $h_m$ is a tree, and $\eta$ is the learning rate that controls how much each tree contributes. A smaller learning rate requires more trees but often improves generalization.
 
 From an equity perspective, gradient boosting presents unique challenges. The sequential nature means that errors on underrepresented populations in early iterations can compound rather than average out as in random forests. If the initial model performs poorly for minority groups and subsequent trees focus on reducing loss for the majority (where there is more data to learn from), the final ensemble may systematically underperform for minorities. The complexity enabled by boosting, while improving overall performance, can also make it easier for models to learn subtle proxies for protected characteristics that simpler models would miss.
 
@@ -2211,11 +2224,11 @@ logger = logging.getLogger(__name__)
 class FairGradientBoostingClassifier:
     """
     Gradient boosting with fairness-aware residual computation.
-    
+
     This implementation modifies standard gradient boosting to explicitly account
     for fairness by adjusting the focus of each boosting iteration based on
     group-specific performance metrics.
-    
+
     Parameters:
         n_estimators: Number of boosting iterations (trees to train)
         learning_rate: Shrinkage parameter (smaller = more conservative)
@@ -2229,7 +2242,7 @@ class FairGradientBoostingClassifier:
         random_state: Random seed for reproducibility
         verbose: Verbosity level
     """
-    
+
     def __init__(
         self,
         n_estimators: int = 100,
@@ -2255,26 +2268,26 @@ class FairGradientBoostingClassifier:
         self.max_features = max_features
         self.random_state = random_state
         self.verbose = verbose
-        
+
         self.estimators_ = []
         self.init_prediction_ = None
         self.classes_ = None
         self.n_features_ = None
-        
+
         if random_state is not None:
             np.random.seed(random_state)
-    
+
     def _init_decision_function(self, y: np.ndarray) -> float:
         """
         Initialize decision function with log-odds of positive class.
-        
+
         This provides a reasonable baseline before boosting begins.
         """
         pos_rate = np.mean(y)
         # Clip to avoid log(0) or log(1)
         pos_rate = np.clip(pos_rate, 1e-10, 1 - 1e-10)
         return logit(pos_rate)
-    
+
     def _compute_residuals(
         self,
         y: np.ndarray,
@@ -2283,31 +2296,31 @@ class FairGradientBoostingClassifier:
     ) -> np.ndarray:
         """
         Compute residuals for next boosting iteration.
-        
+
         For binary classification with log loss, residuals are:
             r_i = y_i - p_i
         where p_i is the current predicted probability for sample i.
-        
+
         With fairness penalties, we reweight residuals to focus more on
         samples from groups where performance is currently poor.
         """
         # Current probabilities
         probs = expit(predictions)
-        
+
         # Standard residuals
         residuals = y - probs
-        
+
         # Apply fairness-based reweighting if requested
         if sensitive_features is not None and self.fairness_penalty > 0:
             groups = np.unique(sensitive_features)
-            
+
             # Compute group-specific losses
             group_losses = {}
             for group in groups:
                 mask = sensitive_features == group
                 group_y = y[mask]
                 group_probs = probs[mask]
-                
+
                 # Log loss for this group
                 group_probs_clipped = np.clip(group_probs, 1e-15, 1 - 1e-15)
                 loss = -np.mean(
@@ -2315,13 +2328,13 @@ class FairGradientBoostingClassifier:
                     (1 - group_y) * np.log(1 - group_probs_clipped)
                 )
                 group_losses[group] = loss
-            
+
             # Compute reweighting factors based on relative losses
             if self.fairness_metric == 'loss_ratio':
                 # Groups with higher loss get more weight
                 max_loss = max(group_losses.values())
                 min_loss = min(group_losses.values())
-                
+
                 if max_loss > min_loss:
                     for group in groups:
                         mask = sensitive_features == group
@@ -2329,7 +2342,7 @@ class FairGradientBoostingClassifier:
                         # Weight proportional to how much worse this group is
                         weight = 1.0 + self.fairness_penalty * (loss - min_loss) / (max_loss - min_loss)
                         residuals[mask] *= weight
-            
+
             elif self.fairness_metric == 'prediction_gap':
                 # Groups with larger prediction gaps get more weight
                 for group in groups:
@@ -2337,14 +2350,14 @@ class FairGradientBoostingClassifier:
                     group_preds = probs[mask]
                     group_mean_pred = np.mean(group_preds)
                     overall_mean_pred = np.mean(probs)
-                    
+
                     # Weight based on absolute difference from overall mean
                     gap = abs(group_mean_pred - overall_mean_pred)
                     weight = 1.0 + self.fairness_penalty * gap
                     residuals[mask] *= weight
-        
+
         return residuals
-    
+
     def fit(
         self,
         X: Union[np.ndarray, pd.DataFrame],
@@ -2353,12 +2366,12 @@ class FairGradientBoostingClassifier:
     ) -> 'FairGradientBoostingClassifier':
         """
         Build gradient boosting ensemble from training data.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
             y: Binary target variable of shape (n_samples,)
             sensitive_features: Protected attributes for fairness constraints
-        
+
         Returns:
             self: Fitted boosting model instance
         """
@@ -2369,29 +2382,29 @@ class FairGradientBoostingClassifier:
             y = y.values
         if isinstance(sensitive_features, pd.Series):
             sensitive_features = sensitive_features.values
-        
+
         # Store classes and number of features
         self.classes_ = np.unique(y)
         self.n_features_ = X.shape[1]
-        
+
         if len(self.classes_) != 2:
             raise ValueError("Only binary classification is supported")
-        
+
         n_samples = len(y)
-        
+
         # Initialize with log-odds
         self.init_prediction_ = self._init_decision_function(y)
-        
+
         # Start with uniform predictions
         predictions = np.full(n_samples, self.init_prediction_)
-        
+
         logger.info(f"Training gradient boosting with {self.n_estimators} iterations...")
-        
+
         # Boosting iterations
         for iteration in range(self.n_estimators):
             # Compute residuals
             residuals = self._compute_residuals(y, predictions, sensitive_features)
-            
+
             # Subsample if requested
             if self.subsample < 1.0:
                 n_subsample = int(n_samples * self.subsample)
@@ -2403,7 +2416,7 @@ class FairGradientBoostingClassifier:
                 X_sub = X
                 residuals_sub = residuals
                 sensitive_sub = sensitive_features
-            
+
             # Train tree to predict residuals
             tree = FairDecisionTreeClassifier(
                 max_depth=self.max_depth,
@@ -2412,25 +2425,25 @@ class FairGradientBoostingClassifier:
                 max_features=self.max_features,
                 random_state=self.random_state + iteration if self.random_state else iteration
             )
-            
+
             # Convert residuals to binary classification problem
             # Use median split: positive if residual > 0, negative otherwise
             y_tree = (residuals_sub > 0).astype(int)
-            
+
             tree.fit(X_sub, y_tree, sensitive_sub)
-            
+
             # Get tree predictions on full dataset
             tree_preds_proba = tree.predict_proba(X)[:, 1]
-            
+
             # Convert probabilities back to residual scale
             tree_preds = 2 * (tree_preds_proba - 0.5)
-            
+
             # Update predictions with learning rate
             predictions += self.learning_rate * tree_preds
-            
+
             # Store tree
             self.estimators_.append(tree)
-            
+
             if self.verbose > 0 and (iteration + 1) % 10 == 0:
                 # Compute current loss
                 current_probs = expit(predictions)
@@ -2440,123 +2453,123 @@ class FairGradientBoostingClassifier:
                     (1 - y) * np.log(1 - current_probs_clipped)
                 )
                 logger.info(f"Iteration {iteration + 1}/{self.n_estimators}, Loss: {loss:.4f}")
-        
+
         logger.info("Gradient boosting training complete")
-        
+
         return self
-    
+
     def _decision_function(self, X: np.ndarray) -> np.ndarray:
         """
         Compute the decision function (log-odds) for samples.
-        
+
         This is the sum of the initial prediction plus contributions
         from all boosted trees.
         """
         if not self.estimators_:
             raise ValueError("Model must be fitted before prediction")
-        
+
         # Start with initial prediction
         predictions = np.full(len(X), self.init_prediction_)
-        
+
         # Add contributions from all trees
         for tree in self.estimators_:
             tree_preds_proba = tree.predict_proba(X)[:, 1]
             tree_preds = 2 * (tree_preds_proba - 0.5)
             predictions += self.learning_rate * tree_preds
-        
+
         return predictions
-    
+
     def predict_proba(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
         Predict class probabilities.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
-        
+
         Returns:
             Predicted probabilities of shape (n_samples, 2)
         """
         if isinstance(X, pd.DataFrame):
             X = X.values
-        
+
         # Get log-odds
         decision = self._decision_function(X)
-        
+
         # Convert to probabilities
         probs_pos = expit(decision)
         probs_neg = 1 - probs_pos
-        
+
         return np.column_stack([probs_neg, probs_pos])
-    
+
     def predict(self, X: Union[np.ndarray, pd.DataFrame], threshold: float = 0.5) -> np.ndarray:
         """
         Predict class labels.
-        
+
         Parameters:
             X: Feature matrix of shape (n_samples, n_features)
             threshold: Decision threshold for classification
-        
+
         Returns:
             Predicted class labels of shape (n_samples,)
         """
         probs = self.predict_proba(X)
         return (probs[:, 1] >= threshold).astype(int)
-    
+
     def get_feature_importance(self) -> pd.DataFrame:
         """
         Compute feature importance from gradient boosting ensemble.
-        
+
         Importance is computed by summing the total gain (impurity reduction)
         for each feature across all trees, weighted by tree position in the
         sequence (later trees may be more important as they correct errors).
         """
         importance = np.zeros(self.n_features_)
-        
+
         for tree_idx, tree in enumerate(self.estimators_):
             # Get importance from this tree
             tree_importance = np.zeros(self.n_features_)
-            
+
             def traverse(node):
                 if node.is_leaf():
                     return
-                
+
                 # Compute impurity reduction
                 parent_impurity = node.impurity
                 n_samples = node.n_samples
-                
+
                 n_left = node.left.n_samples
                 n_right = node.right.n_samples
-                
+
                 left_impurity = node.left.impurity
                 right_impurity = node.right.impurity
-                
+
                 weighted_child_impurity = (n_left * left_impurity + n_right * right_impurity) / n_samples
-                
+
                 gain = n_samples * (parent_impurity - weighted_child_impurity)
-                
+
                 tree_importance[node.feature] += gain
-                
+
                 traverse(node.left)
                 traverse(node.right)
-            
+
             traverse(tree.tree_)
-            
+
             # Add to overall importance with weight based on tree position
             # Later trees get slightly higher weight as they correct errors
             tree_weight = 1.0 + 0.1 * (tree_idx / len(self.estimators_))
             importance += tree_weight * tree_importance
-        
+
         # Normalize
         if importance.sum() > 0:
             importance = importance / importance.sum()
-        
+
         importance_df = pd.DataFrame({
             'feature_index': range(self.n_features_),
             'importance': importance
         })
-        
+
         importance_df = importance_df.sort_values('importance', ascending=False)
-        
+
         return importance_df
 ```
 
@@ -2649,5 +2662,4 @@ Zafar, M. B., Valera, I., Gomez Rodriguez, M., & Gummadi, K. P. (2017). Fairness
 Zhang, B. H., Lemoine, B., & Mitchell, M. (2018). Mitigating unwanted biases with adversarial learning. *Proceedings of the 2018 AAAI/ACM Conference on AI, Ethics, and Society*, 335-340. https://doi.org/10.1145/3278721.3278779
 
 Zink, A., & Rose, S. (2020). Fair regression for health care spending. *Biometrics*, 76(3), 973-982. https://doi.org/10.1111/biom.13206
-
 

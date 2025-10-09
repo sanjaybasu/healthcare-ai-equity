@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 24: Population Health Management and Screening"
 chapter_number: 24
+part_number: 6
+prev_chapter: /chapters/chapter-23-precision-medicine-genomics/
+next_chapter: /chapters/chapter-25-sdoh-integration/
 ---
-
 # Chapter 24: Population Health Management and Screening
 
 ## Learning Objectives
@@ -37,34 +39,40 @@ This chapter integrates technical rigor with practical implementation guidance, 
 
 Population risk stratification aims to identify individuals at high risk for adverse outcomes to enable preventive interventions, but the mathematical formulation of "risk" profoundly shapes who gets identified and how resources are allocated. Traditional risk models optimize predictive accuracy for outcomes like hospitalization or mortality, but this approach has systematic equity problems because it conflates risk of adverse health events with risk of healthcare utilization or documentation, privileging patients with better access to care and more complete health records.
 
-Consider a standard risk stratification model for identifying patients at high risk of hospitalization within the next year. Let $$Y_i \in \{0, 1\}$$ indicate whether patient $i$ is hospitalized during the prediction window, and $$X_i$$ be a feature vector containing demographics, diagnoses, medications, and prior utilization. A logistic regression model estimates:
+Consider a standard risk stratification model for identifying patients at high risk of hospitalization within the next year. Let $Y_i \in \{0, 1\}$ indicate whether patient $i$ is hospitalized during the prediction window, and $X_i$ be a feature vector containing demographics, diagnoses, medications, and prior utilization. A logistic regression model estimates:
 
-$$P(Y_i = 1 | X_i) = \sigma(\beta^T X_i)$$
+$$
+P(Y_i = 1 | X_i) = \sigma(\beta^T X_i)
+$$
 
-where $$\sigma(z) = 1/(1 + e^{-z})$$ is the sigmoid function. Patients are ranked by predicted risk $$\hat{p}_i = \sigma(\hat{\beta}^T X_i)$$ and those above some threshold $$\tau$$ are enrolled in care management programs. This formulation has two critical equity problems. First, patients with better documentation will have higher predicted risks simply because their health problems are more comprehensively recorded, not because their underlying health is worse. A patient seen regularly at a well-resourced academic medical center will accumulate more diagnosis codes than an equally sick patient receiving sporadic care at an under-resourced community clinic. Second, the outcome $$Y_i$$ measures healthcare utilization rather than underlying health need - patients who lack insurance or transportation may be extremely sick but unable to access hospitalization.
+where $\sigma(z) = 1/(1 + e^{-z})$ is the sigmoid function. Patients are ranked by predicted risk $\hat{p}_i = \sigma(\hat{\beta}^T X_i)$ and those above some threshold $\tau$ are enrolled in care management programs. This formulation has two critical equity problems. First, patients with better documentation will have higher predicted risks simply because their health problems are more comprehensively recorded, not because their underlying health is worse. A patient seen regularly at a well-resourced academic medical center will accumulate more diagnosis codes than an equally sick patient receiving sporadic care at an under-resourced community clinic. Second, the outcome $Y_i$ measures healthcare utilization rather than underlying health need - patients who lack insurance or transportation may be extremely sick but unable to access hospitalization.
 
 A more equitable formulation distinguishes underlying health status from healthcare access and documentation quality. We can decompose the observed outcome as:
 
-$$Y_i = H_i \cdot A_i$$
+$$
+Y_i = H_i \cdot A_i
+$$
 
-where $$H_i \in \{0, 1\}$$ indicates whether patient $i$ has a health condition severe enough to warrant hospitalization, and $$A_i \in \{0, 1\}$$ indicates whether they actually access hospitalization given their health status. In underserved populations, many patients have $$H_i = 1$$ but $$A_i = 0$$ due to barriers like lack of insurance, transportation, or proximity to hospitals. Standard risk models trained on $$Y_i$$ systematically underestimate risk for patients with low $$A_i$$, concentrating resources on those who already have good access.
+where $H_i \in \{0, 1\}$ indicates whether patient $i$ has a health condition severe enough to warrant hospitalization, and $A_i \in \{0, 1\}$ indicates whether they actually access hospitalization given their health status. In underserved populations, many patients have $H_i = 1$ but $A_i = 0$ due to barriers like lack of insurance, transportation, or proximity to hospitals. Standard risk models trained on $Y_i$ systematically underestimate risk for patients with low $A_i$, concentrating resources on those who already have good access.
 
-To address this, we need models that estimate $$P(H_i = 1 | X_i)$$ rather than $$P(Y_i = 1 | X_i)$$, but $$H_i$$ is unobserved in standard claims or EHR data. This requires causal inference techniques to debias for differential access. One approach uses instrumental variable methods where geographic proximity to hospitals serves as an instrument for access conditional on health status. Another approach stratifies by measures of healthcare access (insurance type, usual source of care, prior utilization patterns) and applies inverse probability weighting to adjust for selection into observation.
+To address this, we need models that estimate $P(H_i = 1 | X_i)$ rather than $P(Y_i = 1 | X_i)$, but $H_i$ is unobserved in standard claims or EHR data. This requires causal inference techniques to debias for differential access. One approach uses instrumental variable methods where geographic proximity to hospitals serves as an instrument for access conditional on health status. Another approach stratifies by measures of healthcare access (insurance type, usual source of care, prior utilization patterns) and applies inverse probability weighting to adjust for selection into observation.
 
-A practical approach suitable for many settings employs composite outcomes that combine utilization with clinical indicators less dependent on access patterns. Instead of predicting hospitalization alone, we can predict $$Y_i^* = \max(Y_i^{\text{hosp}}, Y_i^{\text{ED}}, Y_i^{\text{lab}}, Y_i^{\text{decline}})$$ where:
+A practical approach suitable for many settings employs composite outcomes that combine utilization with clinical indicators less dependent on access patterns. Instead of predicting hospitalization alone, we can predict $Y_i^* = \max(Y_i^{\text{hosp}}, Y_i^{\text{ED}}, Y_i^{\text{lab}}, Y_i^{\text{decline}})$ where:
 
-- $$Y_i^{\text{hosp}}$$ indicates hospitalization
-- $$Y_i^{\text{ED}}$$ indicates multiple emergency department visits
-- $$Y_i^{\text{lab}}$$ indicates concerning laboratory values (elevated HbA1c, low eGFR, etc.)
-- $$Y_i^{\text{decline}}$$ indicates functional decline measured by changes in vital signs or mobility
+- $Y_i^{\text{hosp}}$ indicates hospitalization
+- $Y_i^{\text{ED}}$ indicates multiple emergency department visits
+- $Y_i^{\text{lab}}$ indicates concerning laboratory values (elevated HbA1c, low eGFR, etc.)
+- $Y_i^{\text{decline}}$ indicates functional decline measured by changes in vital signs or mobility
 
 This composite outcome better captures underlying health status because laboratory values and functional measures are less dependent on healthcare-seeking behavior than hospitalization codes. However, even composite outcomes have equity issues if some components are more likely to be measured in certain populations.
 
 The most robust approach incorporates social determinants and health equity indices directly into risk models, not as additional predictors but as explicit components of the outcome definition. We can define need-adjusted risk as:
 
-$$R_i^{\text{need}} = P(H_i = 1 | X_i) \cdot V_i$$
+$$
+R_i^{\text{need}} = P(H_i = 1 | X_i) \cdot V_i
+$$
 
-where $$V_i$$ is a vulnerability index capturing social determinants that amplify the impact of health problems. For example, an elderly patient with diabetes living alone in a housing-unstable situation faces greater consequences from uncontrolled diabetes than an otherwise identical patient with strong family support and stable housing. The vulnerability index $$V_i$$ can incorporate:
+where $V_i$ is a vulnerability index capturing social determinants that amplify the impact of health problems. For example, an elderly patient with diabetes living alone in a housing-unstable situation faces greater consequences from uncontrolled diabetes than an otherwise identical patient with strong family support and stable housing. The vulnerability index $V_i$ can incorporate:
 
 - Social isolation (living alone, limited social support)
 - Housing instability or homelessness
@@ -80,151 +88,191 @@ This formulation prioritizes patients who face greatest consequences from health
 
 Screening programs aim to detect disease early when treatment is most effective, but screening decisions involve tradeoffs between benefits and harms that differ across populations in ways that can exacerbate health disparities. The mathematical framework for screening optimization must account for differential screening burden, varying prevalence across demographic groups, and inequities in follow-up care access.
 
-Classical screening theory analyzes the population benefit from screening using a decision-theoretic framework. Let $$D \in \{0, 1\}$$ indicate true disease status and $$S \in \{0, 1\}$$ indicate screening test result (positive or negative). For a continuous test score $T$, the screening decision uses threshold $$\tau$$ such that $$S = \mathbb{1}(T > \tau)$$$. The operating characteristics of screening at threshold$$\tau$ are:
+Classical screening theory analyzes the population benefit from screening using a decision-theoretic framework. Let $D \in \{0, 1\}$ indicate true disease status and $S \in \{0, 1\}$ indicate screening test result (positive or negative). For a continuous test score $T$, the screening decision uses threshold $\tau$ such that $S = \mathbb{1}(T > \tau)$. The operating characteristics of screening at threshold$\tau$ are:
 
-- Sensitivity: $$\text{Se}(\tau) = P(T > \tau | D = 1)$$
-- Specificity: $$\text{Sp}(\tau) = P(T \leq \tau | D = 0)$$
-- Positive predictive value: $$\text{PPV}(\tau) = \frac{p \cdot \text{Se}(\tau)}{p \cdot \text{Se}(\tau) + (1-p)(1-\text{Sp}(\tau))}$$
+- Sensitivity: $\text{Se}(\tau) = P(T > \tau | D = 1)$
+- Specificity: $\text{Sp}(\tau) = P(T \leq \tau | D = 0)$
+- Positive predictive value: $\text{PPV}(\tau) = \frac{p \cdot \text{Se}(\tau)}{p \cdot \text{Se}(\tau) + (1-p)(1-\text{Sp}(\tau))}$
 
-where $$p = P(D = 1)$$ is disease prevalence. The receiver operating characteristic (ROC) curve plots sensitivity versus $$(1 - \text{specificity})$$ across thresholds, and the area under the ROC curve (AUC) summarizes overall discriminative ability.
+where $p = P(D = 1)$ is disease prevalence. The receiver operating characteristic (ROC) curve plots sensitivity versus $(1 - \text{specificity})$ across thresholds, and the area under the ROC curve (AUC) summarizes overall discriminative ability.
 
 However, this framework ignores screening burden and assumes all false positives and false negatives have equal consequences across populations. In reality, screening burden varies dramatically. For a patient with reliable transportation, health insurance, and flexible work arrangements, undergoing screening and follow-up testing for a false positive is an inconvenience. For a patient working multiple hourly-wage jobs with no paid sick leave, uncertain immigration status, or significant caregiving responsibilities, the same process may be prohibitively burdensome or even dangerous.
 
 A more complete framework incorporates screening burden explicitly into the utility function. Let:
 
-- $$U_{TP}$$ = utility of true positive (early disease detection and treatment)
-- $$U_{TN}$$ = utility of true negative (reassurance)
-- $$U_{FP}$$ = utility of false positive (includes screening burden, anxiety, follow-up testing risks)
-- $$U_{FN}$$ = utility of false negative (missed opportunity for early treatment)
+- $U_{TP}$ = utility of true positive (early disease detection and treatment)
+- $U_{TN}$ = utility of true negative (reassurance)
+- $U_{FP}$ = utility of false positive (includes screening burden, anxiety, follow-up testing risks)
+- $U_{FN}$ = utility of false negative (missed opportunity for early treatment)
 
-Expected utility of screening at threshold $$\tau$$ for an individual is:
+Expected utility of screening at threshold $\tau$ for an individual is:
 
-$$EU(\tau) = p \cdot [\text{Se}(\tau) \cdot U_{TP} + (1-\text{Se}(\tau)) \cdot U_{FN}] + (1-p) \cdot [\text{Sp}(\tau) \cdot U_{TN} + (1-\text{Sp}(\tau)) \cdot U_{FP}]$$
+$$
+EU(\tau) = p \cdot [\text{Se}(\tau) \cdot U_{TP} + (1-\text{Se}(\tau)) \cdot U_{FN}] + (1-p) \cdot [\text{Sp}(\tau) \cdot U_{TN} + (1-\text{Sp}(\tau)) \cdot U_{FP}]
+$$
 
-The optimal threshold $$\tau^*$$ maximizes expected utility:
+The optimal threshold $\tau^*$ maximizes expected utility:
 
-$$\tau^* = \arg\max_\tau EU(\tau)$$
+$$
+\tau^* = \arg\max_\tau EU(\tau)
+$$
 
-Critically, the utility values $$U_{TP}, U_{TN}, U_{FP}, U_{FN}$$ vary across populations based on screening burden, access to follow-up care, and treatment effectiveness. For populations facing high screening burden, $$U_{FP}$$ is more negative (false positives cause greater harm) and $$U_{TN}$$ is less positive (screening itself imposes costs even when negative). This means the optimal threshold $$\tau^*$$ should differ across populations - higher thresholds (requiring stronger evidence before screening positive) for populations with high screening burden.
+Critically, the utility values $U_{TP}, U_{TN}, U_{FP}, U_{FN}$ vary across populations based on screening burden, access to follow-up care, and treatment effectiveness. For populations facing high screening burden, $U_{FP}$ is more negative (false positives cause greater harm) and $U_{TN}$ is less positive (screening itself imposes costs even when negative). This means the optimal threshold $\tau^*$ should differ across populations - higher thresholds (requiring stronger evidence before screening positive) for populations with high screening burden.
 
-Standard practice uses uniform thresholds across populations, which systematically harms those facing greater screening burden. Consider mammography screening where $$\tau$$ determines the threshold for calling a mammogram abnormal and recommending additional imaging. Using the same threshold for all women means that those who face transportation barriers, lack paid leave, or fear immigration consequences from medical contact experience greater net harm from screening because they endure the same false positive rate but face higher burden from follow-up.
+Standard practice uses uniform thresholds across populations, which systematically harms those facing greater screening burden. Consider mammography screening where $\tau$ determines the threshold for calling a mammogram abnormal and recommending additional imaging. Using the same threshold for all women means that those who face transportation barriers, lack paid leave, or fear immigration consequences from medical contact experience greater net harm from screening because they endure the same false positive rate but face higher burden from follow-up.
 
 An equitable screening strategy optimizes thresholds separately for populations with different burden profiles:
 
-$$\tau_g^* = \arg\max_\tau EU_g(\tau)$$
+$$
+\tau_g^* = \arg\max_\tau EU_g(\tau)
+$$
 
 where subscript $g$ indicates population group. This approach raises concerns about "different standards" for different groups, but the key insight is that groups already face different burdens - uniform thresholds mean uniform test characteristics but inequitable net benefit. Adjusting thresholds to equalize net benefit across groups is more equitable than maintaining uniform test characteristics.
 
 The number needed to screen (NNS) provides an interpretable metric for comparing screening strategies:
 
-$$\text{NNS} = \frac{1}{p \cdot \text{Se}(\tau) \cdot \text{RRR}}$$
+$$
+\text{NNS} = \frac{1}{p \cdot \text{Se}(\tau) \cdot \text{RRR}}
+$$
 
 where RRR is relative risk reduction from detecting and treating disease early. Lower NNS means fewer people need to be screened to prevent one adverse outcome. However, NNS alone is insufficient for equity analysis because it doesn't account for screening burden or differential treatment effectiveness. A better metric is number needed to screen to achieve net benefit:
 
-$$\text{NNS}_{\text{net}} = \frac{1}{p \cdot \text{Se}(\tau) \cdot \text{RRR} - (1-p) \cdot (1-\text{Sp}(\tau)) \cdot h}$$
+$$
+\text{NNS}_{\text{net}} = \frac{1}{p \cdot \text{Se}(\tau) \cdot \text{RRR} - (1-p) \cdot (1-\text{Sp}(\tau)) \cdot h}
+$$
 
 where $h$ is the ratio of harms from false positive to benefits from true positive. This metric accounts for false positive harms and provides a more complete picture of screening value.
 
-Screening optimization must also address differential participation rates. Even if a screening strategy has positive net benefit at the population level, it exacerbates disparities if participation is lower among those who would benefit most. Let $$\pi_g$$ be the participation rate in group $g$. Population-level impact of screening is:
+Screening optimization must also address differential participation rates. Even if a screening strategy has positive net benefit at the population level, it exacerbates disparities if participation is lower among those who would benefit most. Let $\pi_g$ be the participation rate in group $g$. Population-level impact of screening is:
 
-$$\text{Impact}_g = \pi_g \cdot [p_g \cdot \text{Se}(\tau) \cdot \text{RRR}]$$
+$$
+\text{Impact}_g = \pi_g \cdot [p_g \cdot \text{Se}(\tau) \cdot \text{RRR}]
+$$
 
-If participation rates $$\pi_g$$ are lower in groups with higher prevalence $$p_g$$ (as often occurs in underserved populations), screening widens disparities even if it has positive benefit in participating individuals. This requires intervention strategies that actively reduce participation barriers rather than simply offering screening and assuming equal uptake.
+If participation rates $\pi_g$ are lower in groups with higher prevalence $p_g$ (as often occurs in underserved populations), screening widens disparities even if it has positive benefit in participating individuals. This requires intervention strategies that actively reduce participation barriers rather than simply offering screening and assuming equal uptake.
 
 ### Temporal Outbreak Detection
 
 Outbreak detection systems identify unusual increases in disease incidence to trigger public health response, but surveillance gaps in underserved communities create blind spots where outbreaks may go undetected. Mathematical approaches for outbreak detection must account for unequal surveillance coverage and differential reporting rates across populations.
 
-The fundamental problem in outbreak detection is distinguishing signal (true outbreak) from noise (random variation in baseline disease rates). Let $$Y_t$$ be the count of disease cases observed at time $t$. Under the null hypothesis of no outbreak, $$Y_t$$ follows some baseline distribution, while under the alternative hypothesis of an outbreak starting at time $$\tau_0$$, there is an elevated rate:
+The fundamental problem in outbreak detection is distinguishing signal (true outbreak) from noise (random variation in baseline disease rates). Let $Y_t$ be the count of disease cases observed at time $t$. Under the null hypothesis of no outbreak, $Y_t$ follows some baseline distribution, while under the alternative hypothesis of an outbreak starting at time $\tau_0$, there is an elevated rate:
 
-$$Y_t \sim \begin{cases} \text{Baseline}(\lambda_0) & t < \tau_0 \\ \text{Outbreak}(\lambda_1) & t \geq \tau_0 \end{cases}$$
+$$
+Y_t \sim \begin{cases} \text{Baseline}(\lambda_0) & t < \tau_0 \\ \text{Outbreak}(\lambda_1) & t \geq \tau_0 \end{cases}
+$$
 
-where $$\lambda_1 > \lambda_0$$. The goal is to detect the change point $$\tau_0$$ as quickly as possible while maintaining low false alarm rates.
+where $\lambda_1 > \lambda_0$. The goal is to detect the change point $\tau_0$ as quickly as possible while maintaining low false alarm rates.
 
 The cumulative sum (CUSUM) control chart is a classical sequential detection method that accumulates evidence of deviation from baseline. Define the CUSUM statistic:
 
-$$S_t = \max(0, S_{t-1} + (Y_t - \mu_0 - k))$$
+$$
+S_t = \max(0, S_{t-1} + (Y_t - \mu_0 - k))
+$$
 
-where $$\mu_0$$ is the expected count under baseline, and $k$ is a reference value (typically set to half the minimum outbreak effect size). An alarm is raised when $$S_t$$ exceeds threshold $h$. The CUSUM efficiently detects sustained increases in disease counts and provides control over average run length (ARL), the expected time to false alarm under the null hypothesis.
+where $\mu_0$ is the expected count under baseline, and $k$ is a reference value (typically set to half the minimum outbreak effect size). An alarm is raised when $S_t$ exceeds threshold $h$. The CUSUM efficiently detects sustained increases in disease counts and provides control over average run length (ARL), the expected time to false alarm under the null hypothesis.
 
-However, CUSUM assumes complete and uniform surveillance. In reality, disease reporting varies dramatically across populations. Underserved communities often have limited access to healthcare facilities where diagnoses are made and reported, leading to systematically lower baseline counts $$\mu_0^g$$ not because disease is less common but because it is less frequently diagnosed and reported. If we use the same CUSUM threshold $h$ across all communities, outbreaks in underserved areas require larger absolute increases to trigger alarms, creating delayed detection in populations that already face worse health outcomes.
+However, CUSUM assumes complete and uniform surveillance. In reality, disease reporting varies dramatically across populations. Underserved communities often have limited access to healthcare facilities where diagnoses are made and reported, leading to systematically lower baseline counts $\mu_0^g$ not because disease is less common but because it is less frequently diagnosed and reported. If we use the same CUSUM threshold $h$ across all communities, outbreaks in underserved areas require larger absolute increases to trigger alarms, creating delayed detection in populations that already face worse health outcomes.
 
-An equity-aware CUSUM approach standardizes by population-specific baselines and adjusts for reporting rates. Let $$\rho_g$$ be the estimated reporting rate (proportion of true cases that are captured by surveillance) in geographic area $g$. We can adjust the CUSUM statistic to:
+An equity-aware CUSUM approach standardizes by population-specific baselines and adjusts for reporting rates. Let $\rho_g$ be the estimated reporting rate (proportion of true cases that are captured by surveillance) in geographic area $g$. We can adjust the CUSUM statistic to:
 
-$$S_t^g = \max(0, S_{t-1}^g + \frac{Y_t^g - \mu_0^g}{\rho_g} - k)$$
+$$
+S_t^g = \max(0, S_{t-1}^g + \frac{Y_t^g - \mu_0^g}{\rho_g} - k)
+$$
 
 This formulation upweights observations from areas with poor surveillance coverage, making the system more sensitive to changes in these communities. However, this also increases false alarm rates in low-coverage areas if reporting variability is higher, requiring careful calibration.
 
-An alternative approach employs stratified thresholds that explicitly trade off detection speed against false alarm rates differently across communities. We can set community-specific thresholds $$h_g$$ to equalize expected time to detection for outbreaks of equal severity:
+An alternative approach employs stratified thresholds that explicitly trade off detection speed against false alarm rates differently across communities. We can set community-specific thresholds $h_g$ to equalize expected time to detection for outbreaks of equal severity:
 
-$$\mathbb{E}[\tau^g | \text{outbreak}] = c \text{ for all } g$$
+$$
+\mathbb{E}[\tau^g | \text{outbreak}] = c \text{ for all } g
+$$
 
-where $$\tau^g$$ is the detection time in community $g$ and $c$ is a constant. This means accepting higher false alarm rates in underserved communities with poorer surveillance in exchange for comparable detection speed, which may be justified by the greater consequences of delayed outbreak response in these vulnerable populations.
+where $\tau^g$ is the detection time in community $g$ and $c$ is a constant. This means accepting higher false alarm rates in underserved communities with poorer surveillance in exchange for comparable detection speed, which may be justified by the greater consequences of delayed outbreak response in these vulnerable populations.
 
 Spatial scan statistics provide complementary approaches that detect geographic clusters of disease. The Kulldorff spatial scan statistic evaluates cylinders (circles on a map extended through time) and identifies clusters where observed case counts significantly exceed expected counts. For each potential cluster $Z$, the likelihood ratio is:
 
-$$\Lambda(Z) = \left(\frac{c_Z}{E[c_Z]}\right)^{c_Z} \left(\frac{c_{\bar{Z}}}{E[c_{\bar{Z}}]}\right)^{c_{\bar{Z}}}$$
+$$
+\Lambda(Z) = \left(\frac{c_Z}{E[c_Z]}\right)^{c_Z} \left(\frac{c_{\bar{Z}}}{E[c_{\bar{Z}}]}\right)^{c_{\bar{Z}}}
+$$
 
-where $$c_Z$$ is observed cases in cluster $Z$, $$c_{\bar{Z}}$$ is observed cases outside the cluster, and $$E[\cdot]$$ indicates expected counts. The most likely cluster is the one maximizing $$\Lambda(Z)$$, and statistical significance is assessed via Monte Carlo simulation.
+where $c_Z$ is observed cases in cluster $Z$, $c_{\bar{Z}}$ is observed cases outside the cluster, and $E[\cdot]$ indicates expected counts. The most likely cluster is the one maximizing $\Lambda(Z)$, and statistical significance is assessed via Monte Carlo simulation.
 
 Spatial scan statistics have equity implications because they naturally detect clusters in areas with higher population density and better surveillance coverage. A cluster of 100 excess cases in a dense urban area with good healthcare access is more likely to be detected than a cluster of 50 excess cases in a rural area with limited healthcare facilities, even though the rural outbreak may represent a larger relative increase in disease burden. To address this, we can use population-adjusted scan statistics that weight by population size and vulnerability indices:
 
-$$\Lambda^{\text{adj}}(Z) = V_Z \cdot \Lambda(Z)$$
+$$
+\Lambda^{\text{adj}}(Z) = V_Z \cdot \Lambda(Z)
+$$
 
-where $$V_Z$$ is an average vulnerability index for cluster $Z$. This upweights clusters in vulnerable communities, increasing sensitivity to outbreaks in areas where consequences are most severe.
+where $V_Z$ is an average vulnerability index for cluster $Z$. This upweights clusters in vulnerable communities, increasing sensitivity to outbreaks in areas where consequences are most severe.
 
 ### Resource Allocation and Capacity Planning
 
 Resource allocation in population health determines which communities receive limited resources like clinic capacity, public health nurses, or vaccination supplies. Traditional operations research approaches optimize for efficiency, but this systematically disadvantages underserved communities where infrastructure gaps mean lower expected returns per resource unit. Equity-focused resource allocation requires explicit optimization for need and vulnerability rather than predicted impact.
 
-Consider a resource allocation problem where we have $R$ units of a resource (e.g., community health workers) to allocate across $G$ geographic areas. Let $$r_g$$ be the allocation to area $g$, subject to $$\sum_g r_g = R$$. An efficiency-based allocation maximizes total impact:
+Consider a resource allocation problem where we have $R$ units of a resource (e.g., community health workers) to allocate across $G$ geographic areas. Let $r_g$ be the allocation to area $g$, subject to $\sum_g r_g = R$. An efficiency-based allocation maximizes total impact:
 
-$$\max_{r_g} \sum_g I_g(r_g)$$
+$$
+\max_{r_g} \sum_g I_g(r_g)
+$$
 
-where $$I_g(r_g)$$ is the predicted impact (e.g., number of hospitalizations prevented) in area $g$ from allocating $$r_g$$ resources. This formulation naturally concentrates resources in areas where infrastructure already exists to support effective interventions, as $$I_g(r_g)$$ is higher in well-resourced communities.
+where $I_g(r_g)$ is the predicted impact (e.g., number of hospitalizations prevented) in area $g$ from allocating $r_g$ resources. This formulation naturally concentrates resources in areas where infrastructure already exists to support effective interventions, as $I_g(r_g)$ is higher in well-resourced communities.
 
 An equity-based allocation instead maximizes weighted impact where weights reflect need rather than capacity:
 
-$$\max_{r_g} \sum_g w_g \cdot I_g(r_g)$$
+$$
+\max_{r_g} \sum_g w_g \cdot I_g(r_g)
+$$
 
 subject to constraints that ensure adequate coverage in all communities:
 
-$$r_g \geq r_{\min} \text{ for all } g$$
+$$
+r_g \geq r_{\min} \text{ for all } g
+$$
 
-The weights $$w_g$$ can incorporate multiple dimensions of need:
+The weights $w_g$ can incorporate multiple dimensions of need:
 
-$$w_g = \alpha_1 \cdot \text{Disease burden}_g + \alpha_2 \cdot \text{Vulnerability}_g + \alpha_3 \cdot \text{Resource deficit}_g$$
+$$
+w_g = \alpha_1 \cdot \text{Disease burden}_g + \alpha_2 \cdot \text{Vulnerability}_g + \alpha_3 \cdot \text{Resource deficit}_g
+$$
 
-where disease burden captures baseline prevalence and severity, vulnerability incorporates social determinants and healthcare access barriers, and resource deficit measures existing resource gaps relative to need. The coefficients $$\alpha_1, \alpha_2, \alpha_3$$ reflect value judgments about how to prioritize different dimensions of need.
+where disease burden captures baseline prevalence and severity, vulnerability incorporates social determinants and healthcare access barriers, and resource deficit measures existing resource gaps relative to need. The coefficients $\alpha_1, \alpha_2, \alpha_3$ reflect value judgments about how to prioritize different dimensions of need.
 
 An alternative formulation optimizes for equity directly by minimizing disparities in outcomes across areas:
 
-$$\min_{r_g} \text{Var}_g[H_g(r_g)]$$
+$$
+\min_{r_g} \text{Var}_g[H_g(r_g)]
+$$
 
-where $$H_g(r_g)$$ is the predicted health outcome (e.g., life expectancy, disease-free years) in area $g$ given resource allocation $$r_g$$. This minimax approach seeks to raise the floor, prioritizing improvements in worst-off communities over aggregate benefit.
+where $H_g(r_g)$ is the predicted health outcome (e.g., life expectancy, disease-free years) in area $g$ given resource allocation $r_g$. This minimax approach seeks to raise the floor, prioritizing improvements in worst-off communities over aggregate benefit.
 
-Capacity planning for healthcare services must account for geographic access barriers that affect underserved populations disproportionately. The classic facility location problem determines where to place $K$ facilities to minimize average travel distance. Let $$d_{ig}$$ be the distance from individual $i$ to potential facility location $g$, and $$y_g \in \{0, 1\}$$ indicate whether a facility is placed at location $g$. The p-median problem minimizes total travel burden:
+Capacity planning for healthcare services must account for geographic access barriers that affect underserved populations disproportionately. The classic facility location problem determines where to place $K$ facilities to minimize average travel distance. Let $d_{ig}$ be the distance from individual $i$ to potential facility location $g$, and $y_g \in \{0, 1\}$ indicate whether a facility is placed at location $g$. The p-median problem minimizes total travel burden:
 
-$$\min_{y_g, x_{ig}} \sum_i \sum_g d_{ig} \cdot x_{ig}$$
+$$
+\min_{y_g, x_{ig}} \sum_i \sum_g d_{ig} \cdot x_{ig}
+$$
 
 subject to:
-- $$\sum_g y_g = K$$$(exactly$$K$ facilities)
-- $$\sum_g x_{ig} = 1$$$for all$$i$ (each person assigned to exactly one facility)
-- $$x_{ig} \leq y_g$$ for all $$i, g$$ (can only assign to open facilities)
+- $\sum_g y_g = K$(exactly$K$ facilities)
+- $\sum_g x_{ig} = 1$for all$i$ (each person assigned to exactly one facility)
+- $x_{ig} \leq y_g$ for all $i, g$ (can only assign to open facilities)
 
 This formulation minimizes average travel distance but ignores heterogeneity in travel burden. For someone with a car and flexible schedule, traveling 20 minutes versus 40 minutes is a minor inconvenience. For someone depending on public transit with multiple job responsibilities, this difference may determine whether healthcare access is feasible at all.
 
 An equity-focused facility location approach weights travel burden by individual vulnerability:
 
-$$\min_{y_g, x_{ig}} \sum_i v_i \cdot \sum_g d_{ig} \cdot x_{ig}$$
+$$
+\min_{y_g, x_{ig}} \sum_i v_i \cdot \sum_g d_{ig} \cdot x_{ig}
+$$
 
-where $$v_i$$ is a vulnerability score capturing factors that amplify travel burden (lack of car, caregiving responsibilities, job inflexibility, etc.). This formulation places facilities closer to those for whom access barriers are most significant, even if it increases average travel distance.
+where $v_i$ is a vulnerability score capturing factors that amplify travel burden (lack of car, caregiving responsibilities, job inflexibility, etc.). This formulation places facilities closer to those for whom access barriers are most significant, even if it increases average travel distance.
 
-Capacity planning must also consider temporal variation in demand and resource availability. Underserved communities often face "deserts" of healthcare access during evenings and weekends when family members are available to accompany patients to appointments. Queueing models can inform capacity planning decisions that account for these patterns. The M/M/s queue with time-varying arrival rates $$\lambda(t)$$ and $s$ servers provides a baseline model. Expected waiting time is:
+Capacity planning must also consider temporal variation in demand and resource availability. Underserved communities often face "deserts" of healthcare access during evenings and weekends when family members are available to accompany patients to appointments. Queueing models can inform capacity planning decisions that account for these patterns. The M/M/s queue with time-varying arrival rates $\lambda(t)$ and $s$ servers provides a baseline model. Expected waiting time is:
 
-$$W = \frac{P_0}{s \mu - \lambda(t)} \cdot \frac{(\lambda(t) / \mu)^s}{s! \cdot (1 - \lambda(t)/(s\mu))^2}$$
+$$
+W = \frac{P_0}{s \mu - \lambda(t)} \cdot \frac{(\lambda(t) / \mu)^s}{s! \cdot (1 - \lambda(t)/(s\mu))^2}
+$$
 
-where $$\mu$$ is service rate and $$P_0$$ is the probability of zero customers in system. For populations with limited flexibility in timing, prolonged wait times effectively reduce access.
+where $\mu$ is service rate and $P_0$ is the probability of zero customers in system. For populations with limited flexibility in timing, prolonged wait times effectively reduce access.
 
 ## Risk Stratification for Care Management
 
@@ -265,12 +313,11 @@ import warnings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class RiskComponent:
     """
     Represents a single risk dimension (clinical, social, functional, etc.)
-    
+
     Attributes:
         name: Human-readable name for this risk dimension
         model: Trained sklearn-compatible model for this component
@@ -285,18 +332,17 @@ class RiskComponent:
     weight: float = 1.0
     last_trained: Optional[datetime] = None
     performance_metrics: Dict[str, float] = field(default_factory=dict)
-    
+
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
         """Predict probability for this risk component"""
         X_component = X[self.features]
         return self.model.predict_proba(X_component)[:, 1]
 
-
 @dataclass
 class VulnerabilityIndex:
     """
     Social vulnerability index capturing factors that amplify health consequences
-    
+
     Components include:
     - Social isolation (living alone, limited support network)
     - Housing instability or homelessness
@@ -313,17 +359,17 @@ class VulnerabilityIndex:
     language_barriers_score: float = 0.0
     health_literacy_score: float = 0.0
     financial_strain_score: float = 0.0
-    
+
     def compute_composite(
         self,
         weights: Optional[Dict[str, float]] = None
     ) -> float:
         """
         Compute composite vulnerability score
-        
+
         Args:
             weights: Optional custom weights for each component
-            
+
         Returns:
             Composite vulnerability score (0-1 scale)
         """
@@ -338,7 +384,7 @@ class VulnerabilityIndex:
                 'health_literacy': 1/7,
                 'financial_strain': 1/7
             }
-        
+
         score = (
             weights['social_isolation'] * self.social_isolation_score +
             weights['housing_instability'] * self.housing_instability_score +
@@ -348,25 +394,24 @@ class VulnerabilityIndex:
             weights['health_literacy'] * self.health_literacy_score +
             weights['financial_strain'] * self.financial_strain_score
         )
-        
-        return np.clip(score, 0.0, 1.0)
 
+        return np.clip(score, 0.0, 1.0)
 
 class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
     """
     Risk stratification system that prioritizes need over predicted utilization
-    
+
     This system addresses equity problems in traditional risk models by:
     1. Separating clinical risk from access barriers
     2. Incorporating social vulnerability as amplifier of consequences
     3. Using composite outcomes less dependent on healthcare-seeking behavior
     4. Continuous monitoring for equity drift across demographic groups
-    
+
     The system combines multiple risk components (clinical, functional, social)
     with vulnerability indices to produce need-adjusted risk scores that prioritize
     patients facing greatest consequences rather than those most likely to utilize
     services.
-    
+
     Parameters:
         clinical_model_type: Type of model for clinical risk component
         social_model_type: Type of model for social risk component
@@ -376,7 +421,7 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
         equity_groups: Demographic variables for equity monitoring
         random_state: Random seed for reproducibility
     """
-    
+
     def __init__(
         self,
         clinical_model_type: str = 'gradient_boosting',
@@ -394,13 +439,13 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
         self.min_training_size = min_training_size
         self.equity_groups = equity_groups or ['race', 'ethnicity', 'insurance', 'language']
         self.random_state = random_state
-        
+
         # Components will be initialized during fit
         self.components: Dict[str, RiskComponent] = {}
         self.scaler: Optional[StandardScaler] = None
         self.is_fitted_: bool = False
         self.equity_metrics_: Dict[str, Any] = {}
-        
+
     def _initialize_component_model(
         self,
         model_type: str
@@ -428,7 +473,7 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             )
         else:
             raise ValueError(f"Unknown model type: {model_type}")
-    
+
     def _create_composite_outcome(
         self,
         y_hosp: np.ndarray,
@@ -438,13 +483,13 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
     ) -> np.ndarray:
         """
         Create composite outcome that captures health status beyond utilization
-        
+
         Args:
             y_hosp: Hospitalization indicator
             y_ed: Multiple ED visits indicator
             y_lab: Concerning lab values indicator
             y_decline: Functional decline indicator
-            
+
         Returns:
             Composite outcome (1 if any component is positive)
         """
@@ -454,16 +499,16 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             y_lab.astype(int),
             y_decline.astype(int)
         ])
-        
+
         return composite
-    
+
     def _extract_vulnerability_scores(
         self,
         X: pd.DataFrame
     ) -> np.ndarray:
         """
         Extract vulnerability index scores from feature matrix
-        
+
         Expects columns following naming convention:
         - social_isolation_score
         - housing_instability_score
@@ -472,10 +517,10 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
         - language_barriers_score
         - health_literacy_score
         - financial_strain_score
-        
+
         Args:
             X: Feature matrix including vulnerability scores
-            
+
         Returns:
             Array of composite vulnerability scores
         """
@@ -488,14 +533,14 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             'health_literacy_score',
             'financial_strain_score'
         ]
-        
+
         # Check which vulnerability columns are available
         available_cols = [col for col in vulnerability_cols if col in X.columns]
-        
+
         if len(available_cols) == 0:
             logger.warning("No vulnerability score columns found. Using uniform vulnerability.")
             return np.ones(len(X))
-        
+
         # Compute composite vulnerability
         vulnerability_scores = []
         for _, row in X[available_cols].iterrows():
@@ -505,9 +550,9 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             vulnerability_scores.append(
                 vi.compute_composite(self.vulnerability_weights)
             )
-        
+
         return np.array(vulnerability_scores)
-    
+
     def fit(
         self,
         X: pd.DataFrame,
@@ -517,7 +562,7 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
     ) -> 'NeedBasedRiskStratifier':
         """
         Fit the risk stratification model
-        
+
         Args:
             X: Feature matrix with all features
             y_components: Dictionary mapping component names to outcome arrays
@@ -525,7 +570,7 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             feature_groups: Dictionary mapping component names to feature lists
                 Expected keys: 'clinical', 'social', 'functional'
             demographic_data: Optional DataFrame with demographic variables for equity monitoring
-            
+
         Returns:
             self: Fitted estimator
         """
@@ -533,9 +578,9 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             raise ValueError(
                 f"Training set too small: {len(X)} < {self.min_training_size}"
             )
-        
+
         logger.info(f"Training need-based risk stratifier on {len(X)} samples")
-        
+
         # Create composite outcome
         y_composite = self._create_composite_outcome(
             y_components['hospitalization'],
@@ -543,14 +588,14 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             y_components['lab_abnormal'],
             y_components['functional_decline']
         )
-        
+
         logger.info(f"Composite outcome prevalence: {y_composite.mean():.3f}")
-        
+
         # Initialize and train clinical risk component
         clinical_model = self._initialize_component_model(self.clinical_model_type)
         clinical_features = feature_groups['clinical']
         clinical_model.fit(X[clinical_features], y_composite)
-        
+
         self.components['clinical'] = RiskComponent(
             name='Clinical Risk',
             model=clinical_model,
@@ -558,12 +603,12 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             weight=0.4,
             last_trained=datetime.now()
         )
-        
+
         # Initialize and train social risk component
         social_model = self._initialize_component_model(self.social_model_type)
         social_features = feature_groups['social']
         social_model.fit(X[social_features], y_composite)
-        
+
         self.components['social'] = RiskComponent(
             name='Social Risk',
             model=social_model,
@@ -571,12 +616,12 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             weight=0.3,
             last_trained=datetime.now()
         )
-        
+
         # Initialize and train functional status component
         functional_model = self._initialize_component_model(self.functional_model_type)
         functional_features = feature_groups['functional']
         functional_model.fit(X[functional_features], y_composite)
-        
+
         self.components['functional'] = RiskComponent(
             name='Functional Status',
             model=functional_model,
@@ -584,21 +629,21 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
             weight=0.3,
             last_trained=datetime.now()
         )
-        
+
         # Extract vulnerability scores for need adjustment
         self.vulnerability_scores_train_ = self._extract_vulnerability_scores(X)
-        
+
         # Compute equity metrics if demographic data provided
         if demographic_data is not None:
             self._compute_equity_metrics(
                 X, y_composite, demographic_data
             )
-        
+
         self.is_fitted_ = True
         logger.info("Model training completed successfully")
-        
+
         return self
-    
+
     def predict_proba(
         self,
         X: pd.DataFrame,
@@ -606,11 +651,11 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
     ) -> Union[np.ndarray, Tuple[np.ndarray, Dict[str, np.ndarray]]]:
         """
         Predict need-adjusted risk probabilities
-        
+
         Args:
             X: Feature matrix
             return_components: If True, return component risks separately
-            
+
         Returns:
             If return_components is False:
                 Array of shape (n_samples,) with need-adjusted risk scores
@@ -620,35 +665,35 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
         """
         if not self.is_fitted_:
             raise RuntimeError("Model must be fitted before prediction")
-        
+
         # Get predictions from each component
         component_risks = {}
         weighted_sum = 0.0
         total_weight = 0.0
-        
+
         for name, component in self.components.items():
             risk = component.predict_proba(X)
             component_risks[name] = risk
             weighted_sum += component.weight * risk
             total_weight += component.weight
-        
+
         # Combine component risks with weights
         base_risk = weighted_sum / total_weight
-        
+
         # Adjust by vulnerability to get need-adjusted risk
         vulnerability = self._extract_vulnerability_scores(X)
         need_adjusted_risk = base_risk * (1 + vulnerability)
-        
+
         # Clip to valid probability range
         need_adjusted_risk = np.clip(need_adjusted_risk, 0.0, 1.0)
-        
+
         if return_components:
             component_risks['vulnerability'] = vulnerability
             component_risks['base_risk'] = base_risk
             return need_adjusted_risk, component_risks
         else:
             return need_adjusted_risk
-    
+
     def predict(
         self,
         X: pd.DataFrame,
@@ -656,17 +701,17 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
     ) -> np.ndarray:
         """
         Predict binary high-risk classification
-        
+
         Args:
             X: Feature matrix
             threshold: Risk threshold for classification as high-risk
-            
+
         Returns:
             Binary predictions (1 = high risk, 0 = not high risk)
         """
         risk_scores = self.predict_proba(X)
         return (risk_scores >= threshold).astype(int)
-    
+
     def _compute_equity_metrics(
         self,
         X: pd.DataFrame,
@@ -675,30 +720,30 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
     ) -> None:
         """
         Compute equity metrics across demographic groups
-        
+
         Args:
             X: Feature matrix
             y: True outcomes
             demographic_data: DataFrame with demographic variables
         """
         predictions = self.predict_proba(X)
-        
+
         self.equity_metrics_ = {}
-        
+
         for group_var in self.equity_groups:
             if group_var not in demographic_data.columns:
                 logger.warning(f"Group variable {group_var} not found in demographic data")
                 continue
-            
+
             group_metrics = {}
             for group_value in demographic_data[group_var].unique():
                 mask = demographic_data[group_var] == group_value
                 if mask.sum() < 30:  # Skip very small groups
                     continue
-                
+
                 group_y = y[mask]
                 group_pred = predictions[mask]
-                
+
                 # Compute metrics for this group
                 group_metrics[group_value] = {
                     'mean_risk': float(group_pred.mean()),
@@ -707,21 +752,21 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
                     'n_samples': int(mask.sum()),
                     'high_risk_rate': float((group_pred > 0.5).mean())
                 }
-            
+
             self.equity_metrics_[group_var] = group_metrics
-        
+
         logger.info("Equity metrics computed successfully")
-    
+
     def get_equity_report(self) -> pd.DataFrame:
         """
         Generate equity report comparing metrics across demographic groups
-        
+
         Returns:
             DataFrame with equity metrics by group
         """
         if not self.equity_metrics_:
             raise RuntimeError("No equity metrics available. Provide demographic_data during fit().")
-        
+
         rows = []
         for group_var, group_metrics in self.equity_metrics_.items():
             for group_value, metrics in group_metrics.items():
@@ -731,9 +776,8 @@ class NeedBasedRiskStratifier(BaseEstimator, ClassifierMixin):
                     **metrics
                 }
                 rows.append(row)
-        
-        return pd.DataFrame(rows)
 
+        return pd.DataFrame(rows)
 
 def compute_targeting_equity_metrics(
     risk_scores: np.ndarray,
@@ -743,16 +787,16 @@ def compute_targeting_equity_metrics(
 ) -> Dict[str, Any]:
     """
     Evaluate equity of care management targeting decisions
-    
+
     This function assesses whether high-risk targeting concentrates resources
     on easily reached populations vs those with greatest need, across demographic groups.
-    
+
     Args:
         risk_scores: Predicted risk scores used for targeting
         true_need: Ground truth need scores (e.g., composite health + vulnerability)
         demographic_groups: Series indicating demographic group for each patient
         top_k: Number of patients to target (top k by risk score)
-        
+
     Returns:
         Dictionary containing equity metrics:
         - representation_ratios: Ratio of selected to eligible for each group
@@ -764,38 +808,38 @@ def compute_targeting_equity_metrics(
     top_k_indices = np.argsort(risk_scores)[-top_k:]
     selected = np.zeros(len(risk_scores), dtype=bool)
     selected[top_k_indices] = True
-    
+
     # Define high need as top quartile of true need
     high_need_threshold = np.percentile(true_need, 75)
     high_need = true_need >= high_need_threshold
-    
+
     # Compute metrics by demographic group
     metrics_by_group = {}
-    
+
     for group in demographic_groups.unique():
         group_mask = demographic_groups == group
-        
+
         # Selection rate: proportion of group selected
         selection_rate = selected[group_mask].mean()
-        
+
         # Representation ratio: selection rate / population proportion
         population_prop = group_mask.mean()
         representation_ratio = selection_rate / population_prop if population_prop > 0 else 0
-        
+
         # Need capture rate: proportion of high-need patients in group who are selected
         group_high_need = high_need[group_mask]
         if group_high_need.sum() > 0:
             need_capture_rate = selected[group_mask][high_need[group_mask]].mean()
         else:
             need_capture_rate = 0
-        
+
         # Precision: proportion of selected patients who are truly high-need
         group_selected = selected[group_mask]
         if group_selected.sum() > 0:
             precision = high_need[group_mask][group_selected].mean()
         else:
             precision = 0
-        
+
         metrics_by_group[group] = {
             'selection_rate': float(selection_rate),
             'representation_ratio': float(representation_ratio),
@@ -804,16 +848,16 @@ def compute_targeting_equity_metrics(
             'n_selected': int(group_selected.sum()),
             'n_high_need': int(group_high_need.sum())
         }
-    
+
     # Compute disparity metrics (ratio of max to min across groups)
     representation_ratios = [m['representation_ratio'] for m in metrics_by_group.values()]
     need_capture_rates = [m['need_capture_rate'] for m in metrics_by_group.values()]
-    
+
     disparity_metrics = {
         'representation_disparity': max(representation_ratios) / min(representation_ratios) if min(representation_ratios) > 0 else np.inf,
         'need_capture_disparity': max(need_capture_rates) / min(need_capture_rates) if min(need_capture_rates) > 0 else np.inf,
     }
-    
+
     return {
         'metrics_by_group': metrics_by_group,
         'disparity_metrics': disparity_metrics
@@ -843,7 +887,6 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 @dataclass
 class EquityAlert:
     """Represents an alert for equity metric exceeding threshold"""
@@ -856,22 +899,21 @@ class EquityAlert:
     affected_groups: List[str]
     message: str
 
-
 class EquityMonitor:
     """
     Continuous monitoring system for risk stratification equity metrics
-    
+
     This system tracks equity metrics over time and generates alerts when
     disparities exceed acceptable thresholds. It maintains a time-series
     of equity measurements and performs statistical tests for trend detection.
-    
+
     Parameters:
         stratifier: Fitted NeedBasedRiskStratifier instance to monitor
         disparity_thresholds: Dict mapping metric names to maximum acceptable disparity ratios
         lookback_periods: Number of monitoring periods to use for trend detection
         alert_cooldown_hours: Minimum hours between alerts for same issue
     """
-    
+
     def __init__(
         self,
         stratifier: NeedBasedRiskStratifier,
@@ -888,11 +930,11 @@ class EquityMonitor:
         }
         self.lookback_periods = lookback_periods
         self.alert_cooldown_hours = alert_cooldown_hours
-        
+
         # Storage for time-series of metrics
         self.metric_history: List[Dict] = []
         self.alert_history: List[EquityAlert] = []
-        
+
     def monitor(
         self,
         X_current: pd.DataFrame,
@@ -902,47 +944,47 @@ class EquityMonitor:
     ) -> List[EquityAlert]:
         """
         Perform equity monitoring on current data batch
-        
+
         Args:
             X_current: Current batch of feature data
             y_current: Current batch of true outcomes
             demographic_data: Demographic information for current batch
             monitoring_date: Date of monitoring (defaults to current time)
-            
+
         Returns:
             List of equity alerts generated for this monitoring period
         """
         if monitoring_date is None:
             monitoring_date = datetime.now()
-        
+
         # Get predictions
         predictions = self.stratifier.predict_proba(X_current)
-        
+
         # Compute equity metrics for current batch
         current_metrics = self._compute_batch_equity_metrics(
             predictions, y_current, demographic_data
         )
         current_metrics['timestamp'] = monitoring_date
-        
+
         # Store in history
         self.metric_history.append(current_metrics)
-        
+
         # Check for threshold violations
         alerts = self._check_thresholds(current_metrics, monitoring_date)
-        
+
         # Check for adverse trends
         if len(self.metric_history) >= self.lookback_periods:
             trend_alerts = self._check_trends(monitoring_date)
             alerts.extend(trend_alerts)
-        
+
         # Filter alerts by cooldown period
         alerts = self._apply_alert_cooldown(alerts)
-        
+
         # Store alerts
         self.alert_history.extend(alerts)
-        
+
         return alerts
-    
+
     def _compute_batch_equity_metrics(
         self,
         predictions: np.ndarray,
@@ -951,20 +993,20 @@ class EquityMonitor:
     ) -> Dict:
         """Compute comprehensive equity metrics for a data batch"""
         metrics = {}
-        
+
         for group_var in self.stratifier.equity_groups:
             if group_var not in demographic_data.columns:
                 continue
-            
+
             group_metrics = {}
             for group_value in demographic_data[group_var].unique():
                 mask = demographic_data[group_var] == group_value
                 if mask.sum() < 10:  # Skip tiny groups
                     continue
-                
+
                 group_pred = predictions[mask]
                 group_true = y_true[mask]
-                
+
                 # Compute various equity-relevant metrics
                 group_metrics[str(group_value)] = {
                     'mean_predicted_risk': float(group_pred.mean()),
@@ -975,11 +1017,11 @@ class EquityMonitor:
                     'positive_predictive_value': float(group_true[group_pred > 0.5].mean()) if (group_pred > 0.5).sum() > 0 else 0,
                     'n_samples': int(mask.sum())
                 }
-            
+
             metrics[group_var] = group_metrics
-        
+
         return metrics
-    
+
     def _check_thresholds(
         self,
         current_metrics: Dict,
@@ -987,31 +1029,31 @@ class EquityMonitor:
     ) -> List[EquityAlert]:
         """Check if current metrics exceed disparity thresholds"""
         alerts = []
-        
+
         for group_var, group_metrics in current_metrics.items():
             if group_var == 'timestamp':
                 continue
-            
+
             for metric_name in ['mean_predicted_risk', 'false_positive_rate', 'positive_predictive_value']:
                 if metric_name not in self.disparity_thresholds:
                     continue
-                
+
                 # Get values across groups
                 values = [m[metric_name] for m in group_metrics.values() if metric_name in m]
                 if len(values) < 2:
                     continue
-                
+
                 # Compute disparity ratio (max / min)
                 disparity_ratio = max(values) / min(values) if min(values) > 0 else np.inf
                 threshold = self.disparity_thresholds.get(metric_name, 1.5)
-                
+
                 if disparity_ratio > threshold:
                     # Identify affected groups (those at extremes)
                     max_group = [g for g, m in group_metrics.items() if m[metric_name] == max(values)]
                     min_group = [g for g, m in group_metrics.items() if m[metric_name] == min(values)]
-                    
+
                     severity = 'critical' if disparity_ratio > threshold * 1.5 else 'warning'
-                    
+
                     alert = EquityAlert(
                         timestamp=monitoring_date,
                         metric_name=metric_name,
@@ -1023,34 +1065,34 @@ class EquityMonitor:
                         message=f"Disparity in {metric_name} across {group_var}: {disparity_ratio:.2f}x (threshold: {threshold:.2f}x). Groups affected: {', '.join(max_group + min_group)}"
                     )
                     alerts.append(alert)
-        
+
         return alerts
-    
+
     def _check_trends(
         self,
         monitoring_date: datetime
     ) -> List[EquityAlert]:
         """Check for adverse trends in equity metrics over time"""
         alerts = []
-        
+
         # Get recent history
         recent_history = self.metric_history[-self.lookback_periods:]
-        
+
         # For each demographic variable and metric, check for adverse trends
         # An adverse trend is increasing disparity over time
-        
+
         # This is a simplified implementation - production systems should use
         # more sophisticated trend detection (e.g., Mann-Kendall test)
-        
+
         return alerts  # Placeholder for trend detection
-    
+
     def _apply_alert_cooldown(
         self,
         alerts: List[EquityAlert]
     ) -> List[EquityAlert]:
         """Filter alerts to respect cooldown periods"""
         filtered_alerts = []
-        
+
         for alert in alerts:
             # Check if we've alerted on this issue recently
             recent_similar_alerts = [
@@ -1059,30 +1101,30 @@ class EquityMonitor:
                 and a.demographic_variable == alert.demographic_variable
                 and (alert.timestamp - a.timestamp).total_seconds() / 3600 < self.alert_cooldown_hours
             ]
-            
+
             if not recent_similar_alerts:
                 filtered_alerts.append(alert)
-        
+
         return filtered_alerts
-    
+
     def generate_equity_dashboard(
         self,
         save_path: Optional[str] = None
     ) -> None:
         """
         Generate visual dashboard of equity metrics over time
-        
+
         Args:
             save_path: Optional path to save dashboard figure
         """
         if len(self.metric_history) < 2:
             logger.warning("Insufficient history for dashboard generation")
             return
-        
+
         # Create figure with subplots
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
         fig.suptitle('Risk Stratification Equity Dashboard', fontsize=16)
-        
+
         # Plot 1: Mean predicted risk over time by demographic group
         ax = axes[0, 0]
         for group_var in self.stratifier.equity_groups:
@@ -1092,26 +1134,26 @@ class EquityMonitor:
         ax.set_title('Mean Predicted Risk Over Time')
         ax.set_xlabel('Monitoring Period')
         ax.set_ylabel('Mean Risk Score')
-        
+
         # Plot 2: Disparity ratios over time
         ax = axes[0, 1]
         ax.set_title('Disparity Ratios Over Time')
         ax.set_xlabel('Monitoring Period')
         ax.set_ylabel('Disparity Ratio (Max/Min)')
         ax.axhline(y=1.0, color='g', linestyle='--', label='Perfect Equity')
-        
+
         # Plot 3: Alert frequency over time
         ax = axes[1, 0]
         ax.set_title('Equity Alerts Over Time')
         ax.set_xlabel('Date')
         ax.set_ylabel('Number of Alerts')
-        
+
         # Plot 4: Current disparity metrics
         ax = axes[1, 1]
         ax.set_title('Current Disparity Metrics')
-        
+
         plt.tight_layout()
-        
+
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         else:
@@ -1142,15 +1184,14 @@ from scipy.stats import beta
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 @dataclass
 class ScreeningUtilities:
     """
     Utility values for screening outcomes, capturing benefits and harms
-    
+
     These values should be elicited from patients and stakeholders,
     ideally stratified by population group to reflect differential burdens.
-    
+
     Attributes:
         u_tp: Utility of true positive (early detection and treatment)
         u_tn: Utility of true negative (reassurance minus screening burden)
@@ -1161,35 +1202,34 @@ class ScreeningUtilities:
     u_tn: float = 0.05
     u_fp: float = -0.2
     u_fn: float = -0.8
-    
+
     def net_benefit_tp(self) -> float:
         """Net benefit of true positive relative to no screening"""
         return self.u_tp - self.u_fn
-    
+
     def net_harm_fp(self) -> float:
         """Net harm of false positive relative to true negative"""
         return self.u_tn - self.u_fp
 
-
 class EquityAwareScreeningOptimizer:
     """
     Screening threshold optimization accounting for differential burdens
-    
+
     This optimizer determines optimal screening thresholds that may differ
     across populations to achieve equitable net benefit, rather than using
     uniform thresholds that result in differential burdens.
-    
+
     The key insight is that populations facing higher screening burden (due to
     lack of transportation, inflexible work, etc.) should have higher thresholds
     (screen only when evidence is stronger) to equalize net benefit.
-    
+
     Parameters:
         prevalence: Disease prevalence by population group
         utilities: Screening utilities by population group
         cost_per_screening: Financial cost of screening (if relevant)
         participation_rates: Expected screening participation by group
     """
-    
+
     def __init__(
         self,
         prevalence: Dict[str, float],
@@ -1201,11 +1241,11 @@ class EquityAwareScreeningOptimizer:
         self.utilities = utilities
         self.cost_per_screening = cost_per_screening
         self.participation_rates = participation_rates or {g: 1.0 for g in prevalence.keys()}
-        
+
         # Storage for computed thresholds
         self.optimal_thresholds_: Dict[str, float] = {}
         self.expected_benefits_: Dict[str, Dict] = {}
-        
+
     def compute_expected_utility(
         self,
         threshold: float,
@@ -1215,30 +1255,30 @@ class EquityAwareScreeningOptimizer:
     ) -> float:
         """
         Compute expected utility of screening at given threshold for a population group
-        
+
         Args:
             threshold: Screening threshold (higher = more selective)
             sensitivity_curve: Function mapping threshold to sensitivity
             specificity_curve: Function mapping threshold to specificity
             group: Population group identifier
-            
+
         Returns:
             Expected utility across all screening outcomes
         """
         p = self.prevalence[group]
         u = self.utilities[group]
-        
+
         se = sensitivity_curve(threshold)
         sp = specificity_curve(threshold)
-        
+
         # Expected utility calculation
         eu = (
             p * (se * u.u_tp + (1 - se) * u.u_fn) +
             (1 - p) * (sp * u.u_tn + (1 - sp) * u.u_fp)
         )
-        
+
         return eu
-    
+
     def compute_net_benefit(
         self,
         threshold: float,
@@ -1248,37 +1288,37 @@ class EquityAwareScreeningOptimizer:
     ) -> float:
         """
         Compute net benefit (benefit minus weighted harms) of screening
-        
+
         Net benefit framework is clinically interpretable and widely used.
-        
+
         Args:
             threshold: Screening threshold
             sensitivity_curve: Function mapping threshold to sensitivity
             specificity_curve: Function mapping threshold to specificity
             group: Population group identifier
-            
+
         Returns:
             Net benefit per person screened
         """
         p = self.prevalence[group]
         u = self.utilities[group]
-        
+
         se = sensitivity_curve(threshold)
         sp = specificity_curve(threshold)
-        
+
         # True positives per person screened
         tp_rate = p * se
-        
+
         # False positives per person screened
         fp_rate = (1 - p) * (1 - sp)
-        
+
         # Weight false positives by relative harm
         harm_weight = abs(u.u_fp - u.u_tn) / abs(u.u_tp - u.u_fn)
-        
+
         net_benefit = tp_rate - harm_weight * fp_rate
-        
+
         return net_benefit
-    
+
     def optimize_group_threshold(
         self,
         sensitivity_curve: Callable[[float], float],
@@ -1288,13 +1328,13 @@ class EquityAwareScreeningOptimizer:
     ) -> Tuple[float, float]:
         """
         Find optimal threshold for a specific population group
-        
+
         Args:
             sensitivity_curve: Function mapping threshold to sensitivity
             specificity_curve: Function mapping threshold to specificity
             group: Population group identifier
             objective: Optimization objective ('expected_utility' or 'net_benefit')
-            
+
         Returns:
             Tuple of (optimal_threshold, objective_value)
         """
@@ -1308,19 +1348,19 @@ class EquityAwareScreeningOptimizer:
             )
         else:
             raise ValueError(f"Unknown objective: {objective}")
-        
+
         # Optimize over reasonable threshold range
         result = minimize_scalar(
             obj_func,
             bounds=(0.01, 0.99),
             method='bounded'
         )
-        
+
         optimal_threshold = result.x
         optimal_value = -result.fun  # Negate because we minimized negative
-        
+
         return optimal_threshold, optimal_value
-    
+
     def optimize_all_groups(
         self,
         sensitivity_curve: Callable[[float], float],
@@ -1329,24 +1369,24 @@ class EquityAwareScreeningOptimizer:
     ) -> Dict[str, Tuple[float, float]]:
         """
         Optimize screening thresholds for all population groups
-        
+
         Args:
             sensitivity_curve: Function mapping threshold to sensitivity
             specificity_curve: Function mapping threshold to specificity
             objective: Optimization objective
-            
+
         Returns:
             Dictionary mapping group names to (optimal_threshold, objective_value)
         """
         results = {}
-        
+
         for group in self.prevalence.keys():
             threshold, value = self.optimize_group_threshold(
                 sensitivity_curve, specificity_curve, group, objective
             )
             results[group] = (threshold, value)
             self.optimal_thresholds_[group] = threshold
-            
+
             # Store expected benefits at optimal threshold
             self.expected_benefits_[group] = {
                 'threshold': threshold,
@@ -1359,9 +1399,9 @@ class EquityAwareScreeningOptimizer:
                 'sensitivity': sensitivity_curve(threshold),
                 'specificity': specificity_curve(threshold)
             }
-        
+
         return results
-    
+
     def compute_population_impact(
         self,
         thresholds: Dict[str, float],
@@ -1371,13 +1411,13 @@ class EquityAwareScreeningOptimizer:
     ) -> Dict[str, Any]:
         """
         Compute population-level impact of screening with group-specific thresholds
-        
+
         Args:
             thresholds: Screening thresholds by group
             sensitivity_curve: Function mapping threshold to sensitivity
             specificity_curve: Function mapping threshold to specificity
             population_sizes: Number of individuals in each group
-            
+
         Returns:
             Dictionary with population-level impact metrics
         """
@@ -1386,30 +1426,30 @@ class EquityAwareScreeningOptimizer:
         total_fp = 0
         total_tn = 0
         total_fn = 0
-        
+
         for group, threshold in thresholds.items():
             n = population_sizes[group]
             p = self.prevalence[group]
             participation = self.participation_rates[group]
-            
+
             # Number actually screened
             n_screened = n * participation
             total_screened += n_screened
-            
+
             # Expected outcomes
             se = sensitivity_curve(threshold)
             sp = specificity_curve(threshold)
-            
+
             tp = n_screened * p * se
             fn = n_screened * p * (1 - se)
             tn = n_screened * (1 - p) * sp
             fp = n_screened * (1 - p) * (1 - sp)
-            
+
             total_tp += tp
             total_fp += fp
             total_tn += tn
             total_fn += fn
-        
+
         return {
             'total_screened': total_screened,
             'true_positives': total_tp,
@@ -1421,7 +1461,7 @@ class EquityAwareScreeningOptimizer:
             'overall_sensitivity': total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0,
             'overall_specificity': total_tn / (total_tn + total_fp) if (total_tn + total_fp) > 0 else 0
         }
-    
+
     def compare_equity_of_strategies(
         self,
         uniform_threshold: float,
@@ -1430,29 +1470,29 @@ class EquityAwareScreeningOptimizer:
     ) -> pd.DataFrame:
         """
         Compare uniform threshold strategy vs. equity-optimized group-specific thresholds
-        
+
         Args:
             uniform_threshold: Single threshold used for all groups
             sensitivity_curve: Function mapping threshold to sensitivity
             specificity_curve: Function mapping threshold to specificity
-            
+
         Returns:
             DataFrame comparing strategies across groups
         """
         results = []
-        
+
         for group in self.prevalence.keys():
             # Uniform threshold strategy
             uniform_nb = self.compute_net_benefit(
                 uniform_threshold, sensitivity_curve, specificity_curve, group
             )
-            
+
             # Group-specific optimized threshold
             optimized_threshold = self.optimal_thresholds_.get(group, uniform_threshold)
             optimized_nb = self.compute_net_benefit(
                 optimized_threshold, sensitivity_curve, specificity_curve, group
             )
-            
+
             results.append({
                 'group': group,
                 'prevalence': self.prevalence[group],
@@ -1463,9 +1503,9 @@ class EquityAwareScreeningOptimizer:
                 'net_benefit_improvement': optimized_nb - uniform_nb,
                 'participation_rate': self.participation_rates[group]
             })
-        
+
         return pd.DataFrame(results)
-    
+
     def plot_threshold_tradeoffs(
         self,
         sensitivity_curve: Callable[[float], float],
@@ -1474,50 +1514,50 @@ class EquityAwareScreeningOptimizer:
     ) -> None:
         """
         Visualize tradeoffs in screening thresholds across groups
-        
+
         Args:
             sensitivity_curve: Function mapping threshold to sensitivity
             specificity_curve: Function mapping threshold to specificity
             save_path: Optional path to save figure
         """
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-        
+
         # Plot 1: Net benefit curves by group
         ax = axes[0]
         thresholds = np.linspace(0.01, 0.99, 100)
-        
+
         for group in self.prevalence.keys():
             net_benefits = [
                 self.compute_net_benefit(t, sensitivity_curve, specificity_curve, group)
                 for t in thresholds
             ]
             ax.plot(thresholds, net_benefits, label=group, linewidth=2)
-            
+
             # Mark optimal threshold
             if group in self.optimal_thresholds_:
                 opt_t = self.optimal_thresholds_[group]
                 opt_nb = self.compute_net_benefit(opt_t, sensitivity_curve, specificity_curve, group)
                 ax.scatter([opt_t], [opt_nb], s=100, zorder=5)
-        
+
         ax.set_xlabel('Screening Threshold', fontsize=12)
         ax.set_ylabel('Net Benefit per Person Screened', fontsize=12)
         ax.set_title('Net Benefit vs. Threshold by Population Group', fontsize=14)
         ax.legend()
         ax.grid(True, alpha=0.3)
         ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
-        
+
         # Plot 2: Optimal thresholds and participation rates
         ax = axes[1]
         groups = list(self.prevalence.keys())
         opt_thresholds = [self.optimal_thresholds_.get(g, 0.5) for g in groups]
         participation = [self.participation_rates[g] for g in groups]
-        
+
         x = np.arange(len(groups))
         width = 0.35
-        
+
         ax.bar(x - width/2, opt_thresholds, width, label='Optimal Threshold', alpha=0.8)
         ax.bar(x + width/2, participation, width, label='Participation Rate', alpha=0.8)
-        
+
         ax.set_xlabel('Population Group', fontsize=12)
         ax.set_ylabel('Value', fontsize=12)
         ax.set_title('Optimal Thresholds and Participation Rates', fontsize=14)
@@ -1525,14 +1565,13 @@ class EquityAwareScreeningOptimizer:
         ax.set_xticklabels(groups, rotation=45, ha='right')
         ax.legend()
         ax.grid(True, alpha=0.3, axis='y')
-        
+
         plt.tight_layout()
-        
+
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         else:
             plt.show()
-
 
 def estimate_screening_curves_from_data(
     y_true: np.ndarray,
@@ -1541,55 +1580,55 @@ def estimate_screening_curves_from_data(
 ) -> Tuple[Callable, Callable]:
     """
     Estimate sensitivity and specificity curves from validation data
-    
+
     Uses isotonic regression to ensure monotonicity and bootstrap for uncertainty.
-    
+
     Args:
         y_true: True disease status (0/1)
         y_scores: Predicted risk scores (higher = more likely diseased)
         n_bootstrap: Number of bootstrap samples for uncertainty estimation
-        
+
     Returns:
         Tuple of (sensitivity_curve, specificity_curve) functions
     """
     from sklearn.isotonic import IsotonicRegression
-    
+
     # Compute ROC curve points
     thresholds = np.percentile(y_scores, np.linspace(0, 100, 101))
-    
+
     sensitivities = []
     specificities = []
-    
+
     for threshold in thresholds:
         predictions = (y_scores >= threshold).astype(int)
-        
+
         tp = ((predictions == 1) & (y_true == 1)).sum()
         tn = ((predictions == 0) & (y_true == 0)).sum()
         fp = ((predictions == 1) & (y_true == 0)).sum()
         fn = ((predictions == 0) & (y_true == 1)).sum()
-        
+
         sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
         specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-        
+
         sensitivities.append(sensitivity)
         specificities.append(specificity)
-    
+
     # Fit isotonic regression for smooth curves
     # Sensitivity should decrease with threshold
     iso_se = IsotonicRegression(increasing=False)
     iso_se.fit(thresholds, sensitivities)
-    
+
     # Specificity should increase with threshold
     iso_sp = IsotonicRegression(increasing=True)
     iso_sp.fit(thresholds, specificities)
-    
+
     # Create functions that interpolate smoothly
     def sensitivity_curve(t: float) -> float:
         return float(np.clip(iso_se.predict([t])[0], 0, 1))
-    
+
     def specificity_curve(t: float) -> float:
         return float(np.clip(iso_sp.predict([t])[0], 0, 1))
-    
+
     return sensitivity_curve, specificity_curve
 ```
 
@@ -1619,12 +1658,11 @@ from shapely.geometry import Point
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 @dataclass
 class SurveillanceSystem:
     """
     Represents surveillance infrastructure for a geographic region
-    
+
     Attributes:
         reporting_rate: Proportion of true cases captured by surveillance
         diagnostic_capacity: Cases per day that can be diagnosed
@@ -1638,16 +1676,15 @@ class SurveillanceSystem:
     coverage_score: float  # 0-1
     population_vulnerability: float  # 0-1
 
-
 class EquityAwareCUSUM:
     """
     CUSUM control chart with adjustments for unequal surveillance coverage
-    
+
     Traditional CUSUM assumes complete and uniform surveillance. This implementation
     adjusts for differential reporting rates across geographic areas, making the
     system more sensitive to outbreaks in underserved communities with poor
     surveillance infrastructure.
-    
+
     Parameters:
         baseline_rates: Expected baseline case counts by geographic area
         reporting_rates: Estimated proportion of cases captured by surveillance
@@ -1656,7 +1693,7 @@ class EquityAwareCUSUM:
         prioritize_vulnerable: If True, accept higher false alarm rates in
             vulnerable communities to achieve equal detection speed
     """
-    
+
     def __init__(
         self,
         baseline_rates: Dict[str, float],
@@ -1670,35 +1707,35 @@ class EquityAwareCUSUM:
         self.reference_value = reference_value
         self.alert_threshold = alert_threshold
         self.prioritize_vulnerable = prioritize_vulnerable
-        
+
         # Initialize CUSUM statistics for each area
         self.cusum_stats: Dict[str, float] = {area: 0.0 for area in baseline_rates.keys()}
         self.alert_times: Dict[str, List[int]] = {area: [] for area in baseline_rates.keys()}
         self.observation_count: int = 0
-        
+
         # Adjust thresholds by area if prioritizing vulnerable populations
         if prioritize_vulnerable:
             self.area_thresholds = self._compute_equity_adjusted_thresholds()
         else:
             self.area_thresholds = {area: alert_threshold for area in baseline_rates.keys()}
-    
+
     def _compute_equity_adjusted_thresholds(self) -> Dict[str, float]:
         """
         Compute area-specific alert thresholds that equalize expected detection time
-        
+
         Areas with lower reporting rates get lower thresholds (more sensitive)
         to compensate for signal attenuation from poor surveillance.
         """
         thresholds = {}
         reference_reporting = np.median(list(self.reporting_rates.values()))
-        
+
         for area, reporting_rate in self.reporting_rates.items():
             # Inverse relationship: lower reporting → lower threshold → more sensitive
             adjustment_factor = reference_reporting / reporting_rate if reporting_rate > 0 else 1.0
             thresholds[area] = self.alert_threshold / adjustment_factor
-        
+
         return thresholds
-    
+
     def update(
         self,
         observed_counts: Dict[str, float],
@@ -1706,30 +1743,30 @@ class EquityAwareCUSUM:
     ) -> Dict[str, bool]:
         """
         Update CUSUM statistics with new observations
-        
+
         Args:
             observed_counts: Observed case counts by geographic area
             time_index: Time index for this observation
-            
+
         Returns:
             Dictionary indicating whether alert triggered for each area
         """
         alerts = {}
-        
+
         for area, count in observed_counts.items():
             if area not in self.cusum_stats:
                 continue
-            
+
             baseline = self.baseline_rates[area]
             reporting = self.reporting_rates[area]
-            
+
             # Adjust observed count for reporting rate to estimate true count
             adjusted_count = count / reporting if reporting > 0 else count
-            
+
             # CUSUM update: accumulate evidence of deviation from baseline
             deviation = adjusted_count - baseline - self.reference_value
             self.cusum_stats[area] = max(0.0, self.cusum_stats[area] + deviation)
-            
+
             # Check if alert threshold exceeded
             threshold = self.area_thresholds[area]
             if self.cusum_stats[area] >= threshold:
@@ -1739,11 +1776,11 @@ class EquityAwareCUSUM:
                 self.cusum_stats[area] = 0.0
             else:
                 alerts[area] = False
-        
+
         self.observation_count += 1
-        
+
         return alerts
-    
+
     def get_current_statistics(self) -> pd.DataFrame:
         """Return current CUSUM statistics for all areas"""
         data = []
@@ -1756,24 +1793,23 @@ class EquityAwareCUSUM:
                 'reporting_rate': self.reporting_rates[area],
                 'alert_count': len(self.alert_times[area])
             })
-        
-        return pd.DataFrame(data)
 
+        return pd.DataFrame(data)
 
 class SpatialScanStatistic:
     """
     Kulldorff spatial scan statistic with equity-aware cluster detection
-    
+
     Traditional spatial scan naturally favors dense urban areas with good
     surveillance. This implementation applies vulnerability weighting to
     upweight clusters in underserved communities.
-    
+
     Parameters:
         max_cluster_size: Maximum population proportion for a cluster (0-1)
         n_simulations: Monte Carlo simulations for significance testing
         vulnerability_weight: Weight for vulnerability index (0 = no weighting, 1 = full)
     """
-    
+
     def __init__(
         self,
         max_cluster_size: float = 0.5,
@@ -1783,9 +1819,9 @@ class SpatialScanStatistic:
         self.max_cluster_size = max_cluster_size
         self.n_simulations = n_simulations
         self.vulnerability_weight = vulnerability_weight
-        
+
         self.scan_results_: Optional[pd.DataFrame] = None
-        
+
     def scan(
         self,
         case_data: pd.DataFrame,
@@ -1796,14 +1832,14 @@ class SpatialScanStatistic:
     ) -> pd.DataFrame:
         """
         Perform spatial scan for disease clusters
-        
+
         Args:
             case_data: DataFrame with columns ['area_id', 'cases']
             population_data: DataFrame with columns ['area_id', 'population']
             vulnerability_scores: Series mapping area_id to vulnerability index (0-1)
             geometry: GeoSeries with Point geometries for each area centroid
             max_cluster_radius_km: Maximum radius for circular clusters
-            
+
         Returns:
             DataFrame with detected clusters ranked by likelihood ratio
         """
@@ -1811,56 +1847,56 @@ class SpatialScanStatistic:
         data = case_data.merge(population_data, on='area_id')
         data['vulnerability'] = data['area_id'].map(vulnerability_scores)
         data['geometry'] = geometry
-        
+
         total_cases = data['cases'].sum()
         total_population = data['population'].sum()
-        
+
         # Compute distance matrix between area centroids
         coords = np.array([[p.x, p.y] for p in geometry])
         distances = distance_matrix(coords, coords)
-        
+
         # Evaluate all possible circular clusters
         cluster_results = []
-        
+
         for center_idx in range(len(data)):
             # Get areas within max radius
             within_radius = distances[center_idx, :] <= max_cluster_radius_km
-            
+
             for radius_idx in np.where(within_radius)[0]:
                 radius = distances[center_idx, radius_idx]
-                
+
                 # Define cluster as all areas within this radius of center
                 cluster_mask = distances[center_idx, :] <= radius
                 cluster_data = data[cluster_mask]
-                
+
                 # Check cluster size constraint
                 cluster_pop = cluster_data['population'].sum()
                 if cluster_pop > self.max_cluster_size * total_population:
                     continue
-                
+
                 # Compute likelihood ratio for this cluster
                 c_in = cluster_data['cases'].sum()  # Cases in cluster
                 n_in = cluster_data['population'].sum()  # Population in cluster
                 c_out = total_cases - c_in  # Cases outside cluster
                 n_out = total_population - n_in  # Population outside cluster
-                
+
                 if c_in == 0 or c_out == 0:
                     continue
-                
+
                 # Expected cases in cluster under null hypothesis
                 expected_in = (c_in + c_out) * n_in / (n_in + n_out)
-                
+
                 # Likelihood ratio
                 if c_in > expected_in:  # Only consider elevated clusters
                     llr = (
                         c_in * np.log(c_in / expected_in) +
                         c_out * np.log(c_out / (total_cases - expected_in))
                     )
-                    
+
                     # Apply vulnerability weighting
                     mean_vulnerability = cluster_data['vulnerability'].mean()
                     adjusted_llr = llr * (1 + self.vulnerability_weight * mean_vulnerability)
-                    
+
                     cluster_results.append({
                         'center_area': data.iloc[center_idx]['area_id'],
                         'radius_km': radius,
@@ -1873,15 +1909,15 @@ class SpatialScanStatistic:
                         'n_areas': cluster_mask.sum(),
                         'mean_vulnerability': mean_vulnerability
                     })
-        
+
         # Convert to DataFrame and rank
         results_df = pd.DataFrame(cluster_results)
-        
+
         if len(results_df) == 0:
             return results_df
-        
+
         results_df = results_df.sort_values('adjusted_llr', ascending=False)
-        
+
         # Monte Carlo significance testing for top clusters
         # (Simplified - production version would do full simulation)
         results_df['p_value'] = self._compute_significance(
@@ -1890,11 +1926,11 @@ class SpatialScanStatistic:
             total_population,
             data
         )
-        
+
         self.scan_results_ = results_df
-        
+
         return results_df
-    
+
     def _compute_significance(
         self,
         observed_llr: float,
@@ -1904,30 +1940,30 @@ class SpatialScanStatistic:
     ) -> float:
         """
         Compute p-value via Monte Carlo simulation
-        
+
         Simplified implementation - production version would perform full scan
         on each simulated dataset.
         """
         # Simulate under null hypothesis (random spatial allocation)
         simulated_max_llr = []
-        
+
         for _ in range(self.n_simulations):
             # Randomly allocate cases proportional to population
             simulated_cases = np.random.multinomial(
                 total_cases,
                 data['population'] / total_population
             )
-            
+
             # Compute maximum LLR in simulated data
             # (Simplified - would need to rerun full scan)
             max_llr = 0  # Placeholder
             simulated_max_llr.append(max_llr)
-        
+
         # P-value: proportion of simulations with max LLR >= observed
         p_value = (np.array(simulated_max_llr) >= observed_llr).mean()
-        
+
         return p_value
-    
+
     def visualize_clusters(
         self,
         top_k: int = 3,
@@ -1935,29 +1971,28 @@ class SpatialScanStatistic:
     ) -> None:
         """
         Visualize top detected clusters on a map
-        
+
         Args:
             top_k: Number of top clusters to display
             save_path: Optional path to save figure
         """
         if self.scan_results_ is None:
             raise RuntimeError("Must run scan() before visualization")
-        
+
         # Simplified visualization - production version would use geopandas plotting
         fig, ax = plt.subplots(figsize=(12, 10))
-        
+
         # Plot top clusters
         for i, row in self.scan_results_.head(top_k).iterrows():
             # Would plot circular cluster on map
             pass
-        
+
         ax.set_title(f'Top {top_k} Disease Clusters (Vulnerability-Weighted)', fontsize=14)
-        
+
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         else:
             plt.show()
-
 
 def simulate_outbreak_scenarios(
     n_areas: int = 100,
@@ -1969,7 +2004,7 @@ def simulate_outbreak_scenarios(
 ) -> Tuple[pd.DataFrame, Dict]:
     """
     Simulate outbreak scenarios to evaluate detection methods
-    
+
     Args:
         n_areas: Number of geographic areas
         outbreak_area_idx: Area where outbreak occurs
@@ -1977,35 +2012,35 @@ def simulate_outbreak_scenarios(
         outbreak_magnitude: Multiplier for case rates during outbreak
         reporting_rates: Reporting rates by area (if None, assumes complete surveillance)
         n_days: Number of days to simulate
-        
+
     Returns:
         Tuple of (case_data_df, ground_truth_dict)
     """
     if reporting_rates is None:
         reporting_rates = np.ones(n_areas)
-    
+
     # Baseline case rates (Poisson distributed)
     baseline_rates = np.random.gamma(2, 2, size=n_areas)
-    
+
     # Simulate daily case counts
     case_data = []
-    
+
     for day in range(n_days):
         for area_idx in range(n_areas):
             baseline = baseline_rates[area_idx]
-            
+
             # Apply outbreak effect
             if day >= outbreak_start_day and area_idx == outbreak_area_idx:
                 rate = baseline * outbreak_magnitude
             else:
                 rate = baseline
-            
+
             # Generate true cases
             true_cases = np.random.poisson(rate)
-            
+
             # Apply reporting rate to get observed cases
             observed_cases = np.random.binomial(true_cases, reporting_rates[area_idx])
-            
+
             case_data.append({
                 'day': day,
                 'area_idx': area_idx,
@@ -2013,15 +2048,15 @@ def simulate_outbreak_scenarios(
                 'true_cases': true_cases,
                 'reporting_rate': reporting_rates[area_idx]
             })
-    
+
     case_df = pd.DataFrame(case_data)
-    
+
     ground_truth = {
         'outbreak_area': outbreak_area_idx,
         'outbreak_start_day': outbreak_start_day,
         'outbreak_magnitude': outbreak_magnitude
     }
-    
+
     return case_df, ground_truth
 ```
 

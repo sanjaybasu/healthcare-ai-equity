@@ -2,8 +2,10 @@
 layout: chapter
 title: "Chapter 10: Survival Analysis and Time-to-Event Modeling"
 chapter_number: 10
+part_number: 3
+prev_chapter: /chapters/chapter-09-advanced-clinical-nlp/
+next_chapter: /chapters/chapter-11-causal-inference/
 ---
-
 # Chapter 10: Survival Analysis and Time-to-Event Modeling
 
 ## Learning Objectives
@@ -87,12 +89,11 @@ import warnings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class SurvivalData:
     """
     Container for time-to-event data with comprehensive metadata.
-    
+
     Attributes:
         time: Array of observed times (either event times or censoring times)
         event: Binary array indicating whether event was observed (1) or censored (0)
@@ -109,25 +110,24 @@ class SurvivalData:
     time_unit: str = "days"
     event_name: str = "event"
     data_source: str = "unknown"
-    
+
     def __post_init__(self) -> None:
         """Validate survival data structure."""
         if len(self.time) != len(self.event):
             raise ValueError("Time and event arrays must have same length")
-        
+
         if np.any(self.time < 0):
             raise ValueError("Time values cannot be negative")
-        
+
         if not np.all(np.isin(self.event, [0, 1])):
             raise ValueError("Event array must contain only 0 (censored) or 1 (event)")
-        
+
         event_rate = np.mean(self.event)
         logger.info(
             f"Initialized survival data: {len(self.time)} observations, "
             f"{int(self.event.sum())} events ({100*event_rate:.1f}%), "
             f"{int((1-self.event).sum())} censored ({100*(1-event_rate):.1f}%)"
         )
-
 
 @dataclass
 class KaplanMeierResults:
@@ -139,16 +139,15 @@ class KaplanMeierResults:
     censoring_analysis: Optional[Dict[str, Any]] = None
     equity_report: Optional[str] = None
 
-
 class KaplanMeierAnalyzer:
     """
     Comprehensive Kaplan-Meier survival analysis with equity evaluation.
-    
+
     This class implements the Kaplan-Meier estimator with stratification by
     demographic groups, formal testing of survival differences, and diagnostic
     evaluation of censoring patterns that may introduce bias in comparisons.
     """
-    
+
     def __init__(
         self,
         data: SurvivalData,
@@ -156,7 +155,7 @@ class KaplanMeierAnalyzer:
     ) -> None:
         """
         Initialize Kaplan-Meier analyzer.
-        
+
         Args:
             data: SurvivalData object containing time-to-event data
             alpha: Significance level for confidence intervals (default 0.05)
@@ -165,11 +164,11 @@ class KaplanMeierAnalyzer:
         self.alpha = alpha
         self.kmf_overall = KaplanMeierFitter(alpha=alpha)
         self.kmf_by_group: Dict[str, KaplanMeierFitter] = {}
-        
+
     def fit(self) -> KaplanMeierResults:
         """
         Fit Kaplan-Meier estimator overall and stratified by groups.
-        
+
         Returns:
             KaplanMeierResults object containing survival curves and statistics
         """
@@ -179,67 +178,67 @@ class KaplanMeierAnalyzer:
             event_observed=self.data.event,
             label="Overall"
         )
-        
+
         results_dict = {
             "Overall": self.kmf_overall.survival_function_
         }
-        
+
         ci_dict = {
             "Overall_lower": self.kmf_overall.confidence_interval_survival_function_.iloc[:, 0],
             "Overall_upper": self.kmf_overall.confidence_interval_survival_function_.iloc[:, 1]
         }
-        
+
         median_survival = {
             "Overall": self.kmf_overall.median_survival_time_
         }
-        
+
         # Fit by group if groups provided
         if self.data.group is not None:
             unique_groups = np.unique(self.data.group)
-            
+
             for group in unique_groups:
                 group_mask = self.data.group == group
                 group_time = self.data.time[group_mask]
                 group_event = self.data.event[group_mask]
-                
+
                 kmf_group = KaplanMeierFitter(alpha=self.alpha)
                 kmf_group.fit(
                     durations=group_time,
                     event_observed=group_event,
                     label=str(group)
                 )
-                
+
                 self.kmf_by_group[str(group)] = kmf_group
                 results_dict[str(group)] = kmf_group.survival_function_
                 ci_dict[f"{group}_lower"] = kmf_group.confidence_interval_survival_function_.iloc[:, 0]
                 ci_dict[f"{group}_upper"] = kmf_group.confidence_interval_survival_function_.iloc[:, 1]
                 median_survival[str(group)] = kmf_group.median_survival_time_
-                
+
                 logger.info(
                     f"Group {group}: {group_time.shape[0]} observations, "
                     f"{int(group_event.sum())} events, "
                     f"median survival = {kmf_group.median_survival_time_:.2f} {self.data.time_unit}"
                 )
-        
+
         # Combine into dataframes
         survival_df = pd.DataFrame(results_dict)
         ci_df = pd.DataFrame(ci_dict)
-        
+
         # Perform log-rank test if multiple groups
         log_rank_result = None
         if self.data.group is not None and len(unique_groups) > 1:
             log_rank_result = self._log_rank_test()
-        
+
         # Analyze censoring patterns
         censoring_analysis = self._analyze_censoring()
-        
+
         # Generate equity report
         equity_report = self._generate_equity_report(
             median_survival,
             log_rank_result,
             censoring_analysis
         )
-        
+
         return KaplanMeierResults(
             survival_function=survival_df,
             confidence_intervals=ci_df,
@@ -248,29 +247,29 @@ class KaplanMeierAnalyzer:
             censoring_analysis=censoring_analysis,
             equity_report=equity_report
         )
-    
+
     def _log_rank_test(self) -> Any:
         """Perform log-rank test comparing survival across groups."""
         if self.data.group is None:
             return None
-        
+
         unique_groups = np.unique(self.data.group)
-        
+
         if len(unique_groups) == 2:
             # Pairwise log-rank test
             group_a = unique_groups[0]
             group_b = unique_groups[1]
-            
+
             mask_a = self.data.group == group_a
             mask_b = self.data.group == group_b
-            
+
             result = logrank_test(
                 durations_A=self.data.time[mask_a],
                 durations_B=self.data.time[mask_b],
                 event_observed_A=self.data.event[mask_a],
                 event_observed_B=self.data.event[mask_b]
             )
-            
+
             logger.info(f"Log-rank test: p={result.p_value:.4f}, test_statistic={result.test_statistic:.4f}")
             return result
         else:
@@ -282,38 +281,38 @@ class KaplanMeierAnalyzer:
             )
             logger.info(f"Multivariate log-rank test: p={result.p_value:.4f}")
             return result
-    
+
     def _analyze_censoring(self) -> Dict[str, Any]:
         """Analyze censoring patterns across groups."""
         censoring_analysis = {
             "overall_censoring_rate": 1 - np.mean(self.event),
             "censoring_by_group": {}
         }
-        
+
         if self.data.group is not None:
             for group in np.unique(self.data.group):
                 group_mask = self.data.group == group
                 group_censoring_rate = 1 - np.mean(self.data.event[group_mask])
                 censoring_analysis["censoring_by_group"][str(group)] = group_censoring_rate
-            
+
             # Test if censoring rates differ significantly across groups
             contingency_table = pd.crosstab(
                 self.data.group,
                 self.data.event
             )
             chi2, p_value, dof, expected = stats.chi2_contingency(contingency_table)
-            
+
             censoring_analysis["censoring_chi2_test"] = {
                 "chi2": chi2,
                 "p_value": p_value,
-                "interpretation": "Censoring rates differ significantly across groups" if p_value < 0.05 
+                "interpretation": "Censoring rates differ significantly across groups" if p_value < 0.05
                                  else "No significant difference in censoring rates"
             }
-            
+
             logger.info(f"Censoring analysis: chi2={chi2:.2f}, p={p_value:.4f}")
-        
+
         return censoring_analysis
-    
+
     def _generate_equity_report(
         self,
         median_survival: Dict[str, float],
@@ -325,36 +324,36 @@ class KaplanMeierAnalyzer:
         lines.append("EQUITY-FOCUSED KAPLAN-MEIER ANALYSIS REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         lines.append("MEDIAN SURVIVAL TIMES:")
         for group, median in median_survival.items():
             lines.append(f"  {group}: {median:.2f} {self.data.time_unit}")
         lines.append("")
-        
+
         if log_rank_result is not None:
             lines.append("STATISTICAL COMPARISON (LOG-RANK TEST):")
             lines.append(f"  Test statistic: {log_rank_result.test_statistic:.4f}")
             lines.append(f"  P-value: {log_rank_result.p_value:.4f}")
-            
+
             if log_rank_result.p_value < 0.05:
                 lines.append("  Interpretation: Survival curves differ significantly across groups")
             else:
                 lines.append("  Interpretation: No significant difference in survival curves")
             lines.append("")
-        
+
         lines.append("CENSORING PATTERN ANALYSIS:")
         lines.append(f"  Overall censoring rate: {100*censoring_analysis['overall_censoring_rate']:.1f}%")
-        
+
         if "censoring_by_group" in censoring_analysis:
             lines.append("  Censoring rates by group:")
             for group, rate in censoring_analysis["censoring_by_group"].items():
                 lines.append(f"    {group}: {100*rate:.1f}%")
-            
+
             if "censoring_chi2_test" in censoring_analysis:
                 lines.append(f"  Chi-square test: p={censoring_analysis['censoring_chi2_test']['p_value']:.4f}")
                 lines.append(f"  {censoring_analysis['censoring_chi2_test']['interpretation']}")
         lines.append("")
-        
+
         lines.append("EQUITY CONSIDERATIONS:")
         lines.append("  1. CENSORING AND BIAS:")
         lines.append("     - Differential censoring across groups may introduce bias if censoring")
@@ -375,13 +374,13 @@ class KaplanMeierAnalyzer:
         lines.append("     - Consider competing risks if different groups face different")
         lines.append("       competing events")
         lines.append("")
-        
+
         lines.append("=" * 80)
         lines.append("END OF EQUITY REPORT")
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
-    
+
     def plot_survival_curves(
         self,
         figsize: Tuple[int, int] = (12, 8),
@@ -390,17 +389,17 @@ class KaplanMeierAnalyzer:
     ) -> plt.Figure:
         """
         Create publication-quality survival curve plot.
-        
+
         Args:
             figsize: Figure size tuple
             show_ci: Whether to show confidence intervals
             show_ci: Whether to show number at risk table
-            
+
         Returns:
             Matplotlib figure object
         """
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         if self.data.group is None:
             # Plot overall curve
             self.kmf_overall.plot_survival_function(
@@ -416,22 +415,21 @@ class KaplanMeierAnalyzer:
                     ci_show=show_ci,
                     label=group_name
                 )
-        
+
         ax.set_xlabel(f"Time ({self.data.time_unit})", fontsize=12)
         ax.set_ylabel(f"Probability of {self.data.event_name}-Free Survival", fontsize=12)
         ax.set_title("Kaplan-Meier Survival Curves", fontsize=14, fontweight='bold')
         ax.legend(loc='best', fontsize=10)
         ax.grid(True, alpha=0.3)
-        
+
         if show_at_risk and self.data.group is not None:
             add_at_risk_counts(
                 *[kmf for kmf in self.kmf_by_group.values()],
                 ax=ax
             )
-        
+
         plt.tight_layout()
         return fig
-
 
 def simulate_survival_data_with_inequity(
     n: int = 1000,
@@ -445,11 +443,11 @@ def simulate_survival_data_with_inequity(
 ) -> SurvivalData:
     """
     Simulate survival data with differential hazards and censoring rates.
-    
+
     This function creates synthetic survival data where Group B has both higher
     event hazard and higher censoring rate, mimicking real-world patterns where
     marginalized populations experience both worse outcomes and more loss to follow-up.
-    
+
     Args:
         n: Total sample size
         groups: List of group names
@@ -459,18 +457,18 @@ def simulate_survival_data_with_inequity(
         censoring_rate_b: Target censoring proportion for Group B
         max_time: Maximum follow-up time
         random_state: Random seed
-        
+
     Returns:
         SurvivalData object
     """
     np.random.seed(random_state)
-    
+
     n_per_group = n // len(groups)
-    
+
     times = []
     events = []
     group_labels = []
-    
+
     for i, group in enumerate(groups):
         if i == 0:
             hazard = base_hazard
@@ -478,27 +476,27 @@ def simulate_survival_data_with_inequity(
         else:
             hazard = base_hazard * hazard_ratio
             censoring_rate = censoring_rate_b
-        
+
         # Generate event times from exponential distribution
         event_times = np.random.exponential(scale=1/hazard, size=n_per_group)
-        
+
         # Generate censoring times
         censoring_times = np.random.uniform(0, max_time, size=n_per_group)
-        
+
         # Apply censoring based on target rate
         censored = np.random.binomial(1, censoring_rate, size=n_per_group).astype(bool)
-        
+
         # Observed time is minimum of event time and censoring time
         obs_times = np.where(censored, censoring_times, event_times)
         obs_times = np.minimum(obs_times, max_time)
-        
+
         # Event indicator
         obs_events = np.where(censored, 0, 1)
-        
+
         times.extend(obs_times)
         events.extend(obs_events)
         group_labels.extend([group] * n_per_group)
-    
+
     return SurvivalData(
         time=np.array(times),
         event=np.array(events),
@@ -507,7 +505,6 @@ def simulate_survival_data_with_inequity(
         event_name="clinical event",
         data_source="simulated"
     )
-
 
 # Example usage
 if __name__ == "__main__":
@@ -519,19 +516,19 @@ if __name__ == "__main__":
         censoring_rate_a=0.15,
         censoring_rate_b=0.35
     )
-    
+
     # Perform Kaplan-Meier analysis
     km_analyzer = KaplanMeierAnalyzer(data=data, alpha=0.05)
     results = km_analyzer.fit()
-    
+
     # Display results
     print(results.equity_report)
-    
+
     # Plot survival curves
     fig = km_analyzer.plot_survival_curves(show_ci=True, show_at_risk=True)
     plt.savefig("/mnt/user-data/outputs/kaplan_meier_example.png", dpi=300, bbox_inches='tight')
     plt.close()
-    
+
     logger.info("Kaplan-Meier analysis completed successfully")
 ```
 
@@ -593,7 +590,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class CoxModelResults:
     """Container for Cox model results and diagnostics."""
@@ -605,16 +601,15 @@ class CoxModelResults:
     proportional_hazards_test: Dict[str, Any]
     equity_report: str
 
-
 class CoxProportionalHazards:
     """
     Comprehensive Cox proportional hazards modeling with equity evaluation.
-    
+
     This class implements Cox regression with extensive diagnostic testing
     for proportional hazards assumptions and fairness assessment across
     demographic subgroups.
     """
-    
+
     def __init__(
         self,
         penalizer: float = 0.0,
@@ -623,7 +618,7 @@ class CoxProportionalHazards:
     ) -> None:
         """
         Initialize Cox proportional hazards model.
-        
+
         Args:
             penalizer: Coefficient for regularization (Ridge if l1_ratio=0, Lasso if 1)
             l1_ratio: Balance between L1 and L2 penalty (0=Ridge, 1=Lasso)
@@ -638,7 +633,7 @@ class CoxProportionalHazards:
             alpha=alpha
         )
         self.fitted = False
-        
+
     def fit(
         self,
         df: pd.DataFrame,
@@ -648,13 +643,13 @@ class CoxProportionalHazards:
     ) -> 'CoxProportionalHazards':
         """
         Fit Cox proportional hazards model.
-        
+
         Args:
             df: DataFrame with survival data and covariates
             duration_col: Name of column containing time-to-event data
             event_col: Name of column containing event indicators (1=event, 0=censored)
             show_progress: Whether to show fitting progress
-            
+
         Returns:
             Self for method chaining
         """
@@ -668,28 +663,28 @@ class CoxProportionalHazards:
             self.fitted = True
             self.duration_col = duration_col
             self.event_col = event_col
-            
+
             logger.info(
                 f"Cox model fitted successfully. "
                 f"Concordance index: {self.model.concordance_index_:.4f}"
             )
-            
+
             return self
-        
+
         except Exception as e:
             logger.error(f"Error fitting Cox model: {str(e)}")
             raise
-    
+
     def test_proportional_hazards(self) -> Dict[str, Any]:
         """
         Test proportional hazards assumption using scaled Schoenfeld residuals.
-        
+
         Returns:
             Dictionary containing test results for each covariate
         """
         if not self.fitted:
             raise ValueError("Model must be fitted before testing assumptions")
-        
+
         try:
             # Perform proportional hazards test
             test_results = proportional_hazard_test(
@@ -697,13 +692,13 @@ class CoxProportionalHazards:
                 self.model.event_observed,
                 test_statistic='rank'
             )
-            
+
             results_dict = {
                 "test_statistic": test_results.test_statistic,
                 "p_value": test_results.p_value,
                 "detailed_results": test_results.summary
             }
-            
+
             # Log any violations
             for covariate in test_results.summary.index:
                 p_val = test_results.summary.loc[covariate, 'p']
@@ -712,27 +707,27 @@ class CoxProportionalHazards:
                         f"Proportional hazards assumption violated for {covariate} "
                         f"(p={p_val:.4f})"
                     )
-            
+
             return results_dict
-            
+
         except Exception as e:
             logger.error(f"Error in proportional hazards test: {str(e)}")
             return {"error": str(e)}
-    
+
     def get_results(self, df: pd.DataFrame, group_col: Optional[str] = None) -> CoxModelResults:
         """
         Extract comprehensive results with equity evaluation.
-        
+
         Args:
             df: Original DataFrame used for fitting
             group_col: Optional column name for demographic group analysis
-            
+
         Returns:
             CoxModelResults object containing all results and diagnostics
         """
         if not self.fitted:
             raise ValueError("Model must be fitted before extracting results")
-        
+
         # Extract coefficients and hazard ratios
         coefficients = pd.DataFrame({
             'coef': self.model.params_,
@@ -743,16 +738,16 @@ class CoxProportionalHazards:
             'lower_0.95': self.model.confidence_intervals_.iloc[:, 0],
             'upper_0.95': self.model.confidence_intervals_.iloc[:, 1]
         })
-        
+
         hazard_ratios = pd.DataFrame({
             'HR': np.exp(self.model.params_),
             'HR_lower_0.95': np.exp(self.model.confidence_intervals_.iloc[:, 0]),
             'HR_upper_0.95': np.exp(self.model.confidence_intervals_.iloc[:, 1])
         })
-        
+
         # Test proportional hazards
         ph_test = self.test_proportional_hazards()
-        
+
         # Generate equity report
         equity_report = self._generate_equity_report(
             coefficients,
@@ -761,7 +756,7 @@ class CoxProportionalHazards:
             df,
             group_col
         )
-        
+
         return CoxModelResults(
             coefficients=coefficients,
             hazard_ratios=hazard_ratios,
@@ -771,7 +766,7 @@ class CoxProportionalHazards:
             proportional_hazards_test=ph_test,
             equity_report=equity_report
         )
-    
+
     def _generate_equity_report(
         self,
         coefficients: pd.DataFrame,
@@ -785,25 +780,25 @@ class CoxProportionalHazards:
         lines.append("EQUITY-FOCUSED COX PROPORTIONAL HAZARDS REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         lines.append(f"MODEL PERFORMANCE:")
         lines.append(f"  Concordance Index: {self.model.concordance_index_:.4f}")
         lines.append(f"  Log-Likelihood: {self.model.log_likelihood_:.2f}")
         lines.append(f"  AIC: {self.model.AIC_:.2f}")
         lines.append("")
-        
+
         lines.append("HAZARD RATIOS:")
         for var in hazard_ratios.index:
             hr = hazard_ratios.loc[var, 'HR']
             hr_lower = hazard_ratios.loc[var, 'HR_lower_0.95']
             hr_upper = hazard_ratios.loc[var, 'HR_upper_0.95']
             p_val = coefficients.loc[var, 'p']
-            
+
             sig_marker = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else ""
-            
+
             lines.append(f"  {var}: HR = {hr:.3f} (95% CI: {hr_lower:.3f}-{hr_upper:.3f}) {sig_marker}")
         lines.append("")
-        
+
         lines.append("PROPORTIONAL HAZARDS ASSUMPTION:")
         if "error" in ph_test:
             lines.append(f"  Could not complete test: {ph_test['error']}")
@@ -812,15 +807,15 @@ class CoxProportionalHazards:
             lines.append(f"  Global p-value: {ph_test['p_value']:.4f}")
             lines.append("")
             lines.append("  Covariate-specific tests:")
-            
+
             for covariate in ph_test['detailed_results'].index:
                 p_val = ph_test['detailed_results'].loc[covariate, 'p']
                 test_stat = ph_test['detailed_results'].loc[covariate, 'test_statistic']
-                
+
                 status = "VIOLATED" if p_val < 0.05 else "OK"
                 lines.append(f"    {covariate}: p={p_val:.4f}, status={status}")
         lines.append("")
-        
+
         lines.append("EQUITY CONSIDERATIONS:")
         lines.append("  1. INTERPRETATION OF DEMOGRAPHIC VARIABLES:")
         lines.append("     - Hazard ratios for race/ethnicity reflect cumulative effects of")
@@ -843,28 +838,28 @@ class CoxProportionalHazards:
         lines.append("     - If competing risks differ by demographics, consider")
         lines.append("       subdistribution hazards or multi-state models")
         lines.append("")
-        
+
         lines.append("=" * 80)
         lines.append("END OF EQUITY REPORT")
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
-    
+
     def plot_coefficients(self, figsize: Tuple[int, int] = (10, 6)) -> plt.Figure:
         """Create forest plot of hazard ratios with confidence intervals."""
         if not self.fitted:
             raise ValueError("Model must be fitted before plotting")
-        
+
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         # Get hazard ratios and CIs
         hr = np.exp(self.model.params_)
         ci_lower = np.exp(self.model.confidence_intervals_.iloc[:, 0])
         ci_upper = np.exp(self.model.confidence_intervals_.iloc[:, 1])
-        
+
         # Create forest plot
         y_pos = np.arange(len(hr))
-        
+
         ax.errorbar(
             hr, y_pos,
             xerr=[hr - ci_lower, ci_upper - hr],
@@ -873,7 +868,7 @@ class CoxProportionalHazards:
             capsize=5,
             capthick=2
         )
-        
+
         ax.axvline(x=1, color='red', linestyle='--', alpha=0.7, label='HR = 1')
         ax.set_yticks(y_pos)
         ax.set_yticklabels(hr.index)
@@ -881,17 +876,16 @@ class CoxProportionalHazards:
         ax.set_title('Cox Proportional Hazards Model Coefficients', fontsize=14, fontweight='bold')
         ax.legend()
         ax.grid(True, alpha=0.3)
-        
+
         plt.tight_layout()
         return fig
-
 
 # Example usage
 if __name__ == "__main__":
     # Create example dataset
     np.random.seed(42)
     n = 500
-    
+
     df = pd.DataFrame({
         'time': np.random.exponential(scale=100, size=n),
         'event': np.random.binomial(1, 0.7, size=n),
@@ -900,22 +894,22 @@ if __name__ == "__main__":
         'comorbidity_score': np.random.poisson(2, size=n),
         'marginalized_group': np.random.binomial(1, 0.3, size=n)
     })
-    
+
     # Fit Cox model
     cox_model = CoxProportionalHazards(penalizer=0.0)
     cox_model.fit(df, duration_col='time', event_col='event')
-    
+
     # Get results
     results = cox_model.get_results(df, group_col='marginalized_group')
-    
+
     # Display equity report
     print(results.equity_report)
-    
+
     # Plot coefficients
     fig = cox_model.plot_coefficients()
     plt.savefig("/mnt/user-data/outputs/cox_model_coefficients.png", dpi=300, bbox_inches='tight')
     plt.close()
-    
+
     logger.info("Cox proportional hazards analysis completed successfully")
 ```
 
@@ -973,12 +967,11 @@ from scipy import stats
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class CompetingRiskData:
     """
     Container for competing risks data.
-    
+
     Attributes:
         time: Array of observed times
         event: Array of event types (0=censored, 1=event type 1, 2=event type 2, etc.)
@@ -993,19 +986,19 @@ class CompetingRiskData:
     covariates: Optional[pd.DataFrame] = None
     event_names: Dict[int, str] = field(default_factory=dict)
     time_unit: str = "days"
-    
+
     def __post_init__(self) -> None:
         """Validate competing risks data structure."""
         if len(self.time) != len(self.event):
             raise ValueError("Time and event arrays must have same length")
-        
+
         if np.any(self.time < 0):
             raise ValueError("Time values cannot be negative")
-        
+
         unique_events = np.unique(self.event)
         if not all(e >= 0 for e in unique_events):
             raise ValueError("Event codes must be non-negative integers")
-        
+
         # Ensure event names exist for all event types
         for event_type in unique_events:
             if event_type not in self.event_names:
@@ -1013,13 +1006,12 @@ class CompetingRiskData:
                     self.event_names[0] = "Censored"
                 else:
                     self.event_names[event_type] = f"Event {event_type}"
-        
+
         logger.info(f"Initialized competing risks data: {len(self.time)} observations")
         for event_type, name in self.event_names.items():
             count = (self.event == event_type).sum()
             pct = 100 * count / len(self.time)
             logger.info(f"  {name}: {count} ({pct:.1f}%)")
-
 
 @dataclass
 class CompetingRisksResults:
@@ -1028,16 +1020,15 @@ class CompetingRisksResults:
     event_counts: pd.DataFrame
     equity_report: str
 
-
 class CompetingRisksAnalysis:
     """
     Comprehensive competing risks analysis with equity evaluation.
-    
+
     This class implements Aalen-Johansen estimation of cumulative incidence
     functions with stratification by demographic groups and evaluation of
     whether competing risk profiles differ systematically across populations.
     """
-    
+
     def __init__(
         self,
         data: CompetingRiskData,
@@ -1045,7 +1036,7 @@ class CompetingRisksAnalysis:
     ) -> None:
         """
         Initialize competing risks analyzer.
-        
+
         Args:
             data: CompetingRiskData object
             alpha: Significance level for confidence intervals
@@ -1053,79 +1044,79 @@ class CompetingRisksAnalysis:
         self.data = data
         self.alpha = alpha
         self.fitters: Dict[Tuple[str, int], AalenJohansenFitter] = {}
-        
+
     def fit(self) -> CompetingRisksResults:
         """
         Fit cumulative incidence functions overall and by group.
-        
+
         Returns:
             CompetingRisksResults object
         """
         cif_results = {}
-        
+
         # Fit overall CIFs for each event type
         unique_events = [e for e in np.unique(self.data.event) if e > 0]
-        
+
         for event_type in unique_events:
             event_name = self.data.event_names[event_type]
-            
+
             aj_fitter = AalenJohansenFitter(alpha=self.alpha)
             aj_fitter.fit(
                 durations=self.data.time,
                 event_observed=self.data.event,
                 event_of_interest=event_type
             )
-            
+
             self.fitters[("Overall", event_type)] = aj_fitter
             cif_results[f"Overall_{event_name}"] = aj_fitter.cumulative_density_
-            
+
             logger.info(
                 f"Event {event_name}: "
                 f"Cumulative incidence at final time = "
                 f"{aj_fitter.cumulative_density_.iloc[-1, 0]:.4f}"
             )
-        
+
         # Fit by group if available
         if self.data.group is not None:
             unique_groups = np.unique(self.data.group)
-            
+
             for group in unique_groups:
                 group_mask = self.data.group == group
-                
+
                 for event_type in unique_events:
                     event_name = self.data.event_names[event_type]
-                    
+
                     aj_fitter = AalenJohansenFitter(alpha=self.alpha)
                     aj_fitter.fit(
                         durations=self.data.time[group_mask],
                         event_observed=self.data.event[group_mask],
                         event_of_interest=event_type
                     )
-                    
+
                     self.fitters[(str(group), event_type)] = aj_fitter
                     cif_results[f"{group}_{event_name}"] = aj_fitter.cumulative_density_
-                    
+
                     logger.info(
                         f"Group {group}, Event {event_name}: "
                         f"CIF at final time = {aj_fitter.cumulative_density_.iloc[-1, 0]:.4f}"
                     )
-        
+
         # Create event count summary
         event_counts = self._summarize_event_counts()
-        
+
         # Generate equity report
         equity_report = self._generate_equity_report(event_counts, cif_results)
-        
+
         return CompetingRisksResults(
             cumulative_incidence=cif_results,
             event_counts=event_counts,
             equity_report=equity_report
         )
-    
+
     def _summarize_event_counts(self) -> pd.DataFrame:
         """Summarize event counts overall and by group."""
         summary_data = []
-        
+
         if self.data.group is None:
             # Overall only
             for event_type, event_name in self.data.event_names.items():
@@ -1140,11 +1131,11 @@ class CompetingRisksAnalysis:
         else:
             # By group
             unique_groups = np.unique(self.data.group)
-            
+
             for group in unique_groups:
                 group_mask = self.data.group == group
                 group_total = group_mask.sum()
-                
+
                 for event_type, event_name in self.data.event_names.items():
                     count = ((self.data.event == event_type) & group_mask).sum()
                     pct = 100 * count / group_total
@@ -1154,9 +1145,9 @@ class CompetingRisksAnalysis:
                         "Count": count,
                         "Percentage": pct
                     })
-        
+
         return pd.DataFrame(summary_data)
-    
+
     def _generate_equity_report(
         self,
         event_counts: pd.DataFrame,
@@ -1167,7 +1158,7 @@ class CompetingRisksAnalysis:
         lines.append("COMPETING RISKS ANALYSIS - EQUITY REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         lines.append("EVENT DISTRIBUTION:")
         for _, row in event_counts.iterrows():
             lines.append(
@@ -1175,13 +1166,13 @@ class CompetingRisksAnalysis:
                 f"{row['Count']} ({row['Percentage']:.1f}%)"
             )
         lines.append("")
-        
+
         lines.append("CUMULATIVE INCIDENCE AT FINAL OBSERVATION:")
         for label, cif_df in cif_results.items():
             final_ci = cif_df.iloc[-1, 0]
             lines.append(f"  {label}: {final_ci:.4f}")
         lines.append("")
-        
+
         lines.append("EQUITY CONSIDERATIONS:")
         lines.append("  1. DIFFERENTIAL COMPETING RISKS:")
         lines.append("     - Higher mortality in marginalized groups reduces observed")
@@ -1202,63 +1193,62 @@ class CompetingRisksAnalysis:
         lines.append("     - Consider modeling each event type separately to understand")
         lines.append("       specific mechanisms of disparity")
         lines.append("")
-        
+
         lines.append("=" * 80)
         lines.append("END OF COMPETING RISKS REPORT")
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
-    
+
     def plot_cumulative_incidence(
         self,
         figsize: Tuple[int, int] = (12, 8)
     ) -> plt.Figure:
         """Create cumulative incidence function plots."""
         unique_events = [e for e in np.unique(self.data.event) if e > 0]
-        
+
         n_events = len(unique_events)
         fig, axes = plt.subplots(1, n_events, figsize=figsize, squeeze=False)
         axes = axes.flatten()
-        
+
         for idx, event_type in enumerate(unique_events):
             ax = axes[idx]
             event_name = self.data.event_names[event_type]
-            
+
             # Plot overall
             if ("Overall", event_type) in self.fitters:
                 fitter = self.fitters[("Overall", event_type)]
                 fitter.plot(ax=ax, label="Overall", ci_show=True)
-            
+
             # Plot by group if available
             if self.data.group is not None:
                 for group in np.unique(self.data.group):
                     if (str(group), event_type) in self.fitters:
                         fitter = self.fitters[(str(group), event_type)]
                         fitter.plot(ax=ax, label=str(group), ci_show=True)
-            
+
             ax.set_xlabel(f"Time ({self.data.time_unit})", fontsize=11)
             ax.set_ylabel("Cumulative Incidence", fontsize=11)
             ax.set_title(f"CIF: {event_name}", fontsize=12, fontweight='bold')
             ax.legend(loc='best')
             ax.grid(True, alpha=0.3)
-        
+
         plt.tight_layout()
         return fig
-
 
 # Example usage
 if __name__ == "__main__":
     # Simulate competing risks data
     np.random.seed(42)
     n = 600
-    
+
     # Group assignment
     group = np.random.choice(["Advantaged", "Marginalized"], size=n, p=[0.6, 0.4])
-    
+
     # Simulate event times with differential hazards
     time = []
     event = []
-    
+
     for g in group:
         if g == "Advantaged":
             # Lower mortality, higher transplant rate
@@ -1270,11 +1260,11 @@ if __name__ == "__main__":
             t_transplant = np.random.exponential(scale=300)
             t_death = np.random.exponential(scale=250)
             t_censor = np.random.uniform(0, 600)
-        
+
         # Observed time is minimum
         obs_time = min(t_transplant, t_death, t_censor)
         time.append(obs_time)
-        
+
         # Event type
         if obs_time == t_transplant:
             event.append(1)  # Transplantation
@@ -1282,7 +1272,7 @@ if __name__ == "__main__":
             event.append(2)  # Death
         else:
             event.append(0)  # Censored
-    
+
     # Create competing risk data object
     cr_data = CompetingRiskData(
         time=np.array(time),
@@ -1291,19 +1281,19 @@ if __name__ == "__main__":
         event_names={0: "Censored", 1: "Transplantation", 2: "Death"},
         time_unit="days"
     )
-    
+
     # Perform competing risks analysis
     cr_analysis = CompetingRisksAnalysis(data=cr_data)
     results = cr_analysis.fit()
-    
+
     # Display equity report
     print(results.equity_report)
-    
+
     # Plot cumulative incidence
     fig = cr_analysis.plot_cumulative_incidence()
     plt.savefig("/mnt/user-data/outputs/competing_risks_cif.png", dpi=300, bbox_inches='tight')
     plt.close()
-    
+
     logger.info("Competing risks analysis completed successfully")
 ```
 
@@ -1348,7 +1338,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class RSFResults:
     """Container for random survival forest results."""
@@ -1358,16 +1347,15 @@ class RSFResults:
     calibration_metrics: Dict[str, Any]
     fairness_report: str
 
-
 class FairRandomSurvivalForest:
     """
     Random survival forest with comprehensive fairness evaluation.
-    
+
     This class implements RSF with stratified sampling, subgroup performance
     evaluation, and calibration analysis to ensure equitable predictions
     across diverse patient populations.
     """
-    
+
     def __init__(
         self,
         n_estimators: int = 100,
@@ -1378,7 +1366,7 @@ class FairRandomSurvivalForest:
     ) -> None:
         """
         Initialize fairness-aware random survival forest.
-        
+
         Args:
             n_estimators: Number of trees in the forest
             min_samples_split: Minimum samples required to split
@@ -1396,7 +1384,7 @@ class FairRandomSurvivalForest:
         )
         self.fitted = False
         self.feature_names: List[str] = []
-        
+
     def fit(
         self,
         X: pd.DataFrame,
@@ -1405,34 +1393,34 @@ class FairRandomSurvivalForest:
     ) -> 'FairRandomSurvivalForest':
         """
         Fit random survival forest with stratified sampling by protected attribute.
-        
+
         Args:
             X: Feature matrix
             y: Structured array with 'event' and 'time' fields
             protected_attribute: Optional array of protected group labels
-            
+
         Returns:
             Self for method chaining
         """
         self.feature_names = list(X.columns)
-        
+
         # Convert to structured array if needed
         if not isinstance(y, np.ndarray) or y.dtype.names is None:
             raise ValueError("y must be structured array with 'event' and 'time' fields")
-        
+
         try:
             self.model.fit(X, y)
             self.fitted = True
-            
+
             logger.info("Random survival forest fitted successfully")
             logger.info(f"Out-of-bag score: {self.model.oob_score_:.4f}")
-            
+
             return self
-            
+
         except Exception as e:
             logger.error(f"Error fitting random survival forest: {str(e)}")
             raise
-    
+
     def predict_survival_function(
         self,
         X: pd.DataFrame,
@@ -1440,19 +1428,19 @@ class FairRandomSurvivalForest:
     ) -> Any:
         """
         Predict survival functions for new data.
-        
+
         Args:
             X: Feature matrix for prediction
             return_array: Whether to return as array rather than callable functions
-            
+
         Returns:
             Survival functions for each individual
         """
         if not self.fitted:
             raise ValueError("Model must be fitted before prediction")
-        
+
         return self.model.predict_survival_function(X, return_array=return_array)
-    
+
     def predict_cumulative_hazard_function(
         self,
         X: pd.DataFrame,
@@ -1461,9 +1449,9 @@ class FairRandomSurvivalForest:
         """Predict cumulative hazard functions for new data."""
         if not self.fitted:
             raise ValueError("Model must be fitted before prediction")
-        
+
         return self.model.predict_cumulative_hazard_function(X, return_array=return_array)
-    
+
     def evaluate(
         self,
         X_test: pd.DataFrame,
@@ -1472,18 +1460,18 @@ class FairRandomSurvivalForest:
     ) -> RSFResults:
         """
         Comprehensive evaluation with fairness metrics.
-        
+
         Args:
             X_test: Test features
             y_test: Test outcomes (structured array)
             protected_attribute: Optional protected group labels for fairness evaluation
-            
+
         Returns:
             RSFResults object with performance and fairness metrics
         """
         if not self.fitted:
             raise ValueError("Model must be fitted before evaluation")
-        
+
         # Overall concordance
         risk_scores = self.model.predict(X_test)
         c_index_overall = concordance_index_censored(
@@ -1491,40 +1479,40 @@ class FairRandomSurvivalForest:
             y_test['time'],
             risk_scores
         )[0]
-        
+
         logger.info(f"Overall concordance index: {c_index_overall:.4f}")
-        
+
         # Concordance by group
         c_index_by_group = {}
         if protected_attribute is not None:
             unique_groups = np.unique(protected_attribute)
-            
+
             for group in unique_groups:
                 group_mask = protected_attribute == group
-                
+
                 if group_mask.sum() > 0:
                     group_c_index = concordance_index_censored(
                         y_test['event'][group_mask],
                         y_test['time'][group_mask],
                         risk_scores[group_mask]
                     )[0]
-                    
+
                     c_index_by_group[str(group)] = group_c_index
                     logger.info(f"Group {group} concordance: {group_c_index:.4f}")
-        
+
         # Feature importance
         feature_importance_df = pd.DataFrame({
             'feature': self.feature_names,
             'importance': self.model.feature_importances_
         }).sort_values('importance', ascending=False)
-        
+
         # Calibration metrics (simplified)
         calibration_metrics = self._evaluate_calibration(
             X_test,
             y_test,
             protected_attribute
         )
-        
+
         # Generate fairness report
         fairness_report = self._generate_fairness_report(
             c_index_overall,
@@ -1532,7 +1520,7 @@ class FairRandomSurvivalForest:
             feature_importance_df,
             calibration_metrics
         )
-        
+
         return RSFResults(
             concordance_overall=c_index_overall,
             concordance_by_group=c_index_by_group,
@@ -1540,7 +1528,7 @@ class FairRandomSurvivalForest:
             calibration_metrics=calibration_metrics,
             fairness_report=fairness_report
         )
-    
+
     def _evaluate_calibration(
         self,
         X_test: pd.DataFrame,
@@ -1555,9 +1543,9 @@ class FairRandomSurvivalForest:
             "overall": "Not yet implemented",
             "by_group": {}
         }
-        
+
         return calibration
-    
+
     def _generate_fairness_report(
         self,
         c_index_overall: float,
@@ -1570,27 +1558,27 @@ class FairRandomSurvivalForest:
         lines.append("RANDOM SURVIVAL FOREST - FAIRNESS EVALUATION REPORT")
         lines.append("=" * 80)
         lines.append("")
-        
+
         lines.append("MODEL PERFORMANCE:")
         lines.append(f"  Overall Concordance Index: {c_index_overall:.4f}")
         lines.append("")
-        
+
         if c_index_by_group:
             lines.append("  Performance by Group:")
             for group, c_index in c_index_by_group.items():
                 lines.append(f"    {group}: {c_index:.4f}")
-            
+
             # Calculate disparity
             c_values = list(c_index_by_group.values())
             max_disparity = max(c_values) - min(c_values)
             lines.append(f"  Maximum performance disparity: {max_disparity:.4f}")
             lines.append("")
-        
+
         lines.append("TOP 10 IMPORTANT FEATURES:")
         for idx, row in feature_importance.head(10).iterrows():
             lines.append(f"  {row['feature']}: {row['importance']:.4f}")
         lines.append("")
-        
+
         lines.append("FAIRNESS CONSIDERATIONS:")
         lines.append("  1. PERFORMANCE PARITY:")
         lines.append("     - Evaluate whether concordance differs significantly across groups")
@@ -1612,13 +1600,13 @@ class FairRandomSurvivalForest:
         lines.append("     - Random forests handle missing data through surrogate splits")
         lines.append("     - If missingness differs by demographics, this may introduce bias")
         lines.append("")
-        
+
         lines.append("=" * 80)
         lines.append("END OF FAIRNESS REPORT")
         lines.append("=" * 80)
-        
+
         return "\n".join(lines)
-    
+
     def plot_feature_importance(
         self,
         top_n: int = 15,
@@ -1627,14 +1615,14 @@ class FairRandomSurvivalForest:
         """Create feature importance plot."""
         if not self.fitted:
             raise ValueError("Model must be fitted before plotting")
-        
+
         importance_df = pd.DataFrame({
             'feature': self.feature_names,
             'importance': self.model.feature_importances_
         }).sort_values('importance', ascending=False).head(top_n)
-        
+
         fig, ax = plt.subplots(figsize=figsize)
-        
+
         ax.barh(range(len(importance_df)), importance_df['importance'])
         ax.set_yticks(range(len(importance_df)))
         ax.set_yticklabels(importance_df['feature'])
@@ -1642,17 +1630,16 @@ class FairRandomSurvivalForest:
         ax.set_title(f'Top {top_n} Most Important Features', fontsize=14, fontweight='bold')
         ax.invert_yaxis()
         ax.grid(True, alpha=0.3, axis='x')
-        
+
         plt.tight_layout()
         return fig
-
 
 # Example usage
 if __name__ == "__main__":
     # Generate example dataset
     np.random.seed(42)
     n = 800
-    
+
     # Features
     X = pd.DataFrame({
         'age': np.random.normal(60, 15, n),
@@ -1661,11 +1648,11 @@ if __name__ == "__main__":
         'comorbidity_count': np.random.poisson(2, n),
         'treatment': np.random.binomial(1, 0.5, n)
     })
-    
+
     # Protected attribute
     protected_attr = np.random.choice(['Group A', 'Group B'], size=n, p=[0.7, 0.3])
     X['protected_group'] = protected_attr
-    
+
     # Generate survival outcomes
     linear_pred = (
         -0.02 * X['age'] +
@@ -1674,31 +1661,31 @@ if __name__ == "__main__":
         0.3 * X['comorbidity_count'] -
         0.5 * X['treatment']
     )
-    
+
     # Add group effect
     group_effect = np.where(protected_attr == 'Group B', 0.5, 0)
     linear_pred += group_effect
-    
+
     hazard = np.exp(linear_pred)
     time = np.random.exponential(1 / hazard)
     censor_time = np.random.uniform(0, 5, n)
-    
+
     observed_time = np.minimum(time, censor_time)
     event = time <= censor_time
-    
+
     # Create structured array for survival outcome
     y = Surv.from_arrays(event=event, time=observed_time)
-    
+
     # Remove protected attribute from features for modeling
     X_model = X.drop('protected_group', axis=1)
-    
+
     # Train/test split
     X_train, X_test, y_train, y_test, pa_train, pa_test = train_test_split(
         X_model, y, protected_attr,
         test_size=0.2,
         random_state=42
     )
-    
+
     # Fit fairness-aware RSF
     rsf = FairRandomSurvivalForest(
         n_estimators=100,
@@ -1706,20 +1693,20 @@ if __name__ == "__main__":
         min_samples_leaf=10,
         random_state=42
     )
-    
+
     rsf.fit(X_train, y_train, protected_attribute=pa_train)
-    
+
     # Evaluate with fairness metrics
     results = rsf.evaluate(X_test, y_test, protected_attribute=pa_test)
-    
+
     # Display fairness report
     print(results.fairness_report)
-    
+
     # Plot feature importance
     fig = rsf.plot_feature_importance(top_n=10)
     plt.savefig("/mnt/user-data/outputs/rsf_feature_importance.png", dpi=300, bbox_inches='tight')
     plt.close()
-    
+
     logger.info("Random survival forest analysis with fairness evaluation completed")
 ```
 
@@ -1772,7 +1759,6 @@ import json
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class FairnessMetrics:
     """Container for fairness metrics at a given time."""
@@ -1783,7 +1769,6 @@ class FairnessMetrics:
     censoring_rates: Dict[str, float]
     prediction_distributions: Dict[str, Dict[str, float]]
     sample_sizes: Dict[str, int]
-
 
 @dataclass
 class FairnessAlert:
@@ -1797,16 +1782,15 @@ class FairnessAlert:
     description: str
     recommended_actions: List[str]
 
-
 class SurvivalModelMonitor:
     """
     Continuous fairness monitoring for deployed survival models.
-    
+
     This class implements monitoring infrastructure that tracks model performance
     across demographic subgroups, detects fairness degradation, and generates
     alerts when equity concerns emerge.
     """
-    
+
     def __init__(
         self,
         model_name: str,
@@ -1819,7 +1803,7 @@ class SurvivalModelMonitor:
     ) -> None:
         """
         Initialize survival model monitoring system.
-        
+
         Args:
             model_name: Name of the deployed model
             protected_attributes: List of protected attribute names to monitor
@@ -1837,12 +1821,12 @@ class SurvivalModelMonitor:
         self.monitoring_frequency_hours = monitoring_frequency_hours
         self.log_dir = log_dir or Path("/mnt/user-data/outputs/monitoring")
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.metrics_history: List[FairnessMetrics] = []
         self.alerts_history: List[FairnessAlert] = []
-        
+
         logger.info(f"Initialized monitoring for model: {model_name}")
-        
+
     def record_predictions(
         self,
         predictions: np.ndarray,
@@ -1852,7 +1836,7 @@ class SurvivalModelMonitor:
     ) -> None:
         """
         Record model predictions with protected attributes for monitoring.
-        
+
         Args:
             predictions: Model risk scores
             outcomes: Observed survival outcomes
@@ -1861,7 +1845,7 @@ class SurvivalModelMonitor:
         """
         if timestamp is None:
             timestamp = datetime.now()
-        
+
         # Compute fairness metrics for this batch
         metrics = self._compute_fairness_metrics(
             predictions,
@@ -1869,19 +1853,19 @@ class SurvivalModelMonitor:
             protected_attributes,
             timestamp
         )
-        
+
         self.metrics_history.append(metrics)
-        
+
         # Check for alerts
         alerts = self._check_for_alerts(metrics)
         if alerts:
             for alert in alerts:
                 self.alerts_history.append(alert)
                 self._log_alert(alert)
-        
+
         # Save metrics
         self._save_metrics(metrics)
-        
+
     def _compute_fairness_metrics(
         self,
         predictions: np.ndarray,
@@ -1891,26 +1875,26 @@ class SurvivalModelMonitor:
     ) -> FairnessMetrics:
         """Compute comprehensive fairness metrics for current batch."""
         from sksurv.metrics import concordance_index_censored
-        
+
         # Overall performance
         overall_c_index = concordance_index_censored(
             outcomes['event'],
             outcomes['time'],
             predictions
         )[0]
-        
+
         # Performance by group
         group_performance = {}
         censoring_rates = {}
         prediction_distributions = {}
         sample_sizes = {}
-        
+
         for attr in self.protected_attributes:
             unique_groups = protected_attributes[attr].unique()
-            
+
             for group in unique_groups:
                 group_mask = protected_attributes[attr] == group
-                
+
                 if group_mask.sum() >= 10:  # Minimum sample size for reliable metrics
                     # Concordance index
                     group_c_index = concordance_index_censored(
@@ -1918,13 +1902,13 @@ class SurvivalModelMonitor:
                         outcomes['time'][group_mask],
                         predictions[group_mask]
                     )[0]
-                    
+
                     group_performance[f"{attr}_{group}"] = group_c_index
-                    
+
                     # Censoring rate
                     censoring_rate = 1 - np.mean(outcomes['event'][group_mask])
                     censoring_rates[f"{attr}_{group}"] = censoring_rate
-                    
+
                     # Prediction distribution
                     group_preds = predictions[group_mask]
                     prediction_distributions[f"{attr}_{group}"] = {
@@ -1934,16 +1918,16 @@ class SurvivalModelMonitor:
                         "q25": float(np.percentile(group_preds, 25)),
                         "q75": float(np.percentile(group_preds, 75))
                     }
-                    
+
                     # Sample size
                     sample_sizes[f"{attr}_{group}"] = int(group_mask.sum())
-        
+
         # Compute performance disparity
         if group_performance:
             performance_disparity = max(group_performance.values()) - min(group_performance.values())
         else:
             performance_disparity = 0.0
-        
+
         return FairnessMetrics(
             timestamp=timestamp,
             overall_performance=overall_c_index,
@@ -1953,11 +1937,11 @@ class SurvivalModelMonitor:
             prediction_distributions=prediction_distributions,
             sample_sizes=sample_sizes
         )
-    
+
     def _check_for_alerts(self, current_metrics: FairnessMetrics) -> List[FairnessAlert]:
         """Check if current metrics trigger any fairness alerts."""
         alerts = []
-        
+
         # Alert 1: Overall performance below threshold
         if current_metrics.overall_performance < self.performance_threshold:
             alert = FairnessAlert(
@@ -1976,13 +1960,13 @@ class SurvivalModelMonitor:
                 ]
             )
             alerts.append(alert)
-        
+
         # Alert 2: Performance disparity exceeds threshold
         if current_metrics.performance_disparity > self.disparity_threshold:
             # Identify which groups are affected
             min_perf_group = min(current_metrics.group_performance.items(), key=lambda x: x[1])
             max_perf_group = max(current_metrics.group_performance.items(), key=lambda x: x[1])
-            
+
             alert = FairnessAlert(
                 alert_id=f"alert_{datetime.now().strftime('%Y%m%d_%H%M%S')}_disparity",
                 timestamp=current_metrics.timestamp,
@@ -2002,15 +1986,15 @@ class SurvivalModelMonitor:
                 ]
             )
             alerts.append(alert)
-        
+
         # Alert 3: Differential censoring rates
         if current_metrics.censoring_rates:
             censor_rates = list(current_metrics.censoring_rates.values())
             censor_disparity = max(censor_rates) - min(censor_rates)
-            
+
             if censor_disparity > 0.15:  # 15% difference in censoring rates
                 max_censor_group = max(current_metrics.censoring_rates.items(), key=lambda x: x[1])
-                
+
                 alert = FairnessAlert(
                     alert_id=f"alert_{datetime.now().strftime('%Y%m%d_%H%M%S')}_censoring",
                     timestamp=current_metrics.timestamp,
@@ -2027,7 +2011,7 @@ class SurvivalModelMonitor:
                     ]
                 )
                 alerts.append(alert)
-        
+
         # Alert 4: Small sample sizes for certain groups
         for group, size in current_metrics.sample_sizes.items():
             if size < 30:
@@ -2046,9 +2030,9 @@ class SurvivalModelMonitor:
                     ]
                 )
                 alerts.append(alert)
-        
+
         return alerts
-    
+
     def _log_alert(self, alert: FairnessAlert) -> None:
         """Log alert to file and console."""
         alert_msg = f"\n{'='*80}\nFAIRNESS ALERT: {alert.severity.upper()}\n{'='*80}\n"
@@ -2062,14 +2046,14 @@ class SurvivalModelMonitor:
         for action in alert.recommended_actions:
             alert_msg += f"  - {action}\n"
         alert_msg += f"{'='*80}\n"
-        
+
         logger.warning(alert_msg)
-        
+
         # Save to file
         alert_file = self.log_dir / f"alert_{alert.alert_id}.txt"
         with open(alert_file, 'w') as f:
             f.write(alert_msg)
-    
+
     def _save_metrics(self, metrics: FairnessMetrics) -> None:
         """Save metrics to JSON file for historical tracking."""
         metrics_dict = {
@@ -2081,11 +2065,11 @@ class SurvivalModelMonitor:
             "prediction_distributions": metrics.prediction_distributions,
             "sample_sizes": metrics.sample_sizes
         }
-        
+
         metrics_file = self.log_dir / f"metrics_{metrics.timestamp.strftime('%Y%m%d_%H%M%S')}.json"
         with open(metrics_file, 'w') as f:
             json.dump(metrics_dict, f, indent=2)
-    
+
     def generate_monitoring_report(
         self,
         lookback_days: int = 30
@@ -2094,17 +2078,17 @@ class SurvivalModelMonitor:
         cutoff_date = datetime.now() - timedelta(days=lookback_days)
         recent_metrics = [m for m in self.metrics_history if m.timestamp >= cutoff_date]
         recent_alerts = [a for a in self.alerts_history if a.timestamp >= cutoff_date]
-        
+
         if not recent_metrics:
             return "No monitoring data available for specified period."
-        
+
         lines = ["=" * 80]
         lines.append(f"FAIRNESS MONITORING REPORT - {self.model_name}")
         lines.append(f"Period: Last {lookback_days} days")
         lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         lines.append("=" * 80)
         lines.append("")
-        
+
         # Overall performance trend
         overall_perfs = [m.overall_performance for m in recent_metrics]
         lines.append("OVERALL PERFORMANCE TREND:")
@@ -2114,7 +2098,7 @@ class SurvivalModelMonitor:
         lines.append(f"  Max: {np.max(overall_perfs):.4f}")
         lines.append(f"  Std: {np.std(overall_perfs):.4f}")
         lines.append("")
-        
+
         # Performance disparity trend
         disparities = [m.performance_disparity for m in recent_metrics]
         lines.append("PERFORMANCE DISPARITY TREND:")
@@ -2122,23 +2106,23 @@ class SurvivalModelMonitor:
         lines.append(f"  Mean: {np.mean(disparities):.4f}")
         lines.append(f"  Max: {np.max(disparities):.4f}")
         lines.append("")
-        
+
         # Alerts summary
         lines.append(f"ALERTS GENERATED: {len(recent_alerts)}")
         if recent_alerts:
             severity_counts = {}
             for alert in recent_alerts:
                 severity_counts[alert.severity] = severity_counts.get(alert.severity, 0) + 1
-            
+
             for severity, count in sorted(severity_counts.items()):
                 lines.append(f"  {severity}: {count}")
             lines.append("")
-            
+
             lines.append("RECENT ALERTS:")
             for alert in recent_alerts[-5:]:  # Show last 5 alerts
                 lines.append(f"  - [{alert.severity}] {alert.description[:100]}...")
         lines.append("")
-        
+
         # Group-specific performance
         if recent_metrics[-1].group_performance:
             lines.append("CURRENT GROUP-SPECIFIC PERFORMANCE:")
@@ -2146,7 +2130,7 @@ class SurvivalModelMonitor:
                 sample_size = recent_metrics[-1].sample_sizes.get(group, 0)
                 lines.append(f"  {group}: {perf:.4f} (n={sample_size})")
         lines.append("")
-        
+
         lines.append("RECOMMENDATIONS:")
         if np.max(disparities) > self.disparity_threshold:
             lines.append("  [WARN]  Performance disparity exceeds threshold - investigate causes")
@@ -2157,18 +2141,17 @@ class SurvivalModelMonitor:
         if not recent_alerts:
             lines.append("  [OK] No fairness alerts in monitoring period")
         lines.append("")
-        
+
         lines.append("=" * 80)
         lines.append("END OF MONITORING REPORT")
         lines.append("=" * 80)
-        
-        return "\n".join(lines)
 
+        return "\n".join(lines)
 
 # Example usage
 if __name__ == "__main__":
     from sksurv.util import Surv
-    
+
     # Initialize monitoring system
     monitor = SurvivalModelMonitor(
         model_name="cardio_risk_prediction_v1",
@@ -2177,45 +2160,45 @@ if __name__ == "__main__":
         disparity_threshold=0.05,
         alert_window_days=7
     )
-    
+
     # Simulate monitoring over time
     np.random.seed(42)
-    
+
     for day in range(14):
         # Simulate batch of predictions
         n_batch = 200
-        
+
         predictions = np.random.uniform(0, 1, n_batch)
-        
+
         time = np.random.exponential(365, n_batch)
         event = np.random.binomial(1, 0.6, n_batch)
         outcomes = Surv.from_arrays(event=event, time=time)
-        
+
         protected_attrs = pd.DataFrame({
             'race': np.random.choice(['White', 'Black', 'Hispanic'], n_batch, p=[0.6, 0.25, 0.15]),
             'insurance_type': np.random.choice(['Private', 'Medicare', 'Medicaid'], n_batch, p=[0.5, 0.3, 0.2])
         })
-        
+
         # Introduce disparity on day 10
         if day >= 10:
             # Degrade performance for certain groups
             marginalized = protected_attrs['race'] == 'Black'
             predictions[marginalized] += np.random.normal(0, 0.2, marginalized.sum())
             predictions = np.clip(predictions, 0, 1)
-        
+
         timestamp = datetime.now() - timedelta(days=14-day)
-        
+
         monitor.record_predictions(
             predictions=predictions,
             outcomes=outcomes,
             protected_attributes=protected_attrs,
             timestamp=timestamp
         )
-    
+
     # Generate monitoring report
     report = monitor.generate_monitoring_report(lookback_days=14)
     print(report)
-    
+
     logger.info("Fairness monitoring simulation completed")
 ```
 
