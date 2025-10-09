@@ -3,29 +3,109 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
   <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+  
+  <!-- SEO -->
   {% seo %}
+  
+  <!-- MathJax Configuration - MUST come before MathJax loads -->
+  {% if page.mathjax or site.mathjax %}
+    {% include mathjax.html %}
+  {% endif %}
 </head>
 <body>
+  <!-- Navigation -->
   <nav>
     <div class="container">
-      <a href="{{ '/' | relative_url }}">Home</a>
-      <a href="{{ '/chapters' | relative_url }}">Chapters</a>
-      <a href="https://github.com/sanjaybasu/healthcare-ai-equity">GitHub</a>
+      <a href="{{ '/' | relative_url }}" class="nav-home">
+        <strong>{{ site.title }}</strong>
+      </a>
+      <div class="nav-links">
+        <a href="{{ '/' | relative_url }}">Home</a>
+        <a href="{{ '/chapters' | relative_url }}">Chapters</a>
+        <a href="https://github.com/sanjaybasu/healthcare-ai-equity" target="_blank">GitHub</a>
+      </div>
     </div>
   </nav>
   
+  <!-- Main Content -->
   <main class="container">
-    {{ content }}
+    {% if page.title and page.chapter_number %}
+    <header class="page-header">
+      <p class="chapter-label">Chapter {{ page.chapter_number }}</p>
+      <h1 class="page-title">{{ page.title }}</h1>
+      {% if page.description %}
+      <p class="page-description">{{ page.description }}</p>
+      {% endif %}
+    </header>
+    {% endif %}
+    
+    <article class="content">
+      {{ content }}
+    </article>
+    
+    {% if page.chapter_number %}
+    <!-- Chapter Navigation -->
+    <nav class="chapter-nav">
+      {% if page.chapter_number > 1 %}
+      <a href="{{ '/chapters/chapter_' | append: page.chapter_number | minus: 1 | append: '_' | relative_url }}" class="prev-chapter">
+        ← Previous Chapter
+      </a>
+      {% endif %}
+      
+      <a href="{{ '/chapters' | relative_url }}" class="all-chapters">
+        All Chapters
+      </a>
+      
+      {% if page.chapter_number < 30 %}
+      <a href="{{ '/chapters/chapter_' | append: page.chapter_number | plus: 1 | append: '_' | relative_url }}" class="next-chapter">
+        Next Chapter →
+      </a>
+      {% endif %}
+    </nav>
+    {% endif %}
   </main>
   
+  <!-- Footer -->
   <footer>
-    <p>&copy; 2025 {{ site.author }}. Licensed under MIT.</p>
+    <div class="container">
+      <p>&copy; 2025 {{ site.author }}. Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
+      <p>
+        <a href="https://github.com/sanjaybasu/healthcare-ai-equity/issues" target="_blank">Report an Issue</a> | 
+        <a href="https://github.com/sanjaybasu/healthcare-ai-equity/blob/main/CONTRIBUTING.md" target="_blank">Contribute</a>
+      </p>
+    </div>
   </footer>
   
+  <!-- Syntax Highlighting -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <script>hljs.highlightAll();</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/sql.min.js"></script>
+  <script>
+    // Initialize syntax highlighting
+    hljs.highlightAll();
+    
+    // Add copy button to code blocks
+    document.querySelectorAll('pre code').forEach((block) => {
+      const button = document.createElement('button');
+      button.className = 'copy-code-button';
+      button.textContent = 'Copy';
+      button.addEventListener('click', () => {
+        navigator.clipboard.writeText(block.textContent).then(() => {
+          button.textContent = 'Copied!';
+          setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+        });
+      });
+      block.parentNode.insertBefore(button, block);
+    });
+  </script>
 </body>
 </html>
