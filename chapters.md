@@ -59,7 +59,7 @@ title: Chapters
 
 **[Chapter 22: Clinical Decision Support Systems](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-22-clinical-decision-support/)**  
 
-**[Chapter 23: Precision Medicine and Genomic AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
+**[Chapter 23: Treatment Recommendation and Clinical Decision Support](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
 
 **[Chapter 24: Population Health Management and Screening](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-24-population-health-screening/)**  
 
