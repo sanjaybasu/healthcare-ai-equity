@@ -1103,13 +1103,13 @@ class InternalValidator:
         if 'representation_warnings' in validation_split.split_metadata:
             lines.append("REPRESENTATION WARNINGS:")
             for warning in validation_split.split_metadata['representation_warnings']:
-                lines.append(f"  âš  {warning}")
+                lines.append(f"  [WARN]  {warning}")
             lines.append("")
         
         if 'demographic_drift_warnings' in validation_split.split_metadata:
             lines.append("DEMOGRAPHIC DRIFT WARNINGS:")
             for warning in validation_split.split_metadata['demographic_drift_warnings']:
-                lines.append(f"  âš  {warning}")
+                lines.append(f"  [WARN]  {warning}")
             lines.append("")
         
         lines.append("=" * 80)
@@ -2236,7 +2236,7 @@ class MultiSiteExternalValidator:
         logger.info(
             f"Meta-analysis results: pooled {metric} = {pooled_estimate:.4f} "
             f"(95% CI: {ci_lower:.4f}-{ci_upper:.4f}), "
-            f"IÂ² = {i_squared:.1%}"
+            f"I^2 = {i_squared:.1%}"
         )
         
         return results
@@ -2421,7 +2421,7 @@ class MultiSiteExternalValidator:
                 f"  95% Prediction interval: ({meta_results['prediction_interval_lower']:.4f}, "
                 f"{meta_results['prediction_interval_upper']:.4f})"
             )
-            lines.append(f"  Heterogeneity (IÂ²): {meta_results['i_squared']:.1%}")
+            lines.append(f"  Heterogeneity (I^2): {meta_results['i_squared']:.1%}")
             lines.append(f"  Cochran's Q p-value: {meta_results['q_pvalue']:.4f}")
             lines.append("")
         
@@ -2466,18 +2466,18 @@ class MultiSiteExternalValidator:
         lines.append("INTERPRETATION:")
         
         if comparison and abs(comparison['degradation_percent']) < 5:
-            lines.append("  âœ“ Model performance generalizes well to external sites")
+            lines.append("  [OK] Model performance generalizes well to external sites")
         elif comparison and abs(comparison['degradation_percent']) < 10:
-            lines.append("  âš  Model shows modest performance degradation on external data")
+            lines.append("  [WARN]  Model shows modest performance degradation on external data")
         else:
-            lines.append("  âœ— Model shows substantial performance degradation on external data")
+            lines.append("  [FAIL] Model shows substantial performance degradation on external data")
         
         if meta_results and meta_results['i_squared'] < 0.25:
-            lines.append("  âœ“ Performance is consistent across sites (low heterogeneity)")
+            lines.append("  [OK] Performance is consistent across sites (low heterogeneity)")
         elif meta_results and meta_results['i_squared'] < 0.50:
-            lines.append("  âš  Performance shows moderate variation across sites")
+            lines.append("  [WARN]  Performance shows moderate variation across sites")
         else:
-            lines.append("  âœ— Performance varies substantially across sites (high heterogeneity)")
+            lines.append("  [FAIL] Performance varies substantially across sites (high heterogeneity)")
         
         lines.append("")
         lines.append("=" * 80)
@@ -2519,7 +2519,7 @@ Authors, A. D. (2019).
 Reporting guidelines for clinical trials evaluating artificial intelligence interventions are needed.
 *Nature Medicine*, 25(10), 1467-1468.
 
-Balduzzi, S., RÃ¼cker, G., & Schwarzer, G. (2019).
+Balduzzi, S., Rücker, G., & Schwarzer, G. (2019).
 How to perform a meta-analysis with R: a practical tutorial.
 *Evidence-Based Mental Health*, 22(4), 153-160.
 
@@ -2699,7 +2699,7 @@ Vickers, A. J., & Elkin, E. B. (2006).
 Decision curve analysis: a novel method for evaluating prediction models.
 *Medical Decision Making*, 26(6), 565-574.
 
-Vollmer, S., Mateen, B. A., Bohner, G., KirÃ¡ly, F. J., Ghani, R., Jonsson, P., ... & Hemingway, H. (2020).
+Vollmer, S., Mateen, B. A., Bohner, G., Király, F. J., Ghani, R., Jonsson, P., ... & Hemingway, H. (2020).
 Machine learning and artificial intelligence research for patient benefit: 20 critical questions on transparency, replicability, ethics, and effectiveness.
 *BMJ*, 368, l6927.
 

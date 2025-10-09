@@ -734,7 +734,7 @@ This implementation provides matrix operations with built-in equity checking. Th
 
 Eigendecomposition reveals the intrinsic structure of matrices by finding directions of maximal variation and the scaling factors along those directions. In healthcare data analysis, eigendecomposition underlies principal components analysis, which finds low-dimensional representations that capture most of the variation in high-dimensional data. However, PCA and related methods can introduce subtle biases when different patient populations have different correlation structures, as the principal components may primarily capture variation patterns from the dominant population while poorly representing patterns specific to minority populations.
 
-The mathematical foundation is elegant. Given a covariance matrix Î£, eigendecomposition finds vectors v and scalars Î» such that Î£v = Î»v. The eigenvector v defines a direction in feature space, and the eigenvalue Î» quantifies the amount of variance along that direction. The largest eigenvalue corresponds to the direction of maximum variance, the second largest to the direction of maximum variance orthogonal to the first, and so on. Principal components analysis uses these eigenvectors as a new coordinate system in which to represent the data, with the hope that the first few principal components capture most of the meaningful variation.
+The mathematical foundation is elegant. Given a covariance matrix Σ, eigendecomposition finds vectors v and scalars λ such that Σv = λv. The eigenvector v defines a direction in feature space, and the eigenvalue λ quantifies the amount of variance along that direction. The largest eigenvalue corresponds to the direction of maximum variance, the second largest to the direction of maximum variance orthogonal to the first, and so on. Principal components analysis uses these eigenvectors as a new coordinate system in which to represent the data, with the hope that the first few principal components capture most of the meaningful variation.
 
 The health equity concern arises when we apply PCA to data from heterogeneous populations. The principal components that best represent the dominant population may not best represent minority populations, especially if the minority populations have different correlation structures. The result is that dimensionality reduction may work well for some patients while losing important information for others. This differential information loss can then propagate through downstream modeling, leading to algorithms that perform better for well-represented populations.
 
@@ -972,7 +972,7 @@ This equity-aware PCA implementation explicitly tracks reconstruction quality ac
 
 ### 2.2.4 Singular Value Decomposition and Matrix Factorization
 
-Singular value decomposition provides an alternative perspective on matrix structure that generalizes eigendecomposition to non-square matrices and connects naturally to many machine learning methods including collaborative filtering, latent semantic analysis, and matrix completion. SVD factorizes a data matrix X into three matrices: X = UÎ£V^T, where U contains left singular vectors, Î£ is a diagonal matrix of singular values, and V contains right singular vectors. This decomposition reveals latent structure in data and enables low-rank approximations that can denoise data or reduce dimensionality.
+Singular value decomposition provides an alternative perspective on matrix structure that generalizes eigendecomposition to non-square matrices and connects naturally to many machine learning methods including collaborative filtering, latent semantic analysis, and matrix completion. SVD factorizes a data matrix X into three matrices: X = UΣV^T, where U contains left singular vectors, Σ is a diagonal matrix of singular values, and V contains right singular vectors. This decomposition reveals latent structure in data and enables low-rank approximations that can denoise data or reduce dimensionality.
 
 In healthcare applications, SVD and related matrix factorization methods are used for tasks including identifying patient subgroups based on similar clinical patterns, discovering latent disease phenotypes from symptom and biomarker data, and imputing missing values in partially observed clinical matrices. However, these methods face equity challenges similar to those we saw with PCA. The latent factors discovered by matrix factorization may primarily reflect patterns in well-represented populations while missing important patterns specific to minority populations. Moreover, when using matrix factorization for missing data imputation, the imputed values will reflect the patterns learned from observed data, which may not be appropriate if missingness patterns differ systematically across groups.
 
@@ -1218,7 +1218,7 @@ class EquityAwareMatrixFactorization:
         """
         Fit non-negative matrix factorization with multiplicative updates.
         
-        Factorizes X â‰ˆ WH where W is (n_samples, n_components) and
+        Factorizes X ≈ WH where W is (n_samples, n_components) and
         H is (n_components, n_features).
         
         Args:
@@ -1610,7 +1610,7 @@ This probability modeling implementation explicitly checks whether distributions
 
 Bayes' theorem provides the mathematical foundation for updating beliefs based on evidence, formally stating that the posterior probability of a hypothesis given observed data is proportional to the likelihood of the data given the hypothesis times the prior probability of the hypothesis. In healthcare, Bayesian reasoning appears in diagnostic test interpretation, where we update our assessment of disease probability based on test results, and in clinical prediction models that combine prior information with patient-specific features.
 
-The mathematical statement is elegant: P(disease | test+) = P(test+ | disease) Ã— P(disease) / P(test+), where P(disease | test+) is the posterior probability of disease given a positive test, P(test+ | disease) is the test sensitivity, P(disease) is the prior probability or prevalence, and P(test+) is the marginal probability of a positive test. However, applying this formula in practice requires careful attention to where the prior probabilities come from and whether they are appropriate for the specific patient.
+The mathematical statement is elegant: P(disease | test+) = P(test+ | disease) * P(disease) / P(test+), where P(disease | test+) is the posterior probability of disease given a positive test, P(test+ | disease) is the test sensitivity, P(disease) is the prior probability or prevalence, and P(test+) is the marginal probability of a positive test. However, applying this formula in practice requires careful attention to where the prior probabilities come from and whether they are appropriate for the specific patient.
 
 The health equity challenge is that prior probabilities often reflect historical patterns of disease diagnosis that may be systematically biased. If a condition has been historically underdiagnosed in certain populations due to lack of access to care, implicit bias in clinical evaluation, or other systemic factors, then prevalence estimates derived from diagnostic databases will underestimate true disease burden in those populations. Using these biased priors in Bayesian reasoning will then lead to systematic underdiagnosis that perpetuates the original inequity.
 
@@ -2679,11 +2679,11 @@ The chapters that follow build on these mathematical foundations to develop mach
 
 ## Bibliography
 
-Agarwal, A., Beygelzimer, A., DudÃ­k, M., Langford, J., & Wallach, H. (2018). A reductions approach to fair classification. *Proceedings of the 35th International Conference on Machine Learning*, 80, 60-69. http://proceedings.mlr.press/v80/agarwal18a.html
+Agarwal, A., Beygelzimer, A., Dudík, M., Langford, J., & Wallach, H. (2018). A reductions approach to fair classification. *Proceedings of the 35th International Conference on Machine Learning*, 80, 60-69. http://proceedings.mlr.press/v80/agarwal18a.html
 
 Barocas, S., Hardt, M., & Narayanan, A. (2019). *Fairness and Machine Learning: Limitations and Opportunities*. MIT Press. http://www.fairmlbook.org
 
-Barredo Arrieta, A., DÃ­az-RodrÃ­guez, N., Del Ser, J., Bennetot, A., Tabik, S., Barbado, A., Garcia, S., Gil-Lopez, S., Molina, D., Benjamins, R., Chatila, R., & Herrera, F. (2020). Explainable Artificial Intelligence (XAI): Concepts, taxonomies, opportunities and challenges toward responsible AI. *Information Fusion*, 58, 82-115. https://doi.org/10.1016/j.inffus.2019.12.012
+Barredo Arrieta, A., Díaz-Rodríguez, N., Del Ser, J., Bennetot, A., Tabik, S., Barbado, A., Garcia, S., Gil-Lopez, S., Molina, D., Benjamins, R., Chatila, R., & Herrera, F. (2020). Explainable Artificial Intelligence (XAI): Concepts, taxonomies, opportunities and challenges toward responsible AI. *Information Fusion*, 58, 82-115. https://doi.org/10.1016/j.inffus.2019.12.012
 
 Bayesian, M. A., Ghorbani, A., & Zou, J. (2019). Data Shapley: Equitable valuation of data for machine learning. *Proceedings of the 36th International Conference on Machine Learning*, 97, 2242-2251. http://proceedings.mlr.press/v97/ghorbani19c.html
 
@@ -2727,7 +2727,7 @@ Hardt, M., Price, E., & Srebro, N. (2016). Equality of opportunity in supervised
 
 Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning: Data Mining, Inference, and Prediction* (2nd ed.). Springer.
 
-Holstein, K., Wortman Vaughan, J., DaumÃ© III, H., DudÃ­k, M., & Wallach, H. (2019). Improving fairness in machine learning systems: What do industry practitioners need? *Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems*, 1-16. https://doi.org/10.1145/3290605.3300830
+Holstein, K., Wortman Vaughan, J., Daumé III, H., Dudík, M., & Wallach, H. (2019). Improving fairness in machine learning systems: What do industry practitioners need? *Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems*, 1-16. https://doi.org/10.1145/3290605.3300830
 
 Huang, K., Altosaar, J., & Ranganath, R. (2020). ClinicalBERT: Modeling clinical notes and predicting hospital readmission. *arXiv preprint arXiv:1904.05342*. https://arxiv.org/abs/1904.05342
 

@@ -1344,7 +1344,7 @@ Bagdasaryan, E., Poursaeed, O., & Shmatikov, V. (2019). Differential privacy has
 
 Bonawitz, K., Ivanov, V., Kreuter, B., Marcedone, A., McMahan, H. B., Patel, S., ... & Seth, K. (2017). Practical secure aggregation for privacy-preserving machine learning. *Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security*, 1175-1191.
 
-Caldas, S., Duddu, S. M. K., Wu, P., Li, T., KoneÄnÃ½, J., McMahan, H. B., ... & Talwalkar, A. (2018). LEAF: A benchmark for federated settings. *arXiv preprint arXiv:1812.01097*.
+Caldas, S., Duddu, S. M. K., Wu, P., Li, T., Konečný, J., McMahan, H. B., ... & Talwalkar, A. (2018). LEAF: A benchmark for federated settings. *arXiv preprint arXiv:1812.01097*.
 
 Chen, I. Y., Pierson, E., Rose, S., Joshi, S., Ferryman, K., & Ghassemi, M. (2021). Ethical machine learning in healthcare. *Annual Review of Biomedical Data Science*, 4, 123-144.
 
@@ -1364,11 +1364,11 @@ Hard, A., Rao, K., Mathews, R., Ramaswamy, S., Beaufays, F., Augenstein, S., ...
 
 Hsieh, K., Phanishayee, A., Mutlu, O., & Gibbons, P. (2020). The non-IID data quagmire of decentralized machine learning. *International Conference on Machine Learning*, 4387-4398.
 
-Kaissis, G. A., Makowski, M. R., RÃ¼ckert, D., & Braren, R. F. (2020). Secure, privacy-preserving and federated machine learning in medical imaging. *Nature Machine Intelligence*, 2(6), 305-311.
+Kaissis, G. A., Makowski, M. R., Rückert, D., & Braren, R. F. (2020). Secure, privacy-preserving and federated machine learning in medical imaging. *Nature Machine Intelligence*, 2(6), 305-311.
 
 Kairouz, P., McMahan, H. B., Avent, B., Bellet, A., Bennis, M., Bhagoji, A. N., ... & Zhao, S. (2019). Advances and open problems in federated learning. *Foundations and Trends in Machine Learning*, 14(1-2), 1-210.
 
-KoneÄnÃ½, J., McMahan, H. B., Yu, F. X., RichtÃ¡rik, P., Suresh, A. T., & Bacon, D. (2016). Federated learning: Strategies for improving communication efficiency. *arXiv preprint arXiv:1610.05492*.
+Konečný, J., McMahan, H. B., Yu, F. X., Richtárik, P., Suresh, A. T., & Bacon, D. (2016). Federated learning: Strategies for improving communication efficiency. *arXiv preprint arXiv:1610.05492*.
 
 Kulkarni, V., Kulkarni, M., & Pant, A. (2020). Survey of personalization techniques for federated learning. *2020 Fourth World Conference on Smart Trends in Systems, Security and Sustainability (WorldS4)*, 794-797.
 
@@ -1388,7 +1388,7 @@ Mohri, M., Sivek, G., & Suresh, A. T. (2019). Agnostic federated learning. *Inte
 
 Rajkomar, A., Hardt, M., Howell, M. D., Corrado, G., & Chin, M. H. (2018). Ensuring fairness in machine learning to advance health equity. *Annals of Internal Medicine*, 169(12), 866-872.
 
-Rieke, N., Hancox, J., Li, W., MilletarÃ¬, F., Roth, H. R., Albarqouni, S., ... & Cardoso, M. J. (2020). The future of digital health with federated learning. *NPJ Digital Medicine*, 3(1), 1-7.
+Rieke, N., Hancox, J., Li, W., Milletari, F., Roth, H. R., Albarqouni, S., ... & Cardoso, M. J. (2020). The future of digital health with federated learning. *NPJ Digital Medicine*, 3(1), 1-7.
 
 Roth, H. R., Chang, K., Singh, P., Neumark, N., Li, W., Gupta, V., ... & Xu, D. (2020). Federated learning for breast density classification: A real-world implementation. *Domain Adaptation and Representation Transfer, and Distributed and Collaborative Learning*, 181-191.
 
@@ -1400,7 +1400,7 @@ Tan, A. Z., Yu, H., Cui, L., & Yang, Q. (2022). Towards personalized federated l
 
 Truex, S., Baracaldo, N., Anwar, A., Steinke, T., Ludwig, H., Zhang, R., & Zhou, Y. (2019). A hybrid approach to privacy-preserving federated learning. *Proceedings of the 12th ACM Workshop on Artificial Intelligence and Security*, 1-11.
 
-Vyas, D. A., Eisenstein, L. G., & Jones, D. S. (2020). Hidden in plain sightâ€”reconsidering the use of race correction in clinical algorithms. *New England Journal of Medicine*, 383(9), 874-882.
+Vyas, D. A., Eisenstein, L. G., & Jones, D. S. (2020). Hidden in plain sight—reconsidering the use of race correction in clinical algorithms. *New England Journal of Medicine*, 383(9), 874-882. https://doi.org/10.1056/NEJMms2004740
 
 Wang, H., Kaplan, Z., Niu, D., & Li, B. (2020). Optimizing federated learning on non-IID data with reinforcement learning. *IEEE INFOCOM 2020-IEEE Conference on Computer Communications*, 1698-1707.
 

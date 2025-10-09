@@ -1902,6 +1902,8 @@ Donabedian, A. (1988). The quality of care: How can it be assessed? *JAMA*, 260(
 
 Egede, L. E. (2006). Race, ethnicity, culture, and disparities in health care. *Journal of General Internal Medicine*, 21(6), 667-669. https://doi.org/10.1111/j.1525-1497.2006.0512.x
 
+Eneanya, N. D., Yang, W., & Reese, P. P. (2019). Reconsidering the consequences of using race to estimate kidney function. *JAMA*, 322(2), 113-114. https://doi.org/10.1001/jama.2019.5774
+
 Eubanks, V. (2018). *Automating Inequality: How High-Tech Tools Profile, Police, and Punish the Poor*. St. Martin's Press.
 
 Feagin, J., & Bennefield, Z. (2014). Systemic racism and U.S. health care. *Social Science & Medicine*, 103, 7-14. https://doi.org/10.1016/j.socscimed.2013.09.006
@@ -1926,21 +1928,19 @@ Hoffman, K. M., Trawalter, S., Axt, J. R., & Oliver, M. N. (2016). Racial bias i
 
 Institute of Medicine. (2003). *Unequal Treatment: Confronting Racial and Ethnic Disparities in Health Care*. National Academies Press. https://doi.org/10.17226/12875
 
-Joyner, M. J., Paneth, N., & Ioannidis, J. P. (2016). What happens when underperforming big ideas in research become entrenched? *JAMA*, 316(13), 1355-1356. https://doi.org/10.1001/jama.2016.11271
+Joyner, M. J., Paneth, N., & Ioannidis, J. P. (2016). What happens when underperforming big ideas in research become entrenched? *JAMA*, 316(13), 1355-1356. https://doi.org/10.1001/jama.2016.11076
 
 Kaushal, A., Altman, R., & Langlotz, C. (2020). Geographic distribution of US cohorts used to train deep learning algorithms. *JAMA*, 324(12), 1212-1213. https://doi.org/10.1001/jama.2020.12067
 
 Kelly, C. J., Karthikesalingam, A., Suleyman, M., Corrado, G., & King, D. (2019). Key challenges for delivering clinical impact with artificial intelligence. *BMC Medicine*, 17(1), 195. https://doi.org/10.1186/s12916-019-1426-2
 
-Kind, A. J., & Buckingham, W. R. (2018). Making neighborhood-disadvantage metrics accessibleâ€”the neighborhood atlas. *New England Journal of Medicine*, 378(26), 2456-2458. https://doi.org/10.1056/NEJMp1802313
+Kind, A. J., & Buckingham, W. R. (2018). Making neighborhood-disadvantage metrics accessible—the neighborhood atlas. *New England Journal of Medicine*, 378(26), 2456-2458. https://doi.org/10.1056/NEJMp1802313
 
 Koenig, B. A., Lee, S. S., & Richardson, S. S. (Eds.). (2008). *Revisiting Race in a Genomic Age*. Rutgers University Press.
 
-Krieger, N. (2020). ENOUGH: COVID-19, structural racism, police brutality, plutocracy, climate changeâ€”and time for health justice, democratic governance, and an equitable, sustainable future. *American Journal of Public Health*, 110(11), 1620-1623. https://doi.org/10.2105/AJPH.2020.305886
+Krieger, N. (2020). ENOUGH: COVID-19, structural racism, police brutality, plutocracy, climate change—and time for health justice, democratic governance, and an equitable, sustainable future. *American Journal of Public Health*, 110(11), 1620-1623. https://doi.org/10.2105/AJPH.2020.305886
 
 Lahiri, A., Bain, P. A., Ngo, T., Duncan, G. T., & Dahl, K. N. (2021). Health care costs vary with demographics and health status: evidence from a large health insurance dataset. *PLOS ONE*, 16(1), e0245476. https://doi.org/10.1371/journal.pone.0245476
-
-Lam, E. T., Rizzo, S., Torreggiani, G., Woodburn, J. B., & Kheirbek, R. E. (2018). Renal function estimate discrepancies with race modifiers. *Journal of General Internal Medicine*, 33(8), 1242-1243. https://doi.org/10.1007/s11606-018-4472-5
 
 Lehmann, C. U., Shorte, V., & Gundlapalli, A. V. (2021). Clinical decision support and precision medicine. *Yearbook of Medical Informatics*, 30(1), 72-77. https://doi.org/10.1055/s-0041-1726499
 
@@ -1948,7 +1948,7 @@ Link, B. G., & Phelan, J. (1995). Social conditions as fundamental causes of dis
 
 Lipworth, W., Mason, P. H., Kerridge, I., & Ioannidis, J. P. (2017). Ethics and epistemology in big data research. *Journal of Bioethical Inquiry*, 14(4), 489-500. https://doi.org/10.1007/s11673-017-9771-3
 
-Mandl, K. D., & Kohane, I. S. (2012). Escaping the EHR trapâ€”the future of health IT. *New England Journal of Medicine*, 366(24), 2240-2242. https://doi.org/10.1056/NEJMp1203102
+Mandl, K. D., & Kohane, I. S. (2012). Escaping the EHR trap—the future of health IT. *New England Journal of Medicine*, 366(24), 2240-2242. https://doi.org/10.1056/NEJMp1203102
 
 Marmot, M., & Bell, R. (2012). Fair society, healthy lives. *Public Health*, 126, S4-S10. https://doi.org/10.1016/j.puhe.2012.05.014
 
@@ -1958,7 +1958,7 @@ Mehrabi, N., Morstatter, F., Saxena, N., Lerman, K., & Galstyan, A. (2021). A su
 
 Mitchell, M., Wu, S., Zaldivar, A., Barnes, P., Vasserman, L., Hutchinson, B., Spitzer, E., Raji, I. D., & Gebru, T. (2019). Model cards for model reporting. *Proceedings of the Conference on Fairness, Accountability, and Transparency*, 220-229. https://doi.org/10.1145/3287560.3287596
 
-Morse, K. E., Bagley, S. C., Shah, N. H., Gundlapalli, A. V., & Leung, A. A. (2021). Estimate the hidden deployment cost of predictive models to improve patient care. *Nature Medicine*, 28, 18-19. https://doi.org/10.1038/s41591-021-01563-7
+Morse, K. E., Bagley, S. C., Shah, N. H., Gundlapalli, A. V., & Leung, A. A. (2020). Estimate the hidden deployment cost of predictive models to improve patient care. *Nature Medicine*, 26(1), 18-19. https://doi.org/10.1038/s41591-019-0651-8
 
 National Academies of Sciences, Engineering, and Medicine. (2017). *Communities in Action: Pathways to Health Equity*. National Academies Press. https://doi.org/10.17226/24624
 
@@ -1986,7 +1986,7 @@ Roberts, D. E. (2011). Fatal Invention: How Science, Politics, and Big Business 
 
 Rudin, C. (2019). Stop explaining black box machine learning models for high stakes decisions and use interpretable models instead. *Nature Machine Intelligence*, 1(5), 206-215. https://doi.org/10.1038/s42256-019-0048-x
 
-Sajjadi, M., Jamal, A., Ziaja, S., & Gendelman, H. E. (2021). New understandings in health disparity research. *Journal of Neuroimmune Pharmacology*, 16(3), 467-476. https://doi.org/10.1007/s11481-020-09964-x
+Hardeman, R. R., Medina, E. M., & Kozhimannil, K. B. (2016). Naming institutionalized racism in the public health literature: A systematic literature review. *American Journal of Public Health*, 106(7), 1161-1165. https://doi.org/10.2105/AJPH.2015.302982
 
 Schwartz, R., Dodge, J., Smith, N. A., & Etzioni, O. (2020). Green AI. *Communications of the ACM*, 63(12), 54-63. https://doi.org/10.1145/3381831
 
@@ -2002,7 +2002,7 @@ Veinot, T. C., Mitchell, H., & Ancker, J. S. (2018). Good intentions are not eno
 
 Verghese, A., Shah, N. H., & Harrington, R. A. (2018). What this computer needs is a physician: humanism and artificial intelligence. *JAMA*, 319(1), 19-20. https://doi.org/10.1001/jama.2017.19198
 
-Vyas, D. A., Eisenstein, L. G., & Jones, D. S. (2020). Hidden in plain sightâ€”reconsidering the use of race correction in clinical algorithms. *New England Journal of Medicine*, 383(9), 874-882. https://doi.org/10.1056/NEJMms2004740
+Vyas, D. A., Eisenstein, L. G., & Jones, D. S. (2020). Hidden in plain sight—reconsidering the use of race correction in clinical algorithms. *New England Journal of Medicine*, 383(9), 874-882. https://doi.org/10.1056/NEJMms2004740
 
 Washington, H. A. (2006). *Medical Apartheid: The Dark History of Medical Experimentation on Black Americans from Colonial Times to the Present*. Doubleday.
 

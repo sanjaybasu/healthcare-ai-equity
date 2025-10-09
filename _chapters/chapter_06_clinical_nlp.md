@@ -2962,9 +2962,9 @@ Devlin, J., Chang, M. W., Lee, K., & Toutanova, K. (2019). BERT: Pre-training of
 
 Fernandez, A., Schillinger, D., Warton, E. M., Adler, N., Moffet, H. H., Schenker, Y., ... & Karter, A. J. (2011). Language barriers, physician-patient language concordance, and glycemic control among insured Latinos with diabetes: the Diabetes Study of Northern California (DISTANCE). *Journal of General Internal Medicine*, 26(2), 170-176. https://doi.org/10.1007/s11606-010-1507-6
 
-Garg, N., Schiebinger, L., Jurafsky, D., & Zou, J. (2018). Word embeddings quantify 100 years of gender and ethnic stereotypes. *Proceedings of the National Academy of Sciences*, 115(16), E3635-E3644. https://doi.org/10.1073/pnas.1720347115
+Ganta, T., Kia, A., Parchure, P., Wang, M., Besculides, M., Mazumdar, M., & Smith, C. B. (2024). Fairness in predicting cancer mortality across racial subgroups. *JAMA Network Open*, 7(7), e2421290. https://doi.org/10.1001/jamanetworkopen.2024.21290
 
-Hall, M. A., Lee, S. S., Jiang, H., Erickson, P., & Cook, T. (2022). Effect of counterfactual fairness on bias mitigation in biomedical artificial intelligence. *JAMA Network Open*, 5(3), e220794. https://doi.org/10.1001/jamanetworkopen.2022.0794
+Garg, N., Schiebinger, L., Jurafsky, D., & Zou, J. (2018). Word embeddings quantify 100 years of gender and ethnic stereotypes. *Proceedings of the National Academy of Sciences*, 115(16), E3635-E3644. https://doi.org/10.1073/pnas.1720347115
 
 Harkema, H., Dowling, J. N., Thornblade, T., & Chapman, W. W. (2009). ConText: An algorithm for determining negation, experiencer, and temporal status from clinical reports. *Journal of Biomedical Informatics*, 42(5), 839-851. https://doi.org/10.1016/j.jbi.2009.05.002
 
@@ -2992,7 +2992,7 @@ Peng, Y., Yan, S., & Lu, Z. (2019). Transfer learning in biomedical natural lang
 
 Singhal, K., Azizi, S., Tu, T., Mahdavi, S. S., Wei, J., Chung, H. W., ... & Natarajan, V. (2022). Large language models encode clinical knowledge. *arXiv preprint arXiv:2212.13138*. https://arxiv.org/abs/2212.13138
 
-Sun, J., Pang, Q., Song, R., Zhang, Y., Chen, M., & Yang, C. (2022). Examining biases in clinical notes: a study of race-related language in admission notes. *JAMA Network Open*, 5(10), e2235150. https://doi.org/10.1001/jamanetworkopen.2022.35150
+Sun, M., Oliwa, T., Peek, M. E., & Tung, E. L. (2022). Negative patient descriptors: documenting racial bias in the electronic health record. *Health Affairs*, 41(2), 203-211. https://doi.org/10.1377/hlthaff.2021.01423
 
 Thirunavukarasu, A. J., Ting, D. S. J., Elangovan, K., Gutierrez, L., Tan, T. F., & Ting, D. S. W. (2023). Large language models in medicine. *Nature Medicine*, 29(8), 1930-1940. https://doi.org/10.1038/s41591-023-02448-8
 

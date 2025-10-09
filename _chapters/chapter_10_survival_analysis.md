@@ -30,7 +30,7 @@ Understanding survival analysis requires building intuition about several fundam
 
 The survival function, typically denoted as S(t), represents the probability that an individual survives beyond time t without experiencing the event of interest. Mathematically, if T represents the random variable for time to event, then S(t) = P(T > t). At time zero, assuming all individuals are event-free at the start of observation, S(0) = 1, meaning everyone has survived to time zero. As time progresses, the survival function is non-increasing because once an event occurs, it cannot be reversed, at least for events like death, though recurrent events require different frameworks. Eventually, as time approaches infinity, S(t) approaches zero for mortal events, though in practice we observe survival curves over finite follow-up periods (Kalbfleisch & Prentice, 2002).
 
-The hazard function, denoted h(t), represents the instantaneous rate of experiencing the event at time t given survival up to that time. More precisely, the hazard function is defined as the limit of the probability of experiencing the event in a small time interval divided by the width of that interval, conditional on having survived to the beginning of the interval. Mathematically, h(t) equals the limit as Î”t approaches zero of P(t â‰¤ T < t + Î”t | T â‰¥ t) divided by Î”t. The hazard function captures the instantaneous risk at each moment in time, while the survival function captures the cumulative probability of surviving beyond each time point. These two functions are mathematically related through the cumulative hazard function H(t), which integrates the hazard rate over time. The cumulative hazard H(t) equals the integral from 0 to t of h(u)du. The survival function can be expressed in terms of the cumulative hazard as S(t) = exp(-H(t)). This relationship allows us to move between different representations of the time-to-event distribution, each of which provides complementary insights (Aalen et al., 2008).
+The hazard function, denoted h(t), represents the instantaneous rate of experiencing the event at time t given survival up to that time. More precisely, the hazard function is defined as the limit of the probability of experiencing the event in a small time interval divided by the width of that interval, conditional on having survived to the beginning of the interval. Mathematically, h(t) equals the limit as Δt approaches zero of P(t ≤ T < t + Δt | T ≥ t) divided by Δt. The hazard function captures the instantaneous risk at each moment in time, while the survival function captures the cumulative probability of surviving beyond each time point. These two functions are mathematically related through the cumulative hazard function H(t), which integrates the hazard rate over time. The cumulative hazard H(t) equals the integral from 0 to t of h(u)du. The survival function can be expressed in terms of the cumulative hazard as S(t) = exp(-H(t)). This relationship allows us to move between different representations of the time-to-event distribution, each of which provides complementary insights (Aalen et al., 2008).
 
 In clinical applications, both functions carry important interpretation. The survival function directly answers questions like what proportion of patients will survive five years after diagnosis, or what is the median time to disease progression. These are the questions clinicians and patients typically ask when discussing prognosis. The hazard function, meanwhile, captures how risk changes over time and enables us to compare how quickly events occur between groups while accounting for different follow-up times and censoring patterns. A treatment that reduces the hazard at all time points is beneficial regardless of whether we observe long-term outcomes, making hazard-based analysis particularly valuable for chronic diseases where complete follow-up until death is impractical (Andersen & Keiding, 2012).
 
@@ -44,15 +44,15 @@ The mathematical treatment of censoring in survival analysis typically assumes n
 
 However, the non-informative censoring assumption is frequently violated in observational healthcare data in ways that systematically differ across demographic groups, creating substantial equity concerns. Consider a study of time to viral suppression among patients initiating HIV treatment. Patients who miss follow-up appointments are censored because viral load measurements are not available. If appointment attendance differs by factors like transportation access, work schedule flexibility, housing stability, or immigration status, then censoring is informative because patients who are censored differ systematically from those who remain under observation. Moreover, if these factors correlate with adherence to antiretroviral therapy, then censored patients may have different underlying viral suppression probabilities than uncensored patients, violating the non-informative censoring assumption (Howe et al., 2016).
 
-When censoring differs across demographic groups, standard survival analysis can produce biased estimates of group differences even when the non-informative censoring assumption holds within each group. If Black patients are censored more frequently than white patients due to residential instability or healthcare system distrust, then even if censoring is non-informative within each racial group, the survival curves will be estimated with less precision for Black patients. This differential precision translates to wider confidence intervals and reduced statistical power to detect disparities. More concerning, if the reasons for differential censoring also correlate with event risk, then censoring becomes informative and standard methods produce biased estimates of survival and hazard functions that may either underestimate or overestimate true disparities depending on the direction of association between censoring and event risk (HernÃ¡n et al., 2010).
+When censoring differs across demographic groups, standard survival analysis can produce biased estimates of group differences even when the non-informative censoring assumption holds within each group. If Black patients are censored more frequently than white patients due to residential instability or healthcare system distrust, then even if censoring is non-informative within each racial group, the survival curves will be estimated with less precision for Black patients. This differential precision translates to wider confidence intervals and reduced statistical power to detect disparities. More concerning, if the reasons for differential censoring also correlate with event risk, then censoring becomes informative and standard methods produce biased estimates of survival and hazard functions that may either underestimate or overestimate true disparities depending on the direction of association between censoring and event risk (Hernán et al., 2010).
 
-Diagnosing and addressing informative censoring requires careful thought about the data generation process and potential use of sensitivity analyses or more sophisticated methods like inverse probability weighting that attempt to adjust for informative censoring by modeling the censoring mechanism. The first step is always descriptive analysis of censoring patterns across demographic groups and over time, examining whether censoring rates differ systematically and exploring associations between baseline characteristics and censoring. When informative censoring seems likely, sensitivity analyses that make different assumptions about the survival distribution of censored individuals can bound the range of plausible estimates. More formally, inverse probability of censoring weights can be applied where individuals are weighted by the inverse probability of remaining uncensored given their observed characteristics, in effect creating a pseudo-population where censoring is balanced across characteristics. However, these methods only adjust for measured confounders of the censoring-outcome relationship and cannot address unmeasured confounding (Robins & Finkelstein, 2000; HernÃ¡n, 2010).
+Diagnosing and addressing informative censoring requires careful thought about the data generation process and potential use of sensitivity analyses or more sophisticated methods like inverse probability weighting that attempt to adjust for informative censoring by modeling the censoring mechanism. The first step is always descriptive analysis of censoring patterns across demographic groups and over time, examining whether censoring rates differ systematically and exploring associations between baseline characteristics and censoring. When informative censoring seems likely, sensitivity analyses that make different assumptions about the survival distribution of censored individuals can bound the range of plausible estimates. More formally, inverse probability of censoring weights can be applied where individuals are weighted by the inverse probability of remaining uncensored given their observed characteristics, in effect creating a pseudo-population where censoring is balanced across characteristics. However, these methods only adjust for measured confounders of the censoring-outcome relationship and cannot address unmeasured confounding (Robins & Finkelstein, 2000; Hernán, 2010).
 
 ### 10.2.3 The Kaplan-Meier Estimator
 
 The Kaplan-Meier estimator provides a non-parametric method for estimating the survival function from data with right censoring. Developed independently by Kaplan and Meier in 1958, the estimator has become the standard approach for descriptive survival analysis due to its intuitive interpretation, minimal assumptions, and robustness (Kaplan & Meier, 1958).
 
-The estimator works by partitioning the observed time period into intervals defined by the observed event times. At each event time, we calculate the conditional probability of surviving through that time given survival to just before that time. The survival probability at any time t is then estimated as the product of all these conditional survival probabilities up to time t. Let tâ‚ < tâ‚‚ < ... < tâ‚– denote the ordered distinct event times. At each time táµ¢, let dáµ¢ denote the number of events occurring at táµ¢ and náµ¢ denote the number of individuals at risk just before time táµ¢, meaning they have neither experienced an event nor been censored before táµ¢. The Kaplan-Meier estimate of survival at time t is the product over all táµ¢ â‰¤ t of (1 - dáµ¢/náµ¢). The term (1 - dáµ¢/náµ¢) represents the conditional probability of surviving through time táµ¢ given survival to just before táµ¢. By multiplying these conditional survival probabilities, we obtain an estimate of survival to any time t that appropriately accounts for censoring. Individuals contribute to the risk set for all intervals before they are either censored or experience an event, then no longer contribute afterward. This allows proper handling of different follow-up times across individuals (Fleming & Harrington, 1991).
+The estimator works by partitioning the observed time period into intervals defined by the observed event times. At each event time, we calculate the conditional probability of surviving through that time given survival to just before that time. The survival probability at any time t is then estimated as the product of these conditional survival probabilities up to time t. Let t_1 < t_2 < ... < t_m denote the ordered distinct event times. At each time t_k, let d_k denote the number of events occurring at t_k and n_k denote the number of individuals at risk just before t_k, meaning they have neither experienced an event nor been censored before that point. The Kaplan-Meier estimate of survival at time t is the product over all t_k ≤ t of (1 - d_k / n_k). The term (1 - d_k / n_k) represents the conditional probability of surviving through time t_k given survival just before t_k. By multiplying these conditional survival probabilities, we obtain an estimate of survival to any time t that appropriately accounts for censoring. Individuals contribute to the risk set for all intervals before they are either censored or experience an event, then no longer contribute afterward. This allows proper handling of different follow-up times across individuals (Fleming & Harrington, 1991).
 
 The Kaplan-Meier estimator is remarkably robust and remains the standard method for descriptive survival analysis. It makes minimal assumptions, requiring only that censoring is non-informative and that survival experience is independent across individuals. It does not assume any particular functional form for how survival changes over time, instead letting the data speak for themselves. The estimator provides a step function that jumps downward at each observed event time, with the magnitude of each jump reflecting the proportion of at-risk individuals who experienced events at that time (Efron, 1988).
 
@@ -357,22 +357,22 @@ class KaplanMeierAnalyzer:
         
         lines.append("EQUITY CONSIDERATIONS:")
         lines.append("  1. CENSORING AND BIAS:")
-        lines.append("     â€¢ Differential censoring across groups may introduce bias if censoring")
+        lines.append("     - Differential censoring across groups may introduce bias if censoring")
         lines.append("       is informative (related to unobserved event risk)")
-        lines.append("     â€¢ Higher censoring in marginalized groups often reflects barriers to")
+        lines.append("     - Higher censoring in marginalized groups often reflects barriers to")
         lines.append("       follow-up rather than random loss to observation")
         lines.append("")
         lines.append("  2. INTERPRETING SURVIVAL DIFFERENCES:")
-        lines.append("     â€¢ Observed differences reflect combined effects of disease biology,")
+        lines.append("     - Observed differences reflect combined effects of disease biology,")
         lines.append("       access to care, social determinants, and measurement differences")
-        lines.append("     â€¢ Consider whether differences emerge early vs late in follow-up")
-        lines.append("     â€¢ Examine whether differences widen, narrow, or cross over time")
+        lines.append("     - Consider whether differences emerge early vs late in follow-up")
+        lines.append("     - Examine whether differences widen, narrow, or cross over time")
         lines.append("")
         lines.append("  3. LIMITATIONS:")
-        lines.append("     â€¢ Kaplan-Meier provides descriptive comparison without adjusting")
+        lines.append("     - Kaplan-Meier provides descriptive comparison without adjusting")
         lines.append("       for confounders")
-        lines.append("     â€¢ Use regression models (Cox, parametric) for covariate adjustment")
-        lines.append("     â€¢ Consider competing risks if different groups face different")
+        lines.append("     - Use regression models (Cox, parametric) for covariate adjustment")
+        lines.append("     - Consider competing risks if different groups face different")
         lines.append("       competing events")
         lines.append("")
         
@@ -543,19 +543,19 @@ The Cox proportional hazards model represents one of the most widely used method
 
 ### 10.3.1 Model Structure and the Proportional Hazards Assumption
 
-The Cox model expresses the hazard function for individual i at time t as the product of a baseline hazard function that depends only on time and a multiplicative factor that depends on individual covariates. The hazard for individual i given their covariate values equals the baseline hazard multiplied by the exponential of a linear combination of covariates. If we denote the baseline hazard as hâ‚€(t) and the covariates for individual i as X_{i1}, X_{i2}, through X_{ip} with corresponding coefficients Î²â‚, Î²â‚‚, through Î²â‚š, then the hazard function becomes hâ‚€(t) times exp(Î²â‚X_{i1} + Î²â‚‚X_{i2} + ... + Î²â‚šX_{ip}). The baseline hazard hâ‚€(t) represents the hazard function when all covariates equal zero, capturing how risk changes over time in the reference population. The exponential term multiplies this baseline hazard by a factor that depends on covariate values but is constant over time for each individual (Cox, 1972; Therneau & Grambsch, 2000).
+The Cox model expresses the hazard function for individual i at time t as the product of a baseline hazard function that depends only on time and a multiplicative factor that depends on individual covariates. The hazard for individual i given their covariate values equals the baseline hazard multiplied by the exponential of a linear combination of covariates. If we denote the baseline hazard as h_0(t) and the covariates for individual i as X_{i1}, X_{i2}, through X_{ip} with corresponding coefficients β_1, β_2, through β_p, then the hazard function becomes h_0(t) times exp(β_1 X_{i1} + β_2 X_{i2} + ... + β_p X_{ip}). The baseline hazard h_0(t) represents the hazard function when all covariates equal zero, capturing how risk changes over time in the reference population. The exponential term multiplies this baseline hazard by a factor that depends on covariate values but is constant over time for each individual (Cox, 1972; Therneau & Grambsch, 2000).
 
-The proportional hazards assumption requires that the ratio of hazards for any two individuals with different covariate values remains constant over time. If individual A has covariates X_A and individual B has covariates X_B, their hazard ratio equals the ratio of their hazard functions, which simplifies to exp(sum of Î² times the difference in covariate values). This ratio does not depend on time t because the baseline hazard hâ‚€(t) cancels when we divide. This proportionality allows powerful partial likelihood estimation where we can estimate the regression coefficients Î² without needing to specify the form of hâ‚€(t), providing a semi-parametric approach that combines flexibility about the baseline hazard with interpretable covariate effects (Cox, 1975).
+The proportional hazards assumption requires that the ratio of hazards for any two individuals with different covariate values remains constant over time. If individual A has covariates X_A and individual B has covariates X_B, their hazard ratio equals the ratio of their hazard functions, which simplifies to exp(β_1 (X_{A1} - X_{B1}) + ... + β_p (X_{Ap} - X_{Bp})). This ratio does not depend on time t because the baseline hazard h_0(t) cancels when we divide. This proportionality allows powerful partial likelihood estimation where we can estimate the regression coefficients β without needing to specify the form of h_0(t), providing a semi-parametric approach that combines flexibility about the baseline hazard with interpretable covariate effects (Cox, 1975).
 
-The hazard ratio interpretation is central to understanding Cox model results. If a covariate increases by one unit, the hazard is multiplied by exp(Î²). For a binary covariate like treatment versus control, exp(Î²) directly gives the hazard ratio comparing treated to untreated individuals. A hazard ratio of 0.5 means the treatment group has half the hazard of the control group at every time point, while a hazard ratio of 2.0 means double the hazard. Hazard ratios provide relative measures of effect that do not depend on the baseline hazard shape (Kleinbaum & Klein, 2012).
+The hazard ratio interpretation is central to understanding Cox model results. If a covariate increases by one unit, the hazard is multiplied by exp(β_j) for the corresponding coefficient β_j. For a binary covariate like treatment versus control, exp(β_j) directly gives the hazard ratio comparing treated to untreated individuals. A hazard ratio of 0.5 means the treatment group has half the hazard of the control group at every time point, while a hazard ratio of 2.0 means double the hazard. Hazard ratios provide relative measures of effect that do not depend on the baseline hazard shape (Kleinbaum & Klein, 2012).
 
-For equity-centered analysis, the proportional hazards assumption deserves critical examination. Consider a Cox model predicting time to cardiovascular events that includes race as a covariate. A significant hazard ratio for Black race might seem to indicate biological differences in cardiovascular risk. However, if the proportional hazards assumption is violated, meaning the hazard ratio changes over time, this could reflect differential patterns of healthcare access rather than constant biological differences. Perhaps Black patients face barriers to preventive cardiology care early in disease course, creating elevated hazard initially, but once enrolled in cardiac rehabilitation or specialty cardiology, the hazard ratio attenuates. Or perhaps early hazards are similar but diverge over time as cumulative exposures to neighborhood-level stressors and environmental factors mount. Either pattern violates proportional hazards and requires more sophisticated analysis to properly characterize (HernÃ¡ndez & Bauer, 2019).
+For equity-centered analysis, the proportional hazards assumption deserves critical examination. Consider a Cox model predicting time to cardiovascular events that includes race as a covariate. A significant hazard ratio for Black race might seem to indicate biological differences in cardiovascular risk. However, if the proportional hazards assumption is violated, meaning the hazard ratio changes over time, this could reflect differential patterns of healthcare access rather than constant biological differences. Perhaps Black patients face barriers to preventive cardiology care early in disease course, creating elevated hazard initially, but once enrolled in cardiac rehabilitation or specialty cardiology, the hazard ratio attenuates. Or perhaps early hazards are similar but diverge over time as cumulative exposures to neighborhood-level stressors and environmental factors mount. Either pattern violates proportional hazards and requires more sophisticated analysis to properly characterize (Hernández & Bauer, 2019).
 
 ### 10.3.2 Partial Likelihood Estimation
 
 The Cox model's elegance lies in its partial likelihood approach to estimation, which avoids need to specify the baseline hazard function while still providing consistent and asymptotically normal estimates of the regression coefficients. The partial likelihood focuses on the ordering of events rather than their exact timing. At each event time, we consider all individuals still at risk and ask what is the probability that the individual who actually experienced the event would be the one to experience it, given that someone in the risk set will experience an event at this time (Cox, 1975).
 
-More formally, let tâ‚ < tâ‚‚ < ... < tâ‚– denote the ordered distinct event times, and let R(táµ¢) denote the risk set at time táµ¢, meaning all individuals who have neither experienced an event nor been censored before time táµ¢. Let i(tâ±¼) denote the individual who experiences an event at time tâ±¼. The partial likelihood is the product over all event times of the probability that individual i(tâ±¼) experiences the event at time tâ±¼ given that someone in R(tâ±¼) experiences an event. Under the proportional hazards assumption, this probability equals exp(Î²'X_{i(tâ±¼)}) divided by the sum over all individuals in R(tâ±¼) of exp(Î²'X_â„“). The partial likelihood is the product of these probabilities across all event times. Maximizing this partial likelihood yields coefficient estimates that have good asymptotic properties despite not modeling the baseline hazard (Kalbfleisch & Prentice, 2002).
+More formally, let t_1 < t_2 < ... < t_m denote the ordered distinct event times, and let R(t_k) denote the risk set at time t_k, meaning all individuals who have neither experienced an event nor been censored before time t_k. Let i(t_k) denote the individual who experiences an event at time t_k. The partial likelihood is the product over all event times of the probability that individual i(t_k) experiences the event at time t_k given that someone in R(t_k) experiences an event. Under the proportional hazards assumption, this probability equals exp(β' X_{i(t_k)}) divided by the sum over all individuals j in R(t_k) of exp(β' X_j). The partial likelihood is the product of these probabilities across all event times. Maximizing this partial likelihood yields coefficient estimates that have good asymptotic properties despite not modeling the baseline hazard (Kalbfleisch & Prentice, 2002).
 
 The partial likelihood approach handles censoring naturally because censored observations contribute to risk sets for all event times before their censoring time, then no longer contribute. This allows individuals with different follow-up lengths to contribute appropriately to estimation. The approach also handles tied event times, where multiple individuals experience events at the same recorded time, though different methods exist for handling ties with varying computational complexity and statistical properties. The Efron approximation provides a good balance of accuracy and computational efficiency for moderate numbers of ties (Efron, 1977).
 
@@ -569,7 +569,7 @@ Schoenfeld residuals offer a formal test by regressing scaled Schoenfeld residua
 
 Including time interactions in the model provides another diagnostic approach. If we extend the model to include interaction terms between covariates and time or functions of time like log(t), significant interactions indicate time-varying effects. This approach not only tests but also estimates how effects change over time, providing substantive insights into the nature of non-proportionality. The interaction coefficient tells us whether the log hazard ratio is increasing or decreasing over time and at what rate (Kleinbaum & Klein, 2012).
 
-When testing proportional hazards specifically in the context of demographic or social variables, violations often have important equity implications. If the hazard ratio for Black race versus white race decreases over time, this might indicate that initial disparities in access to diagnosis or treatment narrow as patients enter specialized care. If the hazard ratio increases over time, this might suggest that initially similar outcomes diverge as cumulative effects of structural barriers mount. Either pattern invalidates the single hazard ratio interpretation from a standard Cox model and requires more sophisticated analysis using time-varying coefficients or stratification (HernÃ¡ndez & Bauer, 2019).
+When testing proportional hazards specifically in the context of demographic or social variables, violations often have important equity implications. If the hazard ratio for Black race versus white race decreases over time, this might indicate that initial disparities in access to diagnosis or treatment narrow as patients enter specialized care. If the hazard ratio increases over time, this might suggest that initially similar outcomes diverge as cumulative effects of structural barriers mount. Either pattern invalidates the single hazard ratio interpretation from a standard Cox model and requires more sophisticated analysis using time-varying coefficients or stratification (Hernández & Bauer, 2019).
 
 ```python
 """
@@ -823,24 +823,24 @@ class CoxProportionalHazards:
         
         lines.append("EQUITY CONSIDERATIONS:")
         lines.append("  1. INTERPRETATION OF DEMOGRAPHIC VARIABLES:")
-        lines.append("     â€¢ Hazard ratios for race/ethnicity reflect cumulative effects of")
+        lines.append("     - Hazard ratios for race/ethnicity reflect cumulative effects of")
         lines.append("       structural racism, not biological differences")
-        lines.append("     â€¢ Violations of proportional hazards may indicate differential")
+        lines.append("     - Violations of proportional hazards may indicate differential")
         lines.append("       access to care over time")
         lines.append("")
         lines.append("  2. ADJUSTMENT FOR MEDIATORS:")
-        lines.append("     â€¢ Over-adjustment for mediators (income, education, neighborhood)")
+        lines.append("     - Over-adjustment for mediators (income, education, neighborhood)")
         lines.append("       may obscure mechanisms of disparity")
-        lines.append("     â€¢ Consider mediation analysis to understand pathways")
+        lines.append("     - Consider mediation analysis to understand pathways")
         lines.append("")
         lines.append("  3. CENSORING PATTERNS:")
-        lines.append("     â€¢ Differential loss to follow-up across groups can bias")
+        lines.append("     - Differential loss to follow-up across groups can bias")
         lines.append("       hazard ratio estimates")
-        lines.append("     â€¢ Review censoring diagnostics from survival analysis")
+        lines.append("     - Review censoring diagnostics from survival analysis")
         lines.append("")
         lines.append("  4. COMPETING RISKS:")
-        lines.append("     â€¢ Standard Cox models assume censoring when competing events occur")
-        lines.append("     â€¢ If competing risks differ by demographics, consider")
+        lines.append("     - Standard Cox models assume censoring when competing events occur")
+        lines.append("     - If competing risks differ by demographics, consider")
         lines.append("       subdistribution hazards or multi-state models")
         lines.append("")
         
@@ -925,9 +925,9 @@ This implementation provides comprehensive Cox proportional hazards modeling wit
 
 Many clinical variables change over time, and their effects on hazard may also vary temporally. Time-varying covariates represent measurements that can change during follow-up, such as blood pressure, medication adherence, or employment status. Time-varying coefficients allow covariate effects to change over time even when the covariate values themselves remain constant. Both extensions relax the standard proportional hazards assumption in different ways (Therneau & Grambsch, 2000).
 
-For time-varying covariates, we modify the Cox model to allow covariate values X_i(t) that depend on time t. The hazard function becomes hâ‚€(t) times exp(Î²'X_i(t)), where the covariate vector can change as time progresses. This requires restructuring the data in counting process format where each individual contributes multiple records, one for each time interval during which their covariate values remain constant. The partial likelihood extends naturally to this setting by evaluating covariate values at the time of each event (Fisher & Lin, 1999).
+For time-varying covariates, we modify the Cox model to allow covariate values X_i(t) that depend on time t. The hazard function becomes h_0(t) times exp(β' X_i(t)), where the covariate vector can change as time progresses. This requires restructuring the data in counting process format where each individual contributes multiple records, one for each time interval during which their covariate values remain constant. The partial likelihood extends naturally to this setting by evaluating covariate values at the time of each event (Fisher & Lin, 1999).
 
-Time-varying coefficients address situations where the effect of a covariate on hazard changes over time. We can model this by including interactions between covariates and time or functions of time. The simplest approach specifies Î²(t) = Î²â‚€ + Î²â‚Â·g(t) where g(t) might be log(t), t, or other functions. The coefficient Î²â‚ tells us how the log hazard ratio changes per unit change in g(t). Positive Î²â‚ means the effect strengthens over time, while negative Î²â‚ means it weakens (Perperoglou et al., 2019).
+Time-varying coefficients address situations where the effect of a covariate on hazard changes over time. We can model this by including interactions between covariates and time or functions of time. The simplest approach specifies β(t) = β_0 + β_1 * g(t) where g(t) might be log(t), t, or other functions. The coefficient β_1 tells us how the log hazard ratio changes per unit change in g(t). Positive β_1 means the effect strengthens over time, while negative β_1 means it weakens (Perperoglou et al., 2019).
 
 For equity applications, time-varying extensions prove essential for capturing how disparities emerge and evolve. Consider medication adherence as a time-varying covariate in a model of cardiovascular events. Adherence measurements at multiple time points allow us to assess how current adherence affects event risk while accounting for past adherence history. If adherence declines more rapidly among patients with transportation barriers or financial constraints, this time-varying relationship captures how structural inequities manifest through behavioral pathways that standard time-fixed models would miss (Ribaudo et al., 2014).
 
@@ -1184,22 +1184,22 @@ class CompetingRisksAnalysis:
         
         lines.append("EQUITY CONSIDERATIONS:")
         lines.append("  1. DIFFERENTIAL COMPETING RISKS:")
-        lines.append("     â€¢ Higher mortality in marginalized groups reduces observed")
+        lines.append("     - Higher mortality in marginalized groups reduces observed")
         lines.append("       incidence of outcomes requiring survival (e.g., transplantation)")
-        lines.append("     â€¢ Standard survival analysis treating death as censoring would")
+        lines.append("     - Standard survival analysis treating death as censoring would")
         lines.append("       overestimate access to care-dependent outcomes")
         lines.append("")
         lines.append("  2. HEALTHCARE ACCESS AND COMPETING RISKS:")
-        lines.append("     â€¢ For events requiring access (e.g., transplantation), mortality")
+        lines.append("     - For events requiring access (e.g., transplantation), mortality")
         lines.append("       competing risks may differ by demographics")
-        lines.append("     â€¢ Groups facing higher mortality while waiting have lower")
+        lines.append("     - Groups facing higher mortality while waiting have lower")
         lines.append("       cumulative incidence of accessing care")
         lines.append("")
         lines.append("  3. INTERPRETATION:")
-        lines.append("     â€¢ Cumulative incidence functions show actual probabilities")
+        lines.append("     - Cumulative incidence functions show actual probabilities")
         lines.append("       accounting for competing risks")
-        lines.append("     â€¢ Disparities in CIF reflect combined effects of all pathways")
-        lines.append("     â€¢ Consider modeling each event type separately to understand")
+        lines.append("     - Disparities in CIF reflect combined effects of all pathways")
+        lines.append("     - Consider modeling each event type separately to understand")
         lines.append("       specific mechanisms of disparity")
         lines.append("")
         
@@ -1593,24 +1593,24 @@ class FairRandomSurvivalForest:
         
         lines.append("FAIRNESS CONSIDERATIONS:")
         lines.append("  1. PERFORMANCE PARITY:")
-        lines.append("     â€¢ Evaluate whether concordance differs significantly across groups")
-        lines.append("     â€¢ Lower performance for marginalized groups may indicate")
+        lines.append("     - Evaluate whether concordance differs significantly across groups")
+        lines.append("     - Lower performance for marginalized groups may indicate")
         lines.append("       insufficient representation or measurement bias")
         lines.append("")
         lines.append("  2. FEATURE IMPORTANCE:")
-        lines.append("     â€¢ High importance of demographic proxies may indicate")
+        lines.append("     - High importance of demographic proxies may indicate")
         lines.append("       model learning shortcuts based on access patterns")
-        lines.append("     â€¢ Consider whether top features reflect clinical risk vs")
+        lines.append("     - Consider whether top features reflect clinical risk vs")
         lines.append("       healthcare utilization patterns")
         lines.append("")
         lines.append("  3. CALIBRATION:")
-        lines.append("     â€¢ Ensure predicted survival probabilities match observed")
+        lines.append("     - Ensure predicted survival probabilities match observed")
         lines.append("       outcomes within each demographic group")
-        lines.append("     â€¢ Poor calibration in specific groups undermines clinical utility")
+        lines.append("     - Poor calibration in specific groups undermines clinical utility")
         lines.append("")
         lines.append("  4. MISSING DATA:")
-        lines.append("     â€¢ Random forests handle missing data through surrogate splits")
-        lines.append("     â€¢ If missingness differs by demographics, this may introduce bias")
+        lines.append("     - Random forests handle missing data through surrogate splits")
+        lines.append("     - If missingness differs by demographics, this may introduce bias")
         lines.append("")
         
         lines.append("=" * 80)
@@ -2060,7 +2060,7 @@ class SurvivalModelMonitor:
         alert_msg += f"\nDescription: {alert.description}\n"
         alert_msg += "\nRecommended Actions:\n"
         for action in alert.recommended_actions:
-            alert_msg += f"  â€¢ {action}\n"
+            alert_msg += f"  - {action}\n"
         alert_msg += f"{'='*80}\n"
         
         logger.warning(alert_msg)
@@ -2136,7 +2136,7 @@ class SurvivalModelMonitor:
             
             lines.append("RECENT ALERTS:")
             for alert in recent_alerts[-5:]:  # Show last 5 alerts
-                lines.append(f"  â€¢ [{alert.severity}] {alert.description[:100]}...")
+                lines.append(f"  - [{alert.severity}] {alert.description[:100]}...")
         lines.append("")
         
         # Group-specific performance
@@ -2149,13 +2149,13 @@ class SurvivalModelMonitor:
         
         lines.append("RECOMMENDATIONS:")
         if np.max(disparities) > self.disparity_threshold:
-            lines.append("  âš  Performance disparity exceeds threshold - investigate causes")
+            lines.append("  [WARN]  Performance disparity exceeds threshold - investigate causes")
         if np.mean(overall_perfs) < self.performance_threshold:
-            lines.append("  âš  Average performance below threshold - consider retraining")
+            lines.append("  [WARN]  Average performance below threshold - consider retraining")
         if len([a for a in recent_alerts if a.metric_type == "censoring_disparity"]) > 0:
-            lines.append("  âš  Differential censoring detected - verify assumptions")
+            lines.append("  [WARN]  Differential censoring detected - verify assumptions")
         if not recent_alerts:
-            lines.append("  âœ“ No fairness alerts in monitoring period")
+            lines.append("  [OK] No fairness alerts in monitoring period")
         lines.append("")
         
         lines.append("=" * 80)
@@ -2239,9 +2239,9 @@ Andersen, P. K., & Keiding, N. (2012). Interpretability and importance of functi
 
 Austin, P. C., Lee, D. S., & Fine, J. P. (2016). Introduction to the analysis of survival data in the presence of competing risks. *Circulation*, 133(6), 601-609. https://doi.org/10.1161/CIRCULATIONAHA.115.017719
 
-Bailey, Z. D., Krieger, N., AgÃ©nor, M., Graves, J., Linos, N., & Bassett, M. T. (2017). Structural racism and health inequities in the USA: Evidence and interventions. *The Lancet*, 389(10077), 1453-1463. https://doi.org/10.1016/S0140-6736(17)30569-X
+Bailey, Z. D., Krieger, N., Agénor, M., Graves, J., Linos, N., & Bassett, M. T. (2017). Structural racism and health inequities in the USA: Evidence and interventions. *The Lancet*, 389(10077), 1453-1463. https://doi.org/10.1016/S0140-6736(17)30569-X
 
-Benjamens, S., Dhunnoo, P., & MeskÃ³, B. (2020). The state of artificial intelligence-based FDA-approved medical devices and algorithms: An online database. *npj Digital Medicine*, 3(1), 118. https://doi.org/10.1038/s41746-020-00324-0
+Benjamens, S., Dhunnoo, P., & Meskó, B. (2020). The state of artificial intelligence-based FDA-approved medical devices and algorithms: An online database. *npj Digital Medicine*, 3(1), 118. https://doi.org/10.1038/s41746-020-00324-0
 
 Bibbins-Domingo, K. (2019). Integrating social care into the delivery of health care. *JAMA*, 322(18), 1763-1764. https://doi.org/10.1001/jama.2019.15603
 
@@ -2269,11 +2269,11 @@ Fleming, T. R., & Harrington, D. P. (1991). *Counting Processes and Survival Ana
 
 Grambsch, P. M., & Therneau, T. M. (1994). Proportional hazards tests and diagnostics based on weighted residuals. *Biometrika*, 81(3), 515-526. https://doi.org/10.1093/biomet/81.3.515
 
-HernÃ¡n, M. A. (2010). The hazards of hazard ratios. *Epidemiology*, 21(1), 13-15. https://doi.org/10.1097/EDE.0b013e3181c1ea43
+Hernán, M. A. (2010). The hazards of hazard ratios. *Epidemiology*, 21(1), 13-15. https://doi.org/10.1097/EDE.0b013e3181c1ea43
 
-HernÃ¡n, M. A., HernÃ¡ndez-DÃ­az, S., & Robins, J. M. (2010). A structural approach to selection bias. *Epidemiology*, 15(5), 615-625. https://doi.org/10.1097/01.ede.0000135174.63482.43
+Hernán, M. A., Hernández-Díaz, S., & Robins, J. M. (2010). A structural approach to selection bias. *Epidemiology*, 15(5), 615-625. https://doi.org/10.1097/01.ede.0000135174.63482.43
 
-HernÃ¡ndez, M., & Bauer, G. R. (2019). Using the proportional hazards model to study the relationship between changes in depressive symptoms and sexual partnership concurrency among young Black women. *Annals of Epidemiology*, 38, 29-35. https://doi.org/10.1016/j.annepidem.2019.08.003
+Hernández, M., & Bauer, G. R. (2019). Using the proportional hazards model to study the relationship between changes in depressive symptoms and sexual partnership concurrency among young Black women. *Annals of Epidemiology*, 38, 29-35. https://doi.org/10.1016/j.annepidem.2019.08.003
 
 Howe, C. J., Cole, S. R., Lau, B., Napravnik, S., & Eron Jr, J. J. (2016). Selection bias due to loss to follow up in cohort studies. *Epidemiology*, 27(1), 91-97. https://doi.org/10.1097/EDE.0000000000000409
 
