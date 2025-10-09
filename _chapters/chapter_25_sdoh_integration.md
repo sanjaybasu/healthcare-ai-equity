@@ -51,7 +51,7 @@ $$M = f_M(Z, S, U_M)$$
 
 $$Y = f_Y(Z, S, M, U_Y)$$
 
-where $U_S$, $U_M$, and $U_Y$ represent unmeasured factors affecting each variable. This model encodes that structural determinants directly affect social position, both structural determinants and social position affect intermediate mechanisms, and all three affect health outcomes through potentially nonlinear functions $f$.
+where $$U_S$$, $$U_M$$, and $$U_Y$$ represent unmeasured factors affecting each variable. This model encodes that structural determinants directly affect social position, both structural determinants and social position affect intermediate mechanisms, and all three affect health outcomes through potentially nonlinear functions $f$.
 
 The total effect of structural determinants on health decomposes into direct effects and indirect effects mediated through social position and intermediate mechanisms:
 
@@ -456,7 +456,7 @@ Several challenges complicate causal inference for social determinants:
 
 Mediation analysis decomposes total effects into direct effects and indirect effects operating through specific pathways (VanderWeele, 2015). For social determinants, mediation analysis can elucidate mechanisms through which structural factors affect health.
 
-Consider the causal diagram: Structural determinant $Z$ → Social position $S$ → Intermediate mechanism $M$ → Health outcome $Y$, with possible direct effects $Z \rightarrow Y$ and $S \rightarrow Y$ bypassing mediators.
+Consider the causal diagram: Structural determinant $Z$ → Social position $S$ → Intermediate mechanism $M$ → Health outcome $Y$, with possible direct effects $$Z \rightarrow Y$$ and $$S \rightarrow Y$$ bypassing mediators.
 
 The total effect of $Z$ on $Y$ decomposes as:
 
@@ -470,14 +470,14 @@ $$NDE = E[Y(z=1, M(z=0))] - E[Y(z=0, M(z=0))]$$
 
 $$NIE = E[Y(z=1, M(z=1))] - E[Y(z=1, M(z=0))]$$
 
-where $Y(z, M(z'))$ denotes the potential outcome under treatment $z$ and mediator value it would take under treatment $z'$.
+where $$Y(z, M(z'))$$ denotes the potential outcome under treatment $z$ and mediator value it would take under treatment $z'$.
 
 Estimation typically proceeds through two regression models:
 
 1. **Outcome model**: Regress $Y$ on $Z$, $M$, and confounders
 2. **Mediator model**: Regress $M$ on $Z$ and confounders
 
-Combining these models and integrating over the mediator distribution yields effect estimates. The proportion mediated is $PM = NIE / TE$.
+Combining these models and integrating over the mediator distribution yields effect estimates. The proportion mediated is $$PM = NIE / TE$$.
 
 For example, to understand how neighborhood poverty affects cardiovascular disease risk through food environment, one would estimate:
 
@@ -496,12 +496,12 @@ A structural equation model consists of two components:
 **Measurement model**: Relates observed variables to latent constructs
 $$X = \Lambda_X \xi + \delta$$
 
-where $X$ is a vector of observed indicators, $\xi$ is a vector of latent exogenous variables, $\Lambda_X$ is a matrix of factor loadings, and $\delta$ is measurement error.
+where $X$ is a vector of observed indicators, $$\xi$$ is a vector of latent exogenous variables, $$\Lambda_X$$ is a matrix of factor loadings, and $$\delta$$ is measurement error.
 
 **Structural model**: Specifies causal relationships among latent variables
 $$\eta = B\eta + \Gamma\xi + \zeta$$
 
-where $\eta$ is a vector of latent endogenous variables, $B$ captures effects among endogenous variables, $\Gamma$ captures effects of exogenous on endogenous variables, and $\zeta$ is structural error.
+where $$\eta$$ is a vector of latent endogenous variables, $B$ captures effects among endogenous variables, $$\Gamma$$ captures effects of exogenous on endogenous variables, and $$\zeta$$ is structural error.
 
 For social determinants, latent variables might include constructs like "neighborhood disadvantage" (measured by census indicators), "chronic stress" (measured by cortisol, blood pressure, self-reports), and "health resilience" (measured by recovery time, adaptation capacity). Structural paths would specify how neighborhood disadvantage affects chronic stress, which in turn affects health outcomes, with possible moderating effects of resilience.
 
@@ -536,7 +536,7 @@ $$D_i = \alpha_0 + \alpha_1 Z_i + \alpha_2' X_i + \epsilon_i$$
 **Second stage**: Regress outcome on predicted treatment and covariates
 $$Y_i = \beta_0 + \beta_1 \hat{D}_i + \beta_2' X_i + u_i$$
 
-The 2SLS estimate of $\beta_1$ is consistent for the local average treatment effect (LATE)—the causal effect for compliers whose treatment status is affected by the instrument.
+The 2SLS estimate of $$\beta_1$$ is consistent for the local average treatment effect (LATE)—the causal effect for compliers whose treatment status is affected by the instrument.
 
 Weak instruments (small first-stage F-statistic) lead to biased and inconsistent estimates. F-statistics above 10 are considered adequate, though higher thresholds (F > 100) are recommended for robust inference (Stock et al., 2002).
 
@@ -560,7 +560,7 @@ Estimation typically uses local linear regression within a bandwidth around the 
 
 $$Y_i = \alpha + \tau D_i + \beta(X_i - c) + \gamma D_i(X_i - c) + \epsilon_i$$
 
-where $D_i$ indicates above-threshold status. The estimate $\hat{\tau}$ identifies the causal effect at the threshold under continuity assumptions.
+where $$D_i$$ indicates above-threshold status. The estimate $$\hat{\tau}$$ identifies the causal effect at the threshold under continuity assumptions.
 
 Validity requires that other factors do not change discontinuously at the threshold and that individuals cannot precisely manipulate their position relative to the threshold. Falsification tests examine whether baseline covariates show discontinuities (they should not) and density tests check for bunching at the threshold.
 
@@ -572,7 +572,7 @@ For policy evaluations affecting social determinants:
 
 $$Y_{it} = \alpha + \beta \text{Treat}_i + \gamma \text{Post}_t + \delta(\text{Treat}_i \times \text{Post}_t) + \epsilon_{it}$$
 
-where $\text{Treat}_i$ indicates treatment group, $\text{Post}_t$ indicates post-policy period, and $\delta$ is the DiD estimate.
+where $$\text{Treat}_i$$ indicates treatment group, $$\text{Post}_t$$ indicates post-policy period, and $$\delta$$ is the DiD estimate.
 
 The key assumption is parallel trends—treated and control groups would have followed parallel trajectories absent treatment. This is untestable but can be evaluated by:
 
@@ -1018,8 +1018,8 @@ class SDOHScreening:
                     'text': 'What is your total household income in the last year?',
                     'type': 'categorical',
                     'options': [
-                        '<$10,000', '$10,000-$20,000', '$20,000-$30,000',
-                        '$30,000-$50,000', '$50,000-$75,000', '>$75,000',
+                        '<$$10,000', '$$10,000-$$20,000', '$$20,000-$30,000',
+                        '$$30,000-$$50,000', '$$50,000-$$75,000', '>$75,000',
                         'Prefer not to answer'
                     ],
                     'domain': SDOHDomain.ECONOMIC_STABILITY
@@ -1928,8 +1928,8 @@ def example_workflow() -> None:
     for patient in patients[:100]:  # Screen subset
         # Generate mock responses
         responses = {
-            'income': np.random.choice(['<$10,000', '$10,000-$20,000', '$20,000-$30,000',
-                                       '$30,000-$50,000', '$50,000-$75,000', '>$75,000']),
+            'income': np.random.choice(['<$$10,000', '$$10,000-$$20,000', '$$20,000-$30,000',
+                                       '$$30,000-$$50,000', '$$50,000-$$75,000', '>$75,000']),
             'employment': np.random.choice(['Employed full-time', 'Employed part-time',
                                            'Unemployed seeking work', 'Retired']),
             'education': np.random.choice(['Less than high school', 'High school or GED',

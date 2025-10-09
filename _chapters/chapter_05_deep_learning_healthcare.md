@@ -51,25 +51,25 @@ $$h^{(0)} = x$$
 $$h^{(l)} = f(W^{(l)} h^{(l-1)} + b^{(l)}) \text{ for } l = 1, \ldots, L-1$$
 $$\hat{y} = g(W^{(L)} h^{(L-1)} + b^{(L)})$$
 
-where $x$ is the input, $h^{(l)}$ represents the hidden activations at layer $l$, $W^{(l)}$ and $b^{(l)}$ are weight matrices and bias vectors, $f$ is a nonlinear activation function, and $g$ is the output activation function appropriate for the task (sigmoid for binary classification, softmax for multiclass classification, identity for regression).
+where $x$ is the input, $$h^{(l)}$$ represents the hidden activations at layer $l$, $$W^{(l)}$$ and $$b^{(l)}$$ are weight matrices and bias vectors, $f$ is a nonlinear activation function, and $g$ is the output activation function appropriate for the task (sigmoid for binary classification, softmax for multiclass classification, identity for regression).
 
-From a fairness perspective, several aspects of this basic architecture merit careful consideration. The learned representations $h^{(l)}$ at intermediate layers may encode information about protected attributes even when those attributes are not directly provided as inputs. This phenomenon, known as representation bias, occurs because proxy variables correlated with demographic characteristics allow the model to indirectly learn protected attributes. For instance, a model predicting hospital readmission might learn that certain zip codes or insurance types are associated with protected race or ethnicity, leading to disparate predictions even without explicit demographic inputs.
+From a fairness perspective, several aspects of this basic architecture merit careful consideration. The learned representations $$h^{(l)}$$ at intermediate layers may encode information about protected attributes even when those attributes are not directly provided as inputs. This phenomenon, known as representation bias, occurs because proxy variables correlated with demographic characteristics allow the model to indirectly learn protected attributes. For instance, a model predicting hospital readmission might learn that certain zip codes or insurance types are associated with protected race or ethnicity, leading to disparate predictions even without explicit demographic inputs.
 
 The depth and width of the network affect its capacity to learn complex patterns, but also its tendency toward overfitting and its ability to generalize across population subgroups. Deeper networks with more parameters can potentially learn group-specific patterns that improve fairness, but only if training data provides adequate representation of all groups. When certain populations are underrepresented in training data, increased model capacity may simply lead to overfitting on the majority group while failing to learn robust patterns for minority groups.
 
-Regularization techniques that constrain model complexity have differential effects on fairness. $L_2$ regularization (weight decay) encourages smaller parameter values, potentially reducing reliance on features that are proxies for protected attributes. Dropout randomly zeros activations during training, forcing the network to learn redundant representations that may be more robust across population subgroups. However, these techniques can also harm fairness if applied uniformly, as they may disproportionately constrain the model's ability to learn patterns specific to underrepresented groups that require more parameters to capture.
+Regularization techniques that constrain model complexity have differential effects on fairness. $$L_2$$ regularization (weight decay) encourages smaller parameter values, potentially reducing reliance on features that are proxies for protected attributes. Dropout randomly zeros activations during training, forcing the network to learn redundant representations that may be more robust across population subgroups. However, these techniques can also harm fairness if applied uniformly, as they may disproportionately constrain the model's ability to learn patterns specific to underrepresented groups that require more parameters to capture.
 
 ### 5.2.2 Activation Functions and Their Equity Implications
 
 The choice of activation function $f$ in neural networks has both computational and fairness implications. The most common activation functions in modern deep learning are:
 
-**Rectified Linear Unit (ReLU):** $f(z) = \max(0, z)$. This simple activation provides computational efficiency and helps mitigate vanishing gradient problems in deep networks. However, ReLU neurons can "die" during training when their weights receive updates that cause them to output zero for all inputs, potentially eliminating capacity needed to learn patterns for minority groups.
+**Rectified Linear Unit (ReLU):** $$f(z) = \max(0, z)$$. This simple activation provides computational efficiency and helps mitigate vanishing gradient problems in deep networks. However, ReLU neurons can "die" during training when their weights receive updates that cause them to output zero for all inputs, potentially eliminating capacity needed to learn patterns for minority groups.
 
-**Leaky ReLU:** $f(z) = \max(\alpha z, z)$ for small $\alpha > 0$. This addresses the dying ReLU problem by maintaining a small gradient for negative inputs, but introduces an additional hyperparameter that may require population-specific tuning.
+**Leaky ReLU:** $$f(z) = \max(\alpha z, z)$$ for small $$\alpha > 0$$. This addresses the dying ReLU problem by maintaining a small gradient for negative inputs, but introduces an additional hyperparameter that may require population-specific tuning.
 
-**Exponential Linear Unit (ELU):** $f(z) = z$ if $z > 0$, else $\alpha(e^z - 1)$. ELU activations have negative outputs with bounded magnitude, potentially providing more robust learned representations across diverse data distributions.
+**Exponential Linear Unit (ELU):** $$f(z) = z$$ if $$z > 0$$, else $$\alpha(e^z - 1)$$. ELU activations have negative outputs with bounded magnitude, potentially providing more robust learned representations across diverse data distributions.
 
-**Gaussian Error Linear Unit (GELU):** $f(z) = z \Phi(z)$ where $\Phi$ is the standard normal cumulative distribution function. GELU has become popular in transformer architectures and provides smooth nonlinearity, though its computational cost is higher than ReLU variants.
+**Gaussian Error Linear Unit (GELU):** $$f(z) = z \Phi(z)$$ where $$\Phi$$ is the standard normal cumulative distribution function. GELU has become popular in transformer architectures and provides smooth nonlinearity, though its computational cost is higher than ReLU variants.
 
 From a fairness perspective, the choice among these activations affects how the network responds to inputs from different distributions. If certain patient populations systematically produce activations in different ranges (for instance, due to different laboratory test ranges or measurement protocols), the activation function's behavior in those ranges directly affects model fairness. Activation functions with asymmetric behavior around zero (like ReLU and its variants) may introduce systematic biases when input distributions differ across groups.
 
@@ -79,27 +79,27 @@ The loss function defines what the model optimizes during training, making it a 
 
 $$\mathcal{L}_{CE} = -\frac{1}{n} \sum_{i=1}^n [y_i \log(\hat{y}_i) + (1-y_i) \log(1-\hat{y}_i)]$$
 
-where $y_i$ is the true label and $\hat{y}_i$ is the predicted probability. This loss treats all misclassifications equally regardless of the patient's demographic characteristics or the type of error (false positive versus false negative).
+where $$y_i$$ is the true label and $$\hat{y}_i$$ is the predicted probability. This loss treats all misclassifications equally regardless of the patient's demographic characteristics or the type of error (false positive versus false negative).
 
 To encourage fairness, we can augment the standard loss with fairness penalty terms. One approach is to add a demographic parity term that penalizes differences in predicted risk across protected groups:
 
 $$\mathcal{L}_{DP} = \mathcal{L}_{CE} + \lambda_{DP} \left| \frac{1}{n_0} \sum_{i: a_i=0} \hat{y}_i - \frac{1}{n_1} \sum_{i: a_i=1} \hat{y}_i \right|$$
 
-where $a_i$ indicates group membership, $n_0$ and $n_1$ are group sizes, and $\lambda_{DP} > 0$ is a hyperparameter controlling the fairness-accuracy tradeoff.
+where $$a_i$$ indicates group membership, $$n_0$$ and $$n_1$$ are group sizes, and $$\lambda_{DP} > 0$$ is a hyperparameter controlling the fairness-accuracy tradeoff.
 
 Alternatively, for settings where we have ground truth outcomes, we can enforce equalized odds by penalizing differences in true positive and false positive rates:
 
 $$\mathcal{L}_{EO} = \mathcal{L}_{CE} + \lambda_{TPR} |TPR_0 - TPR_1| + \lambda_{FPR} |FPR_0 - FPR_1|$$
 
-where $TPR_g$ and $FPR_g$ are the true positive and false positive rates for group $g$.
+where $$TPR_g$$ and $$FPR_g$$ are the true positive and false positive rates for group $g$.
 
-These fairness-augmented loss functions enable end-to-end training of models that explicitly balance predictive accuracy with fairness constraints. However, they require careful tuning of the penalty weights $\lambda$ and may face optimization challenges, particularly when fairness constraints conflict with accuracy on underrepresented groups with limited training data.
+These fairness-augmented loss functions enable end-to-end training of models that explicitly balance predictive accuracy with fairness constraints. However, they require careful tuning of the penalty weights $$\lambda$$ and may face optimization challenges, particularly when fairness constraints conflict with accuracy on underrepresented groups with limited training data.
 
 Another approach is to use group-specific loss weighting that upweights examples from underrepresented groups:
 
 $$\mathcal{L}_{weighted} = -\sum_{i=1}^n w_i [y_i \log(\hat{y}_i) + (1-y_i) \log(1-\hat{y}_i)]$$
 
-where $w_i$ is chosen inversely proportional to the frequency of patient $i$'s demographic group in the training data. This prevents the model from ignoring minority groups to minimize overall loss.
+where $$w_i$$ is chosen inversely proportional to the frequency of patient $i$'s demographic group in the training data. This prevents the model from ignoring minority groups to minimize overall loss.
 
 ### 5.2.4 Production Implementation: Fair Multilayer Perceptron
 
@@ -1015,19 +1015,19 @@ Convolutional neural networks leverage spatial structure in image data through o
 
 $$h^{(l)}_{ij} = f\left(\sum_{a,b} W^{(l)}_{ab} h^{(l-1)}_{i+a,j+b} + b^{(l)}\right)$$
 
-where $h^{(l)}_{ij}$ is the activation at spatial position $(i,j)$ in layer $l$, $W^{(l)}$ is the convolutional kernel, and $f$ is the nonlinear activation function.
+where $$h^{(l)}_{ij}$$ is the activation at spatial position $$(i,j)$$ in layer $l$, $$W^{(l)}$$ is the convolutional kernel, and $f$ is the nonlinear activation function.
 
 Pooling operations reduce spatial dimensions while providing local translation invariance:
 
 $$h^{(pool)}_{ij} = \max_{a,b \in \mathcal{N}_{ij}} h_{ab}$$
 
-for max pooling over neighborhood $\mathcal{N}_{ij}$.
+for max pooling over neighborhood $$\mathcal{N}_{ij}$$.
 
 Modern CNN architectures for medical imaging often build on successful designs from natural image classification, including residual connections that enable training very deep networks:
 
 $$h^{(l+1)} = f(h^{(l)} + \mathcal{F}(h^{(l)}, W^{(l)}))$$
 
-where $\mathcal{F}$ represents a residual block of convolutional layers. These skip connections allow gradients to flow directly backward through the network, mitigating vanishing gradient problems in deep architectures.
+where $$\mathcal{F}$$ represents a residual block of convolutional layers. These skip connections allow gradients to flow directly backward through the network, mitigating vanishing gradient problems in deep architectures.
 
 From a fairness perspective, several architectural choices affect how CNNs generalize across diverse medical images. The receptive field size—the region of the input image that influences a particular activation—determines what scale of features the network can learn. For medical imaging tasks where the relevant pathology may appear at different scales in different patient populations or with different imaging protocols, receptive field design becomes crucial. A network with receptive fields tuned to the typical size of findings in majority training data may miss findings that appear at different scales in underrepresented populations.
 
@@ -1741,12 +1741,12 @@ Clinical data is fundamentally temporal. Patient vital signs evolve over hours i
 
 ### 5.4.1 Recurrent Neural Network Architectures
 
-Recurrent neural networks process sequential data by maintaining hidden states that capture information from previous time steps. For an input sequence $\{x_1, x_2, \ldots, x_T\}$, a basic RNN computes:
+Recurrent neural networks process sequential data by maintaining hidden states that capture information from previous time steps. For an input sequence $$\{x_1, x_2, \ldots, x_T\}$$, a basic RNN computes:
 
 $$h_t = \tanh(W_h h_{t-1} + W_x x_t + b)$$
 $$y_t = W_y h_t + b_y$$
 
-where $h_t$ is the hidden state at time $t$, $W_h$, $W_x$, and $W_y$ are weight matrices, and $b$, $b_y$ are bias vectors.
+where $$h_t$$ is the hidden state at time $t$, $$W_h$$, $$W_x$$, and $$W_y$$ are weight matrices, and $b$, $$b_y$$ are bias vectors.
 
 Basic RNNs suffer from vanishing and exploding gradient problems when processing long sequences, limiting their ability to capture long-range dependencies. Long Short-Term Memory (LSTM) networks address this through gating mechanisms that control information flow:
 
@@ -1757,7 +1757,7 @@ $$C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t$$  (cell state update)
 $$o_t = \sigma(W_o [h_{t-1}, x_t] + b_o)$$  (output gate)
 $$h_t = o_t \odot \tanh(C_t)$$  (hidden state)
 
-where $\sigma$ is the sigmoid function, $\odot$ denotes element-wise multiplication, and $C_t$ is the cell state that can maintain information across many time steps.
+where $$\sigma$$ is the sigmoid function, $$\odot$$ denotes element-wise multiplication, and $$C_t$$ is the cell state that can maintain information across many time steps.
 
 Gated Recurrent Units (GRU) simplify the LSTM architecture while maintaining its ability to model long-range dependencies:
 
@@ -1772,23 +1772,23 @@ More sophisticated approaches handle irregular time series explicitly. Time-awar
 
 ### 5.4.2 Attention Mechanisms and Transformer Architectures
 
-Attention mechanisms allow models to focus on relevant parts of input sequences when making predictions, providing both improved performance and interpretability. For a sequence of hidden states $\{h_1, \ldots, h_T\}$ and a query state $q$, attention computes:
+Attention mechanisms allow models to focus on relevant parts of input sequences when making predictions, providing both improved performance and interpretability. For a sequence of hidden states $$\{h_1, \ldots, h_T\}$$ and a query state $q$, attention computes:
 
 $$\alpha_t = \frac{\exp(score(q, h_t))}{\sum_{t'=1}^T \exp(score(q, h_{t'}))}$$
 $$c = \sum_{t=1}^T \alpha_t h_t$$
 
-where $score(q, h_t)$ measures the relevance of $h_t$ to query $q$ (commonly using dot product $q^T h_t$ or a learned function), $\alpha_t$ are the attention weights, and $c$ is the context vector combining relevant information from the entire sequence.
+where $$score(q, h_t)$$ measures the relevance of $$h_t$$ to query $q$ (commonly using dot product $$q^T h_t$$ or a learned function), $$\alpha_t$$ are the attention weights, and $c$ is the context vector combining relevant information from the entire sequence.
 
 Transformer architectures dispense with recurrence entirely, processing all sequence positions in parallel using self-attention:
 
 $$Attention(Q, K, V) = softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
 
-where $Q$ (queries), $K$ (keys), and $V$ (values) are linear projections of the input sequence, and $d_k$ is the dimension of the key vectors used for normalization. Multi-head attention runs multiple attention operations in parallel, allowing the model to attend to different aspects of the input:
+where $Q$ (queries), $K$ (keys), and $V$ (values) are linear projections of the input sequence, and $$d_k$$ is the dimension of the key vectors used for normalization. Multi-head attention runs multiple attention operations in parallel, allowing the model to attend to different aspects of the input:
 
 $$MultiHead(Q, K, V) = Concat(head_1, \ldots, head_h)W^O$$
 $$head_i = Attention(QW_i^Q, KW_i^K, VW_i^V)$$
 
-where $W_i^Q$, $W_i^K$, $W_i^V$ are learned projection matrices for head $i$, and $W^O$ is the output projection.
+where $$W_i^Q$$, $$W_i^K$$, $$W_i^V$$ are learned projection matrices for head $i$, and $$W^O$$ is the output projection.
 
 For clinical sequences, transformers offer several advantages over recurrent architectures. The parallel processing of all sequence positions enables efficient training on long clinical histories. The explicit attention weights provide interpretability by showing which past observations most influenced a given prediction. Positional encodings can incorporate not just sequence order but also actual timestamps, naturally handling irregular observation times.
 
