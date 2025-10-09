@@ -9,7 +9,7 @@ title: Chapters
 
 **[Chapter 2: Mathematical Foundations with Health Equity Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-02-mathematical-foundations/))**  
 
-**[Chapter 3: Healthcare Data Engineering for Equity]((https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/))**  
+**[Chapter 3: Healthcare Data Engineering for Equity](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/)**  
 
 ### Part II: Core Machine Learning Methods
 
