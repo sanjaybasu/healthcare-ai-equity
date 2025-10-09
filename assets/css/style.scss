@@ -1,3 +1,6 @@
+---
+---
+
 /* ========================================
    Fixed Stylesheet for Healthcare AI Textbook
    Resolves: Sticky TOC, Equation rendering, Layout issues
@@ -165,24 +168,12 @@ a:hover {
 }
 
 /* ========================================
-   Table of Contents - FIXED
+   Table of Contents - FIXED FOR ALL CASES
    ======================================== */
-.chapter-toc {
-  /* CRITICAL FIX: Remove sticky/fixed positioning */
-  position: static;
-  background-color: var(--bg-alt);
-  padding: 1.5rem;
-  border-left: 4px solid var(--secondary-color);
-  margin: 2rem 0;
-  border-radius: 5px;
-  /* Remove any height constraints */
-  max-height: none;
-  overflow: visible;
-}
-
-/* Table of Contents - JavaScript-generated version */
-.table-of-contents {
-  /* CRITICAL: Not sticky/fixed */
+.table-of-contents,
+.chapter-toc,
+nav.table-of-contents,
+nav.chapter-toc {
   position: static !important;
   background-color: var(--bg-alt);
   padding: 1.5rem;
@@ -192,37 +183,12 @@ a:hover {
   max-height: none !important;
   overflow: visible !important;
   top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
 }
 
-.table-of-contents h2 {
-  font-size: 1.3rem;
-  margin-top: 0;
-  border: none;
-  color: var(--primary-color);
-}
-
-.table-of-contents ul {
-  list-style: none;
-  padding-left: 0;
-  margin-top: 1rem;
-}
-
-.table-of-contents li {
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
-}
-
-.table-of-contents h2 {
-  margin-left: 0;
-  font-weight: 600;
-}
-
-.table-of-contents h3 {
-  margin-left: 1.5rem;
-  font-size: 0.95rem;
-  color: var(--text-light);
-}
-
+.table-of-contents h2,
 .chapter-toc h2 {
   font-size: 1.3rem;
   margin-top: 0;
@@ -230,12 +196,14 @@ a:hover {
   color: var(--primary-color);
 }
 
+.table-of-contents ul,
 .toc-list {
   list-style: none;
   padding-left: 0;
   margin-top: 1rem;
 }
 
+.table-of-contents li,
 .toc-list li {
   margin-bottom: 0.5rem;
   line-height: 1.5;
@@ -246,7 +214,8 @@ a:hover {
   margin-top: 0.5rem;
 }
 
-.toc-h3 {
+.toc-h3,
+.table-of-contents h3 {
   margin-left: 1.5rem;
   font-size: 0.95rem;
   color: var(--text-light);
@@ -506,7 +475,8 @@ figcaption {
     text-align: center;
   }
   
-  .chapter-toc {
+  .chapter-toc,
+  .table-of-contents {
     padding: 1rem;
   }
   
