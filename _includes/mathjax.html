@@ -1,0 +1,217 @@
+<!-- MathJax Configuration for Healthcare AI Textbook -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  extensions: ["tex2jax.js"],
+  jax: ["input/TeX", "output/HTML-CSS"],
+  tex2jax: {
+    // Delimiters for inline and display math
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\\[','\\]']],
+    
+    // Process equations but skip certain tags
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    
+    // Ignore classes
+    ignoreClass: "tex2jax_ignore",
+    processClass: "tex2jax_process",
+    
+    TeX: {
+      equationNumbers: { 
+        autoNumber: "AMS",
+        formatNumber: function (n) { return n } 
+      },
+      extensions: [
+        "AMSmath.js",
+        "AMSsymbols.js",
+        "noErrors.js",
+        "noUndefined.js",
+        "autoload-all.js"
+      ],
+      // Common mathematical macros for healthcare AI
+      Macros: {
+        // Sets and spaces
+        RR: "{\\mathbb{R}}",
+        NN: "{\\mathbb{N}}",
+        ZZ: "{\\mathbb{Z}}",
+        CC: "{\\mathbb{C}}",
+        PP: "{\\mathbb{P}}",
+        EE: "{\\mathbb{E}}",
+        
+        // Operators
+        argmin: "\\operatorname*{arg\\,min}",
+        argmax: "\\operatorname*{arg\\,max}",
+        sign: "\\operatorname{sign}",
+        tr: "\\operatorname{tr}",
+        diag: "\\operatorname{diag}",
+        rank: "\\operatorname{rank}",
+        span: "\\operatorname{span}",
+        dom: "\\operatorname{dom}",
+        
+        // Probability and statistics
+        E: "\\mathbb{E}",
+        Var: "\\operatorname{Var}",
+        Cov: "\\operatorname{Cov}",
+        Corr: "\\operatorname{Corr}",
+        Prob: "\\mathbb{P}",
+        given: "\\,|\\,",
+        
+        // Calculus and optimization
+        grad: "\\nabla",
+        hess: "\\nabla^2",
+        Loss: "\\mathcal{L}",
+        KL: "\\operatorname{KL}",
+        
+        // Machine learning specific
+        sigmoid: "\\operatorname{sigmoid}",
+        softmax: "\\operatorname{softmax}",
+        relu: "\\operatorname{ReLU}",
+        
+        // Bold vectors and matrices
+        bold: ["{\\bf #1}", 1],
+        bm: ["{\\boldsymbol{#1}}", 1],
+        
+        // Common notation
+        ind: "\\mathbb{1}",
+        iid: "\\stackrel{\\text{iid}}{\\sim}"
+      },
+      // Equation numbering
+      TagSide: "right",
+      TagIndent: ".8em",
+      MultLineWidth: "85%"
+    },
+    SVG: {
+      scale: 100,
+      minScaleAdjust: 50,
+      font: "TeX",
+      blacker: 2,
+      undefinedFamily: "STIXGeneral,'Arial Unicode MS',serif"
+    }
+  },
+  // HTML-CSS output configuration
+  "HTML-CSS": {
+    availableFonts: ["TeX"],
+    preferredFont: "TeX",
+    webFont: "TeX",
+    imageFont: null,
+    scale: 100,
+    minScaleAdjust: 50,
+    linebreaks: { 
+      automatic: true,
+      width: "container" 
+    },
+    styles: {
+      ".MathJax_Display": {
+        margin: "1em 0"
+      }
+    },
+    // Handle overflow in equations
+    matchFontHeight: true,
+    mtextFontInherit: true
+  },
+  // Common HTML-CSS settings
+  CommonHTML: {
+    scale: 100,
+    minScaleAdjust: 50,
+    linebreaks: { automatic: true }
+  },
+  // Display settings
+  showMathMenu: true,
+  showProcessingMessages: false,
+  messageStyle: "none",
+  displayAlign: "center",
+  displayIndent: "0em",
+  
+  // Accessibility
+  menuSettings: {
+    zoom: "Click",
+    zscale: "200%"
+  },
+  
+  // Loading settings
+  showMathMenuMSIE: true,
+  positionToHash: true
+});
+
+// Post-processing to add has-jax class for custom styling
+MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for(i = 0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+
+// Error handling
+MathJax.Hub.Register.MessageHook("Math Processing Error", function (message) {
+  console.error("MathJax Error: ", message);
+});
+
+MathJax.Hub.Register.MessageHook("TeX Jax - parse error", function (message) {
+  console.error("MathJax Parse Error: ", message);
+});
+</script>
+
+<!-- Load MathJax from CDN -->
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+<!-- Custom styling for math elements -->
+<style>
+/* Ensure math doesn't overflow on mobile */
+.MathJax_Display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 0.5em 0;
+}
+
+/* Style for inline math */
+.MathJax {
+  outline: 0;
+}
+
+/* Prevent code highlighting from affecting math in code blocks */
+code.has-jax {
+  font: inherit;
+  font-size: 100%;
+  background: inherit;
+  border: inherit;
+  color: inherit;
+  padding: 0;
+}
+
+/* Display math centering */
+.MathJax_Display {
+  text-align: center;
+  margin: 1em 0;
+}
+
+/* Equation numbers */
+.MathJax_Display .MJXc-display {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+  padding: 0;
+}
+
+/* Responsive math - prevent horizontal scroll on small screens */
+@media (max-width: 768px) {
+  .MathJax_Display {
+    font-size: 90%;
+  }
+}
+
+/* Loading indicator */
+.MathJax_Preview {
+  color: #888;
+  font-style: italic;
+}
+
+/* Error styling */
+.MathJax_Error {
+  color: #cc0000;
+  font-style: italic;
+}
+</style>
