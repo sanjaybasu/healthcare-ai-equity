@@ -40,7 +40,7 @@ The transformer architecture, introduced by Vaswani et al. (2017), forms the fou
 
 The core transformer consists of stacked encoder and decoder layers, though modern LLMs typically use decoder-only architectures (Radford et al., 2019; Brown et al., 2020). Each layer applies multi-head self-attention followed by position-wise feed-forward networks, with residual connections and layer normalization throughout.
 
-For an input sequence of tokens $x_1, \ldots, x_n$, we first embed each token and add positional encodings to preserve sequence order. Let $\mathbf{X} \in \mathbb{R}^{n \times d}$denote the embedded input matrix where$d$ is the embedding dimension. The self-attention mechanism computes representations that weight the importance of each token to every other token.
+For an input sequence of tokens $x_1, \ldots, x_n $, we first embed each token and add positional encodings to preserve sequence order. Let $\mathbf{X} \in \mathbb{R}^{n \times d}$ denote the embedded input matrix where $d$ is the embedding dimension. The self-attention mechanism computes representations that weight the importance of each token to every other token.
 
 ### Self-Attention Mechanism
 
@@ -58,7 +58,7 @@ $$
 
 The scaling factor $\sqrt{d_k}$ prevents dot products from growing too large in magnitude, which would push the softmax into regions with extremely small gradients. The softmax operation over each row produces attention weights summing to one, determining how much each position attends to every other position.
 
-Multi-head attention runs $h$ attention mechanisms in parallel with different learned projections, allowing the model to attend to different representation subspaces:
+Multi-head attention runs $ h$ attention mechanisms in parallel with different learned projections, allowing the model to attend to different representation subspaces:
 
 $$
 \text{MultiHead}(\mathbf{X}) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)\mathbf{W}^O
@@ -68,15 +68,15 @@ where $\text{head}_i = \text{Attention}(\mathbf{Q}_i, \mathbf{K}_i, \mathbf{V}_i
 
 ### Causal Language Modeling
 
-Large language models are trained using causal language modeling objectives that predict the next token given previous context. For a sequence $x_1, \ldots, x_n$, the model learns to maximize the log-likelihood:
+Large language models are trained using causal language modeling objectives that predict the next token given previous context. For a sequence $ x_1, \ldots, x_n$, the model learns to maximize the log-likelihood:
 
 $$
 \mathcal{L}(\theta) = \sum_{t=1}^{n} \log P_\theta(x_t \mid x_1, \ldots, x_{t-1})
 $$
 
-This autoregressive factorization allows the model to learn rich language patterns without requiring labeled data. The causal mask ensures that position $t$ can only attend to positions $1, \ldots, t$, preventing information leakage from future tokens during training.
+This autoregressive factorization allows the model to learn rich language patterns without requiring labeled data. The causal mask ensures that position $t $ can only attend to positions $ 1, \ldots, t $, preventing information leakage from future tokens during training.
 
-At inference time, we generate text by sampling from the model's predicted distribution. Common strategies include greedy decoding (selecting the highest probability token), beam search (maintaining multiple high-probability sequences), and nucleus sampling (sampling from the smallest set of tokens whose cumulative probability exceeds a threshold $p$) (Holtzman et al., 2020).
+At inference time, we generate text by sampling from the model's predicted distribution. Common strategies include greedy decoding (selecting the highest probability token), beam search (maintaining multiple high-probability sequences), and nucleus sampling (sampling from the smallest set of tokens whose cumulative probability exceeds a threshold $ p $) (Holtzman et al., 2020).
 
 ### Fine-tuning and Adaptation
 
@@ -88,7 +88,7 @@ $$
 
 However, full fine-tuning requires updating all model parameters, which is computationally expensive for large models and risks catastrophic forgetting of pre-trained knowledge. Parameter-efficient fine-tuning methods address this by updating only a small subset of parameters while keeping most weights frozen.
 
-Low-Rank Adaptation (LoRA) injects trainable rank-decomposition matrices into attention layers (Hu et al., 2021). For a pre-trained weight matrix $\mathbf{W}_0 \in \mathbb{R}^{d \times k}$, LoRA adds an update $\Delta \mathbf{W} = \mathbf{B}\mathbf{A}$ where $\mathbf{B} \in \mathbb{R}^{d \times r}$ and $\mathbf{A} \in \mathbb{R}^{r \times k}$with rank$r \ll \min(d, k)$. During forward passes, we compute:
+Low-Rank Adaptation (LoRA) injects trainable rank-decomposition matrices into attention layers (Hu et al., 2021). For a pre-trained weight matrix $\mathbf{W}_0 \in \mathbb{R}^{d \times k}$, LoRA adds an update $\Delta \mathbf{W} = \mathbf{B}\mathbf{A}$ where $\mathbf{B} \in \mathbb{R}^{d \times r}$ and $\mathbf{A} \in \mathbb{R}^{r \times k}$ with rank $r \ll \min(d, k)$. During forward passes, we compute:
 
 $$
 \mathbf{h} = \mathbf{W}_0 \mathbf{x} + \mathbf{B}\mathbf{A}\mathbf{x}
@@ -96,7 +96,7 @@ $$
 
 By training only $\mathbf{A}$ and $\mathbf{B}$, LoRA reduces trainable parameters by orders of magnitude while achieving comparable performance to full fine-tuning.
 
-Prompt tuning prepends learnable continuous vectors (soft prompts) to the input embeddings while keeping model weights frozen (Lester et al., 2021). For a prompt of length $p$, we optimize $\mathbf{P} \in \mathbb{R}^{p \times d}$ to minimize task loss. This approach requires storing only the prompt parameters for each task, enabling efficient multi-task deployment.
+Prompt tuning prepends learnable continuous vectors (soft prompts) to the input embeddings while keeping model weights frozen (Lester et al., 2021). For a prompt of length $ p $, we optimize $\mathbf{P} \in \mathbb{R}^{p \times d}$ to minimize task loss. This approach requires storing only the prompt parameters for each task, enabling efficient multi-task deployment.
 
 ### Healthcare-Specific Considerations
 

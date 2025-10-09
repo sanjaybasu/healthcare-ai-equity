@@ -41,31 +41,31 @@ Catastrophic forgetting, also termed catastrophic interference, describes the te
 
 ### Mathematical Foundations
 
-Consider a neural network with parameters $\theta$ trained sequentially on a series of tasks $T_1, T_2, \ldots, T_n$. For each task $T_i$, we have a dataset $\mathcal{D}_i = \{(x_j^{(i)}, y_j^{(i)})\}_{j=1}^{N_i}$ and a loss function $\mathcal{L}_i(\theta)$. In traditional supervised learning, we would train on task$T_i$ by minimizing:
+Consider a neural network with parameters $\theta $ trained sequentially on a series of tasks $ T_1, T_2, \ldots, T_n $. For each task $ T_i $, we have a dataset $\mathcal{D}_i = \{(x_j^{(i)}, y_j^{(i)})\}_{j=1}^{N_i}$ and a loss function $\mathcal{L}_i(\theta)$. In traditional supervised learning, we would train on task $ T_i$ by minimizing:
 
 $$
 \theta_i^* = \arg\min_{\theta} \mathcal{L}_i(\theta) = \arg\min_{\theta} \frac{1}{N_i} \sum_{j=1}^{N_i} \ell(f_\theta(x_j^{(i)}), y_j^{(i)})
 $$
 
-where $\ell$ is a loss function such as cross-entropy for classification or mean squared error for regression, and $f_\theta$ represents the neural network function parameterized by $\theta$.
+where $\ell $ is a loss function such as cross-entropy for classification or mean squared error for regression, and $ f_\theta $ represents the neural network function parameterized by $\theta $.
 
-When we subsequently train on task $T_{i+1}$, standard stochastic gradient descent updates the parameters according to:
+When we subsequently train on task $ T_{i+1}$, standard stochastic gradient descent updates the parameters according to:
 
 $$
 \theta \leftarrow \theta - \eta \nabla_\theta \mathcal{L}_{i+1}(\theta)
 $$
 
-where $\eta$ is the learning rate. The problem is that these updates are computed solely based on the loss for task $T_{i+1}$, with no explicit constraint to preserve performance on tasks $T_1, \ldots, T_i$. Because neural networks use distributed representations where the same parameters influence predictions across multiple tasks, updates optimized for $T_{i+1}$ can dramatically increase loss on previous tasks.
+where $\eta $ is the learning rate. The problem is that these updates are computed solely based on the loss for task $ T_{i+1}$, with no explicit constraint to preserve performance on tasks $ T_1, \ldots, T_i $. Because neural networks use distributed representations where the same parameters influence predictions across multiple tasks, updates optimized for $ T_{i+1}$ can dramatically increase loss on previous tasks.
 
-To quantify catastrophic forgetting, we measure the performance change on previous tasks after learning new tasks. Let $A_i(j)$ denote the accuracy on task $T_j$ after training on tasks $T_1, \ldots, T_i$. The average forgetting after learning task $T_n$ is:
+To quantify catastrophic forgetting, we measure the performance change on previous tasks after learning new tasks. Let $ A_i(j)$ denote the accuracy on task $ T_j $ after training on tasks $ T_1, \ldots, T_i $. The average forgetting after learning task $ T_n$ is:
 
 $$
 \mathcal{F}_n = \frac{1}{n-1} \sum_{i=1}^{n-1} \left( \max_{j \in \{i, \ldots, n-1\}} A_j(i) - A_n(i) \right)
 $$
 
-This metric captures the maximum accuracy achieved on each task before learning subsequent tasks, minus the final accuracy after learning all tasks. High values of $\mathcal{F}_n$ indicate severe catastrophic forgetting.
+This metric captures the maximum accuracy achieved on each task before learning subsequent tasks, minus the final accuracy after learning all tasks. High values of $\mathcal{F}_n $ indicate severe catastrophic forgetting.
 
-The severity of catastrophic forgetting depends on several factors. Task similarity plays a crucial role: if tasks share common structure or representations, learning new tasks may benefit rather than harm performance on previous tasks through positive transfer. The degree of overlap in the optimal parameter configurations also matters: if $\theta_i^*$ and $\theta_j^*$ are similar for tasks $i$ and $j$, forgetting is less likely. Network capacity influences forgetting: larger networks with more parameters have greater ability to dedicate different subsets of parameters to different tasks, reducing interference. Finally, the learning rate and number of training epochs on new tasks affect the extent of parameter updates and thus the degree of forgetting.
+The severity of catastrophic forgetting depends on several factors. Task similarity plays a crucial role: if tasks share common structure or representations, learning new tasks may benefit rather than harm performance on previous tasks through positive transfer. The degree of overlap in the optimal parameter configurations also matters: if $\theta_i^*$ and $\theta_j^*$ are similar for tasks $ i $ and $ j$, forgetting is less likely. Network capacity influences forgetting: larger networks with more parameters have greater ability to dedicate different subsets of parameters to different tasks, reducing interference. Finally, the learning rate and number of training epochs on new tasks affect the extent of parameter updates and thus the degree of forgetting.
 
 ### Catastrophic Forgetting in Healthcare
 
@@ -89,11 +89,11 @@ $$
 \Theta(x, x') = \mathbb{E}_{\theta \sim \mathcal{P}_0} \left[ \nabla_\theta f_\theta(x)^T \nabla_\theta f_\theta(x') \right]
 $$
 
-and $\mathcal{P}_0$ is the initialization distribution. In this regime, the network function at initialization plus its linear approximation around initialization parameters describes the network's evolution during training. When training on a new task, the gradient updates are computed based only on the new task's loss landscape, leading to changes in the function that can be destructive for previous tasks unless the neural tangent kernels for different tasks have specific structure that preserves previous performance.
+and $\mathcal{P}_0 $ is the initialization distribution. In this regime, the network function at initialization plus its linear approximation around initialization parameters describes the network's evolution during training. When training on a new task, the gradient updates are computed based only on the new task's loss landscape, leading to changes in the function that can be destructive for previous tasks unless the neural tangent kernels for different tasks have specific structure that preserves previous performance.
 
 An alternative perspective comes from mode connectivity and loss landscape analysis. Neural networks often have multiple local minima that achieve good performance on a given task. These minima are connected by low-loss paths or tunnels in parameter space, forming a complex loss landscape with multiple basins of attraction. When training on a new task, gradient descent moves the parameters toward minima for the new task, potentially crossing high-loss regions for previous tasks. If the minima for different tasks are in disconnected regions of parameter space, catastrophic forgetting is inevitable with standard sequential training.
 
-Bayesian perspectives on continual learning model parameter uncertainty and update the posterior distribution over parameters as new data arrives. Let $p(\theta | \mathcal{D}_1)$ be the posterior after training on task 1. When task 2 data arrives, we should update:
+Bayesian perspectives on continual learning model parameter uncertainty and update the posterior distribution over parameters as new data arrives. Let $ p(\theta | \mathcal{D}_1)$ be the posterior after training on task 1. When task 2 data arrives, we should update:
 
 $$
 p(\theta | \mathcal{D}_1, \mathcal{D}_2) \propto p(\mathcal{D}_2 | \theta) p(\theta | \mathcal{D}_1)
@@ -113,7 +113,7 @@ $$
 p(\theta | \mathcal{D}_A) \approx \mathcal{N}(\theta; \theta_A^*, F_A^{-1})
 $$
 
-where $F_A$ is the Fisher information matrix evaluated at $\theta_A^*$:
+where $F_A $ is the Fisher information matrix evaluated at $\theta_A^*$:
 
 $$
 F_A = \mathbb{E}_{x \sim \mathcal{D}_A} \left[ \nabla_\theta \log p(y|x, \theta_A^*) \nabla_\theta \log p(y|x, \theta_A^*)^T \right]
@@ -137,7 +137,7 @@ $$
 
 This diagonal approximation assumes independence between parameters, which is clearly an approximation for neural networks where parameters interact through nonlinear activations. Nevertheless, empirical results show this approximation provides effective regularization in practice.
 
-For continual learning across multiple tasks $T_1, T_2, \ldots, T_n$, we can accumulate Fisher information matrices across tasks. After learning task $T_k$, we compute $F_k$ and store it along with $\theta_k^*$. When learning task $T_{k+1}$, the loss becomes:
+For continual learning across multiple tasks $T_1, T_2, \ldots, T_n $, we can accumulate Fisher information matrices across tasks. After learning task $ T_k $, we compute $ F_k $ and store it along with $\theta_k^*$. When learning task $ T_{k+1}$, the loss becomes:
 
 $$
 \mathcal{L}(\theta) = \mathcal{L}_{k+1}(\theta) + \sum_{j=1}^{k} \frac{\lambda_j}{2} \sum_i F_{j,i} (\theta_i - \theta_{j,i}^*)^2
@@ -149,13 +149,13 @@ This formulation can lead to memory issues as we must store Fisher information m
 
 Synaptic Intelligence (SI), proposed by Zenke, Poole, and Ganguli in 2017, takes a different approach to identifying important parameters. Rather than using Fisher information computed at the end of training on each task, SI tracks the importance of each parameter throughout the learning trajectory by accumulating path integrals of gradients.
 
-The contribution of parameter $\theta_i$ to reducing the loss on task $k$ over the learning trajectory is:
+The contribution of parameter $\theta_i $ to reducing the loss on task $ k$ over the learning trajectory is:
 
 $$
 \omega_i^{(k)} = \sum_{t} -g_i^{(k)}(t) \Delta \theta_i(t)
 $$
 
-where $g_i^{(k)}(t)$ is the gradient of the loss for task $k$ with respect to parameter $i$ at time step $t$, and $\Delta \theta_i(t) = \theta_i(t+1) - \theta_i(t)$ is the parameter change at that time step. This quantity measures how much each parameter contributed to loss reduction: parameters that move in the direction of the negative gradient contribute positively to $\omega_i^{(k)}$.
+where $g_i^{(k)}(t)$ is the gradient of the loss for task $ k $ with respect to parameter $ i $ at time step $ t $, and $\Delta \theta_i(t) = \theta_i(t+1) - \theta_i(t)$ is the parameter change at that time step. This quantity measures how much each parameter contributed to loss reduction: parameters that move in the direction of the negative gradient contribute positively to $\omega_i^{(k)}$.
 
 To prevent numerical issues and ensure scale invariance, SI normalizes these contributions by the total parameter change:
 
@@ -163,9 +163,9 @@ $$
 \Omega_i^{(k)} = \frac{\omega_i^{(k)}}{(\Delta \theta_i^{(k)})^2 + \xi}
 $$
 
-where $\Delta \theta_i^{(k)} = \theta_i^{(k+1)} - \theta_i^{(k)}$ is the total change in parameter $i$ during training on task $k$, and $\xi$ is a small damping parameter for numerical stability.
+where $\Delta \theta_i^{(k)} = \theta_i^{(k+1)} - \theta_i^{(k)}$ is the total change in parameter $ i $ during training on task $ k $, and $\xi $ is a small damping parameter for numerical stability.
 
-When learning task $k+1$, SI adds a quadratic penalty on parameter changes weighted by these importance measures:
+When learning task $ k+1$, SI adds a quadratic penalty on parameter changes weighted by these importance measures:
 
 $$
 \mathcal{L}_{SI}(\theta) = \mathcal{L}_{k+1}(\theta) + c \sum_{j=1}^{k} \sum_i \Omega_i^{(j)} (\theta_i - \theta_i^{(j)})^2
@@ -181,13 +181,13 @@ $$
 \Omega_i = \frac{1}{N} \sum_{n=1}^{N} \left\| \frac{\partial f_\theta(x_n)}{\partial \theta_i} \right\|^2
 $$
 
-This measures how much the network's output changes when parameter $i$ changes, averaged over the data distribution. Parameters that strongly influence the output are deemed important and should be preserved during subsequent learning.
+This measures how much the network's output changes when parameter $i $ changes, averaged over the data distribution. Parameters that strongly influence the output are deemed important and should be preserved during subsequent learning.
 
 A key advantage of MAS is that it does not require task labels during continual learning. While EWC and SI compute importance with respect to specific tasks, MAS computes importance based on the learned function itself, making it applicable in scenarios where task boundaries are not clearly defined or where continual learning occurs in a task-free streaming data setting.
 
 ### Practical Considerations for Healthcare
 
-When applying regularization-based continual learning in healthcare, several practical considerations arise. First, the choice of regularization strength $\lambda$ critically affects the stability-plasticity tradeoff. High values of $\lambda$ strongly preserve previous knowledge but limit the model's ability to adapt to new patterns. Low values allow greater plasticity but risk catastrophic forgetting. In healthcare, this tradeoff has direct implications for patient safety: too much stability may prevent the model from learning important new clinical patterns, while too much plasticity may cause the model to forget rare but critical diagnoses.
+When applying regularization-based continual learning in healthcare, several practical considerations arise. First, the choice of regularization strength $\lambda $ critically affects the stability-plasticity tradeoff. High values of $\lambda $ strongly preserve previous knowledge but limit the model's ability to adapt to new patterns. Low values allow greater plasticity but risk catastrophic forgetting. In healthcare, this tradeoff has direct implications for patient safety: too much stability may prevent the model from learning important new clinical patterns, while too much plasticity may cause the model to forget rare but critical diagnoses.
 
 Second, computational costs must be considered. Computing Fisher information matrices, path integrals of gradients, or output sensitivities all add overhead to the training process. For large models commonly used in medical imaging or clinical NLP, these computations can be substantial. Efficient approximations, such as diagonal Fisher information matrices or sampling-based estimation, become necessary for practical deployment.
 
@@ -207,19 +207,19 @@ $$
 \mathcal{L}_{replay}(\theta) = \mathbb{E}_{(x,y) \sim \mathcal{D}_{new}} [\ell(f_\theta(x), y)] + \alpha \mathbb{E}_{(x,y) \sim \mathcal{M}} [\ell(f_\theta(x), y)]
 $$
 
-where $\alpha$ controls the relative weight of replayed samples. This approach ensures that the model maintains exposure to previous data distributions throughout training on new tasks, preventing the parameter updates from being driven solely by the new task.
+where $\alpha $ controls the relative weight of replayed samples. This approach ensures that the model maintains exposure to previous data distributions throughout training on new tasks, preventing the parameter updates from being driven solely by the new task.
 
 The critical design decision in experience replay is the memory management strategy: how to select which samples to store when memory capacity is limited, and how to update the memory as new tasks arrive. Several strategies exist:
 
-**Reservoir Sampling:** Maintains a uniform sample over all observed data by probabilistically replacing older samples. When a new sample arrives, it is added to the memory with probability $\frac{|\mathcal{M}|}{n}$ where $n$ is the total number of samples seen, and if added, it randomly replaces an existing sample. This ensures each historical sample has equal probability of being in memory regardless of when it was observed.
+**Reservoir Sampling:** Maintains a uniform sample over all observed data by probabilistically replacing older samples. When a new sample arrives, it is added to the memory with probability $\frac{|\mathcal{M}|}{n}$ where $ n $ is the total number of samples seen, and if added, it randomly replaces an existing sample. This ensures each historical sample has equal probability of being in memory regardless of when it was observed.
 
-**Herding:** Selects samples that best represent the feature distribution of each class or task. For a given class $c$, herding maintains a memory set $\mathcal{M}_c$ such that the mean feature representation of samples in $\mathcal{M}_c$is close to the mean feature representation of all samples of class$c$:
+**Herding:** Selects samples that best represent the feature distribution of each class or task. For a given class $ c $, herding maintains a memory set $\mathcal{M}_c $ such that the mean feature representation of samples in $\mathcal{M}_c $ is close to the mean feature representation of all samples of class $c$:
 
 $$
 \mathcal{M}_c = \arg\min_{\mathcal{S} \subseteq \mathcal{D}_c, |\mathcal{S}| = m} \left\| \frac{1}{|\mathcal{D}_c|} \sum_{x \in \mathcal{D}_c} \phi(x) - \frac{1}{m} \sum_{x \in \mathcal{S}} \phi(x) \right\|^2
 $$
 
-where $\phi(x)$ represents the feature embedding of sample $x$ (typically the penultimate layer activations of the neural network), and $m$ is the memory budget per class.
+where $\phi(x)$ represents the feature embedding of sample $ x $ (typically the penultimate layer activations of the neural network), and $ m $ is the memory budget per class.
 
 **Ring Buffer:** Simply stores the most recent samples in a first-in-first-out manner. While this approach does not maintain a representative sample of the entire historical distribution, it can be effective when the data distribution changes gradually and recent samples are most relevant.
 
@@ -227,26 +227,26 @@ where $\phi(x)$ represents the feature embedding of sample $x$ (typically the pe
 
 ### Gradient-Based Sample Selection
 
-More sophisticated replay methods select memory samples based on their utility for preserving model performance. Gradient Episodic Memory (GEM), introduced by Lopez-Paz and Ranzato, formulates continual learning as a constrained optimization problem. When learning task $t$, GEM ensures that gradient updates do not increase the loss on previous tasks:
+More sophisticated replay methods select memory samples based on their utility for preserving model performance. Gradient Episodic Memory (GEM), introduced by Lopez-Paz and Ranzato, formulates continual learning as a constrained optimization problem. When learning task $ t $, GEM ensures that gradient updates do not increase the loss on previous tasks:
 
 $\begin{aligned}
 \min_{\theta} \quad & \mathcal{L}_t(\theta) \\
 \text{subject to} \quad & \mathcal{L}_k(\theta) \leq \mathcal{L}_k(\theta_{t-1}) \quad \forall k < t
 \end{aligned}$
 
-In practice, this is enforced by checking whether the gradient on the current task $g_t = \nabla_\theta \mathcal{L}_t(\theta)$ increases any previous task loss. If so, the gradient is projected to the nearest direction that does not increase previous task losses:
+In practice, this is enforced by checking whether the gradient on the current task $ g_t = \nabla_\theta \mathcal{L}_t(\theta)$ increases any previous task loss. If so, the gradient is projected to the nearest direction that does not increase previous task losses:
 
 $$
 g_t' = \arg\min_{g} \|g - g_t\|^2 \text{ subject to } g^T g_k \leq 0 \quad \forall k < t
 $$
 
-where $g_k = \nabla_\theta \mathcal{L}_k(\theta)$is the gradient on task$k$ computed using samples from memory. This projection can be efficiently computed using quadratic programming.
+where $g_k = \nabla_\theta \mathcal{L}_k(\theta)$ is the gradient on task $k$ computed using samples from memory. This projection can be efficiently computed using quadratic programming.
 
 Averaged GEM (A-GEM) provides a more scalable variant by enforcing only that the gradient does not increase the average loss across previous tasks rather than enforcing constraints for each task individually. This reduces the computational complexity from quadratic to linear in the number of tasks.
 
 ### Generative Replay
 
-Generative replay addresses memory constraints by training a generative model to produce synthetic samples representative of previous data distributions rather than storing actual data samples. When learning task $t$, a generative model $G_t$ (such as a variational autoencoder or generative adversarial network) is trained alongside the main model to generate samples resembling task $t$ data. When learning subsequent tasks, synthetic samples from $G_t$ are used for replay instead of actual stored samples.
+Generative replay addresses memory constraints by training a generative model to produce synthetic samples representative of previous data distributions rather than storing actual data samples. When learning task $ t $, a generative model $ G_t $ (such as a variational autoencoder or generative adversarial network) is trained alongside the main model to generate samples resembling task $ t $ data. When learning subsequent tasks, synthetic samples from $ G_t$ are used for replay instead of actual stored samples.
 
 The loss function for generative replay combines the current task loss with a replay loss on generated samples:
 
@@ -274,7 +274,7 @@ $$
 \mathcal{M} = \arg\min_{\mathcal{S}} \sum_{c,d} w_{c,d} \left\| \mu_{c,d}^{\mathcal{D}} - \mu_{c,d}^{\mathcal{S}} \right\|^2
 $$
 
-where $\mu_{c,d}^{\mathcal{D}}$ and $\mu_{c,d}^{\mathcal{S}}$are mean feature representations for class$c$and demographic group$d$in the full dataset and memory set respectively, and$w_{c,d}$ are weights emphasizing rare class-demographic combinations.
+where $\mu_{c,d}^{\mathcal{D}}$ and $\mu_{c,d}^{\mathcal{S}}$ are mean feature representations for class $c$ and demographic group $d$ in the full dataset and memory set respectively, and $w_{c,d}$ are weights emphasizing rare class-demographic combinations.
 
 **Multi-Objective Replay:** Formulates replay sample selection as a multi-objective optimization problem balancing overall accuracy preservation with fairness metric preservation across groups. Pareto optimization techniques can identify memory sets that provide reasonable tradeoffs across these potentially competing objectives.
 
@@ -286,17 +286,17 @@ Architecture-based approaches to continual learning allocate dedicated model cap
 
 ### Progressive Neural Networks
 
-Progressive Neural Networks, introduced by Rusu and colleagues in 2016, create a separate neural network column for each task while retaining lateral connections from previous columns to enable transfer learning. When learning task $t$, a new column of layers is instantiated with random initialization. Each layer in the new column receives input not only from the previous layer in its own column but also from corresponding layers in all previous columns through lateral connections.
+Progressive Neural Networks, introduced by Rusu and colleagues in 2016, create a separate neural network column for each task while retaining lateral connections from previous columns to enable transfer learning. When learning task $ t $, a new column of layers is instantiated with random initialization. Each layer in the new column receives input not only from the previous layer in its own column but also from corresponding layers in all previous columns through lateral connections.
 
-Formally, the activation $h_i^{(t)}$ at layer $i$ for task $t$ is:
+Formally, the activation $ h_i^{(t)}$ at layer $ i $ for task $ t$ is:
 
 $$
 h_i^{(t)} = \sigma\left(W_i^{(t)} h_{i-1}^{(t)} + \sum_{k=1}^{t-1} U_i^{(k \rightarrow t)} h_{i-1}^{(k)}\right)
 $$
 
-where $W_i^{(t)}$ are the within-column weights for task $t$, $U_i^{(k \rightarrow t)}$are lateral connection weights from column$k$to column$t$, and$\sigma$ is a nonlinearity. The lateral connections allow new tasks to leverage features learned for previous tasks while the dedicated columns ensure that learning new tasks does not modify parameters used by previous tasks.
+where $W_i^{(t)}$ are the within-column weights for task $ t $, $ U_i^{(k \rightarrow t)}$ are lateral connection weights from column $ k$ to column $ t$, and $\sigma$ is a nonlinearity. The lateral connections allow new tasks to leverage features learned for previous tasks while the dedicated columns ensure that learning new tasks does not modify parameters used by previous tasks.
 
-Progressive networks completely eliminate catastrophic forgetting since parameters for old tasks are frozen after training. However, they suffer from unbounded growth in model size and parameters as more tasks are learned. For a network with $L$ layers and $n$ units per layer, learning $T$ tasks requires $O(T^2 L n^2)$ total parameters due to the lateral connections from all previous columns to each new column.
+Progressive networks completely eliminate catastrophic forgetting since parameters for old tasks are frozen after training. However, they suffer from unbounded growth in model size and parameters as more tasks are learned. For a network with $ L $ layers and $ n $ units per layer, learning $ T $ tasks requires $ O(T^2 L n^2)$ total parameters due to the lateral connections from all previous columns to each new column.
 
 ### Packnet
 
@@ -308,7 +308,7 @@ PackNet, developed by Mallya and Lazebnik, addresses the growth problem by itera
 
 The pruning step uses magnitude-based pruning, setting weights below a threshold to zero. The threshold is chosen to achieve a target sparsity level. Importance is assessed globally across all tasks: weights that are important for any task are retained. This is implemented by tracking which weights are active (non-zero) after pruning for each task and taking the union of active weight sets.
 
-When learning task $t$, let $M^{(k)}$ be the binary mask of active weights for task $k$. The combined mask $M^{(1:t-1)} = M^{(1)} \vee M^{(2)} \vee \cdots \vee M^{(t-1)}$ indicates weights used by any previous task. During training on task $t$, only weights where $M^{(1:t-1)} = 0$ are updated, ensuring previous task parameters remain unchanged.
+When learning task $ t $, let $ M^{(k)}$ be the binary mask of active weights for task $ k $. The combined mask $ M^{(1:t-1)} = M^{(1)} \vee M^{(2)} \vee \cdots \vee M^{(t-1)}$ indicates weights used by any previous task. During training on task $ t $, only weights where $ M^{(1:t-1)} = 0$ are updated, ensuring previous task parameters remain unchanged.
 
 PackNet can continue learning new tasks until the network reaches full capacity (all weights are being used by some task). In practice, with deep networks and high sparsity levels (e.g., 50-80% of weights pruned per task), PackNet can accommodate many tasks before exhausting capacity. However, unlike progressive networks, there is no theoretical guarantee of unlimited task capacity, and performance may degrade as the network approaches full capacity.
 
@@ -338,7 +338,7 @@ DEN provides a middle ground between progressive networks (which always expand) 
 
 Recent work has explored using hypernetworks—networks that generate weights for other networks—for continual learning. The hypernetwork is conditioned on task embeddings and generates task-specific weights for a main network. When learning a new task, the hypernetwork parameters are updated while previously generated weights remain fixed.
 
-Let $h_\phi$ be the hypernetwork parameterized by $\phi$, and let $e_t$ be an embedding vector for task $t$. The weights for task $t$ are generated as:
+Let $h_\phi $ be the hypernetwork parameterized by $\phi $, and let $ e_t $ be an embedding vector for task $ t $. The weights for task $ t$ are generated as:
 
 $$
 \theta_t = h_\phi(e_t)
@@ -350,7 +350,7 @@ $$
 \min_{\phi, e_t} \mathcal{L}_t(f_{\theta_t}(x), y)
 $$
 
-where $f_{\theta_t}$ is the main network with weights $\theta_t$. Previously learned task embeddings $e_1, \ldots, e_{t-1}$ are frozen, so previous task weights $\theta_1, \ldots, \theta_{t-1}$ remain unchanged.
+where $f_{\theta_t}$ is the main network with weights $\theta_t $. Previously learned task embeddings $ e_1, \ldots, e_{t-1}$ are frozen, so previous task weights $\theta_1, \ldots, \theta_{t-1}$ remain unchanged.
 
 Hypernetwork-based continual learning provides several advantages: it explicitly separates task-specific knowledge (in the task embeddings) from shared knowledge (in the hypernetwork), it allows tasks to share structure through the hypernetwork while maintaining task-specific parameters, and it can potentially generalize to new tasks through interpolation in embedding space. However, it requires defining task embeddings and assumes task identities are known during training and inference.
 
@@ -372,13 +372,13 @@ Healthcare data is subject to numerous sources of distribution shift that can de
 
 Distribution shift can be taxonomized into several categories based on what aspects of the data generation process change:
 
-**Covariate Shift:** The input distribution $P(X)$ changes while the conditional distribution of outputs given inputs $P(Y|X)$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
+**Covariate Shift:** The input distribution $ P(X)$ changes while the conditional distribution of outputs given inputs $ P(Y|X)$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
 
 $$
 P_{train}(Y|X) = P_{deploy}(Y|X) \quad \text{but} \quad P_{train}(X) \neq P_{deploy}(X)
 $$
 
-**Label Shift:** The marginal distribution of outputs $P(Y)$ changes while the conditional distribution of inputs given outputs $P(X|Y)$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
+**Label Shift:** The marginal distribution of outputs $P(Y)$ changes while the conditional distribution of inputs given outputs $ P(X|Y)$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
 
 $$
 P_{train}(X|Y) = P_{deploy}(X|Y) \quad \text{but} \quad P_{train}(Y) \neq P_{deploy}(Y)
@@ -416,7 +416,7 @@ $$
 \widehat{MMD}^2 = \frac{1}{n^2} \sum_{i,j} k(x_i, x_j) + \frac{1}{m^2} \sum_{i,j} k(x_i', x_j') - \frac{2}{nm} \sum_{i,j} k(x_i, x_j')
 $$
 
-where $k$ is a kernel function, $\{x_i\}$ are training samples, and $\{x_i'\}$ are deployment samples. A permutation test establishes significance: if MMD between training and deployment is larger than most values obtained by randomly permuting labels, we conclude distribution shift has occurred.
+where $k $ is a kernel function, $\{x_i\}$ are training samples, and $\{x_i'\}$ are deployment samples. A permutation test establishes significance: if MMD between training and deployment is larger than most values obtained by randomly permuting labels, we conclude distribution shift has occurred.
 
 **Classifier-Based Shift Detection:** Train a binary classifier to distinguish training data from deployment data. If the classifier achieves accuracy significantly better than random (0.5 for balanced classes), this indicates distribution shift. The classifier's accuracy provides a measure of shift magnitude. This approach can detect both covariate shift and label shift depending on what features are provided to the classifier.
 
@@ -424,7 +424,7 @@ where $k$ is a kernel function, $\{x_i\}$ are training samples, and $\{x_i'\}$ a
 
 **Prediction Uncertainty:** Monitor changes in the model's prediction uncertainty over time. Increased uncertainty may indicate the model is encountering data unlike what it was trained on. For Bayesian neural networks or ensembles, we can track the variance of predictions across ensemble members or posterior samples. For standard neural networks, calibration-aware metrics like the expected calibration error can indicate when the model's confidence is becoming miscalibrated.
 
-**Drift-Specific Statistics:** For specific types of shift, specialized statistics exist. For covariate shift, we can estimate the likelihood ratio $w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$using probabilistic classifiers or density ratio estimation and monitor the distribution of$w(x)$ over time. For label shift, we can estimate changes in label prevalence using confusion matrices and the method of moments.
+**Drift-Specific Statistics:** For specific types of shift, specialized statistics exist. For covariate shift, we can estimate the likelihood ratio $w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$ using probabilistic classifiers or density ratio estimation and monitor the distribution of $w(x)$ over time. For label shift, we can estimate changes in label prevalence using confusion matrices and the method of moments.
 
 In healthcare, shift detection should be stratified by demographic groups to ensure shifts affecting minority populations are not masked by aggregate statistics. For each demographic group, we can compute separate shift detection statistics and trigger adaptation when shift is detected in any group, even if aggregate shift is not significant.
 
@@ -438,7 +438,7 @@ Once shift is detected, several strategies exist for adapting models:
 
 **Ensemble Updating:** Maintain an ensemble of models trained on different time periods or data distributions. When shift is detected, add a new model trained on recent data to the ensemble and potentially remove the oldest model to manage ensemble size. Ensemble predictions can be weighted based on recency or performance on recent validation data. This approach naturally maintains representations of multiple distributions but increases computational costs and complexity.
 
-**Importance Weighting:** Reweight training samples to account for covariate shift. If we can estimate the likelihood ratio $w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$, we can train or adapt models using the weighted loss:
+**Importance Weighting:** Reweight training samples to account for covariate shift. If we can estimate the likelihood ratio $ w(x) = \frac{P_{deploy}(x)}{P_{train}(x)}$, we can train or adapt models using the weighted loss:
 
 $$
 \mathcal{L}_{weighted}(\theta) = \mathbb{E}_{x, y \sim P_{train}} [w(x) \ell(f_\theta(x), y)]

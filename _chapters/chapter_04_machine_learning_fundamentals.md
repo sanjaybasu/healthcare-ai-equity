@@ -68,7 +68,7 @@ $$
 \log\left(\frac{P(Y=1\mid\mathbf{x})}{P(Y=0\mid\mathbf{x})}\right) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p
 $$
 
-This formulation connects naturally to how clinicians reason about risk. Each coefficient $\beta_j$ represents the change in log-odds of the outcome for a one-unit increase in feature $x_j$ holding all other features constant. When we exponentiate coefficients, we obtain odds ratios that clinicians use routinely to interpret associations between risk factors and outcomes.
+This formulation connects naturally to how clinicians reason about risk. Each coefficient $\beta_j $ represents the change in log-odds of the outcome for a one-unit increase in feature $ x_j $ holding all other features constant. When we exponentiate coefficients, we obtain odds ratios that clinicians use routinely to interpret associations between risk factors and outcomes.
 
 In healthcare applications, this interpretability is crucial for several reasons. First, clinicians must understand why a model makes particular predictions to appropriately integrate algorithmic guidance into clinical judgment. When a model predicts high readmission risk for a patient, the clinician needs to understand whether that prediction is driven by clinical factors amenable to intervention or by social factors requiring different approaches. Second, regulators and payers increasingly require that risk prediction models used for resource allocation be interpretable and auditable. Third, patients have a right to understand factors driving recommendations that affect their care.
 
@@ -1065,7 +1065,7 @@ From an equity perspective, decision trees present both opportunities and challe
 
 A decision tree is constructed through recursive binary splitting of the feature space. Starting with the full dataset at the root node, the algorithm selects a feature and threshold that best separates the data according to some splitting criterion. The most common criteria are:
 
-**Gini impurity** measures the probability of misclassifying a randomly chosen element if it were randomly labeled according to the distribution of labels in the node. For a node with class proportions $p_1, p_2, \ldots, p_K$, the Gini impurity is:
+**Gini impurity** measures the probability of misclassifying a randomly chosen element if it were randomly labeled according to the distribution of labels in the node. For a node with class proportions $ p_1, p_2, \ldots, p_K$, the Gini impurity is:
 
 $$
 \text{Gini} = 1 - \sum_{k=1}^K p_k^2 = \sum_{k=1}^K p_k(1 - p_k)
@@ -1837,11 +1837,11 @@ $$
 \hat{p}(y=1 | \mathbf{x}) = \frac{1}{T} \sum_{t=1}^T \hat{p}_t(y=1 | \mathbf{x})
 $$
 
-where $\hat{p}_t(y=1 | \mathbf{x})$is the predicted probability from tree$t$.
+where $\hat{p}_t(y=1 | \mathbf{x})$ is the predicted probability from tree $t$.
 
 The bootstrap sampling creates training subsets that differ across trees, introducing diversity that improves generalization. However, if demographic groups are unevenly represented in the full training set, bootstrap samples will maintain or exacerbate this imbalance. Trees trained on samples with very few examples from minority groups may learn poor models for those groups, and aggregating many such trees still produces poor overall performance for underrepresented populations.
 
-The random feature subsampling at each split considers only a subset of features when determining the best split. Typically $\sqrt{p}$features are considered at each split for$p$ total features, though this hyperparameter can be tuned. This randomness introduces additional diversity and reduces overfitting, but also means that features particularly informative for minority groups may be missed if they don't appear in the random subset at critical splits.
+The random feature subsampling at each split considers only a subset of features when determining the best split. Typically $\sqrt{p}$ features are considered at each split for $p$ total features, though this hyperparameter can be tuned. This randomness introduces additional diversity and reduces overfitting, but also means that features particularly informative for minority groups may be missed if they don't appear in the random subset at critical splits.
 
 ### 4.4.2 Fairness-Aware Random Forest Implementation
 
@@ -2189,13 +2189,13 @@ Random forests provide an excellent balance of predictive performance, robustnes
 
 Gradient boosting represents a fundamentally different approach to ensemble learning compared to random forests. Rather than training trees independently in parallel, gradient boosting trains trees sequentially, with each new tree focusing on correcting the errors made by the ensemble so far. This sequential refinement enables gradient boosting to learn very complex patterns and achieve state-of-the-art predictive performance on many tasks.
 
-The gradient boosting algorithm works by iteratively adding trees that predict the residuals or gradients of the current ensemble's predictions. For binary classification with log loss, we start with a simple baseline model (often just predicting the overall prevalence) and then repeatedly add trees that move predictions in the direction that most reduces the loss function. After training $M$ trees, the final prediction is:
+The gradient boosting algorithm works by iteratively adding trees that predict the residuals or gradients of the current ensemble's predictions. For binary classification with log loss, we start with a simple baseline model (often just predicting the overall prevalence) and then repeatedly add trees that move predictions in the direction that most reduces the loss function. After training $ M$ trees, the final prediction is:
 
 $$
 f(\mathbf{x}) = f_0 + \eta \sum_{m=1}^M h_m(\mathbf{x})
 $$
 
-where $f_0$ is the initial prediction, each $h_m$ is a tree, and $\eta$ is the learning rate that controls how much each tree contributes. A smaller learning rate requires more trees but often improves generalization.
+where $f_0 $ is the initial prediction, each $ h_m $ is a tree, and $\eta$ is the learning rate that controls how much each tree contributes. A smaller learning rate requires more trees but often improves generalization.
 
 From an equity perspective, gradient boosting presents unique challenges. The sequential nature means that errors on underrepresented populations in early iterations can compound rather than average out as in random forests. If the initial model performs poorly for minority groups and subsequent trees focus on reducing loss for the majority (where there is more data to learn from), the final ensemble may systematically underperform for minorities. The complexity enabled by boosting, while improving overall performance, can also make it easier for models to learn subtle proxies for protected characteristics that simpler models would miss.
 
