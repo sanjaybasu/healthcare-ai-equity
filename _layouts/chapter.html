@@ -1,9 +1,52 @@
 ---
 layout: default
+mathjax: true
 ---
 
-<article class="post">
-  <div class="post-content">
-    {{ content }}
-  </div>
+<article class="chapter-content">
+  {{ content }}
 </article>
+
+<!-- Add table of contents if the chapter has headings -->
+<script>
+  // Auto-generate table of contents from h2 and h3 headings
+  document.addEventListener('DOMContentLoaded', function() {
+    const article = document.querySelector('.chapter-content');
+    const headings = article.querySelectorAll('h2, h3');
+    
+    if (headings.length > 3) {
+      const toc = document.createElement('nav');
+      toc.className = 'table-of-contents';
+      toc.innerHTML = '<h2>Table of Contents</h2>';
+      
+      const tocList = document.createElement('ul');
+      
+      headings.forEach((heading, index) => {
+        // Add ID to heading if it doesn't have one
+        if (!heading.id) {
+          heading.id = 'section-' + index;
+        }
+        
+        const li = document.createElement('li');
+        li.className = heading.tagName.toLowerCase();
+        
+        const link = document.createElement('a');
+        link.href = '#' + heading.id;
+        link.textContent = heading.textContent;
+        
+        li.appendChild(link);
+        tocList.appendChild(li);
+      });
+      
+      toc.appendChild(tocList);
+      
+      // Insert TOC after the first paragraph or at the beginning
+      const firstPara = article.querySelector('p');
+      if (firstPara) {
+        firstPara.parentNode.insertBefore(toc, firstPara.nextSibling);
+      } else {
+        article.insertBefore(toc, article.firstChild);
+      }
+    }
+  });
+</script>
