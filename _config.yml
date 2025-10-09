@@ -5,12 +5,33 @@ email: "sanjay.basu@waymarkcare.com"
 baseurl: "/healthcare-ai-equity"
 url: "https://sanjaybasu.github.io"
 
+# Markdown settings - CRITICAL for MathJax
 markdown: kramdown
 theme: minima
 
 kramdown:
   input: GFM
   syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+  # CRITICAL: Math engine configuration for LaTeX rendering
+  math_engine: mathjax
+  math_engine_opts:
+    preview: true
+    preview_as_code: false
+  # Improved parsing settings
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  # Prevent kramdown from processing code blocks
+  parse_block_html: false
+  parse_span_html: false
+
+# Enable MathJax
+mathjax: true
 
 collections:
   chapters:
@@ -23,13 +44,17 @@ defaults:
       type: "chapters"
     values:
       layout: "chapter"
+  - scope:
+      path: ""
+    values:
+      mathjax: true
 
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
   - jekyll-sitemap
 
-exclude:
+# Single exclude section (fixed duplicate)
 exclude:
   - Gemfile
   - Gemfile.lock
@@ -40,4 +65,8 @@ exclude:
   - vendor/ruby/
   - .github/
   - README.md
-  - scripts
+  - scripts/
+  - "*.pyc"
+  - __pycache__
+  - .git
+  - .gitignore
