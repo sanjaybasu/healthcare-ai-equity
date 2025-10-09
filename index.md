@@ -106,8 +106,8 @@ Comprehensive fairness metrics, intersectional evaluation, impact assessment fra
 **[Chapter 22: Clinical Decision Support Systems](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-22-clinical-decision-support/)**  
 Diagnostic support, treatment recommendations, alerts and warnings, and ensuring CDS systems reduce rather than exacerbate disparities.
 
-**[Chapter 23: Precision Medicine and Genomic AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
-Pharmacogenomics, polygenic risk scores, multi-omic integration, and addressing genomic data equity gaps.
+**[Chapter 23: Treatment Recommendation and Clinical Decision Support](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
+Personalizing treatment selections through effect heterogeneity, preference and utility modeling, and clinical pathway optimization.
 
 **[Chapter 24: Population Health Management and Screening](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-24-population-health-screening/)**  
 Risk stratification, care management targeting, screening strategies, and ensuring population health AI serves those with greatest need.
