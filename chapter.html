@@ -1,161 +1,136 @@
 ---
 layout: default
+mathjax: true
 ---
 
-<article class="chapter">
-  <header class="chapter-header">
-    <h1>{{ page.title }}</h1>
-    {% if page.subtitle %}
-      <p class="subtitle">{{ page.subtitle }}</p>
-    {% endif %}
-    
-    <div class="chapter-meta">
-      {% if page.chapter_number %}
-        <span class="chapter-number">Chapter {{ page.chapter_number }}</span>
-      {% endif %}
-      {% if page.last_updated %}
-        <span class="last-updated">Last updated: {{ page.last_updated | date: "%B %d, %Y" }}</span>
-      {% endif %}
-    </div>
-  </header>
-
-  <!-- Chapter navigation -->
-  <nav class="chapter-nav">
-    {% if page.prev_chapter %}
-      <a href="{{ page.prev_chapter | relative_url }}" class="nav-prev">
-        ← Previous Chapter
-      </a>
-    {% endif %}
-    
-    <a href="{{ "/" | relative_url }}" class="nav-home">
-      ↑ Table of Contents
-    </a>
-    
-    {% if page.next_chapter %}
-      <a href="{{ page.next_chapter | relative_url }}" class="nav-next">
-        Next Chapter →
-      </a>
-    {% endif %}
-  </nav>
-
-  <!-- Table of contents (auto-generated from headings) -->
-  {% if page.show_toc != false %}
-  <div class="chapter-toc">
-    <h2>In This Chapter</h2>
-    <div id="toc"></div>
-  </div>
-  {% endif %}
-
-  <!-- Main chapter content -->
-  <div class="chapter-content">
-    {{ content }}
-  </div>
-
-  <!-- Chapter footer -->
-  <footer class="chapter-footer">
-    <!-- Download options -->
-    <div class="download-options">
-      <h3>Download This Chapter</h3>
-      <p>
-        <a href="{{ page.url | replace: '.html', '.md' }}" download>
-          📄 Markdown
-        </a> |
-        <a href="{{ page.url | replace: '.html', '.pdf' }}" target="_blank">
-          📑 PDF (via print)
-        </a>
-      </p>
-    </div>
-
-    <!-- Citation -->
-    <div class="citation">
-      <h3>Cite This Chapter</h3>
-      <div class="citation-box">
-        <code>
-Basu, S. ({{ site.time | date: "%Y" }}). {{ page.title }}. 
-In <em>Healthcare AI for Underserved Populations: A Practical Textbook</em>. 
-Retrieved from {{ page.url | absolute_url }}
-        </code>
-      </div>
-    </div>
-
-    <!-- Feedback -->
-    <div class="feedback">
-      <h3>Feedback</h3>
-      <p>
-        Found an error or have a suggestion? 
-        <a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}/issues/new?title=Chapter%20{{ page.chapter_number }}%20feedback" target="_blank">
-          Open an issue on GitHub
-        </a>
-      </p>
-    </div>
-  </footer>
-
-  <!-- Chapter navigation (bottom) -->
-  <nav class="chapter-nav chapter-nav-bottom">
-    {% if page.prev_chapter %}
-      <a href="{{ page.prev_chapter | relative_url }}" class="nav-prev">
-        ← Previous: {% if page.prev_chapter_title %}{{ page.prev_chapter_title }}{% else %}Previous Chapter{% endif %}
-      </a>
-    {% endif %}
-    
-    {% if page.next_chapter %}
-      <a href="{{ page.next_chapter | relative_url }}" class="nav-next">
-        Next: {% if page.next_chapter_title %}{{ page.next_chapter_title }}{% else %}Next Chapter{% endif %} →
-      </a>
-    {% endif %}
-  </nav>
+<article class="chapter-content">
+  {{ content }}
 </article>
 
-<!-- Auto-generate table of contents from headings -->
+<!-- Table of contents generation - NOT sticky, inserted into content -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const content = document.querySelector('.chapter-content');
-    const toc = document.getElementById('toc');
+    const article = document.querySelector('.chapter-content');
+    const headings = article.querySelectorAll('h2, h3');
     
-    if (!content || !toc) return;
-    
-    const headings = content.querySelectorAll('h2, h3');
-    if (headings.length === 0) {
-      toc.parentElement.style.display = 'none';
-      return;
+    // Only create TOC if there are enough headings
+    if (headings.length > 3) {
+      const toc = document.createElement('nav');
+      toc.className = 'table-of-contents';
+      toc.innerHTML = '<h2>Table of Contents</h2>';
+      
+      const tocList = document.createElement('ul');
+      
+      headings.forEach((heading, index) => {
+        // Add ID to heading if it doesn't have one
+        if (!heading.id) {
+          heading.id = 'section-' + index;
+        }
+        
+        const li = document.createElement('li');
+        li.className = heading.tagName.toLowerCase();
+        
+        const link = document.createElement('a');
+        link.href = '#' + heading.id;
+        link.textContent = heading.textContent;
+        
+        li.appendChild(link);
+        tocList.appendChild(li);
+      });
+      
+      toc.appendChild(tocList);
+      
+      // Insert TOC after learning objectives or first paragraph
+      // Look for "Learning Objectives" heading
+      const learningObjectivesHeading = Array.from(article.querySelectorAll('h2')).find(
+        h => h.textContent.toLowerCase().includes('learning objectives')
+      );
+      
+      if (learningObjectivesHeading) {
+        // Find the next h2 after learning objectives
+        let nextSection = learningObjectivesHeading.nextElementSibling;
+        while (nextSection && nextSection.tagName !== 'H2') {
+          nextSection = nextSection.nextElementSibling;
+        }
+        
+        if (nextSection) {
+          // Insert TOC right before the next major section
+          nextSection.parentNode.insertBefore(toc, nextSection);
+        } else {
+          // If no next section, insert at end
+          article.appendChild(toc);
+        }
+      } else {
+        // Fallback: insert after first paragraph
+        const firstPara = article.querySelector('p');
+        if (firstPara) {
+          firstPara.parentNode.insertBefore(toc, firstPara.nextSibling);
+        } else {
+          article.insertBefore(toc, article.firstChild);
+        }
+      }
     }
     
-    const tocList = document.createElement('ul');
-    tocList.className = 'toc-list';
-    
-    headings.forEach((heading, index) => {
-      // Add ID if not present
-      if (!heading.id) {
-        heading.id = 'section-' + index;
-      }
-      
-      const li = document.createElement('li');
-      li.className = 'toc-' + heading.tagName.toLowerCase();
-      
-      const link = document.createElement('a');
-      link.href = '#' + heading.id;
-      link.textContent = heading.textContent;
-      
-      li.appendChild(link);
-      tocList.appendChild(li);
+    // Smooth scroll for TOC links
+    document.querySelectorAll('.table-of-contents a').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Offset for sticky nav
+          window.scrollBy(0, -80);
+        }
+      });
     });
-    
-    toc.appendChild(tocList);
   });
 </script>
 
-<!-- Smooth scrolling for anchor links -->
-<script>
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    });
-  });
-</script>
+<style>
+/* Make sure TOC is NOT sticky */
+.table-of-contents {
+  position: static !important; /* Override any sticky positioning */
+  background: var(--bg-gray, #f7fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 5px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  max-width: 100%;
+}
+
+.table-of-contents h2 {
+  margin-top: 0 !important;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  border: none;
+  padding: 0;
+}
+
+.table-of-contents ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.table-of-contents li {
+  margin-bottom: 0.5rem;
+  padding-left: 0;
+}
+
+.table-of-contents li.h3 {
+  margin-left: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.table-of-contents a {
+  color: var(--text, #2d3748);
+  text-decoration: none;
+  display: block;
+  padding: 0.25rem 0;
+  transition: color 0.2s;
+}
+
+.table-of-contents a:hover {
+  color: var(--secondary, #4a90a4);
+}
+</style>
