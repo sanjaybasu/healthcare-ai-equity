@@ -64,6 +64,10 @@ jobs:
             --input-dir data/literature \
             --chapters-dir _chapters \
             --output-file data/relevant_papers.json
+            --impact-threshold 55.0 \
+            --threshold 0.75 \
+            --min-citations 10 \
+            --max-papers-per-chapter 15
         continue-on-error: false
       
       - name: Update chapters
