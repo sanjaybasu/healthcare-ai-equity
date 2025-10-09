@@ -180,6 +180,50 @@ a:hover {
   overflow: visible;
 }
 
+/* Table of Contents - JavaScript-generated version */
+.table-of-contents {
+  /* CRITICAL: Not sticky/fixed */
+  position: static !important;
+  background-color: var(--bg-alt);
+  padding: 1.5rem;
+  border-left: 4px solid var(--secondary-color);
+  margin: 2rem 0;
+  border-radius: 5px;
+  max-height: none !important;
+  overflow: visible !important;
+  top: auto !important;
+  position: relative !important;
+}
+
+.table-of-contents h2 {
+  font-size: 1.3rem;
+  margin-top: 0;
+  border: none;
+  color: var(--primary-color);
+}
+
+.table-of-contents ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1rem;
+}
+
+.table-of-contents li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.table-of-contents h2 {
+  margin-left: 0;
+  font-weight: 600;
+}
+
+.table-of-contents h3 {
+  margin-left: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
 .chapter-toc h2 {
   font-size: 1.3rem;
   margin-top: 0;
