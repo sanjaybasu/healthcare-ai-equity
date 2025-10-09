@@ -1,6 +1,6 @@
 ---
 layout: chapter
-title: "Chapter 23: Precision Medicine and Genomic AI"
+title: "Chapter 23: Treatment Recommendation and Clinical Decision Support"
 chapter_number: 23
 part_number: 6
 prev_chapter: /chapters/chapter-22-clinical-decision-support/
