@@ -66,7 +66,7 @@ This textbook is designed for **healthcare data scientists**, **physician-scient
 
 ### Part I: Foundations and Context
 
-**[Chapter 1: Clinical Informatics Foundations for Equity-Centered AI]([{{ site.baseurl }}/chapters/chapter_01_clinical_informatics/](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-01-clinical-informatics/))**  
+**[Chapter 1: Clinical Informatics Foundations for Equity-Centered AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-01-clinical-informatics/)**  
 Why traditional healthcare AI has failed underserved populations, and the framework we'll use throughout this book to build systems that work equitably.
 
 **[Chapter 2: Mathematical Foundations with Health Equity Applications]({{ site.baseurl }}/chapters/chapter_02_mathematical_foundations/)**  
