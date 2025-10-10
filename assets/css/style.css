@@ -1,9 +1,8 @@
 /* ============================================
-   Healthcare AI Equity Textbook - Waymark Style
-   Matching the design of waymarkcare.com/book
+   Healthcare AI  Textbook
    ============================================ */
 
-/* CSS Variables - Waymark Color Scheme */
+/* CSS Variables -  Color Scheme */
 :root {
   /* Primary Colors - Warm, professional tones */
   --primary: #1a5490;           /* Deep blue - professional, trustworthy */
@@ -52,7 +51,7 @@
   --spacing-xxl: 4rem;
   
   /* Layout */
-  --content-width: 720px;       /* Narrow for readability */
+  --content-width: 900px;       /* Optimized for readability */
   --container-width: 1200px;    /* Wide for layout */
   
   /* Shadows */
@@ -458,7 +457,7 @@ blockquote p:last-child {
   font-weight: 500;
 }
 
-/* Table of Contents - Sidebar style */
+/* Table of Contents - Sidebar style with scroll and collapse */
 .table-of-contents {
   background: var(--bg-secondary);
   border: 1px solid var(--border-light);
@@ -466,6 +465,10 @@ blockquote p:last-child {
   padding: var(--spacing-lg);
   margin: var(--spacing-xl) 0;
   box-shadow: var(--shadow-sm);
+  max-height: 500px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .table-of-contents h2 {
@@ -478,6 +481,8 @@ blockquote p:last-child {
   color: var(--primary-dark);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  cursor: pointer;
+  user-select: none;
 }
 
 .table-of-contents ul {
@@ -733,6 +738,10 @@ dd {
   
   .pullquote {
     font-size: 1.2rem;
+  }
+  
+  .table-of-contents {
+    max-height: 300px;
   }
 }
 
