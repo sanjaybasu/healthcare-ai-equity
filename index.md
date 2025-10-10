@@ -6,7 +6,7 @@ title: Home
 # Foundations of Healthcare AI Development for Underserved Populations
 ## A Self-Updating Technical and Practical Text
 
-### Sanjay Basu, MD, PhD
+#### Sanjay Basu, MD, PhD
 
 ---
 
