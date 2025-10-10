@@ -7,9 +7,8 @@ mathjax: true
   {{ content }}
 </article>
 
-<!-- Add table of contents if the chapter has headings -->
+<!-- Auto-generate collapsible table of contents from h2 and h3 headings -->
 <script>
-  // Auto-generate table of contents from h2 and h3 headings
   document.addEventListener('DOMContentLoaded', function() {
     const article = document.querySelector('.chapter-content');
     const headings = article.querySelectorAll('h2, h3');
@@ -17,8 +16,13 @@ mathjax: true
     if (headings.length > 3) {
       const toc = document.createElement('nav');
       toc.className = 'table-of-contents';
-      toc.innerHTML = '<h2>Table of Contents</h2>';
       
+      // Create collapsible header
+      const tocHeader = document.createElement('h2');
+      tocHeader.innerHTML = 'Table of Contents <span style="float:right; font-size: 0.8em;">▼</span>';
+      toc.appendChild(tocHeader);
+      
+      // Create TOC list
       const tocList = document.createElement('ul');
       
       headings.forEach((heading, index) => {
@@ -40,6 +44,17 @@ mathjax: true
       
       toc.appendChild(tocList);
       
+      // Make header collapsible
+      tocHeader.style.cursor = 'pointer';
+      tocHeader.style.userSelect = 'none';
+      
+      tocHeader.addEventListener('click', function() {
+        const isHidden = tocList.style.display === 'none';
+        tocList.style.display = isHidden ? 'block' : 'none';
+        const arrow = tocHeader.querySelector('span');
+        arrow.textContent = isHidden ? '▼' : '▶';
+      });
+      
       // Insert TOC after the first paragraph or at the beginning
       const firstPara = article.querySelector('p');
       if (firstPara) {
@@ -47,6 +62,20 @@ mathjax: true
       } else {
         article.insertBefore(toc, article.firstChild);
       }
+      
+      // Smooth scroll behavior for TOC links
+      tocList.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const targetId = this.getAttribute('href').substring(1);
+          const targetElement = document.getElementById(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Update URL without jumping
+            history.pushState(null, null, '#' + targetId);
+          }
+        });
+      });
     }
   });
 </script>
