@@ -5,7 +5,7 @@ email: "sanjay.basu@waymarkcare.com"
 baseurl: "/healthcare-ai-foundations"
 url: "https://sanjaybasu.github.io"
 
-# Markdown settings - CRITICAL for MathJax
+# Markdown settings 
 markdown: kramdown
 theme: minima
 
