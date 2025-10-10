@@ -1,8 +1,8 @@
-title: "Equitable Healthcare AI: From Algorithms to Clinical Impact"
+title: "Healthcare AI for All Populations"
 description: "A Comprehensive, Self-Updating Technical and Practical Textbook"
 author: "Sanjay Basu, MD PhD"
 email: "sanjay.basu@waymarkcare.com"
-baseurl: "/healthcare-ai-equity"
+baseurl: "/healthcare-ai-foundations"
 url: "https://sanjaybasu.github.io"
 
 # Markdown settings - CRITICAL for MathJax
