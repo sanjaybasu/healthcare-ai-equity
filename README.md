@@ -190,25 +190,10 @@ Special acknowledgment to the healthcare institutions and health systems that ha
 
 ---
 
-
-## Version History and Roadmap
-
-**Current Version:** 1.0 (October 2025)  
-**Major Updates:** Weekly automated literature integration  
-**Next Planned Additions:**
-- Chapter 31: Reinforcement Learning for Clinical Decision Support
-- Chapter 32: Fairness in Generative AI for Healthcare
-- Expanded case studies from international deployments
-- Interactive visualization tools for fairness metrics
-
-See the GitHub repository for detailed changelog and upcoming features.
-
----
-
 > **"The fundamental question is not whether AI can achieve high aggregate performance in healthcare, but whether it achieves reliable, validated performance across all patient populations who will depend on it."**
 
 ---
 
-**Repository:** [github.com/sanjaybasu/healthcare-ai-equity](https://github.com/sanjaybasu/healthcare-ai-equity)  
+**Repository:** [github.com/sanjaybasu/healthcare-ai-foundations](https://github.com/sanjaybasu/healthcare-ai-foundations)  
 **License:** MIT License  
 **Last Updated:** {{ site.time | date: "%B %d, %Y" }}
