@@ -96,7 +96,7 @@ An alternative perspective comes from mode connectivity and loss landscape analy
 Bayesian perspectives on continual learning model parameter uncertainty and update the posterior distribution over parameters as new data arrives. Let $ p(\theta \mid \mathcal{D}_1)$ be the posterior after training on task 1. When task 2 data arrives, we should update:
 
 $$
-p(\theta \lvert \mathcal{D}_1, \mathcal{D}_2) \propto p(\mathcal{D}_2 \rvert \theta) p(\theta \mid \mathcal{D}_1)
+p(\theta \mid \mathcal{D}_1, \mathcal{D}_2) \propto p(\mathcal{D}_2 \mid \theta) p(\theta \mid \mathcal{D}_1)
 $$
 
 This formulation naturally incorporates knowledge from previous tasks through the prior $p(\theta \mid \mathcal{D}_1)$. However, computing and maintaining exact posteriors is intractable for high-dimensional neural network parameter spaces, leading to the development of approximate Bayesian continual learning methods that we discuss in subsequent sections.
@@ -116,7 +116,7 @@ $$
 where $F_A $ is the Fisher information matrix evaluated at $\theta_A^*$:
 
 $$
-F_A = \mathbb{E}_{x \sim \mathcal{D}_A} \left[ \nabla_\theta \log p(y\lvert x, \theta_A^*) \nabla_\theta \log p(y \rvertx, \theta_A^*)^T \right]
+F_A = \mathbb{E}_{x \sim \mathcal{D}_A} \left[ \nabla_\theta \log p(y\mid x, \theta_A^*) \nabla_\theta \log p(y \mid x, \theta_A^*)^T \right]
 $$
 
 The Fisher information matrix captures how sensitive the log-likelihood is to changes in each parameter. Parameters with high Fisher information are those for which small changes cause large changes in the likelihood, indicating these parameters are important for the task.
@@ -132,7 +132,7 @@ where $\lambda$ controls the relative importance of the regularization term. Par
 The Fisher information matrix is typically intractable to compute exactly for large neural networks, as it requires computing second derivatives of the log-likelihood. EWC uses an efficient diagonal approximation:
 
 $$
-F_i \approx \frac{1}{N} \sum_{n=1}^{N} \left( \frac{\partial \log p(y_n \lvert x_n, \theta)}{\partial \theta_i} \right)^2 \bigg \rvert_{\theta = \theta_A^*}
+F_i \approx \frac{1}{N} \sum_{n=1}^{N} \left( \frac{\partial \log p(y_n \mid x_n, \theta)}{\partial \theta_i} \right)^2 \bigg|_{\theta = \theta_A^*}
 $$
 
 This diagonal approximation assumes independence between parameters, which is clearly an approximation for neural networks where parameters interact through nonlinear activations. Nevertheless, empirical results show this approximation provides effective regularization in practice.
@@ -229,10 +229,12 @@ where $\phi(x)$ represents the feature embedding of sample $ x $ (typically the 
 
 More sophisticated replay methods select memory samples based on their utility for preserving model performance. Gradient Episodic Memory (GEM), introduced by Lopez-Paz and Ranzato, formulates continual learning as a constrained optimization problem. When learning task $ t $, GEM ensures that gradient updates do not increase the loss on previous tasks:
 
-$\begin{aligned}
+\[
+\begin{aligned}
 \min_{\theta} \quad & \mathcal{L}_t(\theta) \\
 \text{subject to} \quad & \mathcal{L}_k(\theta) \leq \mathcal{L}_k(\theta_{t-1}) \quad \forall k < t
-\end{aligned}$
+\end{aligned}
+\]
 
 In practice, this is enforced by checking whether the gradient on the current task $ g_t = \nabla_\theta \mathcal{L}_t(\theta)$ increases any previous task loss. If so, the gradient is projected to the nearest direction that does not increase previous task losses:
 
@@ -372,22 +374,22 @@ Healthcare data is subject to numerous sources of distribution shift that can de
 
 Distribution shift can be taxonomized into several categories based on what aspects of the data generation process change:
 
-**Covariate Shift:** The input distribution $ P(X)$ changes while the conditional distribution of outputs given inputs $ P(Y\midX)$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
+**Covariate Shift:** The input distribution $ P(X)$ changes while the conditional distribution of outputs given inputs $ P(Y\mid X)$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
 
 $$
-P_{train}(Y\lvert X) = P_{deploy}(Y \rvertX) \quad \text{but} \quad P_{train}(X) \neq P_{deploy}(X)
+P_{train}(Y\mid X) = P_{deploy}(Y \mid X) \quad \text{but} \quad P_{train}(X) \neq P_{deploy}(X)
 $$
 
-**Label Shift:** The marginal distribution of outputs $P(Y)$ changes while the conditional distribution of inputs given outputs $ P(X\midY)$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
+**Label Shift:** The marginal distribution of outputs $P(Y)$ changes while the conditional distribution of inputs given outputs $ P(X\mid Y)$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
 
 $$
-P_{train}(X\lvert Y) = P_{deploy}(X \rvertY) \quad \text{but} \quad P_{train}(Y) \neq P_{deploy}(Y)
+P_{train}(X\mid Y) = P_{deploy}(X \mid Y) \quad \text{but} \quad P_{train}(Y) \neq P_{deploy}(Y)
 $$
 
-**Concept Drift:** The fundamental relationship between inputs and outputs $P(Y\midX)$ changes. This is the most challenging type of shift as it indicates the underlying phenomena being modeled have changed. In healthcare, concept drift occurs when treatment protocols change, new therapies become available, or the causal pathways linking risk factors to outcomes change. For example, the relationship between blood pressure and cardiovascular risk changed with the introduction of modern antihypertensive medications. Formally:
+**Concept Drift:** The fundamental relationship between inputs and outputs $P(Y\mid X)$ changes. This is the most challenging type of shift as it indicates the underlying phenomena being modeled have changed. In healthcare, concept drift occurs when treatment protocols change, new therapies become available, or the causal pathways linking risk factors to outcomes change. For example, the relationship between blood pressure and cardiovascular risk changed with the introduction of modern antihypertensive medications. Formally:
 
 $$
-P_{train}(Y\lvert X) \neq P_{deploy}(Y \rvertX)
+P_{train}(Y\mid X) \neq P_{deploy}(Y \mid X)
 $$
 
 **Domain Shift:** More generally, the entire joint distribution $P(X, Y)$ changes, which may involve combinations of the above. Electronic health record systems often experience domain shift when transitioning from one documentation system to another, changing both the feature distributions and potentially the relationships between features and outcomes.
@@ -460,11 +462,13 @@ Adapting models in response to distribution shift while maintaining fairness req
 
 **Fairness-Constrained Retraining:** When retraining or fine-tuning, impose fairness constraints that ensure disparities in performance or error rates across groups do not increase. This can be formulated as constrained optimization:
 
-$\begin{aligned}
+\[
+\begin{aligned}
 \min_{\theta} \quad & \mathcal{L}(\theta) \\
 \text{subject to} \quad & \Delta_{FPR}(\theta) \leq \epsilon_1 \\
 & \Delta_{FNR}(\theta) \leq \epsilon_2
-\end{aligned}$
+\end{aligned}
+\]
 
 where $\Delta_{FPR}(\theta)$ and $\Delta_{FNR}(\theta)$ measure disparities in false positive and false negative rates across groups, and $\epsilon_1, \epsilon_2$ are tolerance thresholds.
 

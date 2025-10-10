@@ -54,13 +54,13 @@ A Markov decision process is defined by the tuple $(\mathcal{S}, \mathcal{A}, \m
 
 - $\mathcal{S}$ is the state space: all possible patient states and clinical contexts
 - $\mathcal{A}$ is the action space: all possible treatment decisions
-- $\mathcal{P}(s'\mids,a)$ is the transition probability: likelihood of transitioning to state $s'$ given current state $s$ and action $a$
+- $\mathcal{P}(s'\mid s,a)$ is the transition probability: likelihood of transitioning to state $s'$ given current state $s$ and action $a$
 - $\mathcal{R}(s,a,s')$ is the reward function: immediate reward for taking action $a$ in state $s$ and transitioning to $s'$
 - $\gamma \in [0,1]$ is the discount factor: relative value of immediate versus future rewards
 
-The Markov property assumes that the current state contains all information relevant to future dynamics: $ P(s_{t+1}\lvert s_t, a_t, s_{t-1}, a_{t-1}, \ldots, s_0, a_0) = P(s_{t+1} \rverts_t, a_t)$. This assumption simplifies analysis and enables efficient algorithms but may be violated when relevant historical information is not fully captured in the state representation.
+The Markov property assumes that the current state contains all information relevant to future dynamics: $ P(s_{t+1}\lvert s_t, a_t, s_{t-1}, a_{t-1}, \ldots, s_0, a_0) = P(s_{t+1} \mid s_t, a_t)$. This assumption simplifies analysis and enables efficient algorithms but may be violated when relevant historical information is not fully captured in the state representation.
 
-A policy $\pi: \mathcal{S} \rightarrow \Delta(\mathcal{A})$ maps states to probability distributions over actions. The policy defines the agent's decision making strategy. We distinguish between deterministic policies $\pi(s) \in \mathcal{A}$ that always take the same action in a given state and stochastic policies $\pi(a\mids)$ that sample actions probabilistically.
+A policy $\pi: \mathcal{S} \rightarrow \Delta(\mathcal{A})$ maps states to probability distributions over actions. The policy defines the agent's decision making strategy. We distinguish between deterministic policies $\pi(s) \in \mathcal{A}$ that always take the same action in a given state and stochastic policies $\pi(a\mid s)$ that sample actions probabilistically.
 
 The goal of reinforcement learning is to find a policy that maximizes the expected cumulative discounted reward, also called the value function:
 
@@ -79,21 +79,21 @@ $$
 The Bellman equations express these value functions recursively:
 
 $$
-V^\pi(s) = \sum_{a} \pi(a\lvert s) \sum_{s'} P(s' \rverts,a)[R(s,a,s') + \gamma V^\pi(s')]
+V^\pi(s) = \sum_{a} \pi(a\lvert s) \sum_{s'} P(s' \mid s,a)[R(s,a,s') + \gamma V^\pi(s')]
 $$
 
 $$
-Q^\pi(s,a) = \sum_{s'} P(s'\lvert s,a)[R(s,a,s') + \gamma \sum_{a'} \pi(a' \rverts') Q^\pi(s',a')]
+Q^\pi(s,a) = \sum_{s'} P(s'\lvert s,a)[R(s,a,s') + \gamma \sum_{a'} \pi(a' \mid s') Q^\pi(s',a')]
 $$
 
 The optimal Bellman equations define the optimal value functions:
 
 $$
-V^*(s) = \max_a \sum_{s'} P(s'\mids,a)[R(s,a,s') + \gamma V^*(s')]
+V^*(s) = \max_a \sum_{s'} P(s'\mid s,a)[R(s,a,s') + \gamma V^*(s')]
 $$
 
 $$
-Q^*(s,a) = \sum_{s'} P(s'\mids,a)[R(s,a,s') + \gamma \max_{a'} Q^*(s',a')]
+Q^*(s,a) = \sum_{s'} P(s'\mid s,a)[R(s,a,s') + \gamma \max_{a'} Q^*(s',a')]
 $$
 
 The optimal policy can be extracted from the optimal Q-function: $\pi^*(s) = \arg\max_a Q^*(s,a)$.
@@ -141,7 +141,7 @@ We recommend constructing reward functions that:
 
 For many clinical applications, the reward is naturally sparse: most time steps have zero reward with large positive rewards for recovery and large negative rewards for adverse events or death. This sparsity makes credit assignment challenging but accurately reflects the temporal structure of many health outcomes.
 
-**Transition dynamics** $ P(s'\mids,a)$ encode how patient states evolve following treatment actions. In practice, we almost never know the true transition function and must learn it from data. The learned dynamics will necessarily reflect the distribution of patients and treatments in the training data. If the training data comes predominantly from academic medical centers serving relatively healthy, well-resourced populations, the learned dynamics may not accurately predict outcomes for complex, socially vulnerable patients in under-resourced settings.
+**Transition dynamics** $ P(s'\mid s,a)$ encode how patient states evolve following treatment actions. In practice, we almost never know the true transition function and must learn it from data. The learned dynamics will necessarily reflect the distribution of patients and treatments in the training data. If the training data comes predominantly from academic medical centers serving relatively healthy, well-resourced populations, the learned dynamics may not accurately predict outcomes for complex, socially vulnerable patients in under-resourced settings.
 
 ### 11.2.3 Violations of MDP Assumptions in Healthcare
 
@@ -153,7 +153,7 @@ For underserved populations, partial observability is often more severe. Patient
 
 Approaches for handling partial observability include: (1) augmenting states with observation histories rather than just current measurements, (2) explicitly modeling uncertainty about unobserved state components, (3) learning observation models that infer missing information from available data while acknowledging uncertainty, and (4) using recurrent neural networks that maintain internal memory of relevant history.
 
-**Unknown transition dynamics**: In model-based RL, we learn the transition function $ P(s'\mids,a)$ from data. However, the learned model is only accurate for state-action pairs well-represented in the training data. For underrepresented populations or novel treatment combinations, the learned dynamics may be highly uncertain or systematically biased. Safe RL approaches constrain policies to avoid actions that would rely on uncertain dynamics.
+**Unknown transition dynamics**: In model-based RL, we learn the transition function $ P(s'\mid s,a)$ from data. However, the learned model is only accurate for state-action pairs well-represented in the training data. For underrepresented populations or novel treatment combinations, the learned dynamics may be highly uncertain or systematically biased. Safe RL approaches constrain policies to avoid actions that would rely on uncertain dynamics.
 
 **Non-stationarity**: The MDP framework assumes that transition dynamics and optimal policies are constant over time. In reality, medical knowledge evolves, treatment availability changes, patient populations shift, and social determinants transform. A policy learned from historical data may become suboptimal or even harmful as clinical practice standards change. Continual learning approaches that update policies as new data arrives are essential for maintaining safety and effectiveness.
 
@@ -1356,10 +1356,10 @@ While value-based methods like Q-learning learn a value function and derive a po
 
 ### 11.4.1 REINFORCE: The Policy Gradient Theorem
 
-The foundational policy gradient algorithm is REINFORCE, which optimizes a parameterized policy $\pi_\theta(a\mids)$ by ascending the gradient of the expected return. The policy gradient theorem provides an elegant expression for this gradient:
+The foundational policy gradient algorithm is REINFORCE, which optimizes a parameterized policy $\pi_\theta(a\mid s)$ by ascending the gradient of the expected return. The policy gradient theorem provides an elegant expression for this gradient:
 
 $$
-\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[\sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t\mids_t) G_t\right]
+\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[\sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t\mid s_t) G_t\right]
 $$
 
 where $G_t = \sum_{k=t}^{T} \gamma^{k-t} r_k$ is the discounted return from time $t$. This formula has an intuitive interpretation: it increases the probability of actions that led to high returns and decreases the probability of actions that led to low returns, with the magnitude of the update proportional to the return and the gradient of the log probability.
@@ -1373,10 +1373,10 @@ The REINFORCE algorithm follows a simple procedure:
 A practical improvement is to subtract a baseline $ b(s_t)$ from the returns to reduce variance:
 
 $$
-\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[\sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t\mids_t) (G_t - b(s_t))\right]
+\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[\sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t\mid s_t) (G_t - b(s_t))\right]
 $$
 
-The baseline does not bias the gradient (since $\mathbb{E}[b(s)] \nabla_\theta \log \pi_\theta(a\mids) = 0$) but can substantially reduce variance. A common choice is $b(s_t) = V(s_t)$, the value function estimate for state $s_t$.
+The baseline does not bias the gradient (since $\mathbb{E}[b(s)] \nabla_\theta \log \pi_\theta(a\mid s) = 0$) but can substantially reduce variance. A common choice is $b(s_t) = V(s_t)$, the value function estimate for state $s_t$.
 
 ### 11.4.2 Actor-Critic Methods
 
@@ -1385,7 +1385,7 @@ Actor-critic methods combine value-based and policy-based approaches by maintain
 The advantage function $ A(s,a) = Q(s,a) - V(s)$ measures how much better action $ a $ is than the average action in state $ s$. Using the advantage as the baseline in REINFORCE yields the advantage actor-critic (A2C) gradient:
 
 $$
-\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[\nabla_\theta \log \pi_\theta(a\mids) A(s,a)\right]
+\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[\nabla_\theta \log \pi_\theta(a\mid s) A(s,a)\right]
 $$
 
 In practice, we approximate the advantage using temporal difference learning:
@@ -1406,7 +1406,7 @@ $$
 L^{CLIP}(\theta) = \mathbb{E}_t\left[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t)\right]
 $$
 
-where $r_t(\theta) = \frac{\pi_\theta(a_t\lvert s_t)}{\pi_{\theta_{old}}(a_t \rverts_t)}$ is the probability ratio between the new and old policies, $\hat{A}_t$ is the advantage estimate, and $\epsilon$ is a hyperparameter (typically 0.1 or 0.2) controlling the clip range.
+where $r_t(\theta) = \frac{\pi_\theta(a_t\lvert s_t)}{\pi_{\theta_{old}}(a_t \mid s_t)}$ is the probability ratio between the new and old policies, $\hat{A}_t$ is the advantage estimate, and $\epsilon$ is a hyperparameter (typically 0.1 or 0.2) controlling the clip range.
 
 The clipping ensures that the policy update is conservative: if an action has positive advantage, its probability can only increase by a limited amount; if it has negative advantage, its probability can only decrease by a limited amount. This prevents catastrophically large policy updates that could destroy previously learned behaviors.
 
@@ -2005,7 +2005,7 @@ Moreover, observational healthcare data suffers from confounding: clinician trea
 The simplest OPE method is importance sampling, which reweights trajectories according to how likely they would have been under the target policy relative to the behavioral policy. For a trajectory $\tau = (s_0, a_0, r_0, \ldots, s_T, a_T, r_T)$, the importance weight is:
 
 $$
-w(\tau) = \prod_{t=0}^{T} \frac{\pi_e(a_t\lvert s_t)}{\pi_b(a_t \rverts_t)}
+w(\tau) = \prod_{t=0}^{T} \frac{\pi_e(a_t\lvert s_t)}{\pi_b(a_t \mid s_t)}
 $$
 
 The OPE estimate is then:
@@ -2025,7 +2025,7 @@ For equity, importance sampling has concerning properties. If the behavioral pol
 Doubly robust (DR) estimation combines importance sampling with learned models to reduce variance while maintaining theoretical guarantees. The DR estimator is:
 
 $$
-\hat{V}^{\pi_e}_{DR} = \frac{1}{n}\sum_{i=1}^{n}\left[\frac{\pi_e(a_i\lvert s_i)}{\pi_b(a_i \rverts_i)}(G_i - \hat{Q}(s_i,a_i)) + \mathbb{E}_{a \sim \pi_e}[\hat{Q}(s_i,a)]\right]
+\hat{V}^{\pi_e}_{DR} = \frac{1}{n}\sum_{i=1}^{n}\left[\frac{\pi_e(a_i\lvert s_i)}{\pi_b(a_i \mid s_i)}(G_i - \hat{Q}(s_i,a_i)) + \mathbb{E}_{a \sim \pi_e}[\hat{Q}(s_i,a)]\right]
 $$
 
 where $\hat{Q}(s,a)$ is a learned estimate of the Q-function.
@@ -2039,7 +2039,7 @@ For healthcare applications, doubly robust estimation is attractive because it l
 Fitted Q-evaluation (FQE) is a model-based OPE method that learns to predict returns directly. Rather than using importance sampling, FQE fits a Q-function $ Q_{\pi_e}(s,a)$ specific to the target policy by iteratively solving:
 
 $$
-Q_{\pi_e}(s,a) = r + \gamma \mathbb{E}_{s' \sim P(\cdot\lvert s,a), a' \sim \pi_e(\cdot \rverts')}[Q_{\pi_e}(s',a')]
+Q_{\pi_e}(s,a) = r + \gamma \mathbb{E}_{s' \sim P(\cdot\lvert s,a), a' \sim \pi_e(\cdot \mid s')}[Q_{\pi_e}(s',a')]
 $$
 
 using the observational dataset. The policy value is then estimated as:

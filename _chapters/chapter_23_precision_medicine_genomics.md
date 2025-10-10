@@ -33,9 +33,9 @@ This chapter develops a comprehensive framework for building treatment recommend
 
 The fundamental challenge in treatment recommendation is estimating individual treatment effects when each patient receives only one treatment. For patient $i$, we define the potential outcomes $Y_i(1)$ under treatment and $Y_i(0)$ under control. The individual treatment effect is $\tau_i = Y_i(1) - Y_i(0)$, but we observe only $Y_i = T_i Y_i(1) + (1-T_i)Y_i(0)$ where $T_i \in \{0,1\}$ indicates treatment assignment. The average treatment effect (ATE) is $\tau = \mathbb{E}[\tau_i]$, but our goal is to estimate the conditional average treatment effect (CATE) $\tau(x) = \mathbb{E}[Y_i(1) - Y_i(0) \mid X_i = x]$ to personalize treatment recommendations based on patient characteristics $X_i$.
 
-Under the assumptions of unconfoundedness $(Y_i(0), Y_i(1)) \perp T_i \mid X_i$ and positivity $0 < P(T_i=1\midX_i=x) < 1$, the CATE can be identified from observational data. The most direct approach is the S-learner which builds a single model $\mu(x,t)$ to predict outcomes and estimates $\hat{\tau}(x) = \hat{\mu}(x,1) - \hat{\mu}(x,0)$. However, when treatment effects are small relative to baseline risk, the S-learner may perform poorly because it must learn both the prognostic function and treatment effect simultaneously.
+Under the assumptions of unconfoundedness $(Y_i(0), Y_i(1)) \perp T_i \mid X_i$ and positivity $0 < P(T_i=1\mid X_i=x) < 1$, the CATE can be identified from observational data. The most direct approach is the S-learner which builds a single model $\mu(x,t)$ to predict outcomes and estimates $\hat{\tau}(x) = \hat{\mu}(x,1) - \hat{\mu}(x,0)$. However, when treatment effects are small relative to baseline risk, the S-learner may perform poorly because it must learn both the prognostic function and treatment effect simultaneously.
 
-The T-learner addresses this by building separate models $\mu_0(x)$ and $\mu_1(x)$ for control and treatment groups, estimating $\hat{\tau}(x) = \hat{\mu}_1(x) - \hat{\mu}_0(x)$. This allows each model to focus on prediction within its respective group but may suffer from overfitting when one treatment group is small. The X-learner improves upon the T-learner by incorporating information across treatment groups. After fitting $\hat{\mu}_0$ and $\hat{\mu}_1$, it computes imputed treatment effects $\tilde{\tau}_1(x) = Y_i - \hat{\mu}_0(X_i)$ for treated patients and $\tilde{\tau}_0(x) = \hat{\mu}_1(X_i) - Y_i$ for controls, then builds models $\tau_1(x)$ and $\tau_0(x)$ to predict these imputed effects. The final CATE estimate is $\hat{\tau}(x) = g(x)\hat{\tau}_0(x) + (1-g(x))\hat{\tau}_1(x)$ where $g(x) = P(T=1\midX=x)$ weights the estimates by propensity score.
+The T-learner addresses this by building separate models $\mu_0(x)$ and $\mu_1(x)$ for control and treatment groups, estimating $\hat{\tau}(x) = \hat{\mu}_1(x) - \hat{\mu}_0(x)$. This allows each model to focus on prediction within its respective group but may suffer from overfitting when one treatment group is small. The X-learner improves upon the T-learner by incorporating information across treatment groups. After fitting $\hat{\mu}_0$ and $\hat{\mu}_1$, it computes imputed treatment effects $\tilde{\tau}_1(x) = Y_i - \hat{\mu}_0(X_i)$ for treated patients and $\tilde{\tau}_0(x) = \hat{\mu}_1(X_i) - Y_i$ for controls, then builds models $\tau_1(x)$ and $\tau_0(x)$ to predict these imputed effects. The final CATE estimate is $\hat{\tau}(x) = g(x)\hat{\tau}_0(x) + (1-g(x))\hat{\tau}_1(x)$ where $g(x) = P(T=1\mid X=x)$ weights the estimates by propensity score.
 
 For more robust estimation, doubly robust methods combine outcome modeling with propensity score weighting. The augmented inverse propensity weighted (AIPW) estimator for the CATE is given by
 
@@ -43,7 +43,7 @@ $$
 \hat{\tau}(x) = \mathbb{E}\left[\frac{T_i(Y_i - \hat{\mu}_1(X_i))}{\hat{e}(X_i)} - \frac{(1-T_i)(Y_i - \hat{\mu}_0(X_i))}{1-\hat{e}(X_i)} + \hat{\mu}_1(X_i) - \hat{\mu}_0(X_i) \Big\mid X_i = x\right]
 $$
 
-where $\hat{e}(x) = P(T=1\midX=x)$ is the estimated propensity score. This estimator is consistent if either the outcome models or the propensity model is correctly specified, providing protection against model misspecification. In practice, we use flexible machine learning methods for both $\hat{\mu}_t(x)$ and $\hat{e}(x)$, combining them through cross-fitting to avoid overfitting bias.
+where $\hat{e}(x) = P(T=1\mid X=x)$ is the estimated propensity score. This estimator is consistent if either the outcome models or the propensity model is correctly specified, providing protection against model misspecification. In practice, we use flexible machine learning methods for both $\hat{\mu}_t(x)$ and $\hat{e}(x)$, combining them through cross-fitting to avoid overfitting bias.
 
 Causal forests extend random forests to estimate CATEs by modifying the splitting criterion to maximize treatment effect heterogeneity. Each tree is built by randomly subsampling the data and features, then recursively partitioning to maximize the difference in treatment effects across resulting nodes. For a given leaf $L(x)$ containing patient $i$, the treatment effect estimate equals
 
@@ -113,7 +113,7 @@ $$
 providing a balance between efficiency and equity. Disparate impact constraints require that treatment effects do not differ substantially across groups, enforcing
 
 $$
-\frac{\mathbb{E}[Y_i(t) \lvert G_i = g_1, X_i]}{\mathbb{E}[Y_i(t) \rvert G_i = g_2, X_i]} \geq 1 - \delta
+\frac{\mathbb{E}[Y_i(t) \mid G_i = g_1, X_i]}{\mathbb{E}[Y_i(t) \mid G_i = g_2, X_i]} \geq 1 - \delta
 $$
 
 for all pairs of groups $(g_1, g_2)$ and some tolerance $\delta$. These constraints ensure that recommendations do not exacerbate existing disparities.
@@ -192,7 +192,7 @@ $$
 
 where $\tau_j(X_i)$ are main effects and $\tau_{jk}(X_i)$ are pairwise interaction effects. Estimating higher-order interactions requires substantial sample sizes. In practice, we often assume limited interactions and use regularization to select sparse models.
 
-An alternative approach uses reinforcement learning to learn optimal treatment policies through sequential decision-making. We model treatment selection as a contextual bandit problem where at each decision point we observe patient state $X_i$, choose action (treatment) $A_i$, and observe reward $R_i$. The goal is to learn a policy $\pi(a\midx)$ that maximizes expected reward $\mathbb{E}_{x,a \sim \pi}[R(x,a)]$. Contextual bandit algorithms such as LinUCB maintain uncertainty estimates for each action and select actions optimistically according to
+An alternative approach uses reinforcement learning to learn optimal treatment policies through sequential decision-making. We model treatment selection as a contextual bandit problem where at each decision point we observe patient state $X_i$, choose action (treatment) $A_i$, and observe reward $R_i$. The goal is to learn a policy $\pi(a\mid x)$ that maximizes expected reward $\mathbb{E}_{x,a \sim \pi}[R(x,a)]$. Contextual bandit algorithms such as LinUCB maintain uncertainty estimates for each action and select actions optimistically according to
 
 $$
 a^*(x) = \arg\max_a \left[\hat{Q}(x,a) + \beta \sqrt{\text{Var}[\hat{Q}(x,a)]}\right]
@@ -213,7 +213,7 @@ When treatment recommendations differ across groups, we must distinguish between
 
 Clinical pathways are structured multidisciplinary care plans that specify the sequence of interventions, timing of assessments, and decision points for managing specific conditions. Optimizing clinical pathways involves identifying the sequence of interventions that maximizes patient outcomes while respecting resource constraints, care setting capabilities, and patient preferences.
 
-We model a clinical pathway as a finite-horizon Markov decision process where patient state $S_t$ evolves over discrete time steps, actions $A_t$ represent clinical interventions, and the transition dynamics $P(S_{t+1}\midS_t, A_t)$ describe disease progression and treatment response. The reward function $R(S_t, A_t)$ captures both intermediate outcomes (symptom relief, functional improvement) and terminal outcomes (survival, quality of life). The optimal policy $\pi^{\star}(s) = \arg\max_a Q^{\star}(s,a)$ maximizes expected cumulative reward defined by
+We model a clinical pathway as a finite-horizon Markov decision process where patient state $S_t$ evolves over discrete time steps, actions $A_t$ represent clinical interventions, and the transition dynamics $P(S_{t+1}\mid S_t, A_t)$ describe disease progression and treatment response. The reward function $R(S_t, A_t)$ captures both intermediate outcomes (symptom relief, functional improvement) and terminal outcomes (survival, quality of life). The optimal policy $\pi^{\star}(s) = \arg\max_a Q^{\star}(s,a)$ maximizes expected cumulative reward defined by
 
 $$
 Q^{\star}(s,a) = \mathbb{E}\left[\sum_{t=0}^T \gamma^t R(S_t, A_t) \Big\mid S_0=s, A_0=a, \pi^{\star}\right]
@@ -278,19 +278,19 @@ To ensure treatment recommendation systems promote rather than undermine health 
 Demographic parity requires that treatment recommendations are independent of protected attributes, imposing
 
 $$
-P(T=1\lvert G=g_1) = P(T=1 \rvertG=g_2)
+P(T=1\mid G=g_1) = P(T=1 \mid G=g_2)
 $$
 
 for all groups $g_1, g_2$. This ensures equal treatment rates but may be inappropriate if treatment needs genuinely differ across populations. Equalized odds requires that, conditional on the outcome, recommendations are independent of group membership, meaning
 
 $$
-P(T=1\lvert Y=y, G=g_1) = P(T=1 \rvertY=y, G=g_2)
+P(T=1\mid Y=y, G=g_1) = P(T=1 \mid Y=y, G=g_2)
 $$
 
 This allows recommendation rates to differ across groups if base rates differ, but requires equal true positive and false positive rates. Predictive parity requires that the positive predictive value of recommendations is equal across groups, captured by
 
 $$
-P(Y=1\lvert T=1, G=g_1) = P(Y=1 \rvertT=1, G=g_2)
+P(Y=1\mid T=1, G=g_1) = P(Y=1 \mid T=1, G=g_2)
 $$
 
 ensuring that a recommendation means the same thing for all groups.
@@ -298,7 +298,7 @@ ensuring that a recommendation means the same thing for all groups.
 For treatment recommendations specifically, we should focus on outcome fairness by asking whether recommended treatments lead to equitable outcomes. This requires that expected outcomes conditional on covariates are similar across groups, so that
 
 $$
-\mathbb{E}[Y_i(t^{\star}(X_i)) \lvert X_i, G_i=g_1] \approx \mathbb{E}[Y_i(t^{\star}(X_i)) \rvert X_i, G_i=g_2]
+\mathbb{E}[Y_i(t^{\star}(X_i)) \mid X_i, G_i=g_1] \approx \mathbb{E}[Y_i(t^{\star}(X_i)) \mid X_i, G_i=g_2]
 $$
 
 for recommended treatments $t^{\star}(X_i)$. Note that this differs from requiring equal outcomes unconditionally, which would ignore that patients present with different clinical needs. Instead, we require that among patients with similar clinical presentations, recommended treatments lead to similar expected benefits regardless of group membership.
@@ -314,7 +314,7 @@ for all groups $g$. Poor calibration can lead to over-treatment or under-treatme
 To implement fairness constraints, we can modify the optimization objective when learning recommendation policies. For example, to satisfy equalized odds constraints in a treatment recommendation setting, we add Lagrange multipliers so that
 
 $$
-\mathcal{L}(\pi, \lambda) = -\mathbb{E}[Y_i(t^\pi(X_i))] + \sum_{g,y} \lambda_{g,y} \lvert P(T=1 \rvertY=y,G=g) - P(T=1\lvert Y=y) \rvert
+\mathcal{L}(\pi, \lambda) = -\mathbb{E}[Y_i(t^\pi(X_i))] + \sum_{g,y} \lambda_{g,y} \lvert P(T=1 \mid Y=y,G=g) - P(T=1\mid Y=y) \rvert
 $$
 
 and solve
