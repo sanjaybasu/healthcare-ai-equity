@@ -42,7 +42,7 @@
     </article>
     
     {% if page.chapter_number %}
-    <!-- Chapter Navigation - FIXED -->
+    <!-- Chapter Navigation -->
     <nav class="chapter-nav">
       {% comment %}Find current chapter in data file{% endcomment %}
       {% assign current_index = -1 %}
@@ -101,6 +101,7 @@
   <script>
     hljs.highlightAll();
     
+    // Add copy buttons to code blocks
     document.querySelectorAll('pre code').forEach((block) => {
       const button = document.createElement('button');
       button.className = 'copy-code-button';
