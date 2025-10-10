@@ -1,7 +1,22 @@
 ---
 ---
 
-/* Healthcare AI Textbook - Fixed Stylesheet */
+/* Healthcare AI Textbook - Updated Stylesheet */
+
+/*
+  This stylesheet builds on the original `style.scss` provided in your
+  repository.  All of the existing typography, spacing, colour variables
+  and component styles are preserved.  The primary change in this file
+  is an expansion of the table‑of‑contents (TOC) rules so that the TOC
+  elements used by the GitHub Pages theme are forced into a non‑sticky,
+  relative positioning context.  On the live site the sidebar Table of
+  Contents is inserted by the theme under a variety of class/ID names
+  (`nav.toc`, `.js-toc`, `aside.table-of-contents`, etc.).  Without
+  targeted overrides these elements remain fixed as the user scrolls and
+  obscure the body text.  The rules below ensure that any element whose
+  class or id contains the substring "toc" has its position reset to
+  `static`.
+*/
 
 :root {
   --primary-color: #2c3e50;
@@ -244,6 +259,7 @@ nav.chapter-toc,
   margin-bottom: 1rem;
 }
 
+/* MathJax container spacing */
 .MathJax, .MathJax_Display, .MathJax_SVG {
   display: inline-block !important;
   margin: 0.5rem 0;
@@ -474,40 +490,32 @@ figcaption {
   .container {
     padding: 0 1rem;
   }
-  
   h1 {
     font-size: 2rem;
   }
-  
   h2 {
     font-size: 1.5rem;
   }
-  
   .chapter-nav {
     flex-direction: column;
     gap: 1rem;
   }
-  
   .chapter-nav a,
   .chapter-nav span {
     width: 100%;
     text-align: center;
     min-width: auto;
   }
-  
   .chapter-nav span.disabled {
     display: none;
   }
-  
   .chapter-toc,
   .table-of-contents {
     padding: 1rem;
   }
-  
   code {
     font-size: 0.85em;
   }
-  
   pre {
     padding: 1rem;
     font-size: 0.8rem;
@@ -518,16 +526,13 @@ figcaption {
   .site-header, .site-footer, .chapter-nav {
     display: none;
   }
-  
   .chapter-content {
     max-width: 100%;
   }
-  
   a {
     color: var(--text-color);
     text-decoration: underline;
   }
-  
   pre, code {
     border: 1px solid var(--border-color);
   }
@@ -586,13 +591,17 @@ figcaption {
   color: #c62828;
 }
 
+/*
+  AGGRESSIVE TOC FIX
+  The following selectors aggressively reset any element whose class or id
+  contains "toc" (table of contents) or matches common TOC container
+  selectors used by Jekyll themes.  It also targets sidebars that may be
+  used to hold the TOC.  These rules ensure that the TOC no longer uses
+  sticky or fixed positioning and instead flows naturally with the page
+  content.  Adjust or remove selectors if they conflict with other
+  components.
+*/
 
----
----
-
-/* Add this to the END of your existing style.scss */
-
-/* AGGRESSIVE TOC FIX - Add at bottom of file */
 * [class*="toc"],
 * [id*="toc"],
 .table-of-contents,
@@ -610,13 +619,16 @@ nav.toc,
   bottom: unset !important;
   left: unset !important;
   right: unset !important;
-  position: relative;
+  width: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  float: none !important;
 }
 
-/* Override any sticky/fixed positioning */
-[style*="position: fixed"],
-[style*="position: sticky"] {
+/* Ensure that any element with inline styles specifying `fixed` or `sticky`
+   positioning is reverted to `static`.  This prevents scripts from adding
+   inline sticky behaviour to the TOC after page load. */
+[style*="position: fixed" i],
+[style*="position: sticky" i] {
   position: static !important;
 }
-
-
