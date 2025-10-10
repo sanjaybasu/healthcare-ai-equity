@@ -23,7 +23,7 @@ This textbook provides rigorous technical foundations and practical implementati
 This is a **living, open-source resource** designed for:
 
 - **Healthcare data scientists** building production ML/AI systems
-- **Physician-scientists** transitioning into AI development
+- **Clinician data-scientists** transitioning into AI development
 - **ML practitioners** entering healthcare who need clinical context
 - **Regulatory professionals** evaluating clinical AI submissions
 - **Implementation scientists** deploying AI in real-world settings
