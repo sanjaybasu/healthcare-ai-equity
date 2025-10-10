@@ -5,21 +5,21 @@ title: Chapters
 
 ### Part I: Foundations and Context
 
-**[Chapter 1: Clinical Informatics Foundations for Equity-Centered AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-01-clinical-informatics/)**  
+**[Chapter 1: Clinical Informatics Foundations for Robust AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-01-clinical-informatics/)**  
 
-**[Chapter 2: Mathematical Foundations with Health Equity Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-02-mathematical-foundations/))**  
+**[Chapter 2: Mathematical Foundations for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-02-mathematical-foundations/)**  
 
-**[Chapter 3: Healthcare Data Engineering for Equity](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/)**  
+**[Chapter 3: Healthcare Data Engineering and Quality Assessment](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/)**  
 
 ### Part II: Core Machine Learning Methods
 
-**[Chapter 4: Machine Learning Fundamentals with Fairness](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-04-machine-learning-fundamentals/)**  
+**[Chapter 4: Machine Learning Fundamentals with Population-Level Validation](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-04-machine-learning-fundamentals/)**  
 
-**[Chapter 5: Deep Learning for Healthcare Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-05-deep-learning-healthcare/)**  
+**[Chapter 5: Deep Learning for Clinical Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-05-deep-learning-healthcare/)**  
 
 **[Chapter 6: Natural Language Processing for Clinical Text](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-06-clinical-nlp/)**  
 
-**[Chapter 7: Computer Vision for Medical Imaging with Fairness](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-07-medical-imaging/)**  
+**[Chapter 7: Computer Vision for Medical Imaging](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-07-medical-imaging/)**  
 
 **[Chapter 8: Time Series Analysis for Clinical Data](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-08-clinical-time-series/)**  
 
@@ -33,46 +33,46 @@ title: Chapters
 
 **[Chapter 12: Federated Learning and Privacy-Preserving AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-12-federated-learning-privacy/)**  
 
-**[Chapter 13: Bias Detection and Mitigation in Healthcare AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-13-bias-detection/)**  
+**[Chapter 13: Comprehensive Bias Detection and Mitigation](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-13-bias-detection/)**  
 
-### Part IV: Interpretability, Validation, and Trust
+### Part IV: Validation, Interpretability, and Clinical Trust
 
-**[Chapter 14: Interpretability and Explainability](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-14-interpretability-explainability/)**  
+**[Chapter 14: Interpretability and Explainability for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-14-interpretability-explainability/)**  
 
-**[Chapter 15: Validation Strategies for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-15-validation-strategies/)**  
+**[Chapter 15: Clinical Validation Frameworks and External Validity](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-15-validation-strategies/)**  
 
 **[Chapter 16: Uncertainty Quantification and Calibration](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-16-uncertainty-calibration/)**  
 
-**[Chapter 17: Regulatory Considerations and FDA Pathways](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-17-regulatory-considerations/)**  
+**[Chapter 17: Regulatory Pathways and FDA Submissions](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-17-regulatory-considerations/)**  
 
 ### Part V: Deployment and Real-World Implementation
 
-**[Chapter 18: Implementation Science for Healthcare AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-18-implementation-science/)**  
+**[Chapter 18: Implementation Science for Clinical AI Systems](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-18-implementation-science/)**  
 
-**[Chapter 19: Human-AI Collaboration in Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-19-human-ai-collaboration/)**  
+**[Chapter 19: Human-AI Collaboration in Clinical Practice](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-19-human-ai-collaboration/)**  
 
 **[Chapter 20: Post-Deployment Monitoring and Maintenance](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-20-monitoring-maintenance/)**  
 
-**[Chapter 21: Health Equity Metrics and Evaluation Frameworks](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-21-health-equity-metrics/)**  
+**[Chapter 21: Performance Metrics and Comprehensive Evaluation](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-21-health-equity-metrics/)**  
 
-### Part VI: Specialized Applications
+### Part VI: Specialized Clinical Applications
 
-**[Chapter 22: Clinical Decision Support Systems](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-22-clinical-decision-support/)**  
+**[Chapter 22: Clinical Decision Support System Design](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-22-clinical-decision-support/)**  
 
-**[Chapter 23: Treatment Recommendation and Clinical Decision Support](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
+**[Chapter 23: Precision Medicine and Treatment Optimization](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
 
-**[Chapter 24: Population Health Management and Screening](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-24-population-health-screening/)**  
+**[Chapter 24: Population Health Management and Risk Stratification](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-24-population-health-screening/)**  
 
-**[Chapter 25: Social Determinants of Health Integration](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-25-sdoh-integration/)**  
+**[Chapter 25: Social Determinants of Health in Clinical Models](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-25-sdoh-integration/)**  
 
 ### Part VII: Emerging Methods and Future Directions
 
-**[Chapter 26: Large Language Models in Healthcare](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-26-llms-in-healthcare/)**  
+**[Chapter 26: Large Language Models in Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-26-llms-in-healthcare/)**  
 
 **[Chapter 27: Multi-Modal Learning for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-27-multimodal-learning/)**  
 
-**[Chapter 28: Continual Learning and Model Updating](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-28-continual-learning/)**  
+**[Chapter 28: Continual Learning and Model Updating Strategies](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-28-continual-learning/)**  
 
-**[Chapter 29: AI for Global Health and Resource-Limited Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-29-global-health-ai/)**  
+**[Chapter 29: AI for Resource-Limited Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-29-global-health-ai/)**  
 
-**[Chapter 30: Research Frontiers in Equity-Centered Health AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-30-research-frontiers-equity/)**  
+**[Chapter 30: Research Frontiers in Robust Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-30-research-frontiers-equity/)**
