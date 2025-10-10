@@ -1,4 +1,4 @@
-# Contributing to Equitable Healthcare AI
+# Contributing to the Textbook
 
 Thank you for your interest in contributing to this textbook! We welcome contributions from researchers, practitioners, students, and community members.
 
