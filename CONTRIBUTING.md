@@ -319,7 +319,7 @@ By contributing, you agree that:
 
 - Your contributions will be licensed under MIT License
 - You have the right to contribute the content
-- You understand the content will be freely available
+- You understand the content will be freely available and you will receive no compensation or copyright
 - You won't include proprietary or confidential information
 
 ---
