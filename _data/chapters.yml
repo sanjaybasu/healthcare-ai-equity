@@ -1,0 +1,61 @@
+chapters:
+  - num: 1
+    file: chapter-01-clinical-informatics
+  - num: 2
+    file: chapter-02-mathematical-foundations
+  - num: 3
+    file: chapter-03-healthcare-data-engineering
+  - num: 4
+    file: chapter-04-machine-learning-fundamentals
+  - num: 5
+    file: chapter-05-deep-learning-healthcare
+  - num: 6
+    file: chapter-06-clinical-nlp
+  - num: 7
+    file: chapter-07-medical-imaging
+  - num: 8
+    file: chapter-08-clinical-time-series
+  - num: 9
+    file: chapter-09-advanced-clinical-nlp
+  - num: 10
+    file: chapter-10-survival-analysis
+  - num: 11
+    file: chapter-11-causal-inference
+  - num: 12
+    file: chapter-12-federated-learning-privacy
+  - num: 13
+    file: chapter-13-bias-detection
+  - num: 14
+    file: chapter-14-interpretability-explainability
+  - num: 15
+    file: chapter-15-validation-strategies
+  - num: 16
+    file: chapter-16-uncertainty-calibration
+  - num: 17
+    file: chapter-17-regulatory-considerations
+  - num: 18
+    file: chapter-18-implementation-science
+  - num: 19
+    file: chapter-19-human-ai-collaboration
+  - num: 20
+    file: chapter-20-monitoring-maintenance
+  - num: 21
+    file: chapter-21-health-equity-metrics
+  - num: 22
+    file: chapter-22-clinical-decision-support
+  - num: 23
+    file: chapter-23-precision-medicine-genomics
+  - num: 24
+    file: chapter-24-population-health-screening
+  - num: 25
+    file: chapter-25-sdoh-integration
+  - num: 26
+    file: chapter-26-llms-in-healthcare
+  - num: 27
+    file: chapter-27-multimodal-learning
+  - num: 28
+    file: chapter-28-continual-learning
+  - num: 29
+    file: chapter-29-global-health-ai
+  - num: 30
+    file: chapter-30-research-frontiers-equity
