@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 arXiv Literature Monitor
-Monitors arXiv for new papers relevant to healthcare AI and equity
+Monitors arXiv for new papers relevant to healthcare AI and population stratification
 """
 
 import arxiv
