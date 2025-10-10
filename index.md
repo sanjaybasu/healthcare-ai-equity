@@ -247,14 +247,6 @@ This is a living, community-driven open-source project. We actively welcome:
 - **Case studies** from your real-world implementations
 - **Code reviews** to improve example quality and robustness
 
-### Discussion Forums:
-- **GitHub Discussions** for technical questions and implementation challenges
-- **Issue tracker** for bug reports and feature requests
-- **Weekly office hours** (schedule on GitHub) for Q&A with contributors
-
-### Community Standards:
-We are committed to maintaining a welcoming, inclusive environment for all contributors. Please review our Code of Conduct in the repository.
-
 **Repository:** [github.com/sanjaybasu/healthcare-ai-foundations](https://github.com/sanjaybasu/healthcare-ai-foundations)  
 **License:** MIT License (free for all uses including commercial)  
 **Contact:** sanjay.basu@waymarkcare.com
