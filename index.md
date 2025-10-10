@@ -12,7 +12,7 @@ title: Home
 
 ## Overview
 
-This textbook provides rigorous technical foundations and practical implementation guidance for developing, validating, and deploying clinical AI systems that achieve robust performance across diverse patient populations. Written for healthcare data scientists, physician-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building AI systems with validated generalizability across real-world clinical settings.
+This textbook provides rigorous technical foundations and practical implementation guidance for developing, validating, and deploying clinical AI systems that achieve robust performance across diverse patient populations. Written for healthcare data scientists, clinicial data-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building AI systems with validated generalizability across real-world clinical settings.
 
 **Why this matters:** Most healthcare AI systems demonstrate strong performance on training data but fail when deployed across heterogeneous patient populations, leading to unreliable predictions, safety concerns, and suboptimal clinical outcomes. This textbook treats population-stratified evaluation, bias detection, and robust generalization as fundamental requirements of clinical validity—not optional considerations.
 
