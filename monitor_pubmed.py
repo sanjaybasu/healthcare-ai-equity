@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 PubMed Literature Monitor
-Monitors PubMed for new papers relevant to healthcare AI and equity
+Monitors PubMed for new papers relevant to healthcare AI and population stratification
 """
 
 import os
