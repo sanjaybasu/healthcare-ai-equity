@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 25: Social Determinants of Health Integration"
+title: "Chapter 25: Social Determinants of Health in Clinical Models"
 chapter_number: 25
 part_number: 6
 prev_chapter: /chapters/chapter-24-population-health-screening/
 next_chapter: /chapters/chapter-26-llms-in-healthcare/
 ---
-# Chapter 25: Social Determinants of Health Integration
+# Chapter 25: Social Determinants of Health in Clinical Models
 
 ## Learning Objectives
 

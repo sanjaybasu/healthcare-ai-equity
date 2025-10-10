@@ -6,7 +6,7 @@ part_number: 3
 prev_chapter: /chapters/chapter-11-causal-inference/
 next_chapter: /chapters/chapter-13-bias-detection/
 ---
-# Chapter 12: Federated Learning and Privacy-Preserving Healthcare AI
+# Chapter 12: Federated Learning and Privacy-Preserving AI
 
 ## Learning Objectives
 

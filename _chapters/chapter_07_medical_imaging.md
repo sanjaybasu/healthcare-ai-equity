@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 7: Computer Vision for Medical Imaging with Fairness"
+title: "Chapter 7: Computer Vision for Medical Imaging"
 chapter_number: 7
 part_number: 2
 prev_chapter: /chapters/chapter-06-clinical-nlp/
 next_chapter: /chapters/chapter-08-clinical-time-series/
 ---
-# Chapter 7: Computer Vision for Medical Imaging with Fairness
+# Chapter 7: Computer Vision for Medical Imaging
 
 ## Learning Objectives
 

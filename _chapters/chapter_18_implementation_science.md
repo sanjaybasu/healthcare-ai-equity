@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 18: Implementation Science for Healthcare AI"
+title: "Chapter 18: Implementation Science for Clinical AI Systems"
 chapter_number: 18
 part_number: 5
 prev_chapter: /chapters/chapter-17-regulatory-considerations/
 next_chapter: /chapters/chapter-19-human-ai-collaboration/
 ---
-# Chapter 18: Implementation Science for Healthcare AI
+# Chapter 18: Implementation Science for Clinical AI Systems
 
 ## Learning Objectives
 

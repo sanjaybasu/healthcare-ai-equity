@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 4: Machine Learning Fundamentals for Clinical Data"
+title: "Chapter 4: Machine Learning Fundamentals with Population-Level Validation"
 chapter_number: 4
 part_number: 2
 prev_chapter: /chapters/chapter-03-healthcare-data-engineering/
 next_chapter: /chapters/chapter-05-deep-learning-healthcare/
 ---
-# Chapter 4: Machine Learning Fundamentals for Clinical Data
+# Chapter 4: Machine Learning Fundamentals with Population-Level Validation
 
 ## Learning Objectives
 

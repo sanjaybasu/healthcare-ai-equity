@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 13: Bias Detection and Measurement"
+title: "Chapter 13: Comprehensive Bias Detection and Mitigation"
 chapter_number: 13
 part_number: 3
 prev_chapter: /chapters/chapter-12-federated-learning-privacy/
 next_chapter: /chapters/chapter-14-interpretability-explainability/
 ---
-# Chapter 13: Bias Detection and Measurement
+# Chapter 13: Comprehensive Bias Detection and Mitigation
 
 ## Learning Objectives
 

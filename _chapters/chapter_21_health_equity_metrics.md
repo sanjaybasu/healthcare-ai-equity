@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 21: Health Equity Metrics and Evaluation Frameworks"
+title: "Chapter 21: Performance Metrics and Comprehensive Evaluation"
 chapter_number: 21
 part_number: 5
 prev_chapter: /chapters/chapter-20-monitoring-maintenance/
 next_chapter: /chapters/chapter-22-clinical-decision-support/
 ---
-# Chapter 21: Clinical Risk Prediction with Fairness Constraints
+# Chapter 21: Performance Metrics and Comprehensive Evaluation
 
 ## Learning Objectives
 

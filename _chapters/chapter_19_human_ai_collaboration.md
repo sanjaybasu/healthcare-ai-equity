@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 19: Human-AI Collaboration in Clinical Settings"
+title: "Chapter 19: Human-AI Collaboration in Clinical Practice"
 chapter_number: 19
 part_number: 5
 prev_chapter: /chapters/chapter-18-implementation-science/
 next_chapter: /chapters/chapter-20-monitoring-maintenance/
 ---
-# Chapter 19: Monitoring and Maintenance of Production Clinical AI
+# Chapter 19: Human-AI Collaboration in Clinical Practice
 
 ## Learning Objectives
 

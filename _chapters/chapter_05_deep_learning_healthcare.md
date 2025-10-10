@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 5: Deep Learning for Healthcare with Equity Considerations"
+title: "Chapter 5: Deep Learning for Clinical Applications"
 chapter_number: 5
 part_number: 2
 prev_chapter: /chapters/chapter-04-machine-learning-fundamentals/
 next_chapter: /chapters/chapter-06-clinical-nlp/
 ---
-# Chapter 5: Deep Learning for Healthcare with Equity Considerations
+# Chapter 5: Deep Learning for Clinical Applications
 
 ## Learning Objectives
 

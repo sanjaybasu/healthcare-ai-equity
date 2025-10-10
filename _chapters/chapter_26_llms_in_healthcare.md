@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 26: Large Language Models in Healthcare"
+title: "Chapter 26: Large Language Models in Clinical Settings"
 chapter_number: 26
 part_number: 7
 prev_chapter: /chapters/chapter-25-sdoh-integration/
 next_chapter: /chapters/chapter-27-multimodal-learning/
 ---
-# Chapter 26: Large Language Models in Healthcare
+# Chapter 26: Large Language Models in Clinical Settings
 
 ## Learning Objectives
 

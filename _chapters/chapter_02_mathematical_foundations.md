@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 2: Mathematical Foundations with Health Equity Applications"
+title: "Chapter 2: Mathematical Foundations for Clinical AI"
 chapter_number: 2
 part_number: 1
 prev_chapter: /chapters/chapter-01-clinical-informatics/
 next_chapter: /chapters/chapter-03-healthcare-data-engineering/
 ---
-# Chapter 2: Mathematical Foundations with Health Equity Applications
+# Chapter 2: Mathematical Foundations for Clinical AI
 
 ## Learning Objectives
 

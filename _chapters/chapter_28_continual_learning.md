@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 28: Continual Learning and Model Updating"
+title: "Chapter 28: Continual Learning and Model Updating Strategies"
 chapter_number: 28
 part_number: 7
 prev_chapter: /chapters/chapter-27-multimodal-learning/
 next_chapter: /chapters/chapter-29-global-health-ai/
 ---
-# Chapter 28: Continual Learning and Model Updating
+# Chapter 28: Continual Learning and Model Updating Strategies
 
 ## Learning Objectives
 

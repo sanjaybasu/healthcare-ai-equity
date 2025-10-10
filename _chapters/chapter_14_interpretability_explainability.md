@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 14: Interpretability and Explainability"
+title: "Chapter 14: Interpretability and Explainability for Clinical AI"
 chapter_number: 14
 part_number: 4
 prev_chapter: /chapters/chapter-13-bias-detection/
 next_chapter: /chapters/chapter-15-validation-strategies/
 ---
-# Chapter 14: Model Interpretability and Explainability for Clinical Trust
+# Chapter 14: Interpretability and Explainability for Clinical AI
 
 ## Learning Objectives
 

@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 29: AI for Global Health and Resource-Limited Settings"
+title: "Chapter 29: AI for Resource-Limited Clinical Settings"
 chapter_number: 29
 part_number: 7
 prev_chapter: /chapters/chapter-28-continual-learning/
 next_chapter: /chapters/chapter-30-research-frontiers-equity/
 ---
-# Chapter 29: AI for Global Health and Resource-Limited Settings
+# Chapter 29: AI for Resource-Limited Clinical Settings
 
 ## Learning Objectives
 

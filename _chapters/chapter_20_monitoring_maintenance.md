@@ -6,7 +6,7 @@ part_number: 5
 prev_chapter: /chapters/chapter-19-human-ai-collaboration/
 next_chapter: /chapters/chapter-21-health-equity-metrics/
 ---
-# Chapter 20: Ethical Frameworks for Healthcare AI Development
+# Chapter 20: Post-Deployment Monitoring and Maintenance
 
 ## Learning Objectives
 

@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 1: Clinical Informatics Foundations for Equity-Centered AI"
+title: "Chapter 1: Clinical Informatics Foundations for Robust AI"
 chapter_number: 1
 part_number: 1
 prev_chapter: null
 next_chapter: /chapters/chapter-02-mathematical-foundations/
 ---
-# Chapter 1: Clinical Informatics Foundations for Equity-Centered AI
+# Chapter 1: Clinical Informatics Foundations for Robust AI
 
 ## Learning Objectives
 

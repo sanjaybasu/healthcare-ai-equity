@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 17: Regulatory Considerations for Clinical AI"
+title: "Chapter 17: Regulatory Pathways and FDA Submissions"
 chapter_number: 17
 part_number: 4
 prev_chapter: /chapters/chapter-16-uncertainty-calibration/
 next_chapter: /chapters/chapter-18-implementation-science/
 ---
-# Chapter 17: Regulatory Considerations for Clinical AI
+# Chapter 17: Regulatory Pathways and FDA Submissions
 
 ## Learning Objectives
 

@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 24: Population Health Management and Screening"
+title: "Chapter 24: Population Health Management and Risk Stratification"
 chapter_number: 24
 part_number: 6
 prev_chapter: /chapters/chapter-23-precision-medicine-genomics/
 next_chapter: /chapters/chapter-25-sdoh-integration/
 ---
-# Chapter 24: Population Health Management and Screening
+# Chapter 24: Population Health Management and Risk Stratification
 
 ## Learning Objectives
 

@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 15: Validation Strategies for Clinical AI"
+title: "Chapter 15: Clinical Validation Frameworks and External Validity"
 chapter_number: 15
 part_number: 4
 prev_chapter: /chapters/chapter-14-interpretability-explainability/
 next_chapter: /chapters/chapter-16-uncertainty-calibration/
 ---
-# Chapter 15: Validation Strategies for Clinical AI
+# Chapter 15: Clinical Validation Frameworks and External Validity
 
 ## Learning Objectives
 

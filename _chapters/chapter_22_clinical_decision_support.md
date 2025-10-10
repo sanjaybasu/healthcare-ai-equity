@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 22: Clinical Decision Support Systems"
+title: "Chapter 22: Clinical Decision Support System Design"
 chapter_number: 22
 part_number: 6
 prev_chapter: /chapters/chapter-21-health-equity-metrics/
 next_chapter: /chapters/chapter-23-precision-medicine-genomics/
 ---
-# Chapter 22: Diagnostic AI with Attention to Disparities
+# Chapter 22: Clinical Decision Support System Design
 
 ## Learning Objectives
 

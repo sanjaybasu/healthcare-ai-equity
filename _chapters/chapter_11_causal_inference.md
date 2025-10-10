@@ -6,7 +6,7 @@ part_number: 3
 prev_chapter: /chapters/chapter-10-survival-analysis/
 next_chapter: /chapters/chapter-12-federated-learning-privacy/
 ---
-# Chapter 11: Reinforcement Learning for Clinical Decision Support
+# Chapter 11: Causal Inference for Healthcare AI
 
 ## Learning Objectives
 

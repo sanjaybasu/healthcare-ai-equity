@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 30: Research Frontiers in Equity-Centered Health AI"
+title: "Chapter 30: Research Frontiers in Robust Clinical AI"
 chapter_number: 30
 part_number: 7
 prev_chapter: /chapters/chapter-29-global-health-ai/
 next_chapter: null
 ---
-# Chapter 30: Research Frontiers in Healthcare AI for Equity
+# Chapter 30: Research Frontiers in Robust Clinical AI
 
 ## Learning Objectives
 

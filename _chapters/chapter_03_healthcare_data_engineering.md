@@ -1,12 +1,12 @@
 ---
 layout: chapter
-title: "Chapter 3: Healthcare Data Engineering for Equity"
+title: "Chapter 3: Healthcare Data Engineering and Quality Assessment"
 chapter_number: 3
 part_number: 1
 prev_chapter: /chapters/chapter-02-mathematical-foundations/
 next_chapter: /chapters/chapter-04-machine-learning-fundamentals/
 ---
-# Chapter 3: Healthcare Data Engineering for Equity (Complete Version)
+# Chapter 3: Healthcare Data Engineering and Quality Assessment
 
 ## Learning Objectives
 
