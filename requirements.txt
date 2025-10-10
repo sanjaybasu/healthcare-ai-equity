@@ -1,4 +1,4 @@
-# Requirements for Healthcare AI Equity Textbook Literature Automation
+# Requirements for Healthcare AI Textbook Literature Automation
 # Python 3.11+
 
 # Core Dependencies
