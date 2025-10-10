@@ -7,7 +7,7 @@ mathjax: true
   {{ content }}
 </article>
 
-<!-- Auto-generate collapsible table of contents from h2 and h3 headings -->
+<!-- Auto-generate collapsible table of contents with auto-collapse on scroll -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const article = document.querySelector('.chapter-content');
@@ -26,7 +26,6 @@ mathjax: true
       const tocList = document.createElement('ul');
       
       headings.forEach((heading, index) => {
-        // Add ID to heading if it doesn't have one
         if (!heading.id) {
           heading.id = 'section-' + index;
         }
@@ -48,22 +47,60 @@ mathjax: true
       tocHeader.style.cursor = 'pointer';
       tocHeader.style.userSelect = 'none';
       
+      const toggleToc = function(shouldCollapse) {
+        tocList.style.display = shouldCollapse ? 'none' : 'block';
+        const arrow = tocHeader.querySelector('span');
+        arrow.textContent = shouldCollapse ? '▶' : '▼';
+      };
+      
       tocHeader.addEventListener('click', function() {
         const isHidden = tocList.style.display === 'none';
-        tocList.style.display = isHidden ? 'block' : 'none';
-        const arrow = tocHeader.querySelector('span');
-        arrow.textContent = isHidden ? '▼' : '▶';
+        toggleToc(!isHidden);
       });
       
-      // Insert TOC after the first paragraph or at the beginning
-      const firstPara = article.querySelector('p');
-      if (firstPara) {
-        firstPara.parentNode.insertBefore(toc, firstPara.nextSibling);
+      // Auto-collapse on scroll
+      let tocCollapsed = false;
+      
+      window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > 300 && !tocCollapsed) {
+          toggleToc(true);
+          tocCollapsed = true;
+        } 
+        else if (scrollTop < 200 && tocCollapsed) {
+          toggleToc(false);
+          tocCollapsed = false;
+        }
+      }, { passive: true });
+      
+      // Smart TOC placement - after learning objectives
+      let insertAfter = null;
+      
+      // Look for the first list (ul/ol) which is likely learning objectives
+      const firstList = article.querySelector('ul, ol');
+      if (firstList) {
+        insertAfter = firstList;
+      }
+      
+      // If no list found, use the third paragraph (skip intro paragraphs)
+      if (!insertAfter) {
+        const paragraphs = article.querySelectorAll('p');
+        if (paragraphs.length >= 3) {
+          insertAfter = paragraphs[2];
+        } else if (paragraphs.length > 0) {
+          insertAfter = paragraphs[paragraphs.length - 1];
+        }
+      }
+      
+      // Insert TOC
+      if (insertAfter && insertAfter.parentNode) {
+        insertAfter.parentNode.insertBefore(toc, insertAfter.nextSibling);
       } else {
         article.insertBefore(toc, article.firstChild);
       }
       
-      // Smooth scroll behavior for TOC links
+      // Smooth scroll for TOC links
       tocList.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', function(e) {
           e.preventDefault();
@@ -71,7 +108,6 @@ mathjax: true
           const targetElement = document.getElementById(targetId);
           if (targetElement) {
             targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Update URL without jumping
             history.pushState(null, null, '#' + targetId);
           }
         });
