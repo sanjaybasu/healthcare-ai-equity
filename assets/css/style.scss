@@ -585,3 +585,38 @@ figcaption {
   border-color: var(--accent-color);
   color: #c62828;
 }
+
+
+---
+---
+
+/* Add this to the END of your existing style.scss */
+
+/* AGGRESSIVE TOC FIX - Add at bottom of file */
+* [class*="toc"],
+* [id*="toc"],
+.table-of-contents,
+.chapter-toc,
+#markdown-toc,
+nav.table-of-contents,
+nav.chapter-toc,
+aside.table-of-contents,
+div.toc,
+nav.toc,
+.sidebar,
+.toc-sidebar {
+  position: static !important;
+  top: unset !important;
+  bottom: unset !important;
+  left: unset !important;
+  right: unset !important;
+  position: relative;
+}
+
+/* Override any sticky/fixed positioning */
+[style*="position: fixed"],
+[style*="position: sticky"] {
+  position: static !important;
+}
+
+
