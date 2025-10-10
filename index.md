@@ -3,17 +3,18 @@ layout: default
 title: Home
 ---
 
-# Healthcare AI for All Populations: Technical Foundations and Clinical Implementation
+# Healthcare AI for All Populations
+## Technical Foundations and Clinical Implementation
 
 **A Comprehensive Guide for Physician Data Scientists**
 
-#### Sanjay Basu, MD, PhD
+### Sanjay Basu, MD, PhD
 
 ---
 
 ## Overview
 
-This textbook provides rigorous technical foundations and practical implementation guidance for developing, validating, and deploying clinical AI systems that achieve robust performance across diverse patient populations. Written for healthcare data scientists, clinician-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building AI systems with validated generalizability across real-world clinical settings.
+This textbook provides rigorous technical foundations and practical implementation guidance for developing, validating, and deploying clinical AI systems that achieve robust performance across diverse patient populations. Written for healthcare data scientists, physician-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building AI systems with validated generalizability across real-world clinical settings.
 
 **Why this matters:** Most healthcare AI systems demonstrate strong performance on training data but fail when deployed across heterogeneous patient populations, leading to unreliable predictions, safety concerns, and suboptimal clinical outcomes. This textbook treats population-stratified evaluation, bias detection, and robust generalization as fundamental requirements of clinical validity—not optional considerations.
 
@@ -54,118 +55,118 @@ This is a **living, open-source resource** designed for:
 
 ### Part I: Foundations and Context
 
-**[Chapter 1: Clinical Informatics Foundations for Robust AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-01-clinical-informatics/)**  
+**[Chapter 1: Clinical Informatics Foundations for Robust AI](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-01-clinical-informatics/)**  
 Why healthcare AI systems fail in real-world deployment, systematic performance gaps across populations, and the technical framework for building clinically valid AI.
 
-**[Chapter 2: Mathematical Foundations for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-02-mathematical-foundations/)**  
+**[Chapter 2: Mathematical Foundations for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-02-mathematical-foundations/)**  
 Linear algebra, probability theory, optimization, and information theory—with healthcare applications demonstrating how mathematical choices affect generalizability.
 
-**[Chapter 3: Healthcare Data Engineering and Quality Assessment](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-03-healthcare-data-engineering/)**  
+**[Chapter 3: Healthcare Data Engineering and Quality Assessment](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-03-healthcare-data-engineering/)**  
 EHR systems, FHIR standards, systematic missingness patterns, data quality metrics, and building robust data pipelines for clinical AI.
 
 ---
 
 ### Part II: Core Machine Learning Methods
 
-**[Chapter 4: Machine Learning Fundamentals with Population-Level Validation](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-04-machine-learning-fundamentals/)**  
+**[Chapter 4: Machine Learning Fundamentals with Population-Level Validation](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-04-machine-learning-fundamentals/)**  
 Logistic regression, decision trees, random forests, and gradient boosting—with comprehensive evaluation frameworks including stratified performance analysis.
 
-**[Chapter 5: Deep Learning for Clinical Applications](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-05-deep-learning-healthcare/)**  
+**[Chapter 5: Deep Learning for Clinical Applications](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-05-deep-learning-healthcare/)**  
 Neural architectures for tabular data, temporal models (RNNs, LSTMs, Transformers), and ensuring robust generalization in deep learning systems.
 
-**[Chapter 6: Natural Language Processing for Clinical Text](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-06-clinical-nlp/)**  
+**[Chapter 6: Natural Language Processing for Clinical Text](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-06-clinical-nlp/)**  
 Clinical NER, relation extraction, linguistic variation in clinical documentation, and adapting foundation models for diverse clinical contexts.
 
-**[Chapter 7: Computer Vision for Medical Imaging](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-07-medical-imaging/)**  
+**[Chapter 7: Computer Vision for Medical Imaging](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-07-medical-imaging/)**  
 CNNs for radiology and pathology, segmentation, detection pipelines, and addressing performance variation across imaging equipment and acquisition protocols.
 
-**[Chapter 8: Time Series Analysis for Clinical Data](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-08-clinical-time-series/)**  
+**[Chapter 8: Time Series Analysis for Clinical Data](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-08-clinical-time-series/)**  
 Handling irregular sampling, missing data mechanisms, forecasting physiological signals, and validation strategies for temporal clinical models.
 
 ---
 
 ### Part III: Advanced Methods for Healthcare AI
 
-**[Chapter 9: Advanced Clinical NLP and Information Retrieval](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-09-advanced-clinical-nlp/)**  
+**[Chapter 9: Advanced Clinical NLP and Information Retrieval](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-09-advanced-clinical-nlp/)**  
 Medical knowledge graphs, clinical question answering, evidence retrieval, and integrating structured/unstructured data in production systems.
 
-**[Chapter 10: Survival Analysis and Time-to-Event Modeling](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-10-survival-analysis/)**  
+**[Chapter 10: Survival Analysis and Time-to-Event Modeling](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-10-survival-analysis/)**  
 Cox proportional hazards, competing risks, random survival forests, and comprehensive validation of time-to-event predictions across patient subgroups.
 
-**[Chapter 11: Causal Inference for Healthcare AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-11-causal-inference/)**  
+**[Chapter 11: Causal Inference for Healthcare AI](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-11-causal-inference/)**  
 DAGs, potential outcomes, instrumental variables, difference-in-differences, and using causal methods to improve algorithmic generalizability.
 
-**[Chapter 12: Federated Learning and Privacy-Preserving AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-12-federated-learning-privacy/)**  
+**[Chapter 12: Federated Learning and Privacy-Preserving AI](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-12-federated-learning-privacy/)**  
 Multi-site learning without centralizing data, differential privacy, secure aggregation, and ensuring performance across heterogeneous data sources.
 
-**[Chapter 13: Comprehensive Bias Detection and Mitigation](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-13-bias-detection/)**  
+**[Chapter 13: Comprehensive Bias Detection and Mitigation](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-13-bias-detection/)**  
 Systematic approaches to detecting and addressing algorithmic underperformance throughout the ML lifecycle, with focus on intersectional analysis.
 
 ---
 
 ### Part IV: Validation, Interpretability, and Clinical Trust
 
-**[Chapter 14: Interpretability and Explainability for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-14-interpretability-explainability/)**  
+**[Chapter 14: Interpretability and Explainability for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-14-interpretability-explainability/)**  
 SHAP, LIME, attention mechanisms, counterfactual explanations, and ensuring interpretability supports rather than obscures performance gaps.
 
-**[Chapter 15: Clinical Validation Frameworks and External Validity](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-15-validation-strategies/)**  
+**[Chapter 15: Clinical Validation Frameworks and External Validity](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-15-validation-strategies/)**  
 Internal validation, external validation across sites, temporal validation, prospective evaluation, and comprehensive performance assessment strategies.
 
-**[Chapter 16: Uncertainty Quantification and Calibration](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-16-uncertainty-calibration/)**  
+**[Chapter 16: Uncertainty Quantification and Calibration](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-16-uncertainty-calibration/)**  
 Bayesian approaches, conformal prediction, calibration assessment across patient subgroups, and communicating uncertainty to clinicians.
 
-**[Chapter 17: Regulatory Pathways and FDA Submissions](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-17-regulatory-considerations/)**  
+**[Chapter 17: Regulatory Pathways and FDA Submissions](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-17-regulatory-considerations/)**  
 Software as Medical Device (SaMD), 510(k) pathways, predetermined change control plans, and demonstrating performance across relevant patient populations.
 
 ---
 
 ### Part V: Deployment and Real-World Implementation
 
-**[Chapter 18: Implementation Science for Clinical AI Systems](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-18-implementation-science/)**  
+**[Chapter 18: Implementation Science for Clinical AI Systems](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-18-implementation-science/)**  
 Stakeholder engagement, workflow integration, clinician training, performance monitoring, and ensuring successful deployment across diverse settings.
 
-**[Chapter 19: Human-AI Collaboration in Clinical Practice](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-19-human-ai-collaboration/)**  
+**[Chapter 19: Human-AI Collaboration in Clinical Practice](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-19-human-ai-collaboration/)**  
 Decision support design, cognitive load, automation bias, appropriate reliance, and fostering effective clinician-AI partnerships.
 
-**[Chapter 20: Post-Deployment Monitoring and Maintenance](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-20-monitoring-maintenance/)**  
+**[Chapter 20: Post-Deployment Monitoring and Maintenance](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-20-monitoring-maintenance/)**  
 Continuous performance monitoring, distribution shift detection, fairness surveillance, model updating protocols, and responding to performance degradation.
 
-**[Chapter 21: Performance Metrics and Comprehensive Evaluation](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-21-health-equity-metrics/)**  
+**[Chapter 21: Performance Metrics and Comprehensive Evaluation](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-21-health-equity-metrics/)**  
 Clinical outcome metrics, fairness measures, intersectional evaluation frameworks, and assessing real-world impact across patient populations.
 
 ---
 
 ### Part VI: Specialized Clinical Applications
 
-**[Chapter 22: Clinical Decision Support System Design](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-22-clinical-decision-support/)**  
+**[Chapter 22: Clinical Decision Support System Design](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-22-clinical-decision-support/)**  
 Diagnostic support, treatment recommendations, alerts and warnings, and ensuring CDS systems improve outcomes across all patients.
 
-**[Chapter 23: Precision Medicine and Treatment Optimization](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-23-precision-medicine-genomics/)**  
+**[Chapter 23: Precision Medicine and Treatment Optimization](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-23-precision-medicine-genomics/)**  
 Effect heterogeneity, treatment effect estimation, preference modeling, clinical pathway optimization, and personalizing care at scale.
 
-**[Chapter 24: Population Health Management and Risk Stratification](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-24-population-health-screening/)**  
+**[Chapter 24: Population Health Management and Risk Stratification](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-24-population-health-screening/)**  
 Risk prediction, care management targeting, screening strategies, and ensuring population health tools identify patients with greatest clinical need.
 
-**[Chapter 25: Social Determinants of Health in Clinical Models](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-25-sdoh-integration/)**  
+**[Chapter 25: Social Determinants of Health in Clinical Models](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-25-sdoh-integration/)**  
 Linking clinical and community data, neighborhood effects, environmental exposures, and incorporating social context into predictive models.
 
 ---
 
 ### Part VII: Emerging Methods and Future Directions
 
-**[Chapter 26: Large Language Models in Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-26-llms-in-healthcare/)**  
+**[Chapter 26: Large Language Models in Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-26-llms-in-healthcare/)**  
 Clinical documentation, patient education at appropriate literacy levels, medical question answering, bias in foundation models, and safe LLM deployment.
 
-**[Chapter 27: Multi-Modal Learning for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-27-multimodal-learning/)**  
+**[Chapter 27: Multi-Modal Learning for Clinical AI](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-27-multimodal-learning/)**  
 Integrating imaging, text, time series, and structured data; fusion architectures; handling missing modalities in diverse clinical contexts.
 
-**[Chapter 28: Continual Learning and Model Updating Strategies](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-28-continual-learning/)**  
+**[Chapter 28: Continual Learning and Model Updating Strategies](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-28-continual-learning/)**  
 Managing distribution shift, catastrophic forgetting, performance-preserving updates, and governance frameworks for evolving clinical AI.
 
-**[Chapter 29: AI for Resource-Limited Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-29-global-health-ai/)**  
+**[Chapter 29: AI for Resource-Limited Clinical Settings](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-29-global-health-ai/)**  
 Offline-capable systems, low-resource imaging, task-shifting, mobile health, and building AI that functions where healthcare resources are most constrained.
 
-**[Chapter 30: Research Frontiers in Robust Clinical AI](https://sanjaybasu.github.io/healthcare-ai-equity/chapters/chapter-30-research-frontiers-equity/)**  
+**[Chapter 30: Research Frontiers in Robust Clinical AI](https://sanjaybasu.github.io/healthcare-ai-foundations/chapters/chapter-30-research-frontiers-equity/)**  
 Learning from limited data, algorithmic approaches to health disparities, environmental health integration, intersectional analysis methods, and future directions.
 
 ---
@@ -256,7 +257,7 @@ This is a living, community-driven open-source project. We actively welcome:
 ### Community Standards:
 We are committed to maintaining a welcoming, inclusive environment for all contributors. Please review our Code of Conduct in the repository.
 
-**Repository:** [github.com/sanjaybasu/healthcare-ai-equity](https://github.com/sanjaybasu/healthcare-ai-equity)  
+**Repository:** [github.com/sanjaybasu/healthcare-ai-foundations](https://github.com/sanjaybasu/healthcare-ai-foundations)  
 **License:** MIT License (free for all uses including commercial)  
 **Contact:** sanjay.basu@waymarkcare.com
 
@@ -288,7 +289,7 @@ If you use this textbook in your research, teaching, or implementation work, ple
   title = {Healthcare AI for All Populations: Technical Foundations and Clinical Implementation},
   year = {2025},
   publisher = {GitHub Pages},
-  url = {https://sanjaybasu.github.io/healthcare-ai-equity},
+  url = {https://sanjaybasu.github.io/healthcare-ai-foundations},
   note = {A Comprehensive Guide for Physician Data Scientists}
 }
 ```
@@ -307,14 +308,6 @@ This work builds on decades of research by clinicians, data scientists, epidemio
 
 Special acknowledgment to the healthcare institutions and health systems that have allowed deployment and evaluation of AI systems across diverse populations, providing the real-world evidence that informs best practices.
 
----
-
-## Version History and Roadmap
-
-**Current Version:** 1.0 (October 2025)  
-**Major Updates:** Weekly automated literature integration  
-
-See the GitHub repository for detailed changelog and upcoming features.
 
 ---
 
@@ -322,6 +315,6 @@ See the GitHub repository for detailed changelog and upcoming features.
 
 ---
 
-**Repository:** [github.com/sanjaybasu/healthcare-ai-equity](https://github.com/sanjaybasu/healthcare-ai-equity)  
+**Repository:** [github.com/sanjaybasu/healthcare-ai-foundations](https://github.com/sanjaybasu/healthcare-ai-foundations)  
 **License:** MIT License  
 **Last Updated:** {{ site.time | date: "%B %d, %Y" }}
