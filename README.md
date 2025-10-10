@@ -5,7 +5,7 @@ title: Home
 
 # Healthcare AI for All Populations: Technical Foundations and Clinical Implementation
 
-**A Comprehensive Guide for Clinician Data Scientists**
+**A Comprehensive, Self-Updating Technical and Practical Textbook**
 
 #### Sanjay Basu, MD, PhD
 
