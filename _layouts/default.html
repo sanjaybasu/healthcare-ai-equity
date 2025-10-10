@@ -15,7 +15,7 @@
   <!-- SEO -->
   {% seo %}
   
-  <!-- MathJax Configuration - MUST come before MathJax loads -->
+  <!-- MathJax Configuration -->
   {% if page.mathjax or site.mathjax %}
     {% include mathjax.html %}
   {% endif %}
@@ -37,30 +37,46 @@
   
   <!-- Main Content -->
   <main class="container">
-    <!-- REMOVED: Title header that was causing duplicate -->
-    <!-- Chapters now display title from their markdown content only -->
-    
     <article class="content">
       {{ content }}
     </article>
     
     {% if page.chapter_number %}
-    <!-- Chapter Navigation -->
+    <!-- Chapter Navigation - FIXED -->
     <nav class="chapter-nav">
-      {% if page.chapter_number > 1 %}
-      <a href="{{ '/chapters/chapter_' | append: page.chapter_number | minus: 1 | append: '_' | relative_url }}" class="prev-chapter">
-        ← Previous Chapter
-      </a>
+      {% comment %}Find current chapter in data file{% endcomment %}
+      {% assign current_index = -1 %}
+      {% for chapter in site.data.chapters.chapters %}
+        {% if chapter.num == page.chapter_number %}
+          {% assign current_index = forloop.index0 %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+      
+      {% comment %}Previous chapter{% endcomment %}
+      {% if current_index > 0 %}
+        {% assign prev_index = current_index | minus: 1 %}
+        {% assign prev_chapter = site.data.chapters.chapters[prev_index] %}
+        <a href="{{ '/chapters/' | append: prev_chapter.file | append: '/' | relative_url }}" class="prev-chapter">
+          ← Previous Chapter
+        </a>
+      {% else %}
+        <span class="disabled"></span>
       {% endif %}
       
       <a href="{{ '/chapters' | relative_url }}" class="all-chapters">
         All Chapters
       </a>
       
-      {% if page.chapter_number < 30 %}
-      <a href="{{ '/chapters/chapter_' | append: page.chapter_number | plus: 1 | append: '_' | relative_url }}" class="next-chapter">
-        Next Chapter →
-      </a>
+      {% comment %}Next chapter{% endcomment %}
+      {% assign next_index = current_index | plus: 1 %}
+      {% if next_index < site.data.chapters.chapters.size %}
+        {% assign next_chapter = site.data.chapters.chapters[next_index] %}
+        <a href="{{ '/chapters/' | append: next_chapter.file | append: '/' | relative_url }}" class="next-chapter">
+          Next Chapter →
+        </a>
+      {% else %}
+        <span class="disabled"></span>
       {% endif %}
     </nav>
     {% endif %}
@@ -83,10 +99,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/r.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/sql.min.js"></script>
   <script>
-    // Initialize syntax highlighting
     hljs.highlightAll();
     
-    // Add copy button to code blocks
     document.querySelectorAll('pre code').forEach((block) => {
       const button = document.createElement('button');
       button.className = 'copy-code-button';
