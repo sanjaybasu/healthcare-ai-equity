@@ -2,7 +2,7 @@
 """
 arXiv Search for Healthcare AI Papers
 
-Searches arXiv for recent preprints relevant to healthcare AI and equity.
+Searches arXiv for recent preprints relevant to healthcare AI and population stratification.
 """
 
 import os
