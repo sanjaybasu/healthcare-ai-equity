@@ -42,7 +42,7 @@ Population risk stratification aims to identify individuals at high risk for adv
 Consider a standard risk stratification model for identifying patients at high risk of hospitalization within the next year. Let $Y_i \in \{0, 1\}$ indicate whether patient $ i $ is hospitalized during the prediction window, and $ X_i$ be a feature vector containing demographics, diagnoses, medications, and prior utilization. A logistic regression model estimates:
 
 $$
-P(Y_i = 1 | X_i) = \sigma(\beta^T X_i)
+P(Y_i = 1 \mid X_i) = \sigma(\beta^T X_i)
 $$
 
 where $\sigma(z) = 1/(1 + e^{-z})$ is the sigmoid function. Patients are ranked by predicted risk $\hat{p}_i = \sigma(\hat{\beta}^T X_i)$ and those above some threshold $\tau $ are enrolled in care management programs. This formulation has two critical equity problems. First, patients with better documentation will have higher predicted risks simply because their health problems are more comprehensively recorded, not because their underlying health is worse. A patient seen regularly at a well-resourced academic medical center will accumulate more diagnosis codes than an equally sick patient receiving sporadic care at an under-resourced community clinic. Second, the outcome $ Y_i$ measures healthcare utilization rather than underlying health need - patients who lack insurance or transportation may be extremely sick but unable to access hospitalization.
@@ -55,7 +55,7 @@ $$
 
 where $H_i \in \{0, 1\}$ indicates whether patient $ i $ has a health condition severe enough to warrant hospitalization, and $ A_i \in \{0, 1\}$ indicates whether they actually access hospitalization given their health status. In underserved populations, many patients have $ H_i = 1 $ but $ A_i = 0 $ due to barriers like lack of insurance, transportation, or proximity to hospitals. Standard risk models trained on $ Y_i $ systematically underestimate risk for patients with low $ A_i $, concentrating resources on those who already have good access.
 
-To address this, we need models that estimate $ P(H_i = 1 | X_i)$ rather than $ P(Y_i = 1 | X_i)$, but $ H_i $ is unobserved in standard claims or EHR data. This requires causal inference techniques to debias for differential access. One approach uses instrumental variable methods where geographic proximity to hospitals serves as an instrument for access conditional on health status. Another approach stratifies by measures of healthcare access (insurance type, usual source of care, prior utilization patterns) and applies inverse probability weighting to adjust for selection into observation.
+To address this, we need models that estimate $ P(H_i = 1 \mid X_i)$ rather than $ P(Y_i = 1 \mid X_i)$, but $ H_i $ is unobserved in standard claims or EHR data. This requires causal inference techniques to debias for differential access. One approach uses instrumental variable methods where geographic proximity to hospitals serves as an instrument for access conditional on health status. Another approach stratifies by measures of healthcare access (insurance type, usual source of care, prior utilization patterns) and applies inverse probability weighting to adjust for selection into observation.
 
 A practical approach suitable for many settings employs composite outcomes that combine utilization with clinical indicators less dependent on access patterns. Instead of predicting hospitalization alone, we can predict $ Y_i^* = \max(Y_i^{\text{hosp}}, Y_i^{\text{ED}}, Y_i^{\text{lab}}, Y_i^{\text{decline}})$ where:
 
@@ -69,7 +69,7 @@ This composite outcome better captures underlying health status because laborato
 The most robust approach incorporates social determinants and health equity indices directly into risk models, not as additional predictors but as explicit components of the outcome definition. We can define need-adjusted risk as:
 
 $$
-R_i^{\text{need}} = P(H_i = 1 | X_i) \cdot V_i
+R_i^{\text{need}} = P(H_i = 1 \mid X_i) \cdot V_i
 $$
 
 where $V_i $ is a vulnerability index capturing social determinants that amplify the impact of health problems. For example, an elderly patient with diabetes living alone in a housing-unstable situation faces greater consequences from uncontrolled diabetes than an otherwise identical patient with strong family support and stable housing. The vulnerability index $ V_i $ can incorporate:
@@ -90,8 +90,8 @@ Screening programs aim to detect disease early when treatment is most effective,
 
 Classical screening theory analyzes the population benefit from screening using a decision-theoretic framework. Let $ D \in \{0, 1\}$ indicate true disease status and $ S \in \{0, 1\}$ indicate screening test result (positive or negative). For a continuous test score $ T $, the screening decision uses threshold $\tau $ such that $ S = \mathbb{1}(T > \tau)$. The operating characteristics of screening at threshold $\tau$ are:
 
-- Sensitivity: $\text{Se}(\tau) = P(T > \tau | D = 1)$
-- Specificity: $\text{Sp}(\tau) = P(T \leq \tau | D = 0)$
+- Sensitivity: $\text{Se}(\tau) = P(T > \tau \mid D = 1)$
+- Specificity: $\text{Sp}(\tau) = P(T \leq \tau \mid D = 0)$
 - Positive predictive value: $\text{PPV}(\tau) = \frac{p \cdot \text{Se}(\tau)}{p \cdot \text{Se}(\tau) + (1-p)(1-\text{Sp}(\tau))}$
 
 where $ p = P(D = 1)$ is disease prevalence. The receiver operating characteristic (ROC) curve plots sensitivity versus $(1 - \text{specificity})$ across thresholds, and the area under the ROC curve (AUC) summarizes overall discriminative ability.
@@ -184,7 +184,7 @@ This formulation upweights observations from areas with poor surveillance covera
 An alternative approach employs stratified thresholds that explicitly trade off detection speed against false alarm rates differently across communities. We can set community-specific thresholds $h_g$ to equalize expected time to detection for outbreaks of equal severity:
 
 $$
-\mathbb{E}[\tau^g | \text{outbreak}] = c \text{ for all } g
+\mathbb{E}[\tau^g \mid \text{outbreak}] = c \text{ for all } g
 $$
 
 where $\tau^g $ is the detection time in community $ g $ and $ c $ is a constant. This means accepting higher false alarm rates in underserved communities with poorer surveillance in exchange for comparable detection speed, which may be justified by the greater consequences of delayed outbreak response in these vulnerable populations.

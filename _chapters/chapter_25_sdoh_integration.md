@@ -581,7 +581,7 @@ For social determinants, examples include:
 The RD estimate compares outcomes just above versus just below the threshold:
 
 $$
-\tau_{RD} = \lim_{x \downarrow c} E[Y|X=x] - \lim_{x \uparrow c} E[Y|X=x]
+\tau_{RD} = \lim_{x \downarrow c} E[Y\lvert X=x] - \lim_{x \uparrow c} E[Y \rvertX=x]
 $$
 
 where $c $ is the cutoff value of running variable $ X$.

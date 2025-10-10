@@ -21,7 +21,7 @@ By the end of this chapter, readers will be able to:
 7. Identify critical open research problems where current methods remain inadequate for achieving health equity through artificial intelligence
 8. Recognize that technical innovation alone is insufficient and that meaningful progress toward health equity through AI requires sustained commitment to justice, structural change, and challenging systems that perpetuate disparate outcomes
 
-## 30.1 Introduction: The Frontiers of Healthcare AI
+## 30.1 Introduction: The Frontiers of Equitable Healthcare AI
 
 Throughout this textbook, we have developed comprehensive methods for creating healthcare AI systems that serve rather than harm underserved populations. We have explored how to detect and mitigate algorithmic bias, how to validate models across diverse populations and care settings, how to design interpretable systems that build trust, and how to implement monitoring infrastructure that catches failures before they cause harm. These methods represent the current state of practice for equity-centered healthcare AI development.
 
@@ -1649,7 +1649,7 @@ Standard machine learning optimizes for accuracy, minimizing prediction error ac
 One formulation defines the objective as a combination of overall health improvement and disparity reduction:
 
 $$
-\max_\theta \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z)] - \lambda \cdot \text{Var}_Z[\mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) | Z]]
+\max_\theta \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z)] - \lambda \cdot \text{Var}_Z[\mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) \mid Z]]
 $$
 
 where $H $ measures health utility, $\hat{Y}_\theta $ are model predictions, $ Z $ represents demographic group, and the variance term penalizes disparities in average health utility across groups. The parameter $\lambda $ controls how heavily disparity reduction is weighted relative to overall health improvement.
@@ -1659,7 +1659,7 @@ This objective creates different incentives than standard accuracy optimization.
 Another formulation uses a maximin objective that explicitly prioritizes the worst-off group:
 
 $$
-\max_\theta \min_z \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) | Z = z]
+\max_\theta \min_z \mathbb{E}[H(X, Y, \hat{Y}_\theta, Z) \mid Z = z]
 $$
 
 This Rawlsian approach focuses entirely on improving outcomes for whichever group has the poorest performance, demanding that no group be left behind even if this substantially reduces average performance. While philosophically appealing for its egalitarian commitment, maximin can lead to significant efficiency losses that may be unacceptable in resource-constrained healthcare settings.
@@ -3646,7 +3646,7 @@ As you apply the methods developed in this textbook to your own healthcare AI wo
 - How does this system engage with structural inequities that create health disparities?
 - What responsibility do we have to work on root causes, not just symptoms?
 
-Useful and helpful improvements to public health and clinical medicine are possible through careful deployment of AI. But they require more than technical innovation. They require careful and thoughtful planning and execution, which we hope this book will help you engineer.
+Health equity through AI is possible. But it requires more than technical innovation. It requires justice.
 
 ## Bibliography
 

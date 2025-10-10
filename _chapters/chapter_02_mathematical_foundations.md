@@ -1530,7 +1530,7 @@ class EquityAwareProbabilityModeling:
         demographic_labels: Optional[np.ndarray] = None
     ) -> Dict[str, float]:
         """
-        Compute P(outcome=outcome_value | condition=condition_value) with
+        Compute $P(outcome=outcome_value \mid condition=condition_value)$ with
         optional stratification by demographic groups.
 
         This is useful for computing diagnostic test sensitivities, disease
@@ -1606,7 +1606,7 @@ This probability modeling implementation explicitly checks whether distributions
 
 Bayes' theorem provides the mathematical foundation for updating beliefs based on evidence, formally stating that the posterior probability of a hypothesis given observed data is proportional to the likelihood of the data given the hypothesis times the prior probability of the hypothesis. In healthcare, Bayesian reasoning appears in diagnostic test interpretation, where we update our assessment of disease probability based on test results, and in clinical prediction models that combine prior information with patient-specific features.
 
-The mathematical statement is elegant: P(disease | test+) = P(test+ | disease) * P(disease) / P(test+), where P(disease | test+) is the posterior probability of disease given a positive test, P(test+ | disease) is the test sensitivity, P(disease) is the prior probability or prevalence, and P(test+) is the marginal probability of a positive test. However, applying this formula in practice requires careful attention to where the prior probabilities come from and whether they are appropriate for the specific patient.
+The mathematical statement is elegant: $P(\text{disease} \mid \text{test}+) = \dfrac{P(\text{test}+ \mid \text{disease}) \, P(\text{disease})}{P(\text{test}+)}$, where $P(\text{disease} \mid \text{test}+)$ is the posterior probability of disease given a positive test, $P(\text{test}+ \mid \text{disease})$ is the test sensitivity, $P(\text{disease})$ is the prior probability or prevalence, and $P(\text{test}+)$ is the marginal probability of a positive test. However, applying this formula in practice requires careful attention to where the prior probabilities come from and whether they are appropriate for the specific patient.
 
 The health equity challenge is that prior probabilities often reflect historical patterns of disease diagnosis that may be systematically biased. If a condition has been historically underdiagnosed in certain populations due to lack of access to care, implicit bias in clinical evaluation, or other systemic factors, then prevalence estimates derived from diagnostic databases will underestimate true disease burden in those populations. Using these biased priors in Bayesian reasoning will then lead to systematic underdiagnosis that perpetuates the original inequity.
 
@@ -1640,8 +1640,8 @@ class EquityAwareBayesianReasoning:
 
         Args:
             test_result: Whether test was positive (True) or negative (False)
-            sensitivity: P(test+ | disease)
-            specificity: P(test- | no disease)
+            sensitivity: $P(test+ \mid disease)$
+            specificity: $P(test- \mid no disease)$
             prior_probability: P(disease) before test
             demographic_group: Optional group label for context
             prior_confidence: How confident we are in prior ('high', 'medium', 'low')
@@ -1657,12 +1657,12 @@ class EquityAwareBayesianReasoning:
 
         # Compute posterior using Bayes' theorem
         if test_result:  # Positive test
-            # P(disease | test+) = P(test+ | disease) * P(disease) / P(test+)
-            # where P(test+) = P(test+ | disease)*P(disease) + P(test+ | no disease)*P(no disease)
+            # $P(disease \mid test+)$ = $P(test+ \mid disease)$ * P(disease) / P(test+)
+            # where $P(test+) = P(test+ \mid disease)$*$P(disease) + P(test+ \mid no disease)$*P(no disease)
             p_test_pos = sensitivity * prior_probability + (1 - specificity) * (1 - prior_probability)
             posterior = (sensitivity * prior_probability) / p_test_pos if p_test_pos > 0 else 0
         else:  # Negative test
-            # P(disease | test-) = P(test- | disease) * P(disease) / P(test-)
+            # $P(disease \mid test-)$ = $P(test- \mid disease)$ * P(disease) / P(test-)
             p_test_neg = (1 - sensitivity) * prior_probability + specificity * (1 - prior_probability)
             posterior = ((1 - sensitivity) * prior_probability) / p_test_neg if p_test_neg > 0 else 0
 
@@ -1850,7 +1850,7 @@ This Bayesian reasoning implementation includes sensitivity analysis for prior p
 
 ### 2.3.3 Conditional Independence and Graphical Models
 
-Conditional independence is a critical concept that underlies much of probabilistic modeling in healthcare AI. Two variables X and Y are conditionally independent given Z if P(X, Y | Z) = P(X | Z) P(Y | Z), meaning that once we know Z, learning X provides no additional information about Y. This concept enables us to build tractable probabilistic models of complex systems by decomposing joint probability distributions into products of simpler conditional distributions.
+Conditional independence is a critical concept that underlies much of probabilistic modeling in healthcare AI. Two variables X and Y are conditionally independent given Z if $P(X, Y \mid Z)$ = $P(X \mid Z)$ $P(Y \mid Z)$, meaning that once we know Z, learning X provides no additional information about Y. This concept enables us to build tractable probabilistic models of complex systems by decomposing joint probability distributions into products of simpler conditional distributions.
 
 However, conditional independence assumptions often fail in healthcare data in ways that reflect social and structural confounding rather than measurement error. Consider predicting hospital readmission using clinical variables like prior hospitalizations, chronic conditions, and functional status. Standard modeling approaches might assume that these clinical variables are conditionally independent given some latent health status. But in reality, many clinical variables are jointly influenced by social determinants like housing stability, food security, and access to primary care. Unmeasured confounders like structural racism affect multiple variables simultaneously, violating conditional independence assumptions in systematic ways.
 

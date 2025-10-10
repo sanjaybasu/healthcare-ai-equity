@@ -315,7 +315,7 @@ $$
 where $[\cdot]$ denotes subsetting. A model is fair across missingness patterns if performance is similar across groups for each missingness pattern:
 
 $$
-|\text{Performance}(\mathcal{M}, g) - \text{Performance}(\mathcal{M}, g')| < \epsilon \quad \forall \mathcal{M}, g, g'
+\lvert \text{Performance}(\mathcal{M}, g) - \text{Performance}(\mathcal{M}, g') \rvert < \epsilon \quad \forall \mathcal{M}, g, g'
 $$
 
 This criterion is stronger than typical fairness metrics because it requires equitable performance not only across groups but also across patterns of data availability.
@@ -385,13 +385,13 @@ $$
 The importance of modality $m$ is quantified by the change in prediction:
 
 $$
-\Delta_i^{(m)} = |\hat{y}_i - \hat{y}_i^{(-m)}|
+\Delta_i^{(m)} = \lvert \hat{y}_i - \hat{y}_i^{(-m)} \rvert
 $$
 
 This can be extended to measure the importance of modality combinations by ablating multiple modalities simultaneously. Shapley values provide a principled framework for computing feature importance that satisfies desirable axioms (efficiency, symmetry, dummy, additivity). For modality $m$:
 
 $$
-\phi^{(m)} = \sum_{\mathcal{S} \subseteq \mathcal{M} \setminus \{m\}} \frac{|\mathcal{S}|! (M - |\mathcal{S}| - 1)!}{M!} [f(\mathcal{S} \cup \{m\}) - f(\mathcal{S})]
+\phi^{(m)} = \sum_{\mathcal{S} \subseteq \mathcal{M} \setminus \{m\}} \frac{\lvert \mathcal{S} \rvert! (M - \lvert \mathcal{S} \rvert - 1)!}{M!} [f(\mathcal{S} \cup \{m\}) - f(\mathcal{S})]
 $$
 
 where $\mathcal{M}$ is the set of all modalities, and $ f(\mathcal{S})$ is the model's prediction using only modalities in set $\mathcal{S}$. Computing exact Shapley values requires evaluating $ 2^M$ subsets, but efficient approximations exist.

@@ -1194,7 +1194,7 @@ For binary classification, conformal prediction can construct prediction sets co
 We begin by formalizing the standard conformal prediction framework before extending it to address health equity considerations. Consider a calibration set of $ n $ examples $(X_i, Y_i)$ for $ i=1,...,n $ and a model $\hat{f}$ producing predictions $\hat{Y}_i = \hat{f}(X_i)$. We define a non-conformity score $ s(X_i, Y_i)$ measuring how different the true outcome $ Y_i $ is from the prediction $\hat{Y}_i$. For regression, a natural non-conformity score is the absolute residual:
 
 $$
-s(X_i, Y_i) = |Y_i - \hat{Y}_i|
+s(X_i, Y_i) = \lvert Y_i - \hat{Y}_i \rvert
 $$
 
 For a new test point $X_{n+1}$ with unknown outcome $ Y_{n+1}$, we want to construct a prediction interval $ C(X_{n+1})$ such that $ P(Y_{n+1} \in C(X_{n+1})) \geq 1 - \alpha$. The conformal prediction interval is defined as:
@@ -1671,16 +1671,16 @@ Bayesian approaches to machine learning provide a principled framework for reaso
 In the Bayesian framework, we specify a prior distribution $p(\theta)$ over model parameters $\theta $ encoding our initial beliefs before observing data. Upon observing training data $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^n$, we update this prior using Bayes' rule to obtain a posterior distribution:
 
 $$
-p(\theta | \mathcal{D}) = \frac{p(\mathcal{D} | \theta) p(\theta)}{p(\mathcal{D})}
+p(\theta \lvert \mathcal{D}) = \frac{p(\mathcal{D} \rvert \theta) p(\theta)}{p(\mathcal{D})}
 $$
 
 The posterior distribution represents our updated uncertainty about model parameters after observing the data. For predictions on a new point $x^*$, we integrate over the posterior to obtain the predictive distribution:
 
 $$
-p(y^* | x^*, \mathcal{D}) = \int p(y^* | x^*, \theta) p(\theta | \mathcal{D}) d\theta
+p(y^* \lvert x^*, \mathcal{D}) = \int p(y^* \rvert x^*, \theta) p(\theta \mid \mathcal{D}) d\theta
 $$
 
-This predictive distribution captures both epistemic uncertainty through the posterior distribution over parameters and aleatoric uncertainty through the likelihood $p(y^* | x^*, \theta)$ for each parameter setting. The width of the predictive distribution reflects our total uncertainty about the outcome, with wider distributions for predictions far from training data where epistemic uncertainty is high.
+This predictive distribution captures both epistemic uncertainty through the posterior distribution over parameters and aleatoric uncertainty through the likelihood $p(y^* \mid x^*, \theta)$ for each parameter setting. The width of the predictive distribution reflects our total uncertainty about the outcome, with wider distributions for predictions far from training data where epistemic uncertainty is high.
 
 For health equity applications, Bayesian uncertainty quantification offers several potential advantages. The explicit modeling of parameter uncertainty enables identifying when predictions for certain patient populations are highly uncertain due to limited training data from similar patients. This can help flag situations where model predictions should be supplemented with additional clinical judgment, particularly for underrepresented demographic groups. The principled combination of prior information with observed data enables incorporating domain knowledge about equitable treatment effects or biological mechanisms that may be poorly represented in limited training data.
 

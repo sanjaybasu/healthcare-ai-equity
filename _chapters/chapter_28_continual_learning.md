@@ -93,13 +93,13 @@ and $\mathcal{P}_0 $ is the initialization distribution. In this regime, the net
 
 An alternative perspective comes from mode connectivity and loss landscape analysis. Neural networks often have multiple local minima that achieve good performance on a given task. These minima are connected by low-loss paths or tunnels in parameter space, forming a complex loss landscape with multiple basins of attraction. When training on a new task, gradient descent moves the parameters toward minima for the new task, potentially crossing high-loss regions for previous tasks. If the minima for different tasks are in disconnected regions of parameter space, catastrophic forgetting is inevitable with standard sequential training.
 
-Bayesian perspectives on continual learning model parameter uncertainty and update the posterior distribution over parameters as new data arrives. Let $ p(\theta | \mathcal{D}_1)$ be the posterior after training on task 1. When task 2 data arrives, we should update:
+Bayesian perspectives on continual learning model parameter uncertainty and update the posterior distribution over parameters as new data arrives. Let $ p(\theta \mid \mathcal{D}_1)$ be the posterior after training on task 1. When task 2 data arrives, we should update:
 
 $$
-p(\theta | \mathcal{D}_1, \mathcal{D}_2) \propto p(\mathcal{D}_2 | \theta) p(\theta | \mathcal{D}_1)
+p(\theta \lvert \mathcal{D}_1, \mathcal{D}_2) \propto p(\mathcal{D}_2 \rvert \theta) p(\theta \mid \mathcal{D}_1)
 $$
 
-This formulation naturally incorporates knowledge from previous tasks through the prior $p(\theta | \mathcal{D}_1)$. However, computing and maintaining exact posteriors is intractable for high-dimensional neural network parameter spaces, leading to the development of approximate Bayesian continual learning methods that we discuss in subsequent sections.
+This formulation naturally incorporates knowledge from previous tasks through the prior $p(\theta \mid \mathcal{D}_1)$. However, computing and maintaining exact posteriors is intractable for high-dimensional neural network parameter spaces, leading to the development of approximate Bayesian continual learning methods that we discuss in subsequent sections.
 
 ## Regularization-Based Continual Learning
 
@@ -110,13 +110,13 @@ Regularization-based approaches to continual learning add penalty terms to the l
 Elastic Weight Consolidation (EWC), introduced by Kirkpatrick and colleagues in 2017, provides a principled Bayesian approach to identifying important parameters. EWC approximates the posterior distribution over parameters after learning previous tasks as a Gaussian centered at the optimal parameters $\theta_A^*$ for those tasks:
 
 $$
-p(\theta | \mathcal{D}_A) \approx \mathcal{N}(\theta; \theta_A^*, F_A^{-1})
+p(\theta \mid \mathcal{D}_A) \approx \mathcal{N}(\theta; \theta_A^*, F_A^{-1})
 $$
 
 where $F_A $ is the Fisher information matrix evaluated at $\theta_A^*$:
 
 $$
-F_A = \mathbb{E}_{x \sim \mathcal{D}_A} \left[ \nabla_\theta \log p(y|x, \theta_A^*) \nabla_\theta \log p(y|x, \theta_A^*)^T \right]
+F_A = \mathbb{E}_{x \sim \mathcal{D}_A} \left[ \nabla_\theta \log p(y\lvert x, \theta_A^*) \nabla_\theta \log p(y \rvertx, \theta_A^*)^T \right]
 $$
 
 The Fisher information matrix captures how sensitive the log-likelihood is to changes in each parameter. Parameters with high Fisher information are those for which small changes cause large changes in the likelihood, indicating these parameters are important for the task.
@@ -132,7 +132,7 @@ where $\lambda$ controls the relative importance of the regularization term. Par
 The Fisher information matrix is typically intractable to compute exactly for large neural networks, as it requires computing second derivatives of the log-likelihood. EWC uses an efficient diagonal approximation:
 
 $$
-F_i \approx \frac{1}{N} \sum_{n=1}^{N} \left( \frac{\partial \log p(y_n | x_n, \theta)}{\partial \theta_i} \right)^2 \bigg|_{\theta = \theta_A^*}
+F_i \approx \frac{1}{N} \sum_{n=1}^{N} \left( \frac{\partial \log p(y_n \lvert x_n, \theta)}{\partial \theta_i} \right)^2 \bigg \rvert_{\theta = \theta_A^*}
 $$
 
 This diagonal approximation assumes independence between parameters, which is clearly an approximation for neural networks where parameters interact through nonlinear activations. Nevertheless, empirical results show this approximation provides effective regularization in practice.
@@ -211,12 +211,12 @@ where $\alpha $ controls the relative weight of replayed samples. This approach 
 
 The critical design decision in experience replay is the memory management strategy: how to select which samples to store when memory capacity is limited, and how to update the memory as new tasks arrive. Several strategies exist:
 
-**Reservoir Sampling:** Maintains a uniform sample over all observed data by probabilistically replacing older samples. When a new sample arrives, it is added to the memory with probability $\frac{|\mathcal{M}|}{n}$ where $ n $ is the total number of samples seen, and if added, it randomly replaces an existing sample. This ensures each historical sample has equal probability of being in memory regardless of when it was observed.
+**Reservoir Sampling:** Maintains a uniform sample over all observed data by probabilistically replacing older samples. When a new sample arrives, it is added to the memory with probability $\frac{\lvert \mathcal{M} \rvert}{n}$ where $ n $ is the total number of samples seen, and if added, it randomly replaces an existing sample. This ensures each historical sample has equal probability of being in memory regardless of when it was observed.
 
 **Herding:** Selects samples that best represent the feature distribution of each class or task. For a given class $ c $, herding maintains a memory set $\mathcal{M}_c $ such that the mean feature representation of samples in $\mathcal{M}_c $ is close to the mean feature representation of all samples of class $c$:
 
 $$
-\mathcal{M}_c = \arg\min_{\mathcal{S} \subseteq \mathcal{D}_c, |\mathcal{S}| = m} \left\| \frac{1}{|\mathcal{D}_c|} \sum_{x \in \mathcal{D}_c} \phi(x) - \frac{1}{m} \sum_{x \in \mathcal{S}} \phi(x) \right\|^2
+\mathcal{M}_c = \arg\min_{\mathcal{S} \subseteq \mathcal{D}_c, \lvert \mathcal{S} \rvert = m} \left\| \frac{1}{\lvert \mathcal{D}_c \rvert} \sum_{x \in \mathcal{D}_c} \phi(x) - \frac{1}{m} \sum_{x \in \mathcal{S}} \phi(x) \right\|^2
 $$
 
 where $\phi(x)$ represents the feature embedding of sample $ x $ (typically the penultimate layer activations of the neural network), and $ m $ is the memory budget per class.
@@ -372,22 +372,22 @@ Healthcare data is subject to numerous sources of distribution shift that can de
 
 Distribution shift can be taxonomized into several categories based on what aspects of the data generation process change:
 
-**Covariate Shift:** The input distribution $ P(X)$ changes while the conditional distribution of outputs given inputs $ P(Y|X)$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
+**Covariate Shift:** The input distribution $ P(X)$ changes while the conditional distribution of outputs given inputs $ P(Y\midX)$ remains constant. In healthcare, covariate shift might occur when the demographic composition of a patient population changes due to migration patterns or changes in insurance coverage, but the relationship between patient features and clinical outcomes remains stable. Formally:
 
 $$
-P_{train}(Y|X) = P_{deploy}(Y|X) \quad \text{but} \quad P_{train}(X) \neq P_{deploy}(X)
+P_{train}(Y\lvert X) = P_{deploy}(Y \rvertX) \quad \text{but} \quad P_{train}(X) \neq P_{deploy}(X)
 $$
 
-**Label Shift:** The marginal distribution of outputs $P(Y)$ changes while the conditional distribution of inputs given outputs $ P(X|Y)$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
+**Label Shift:** The marginal distribution of outputs $P(Y)$ changes while the conditional distribution of inputs given outputs $ P(X\midY)$ remains constant. This might occur when disease prevalence changes (e.g., seasonal variation in influenza, emergence of new pathogens like COVID-19) but the characteristic presentations of diseases remain stable. Formally:
 
 $$
-P_{train}(X|Y) = P_{deploy}(X|Y) \quad \text{but} \quad P_{train}(Y) \neq P_{deploy}(Y)
+P_{train}(X\lvert Y) = P_{deploy}(X \rvertY) \quad \text{but} \quad P_{train}(Y) \neq P_{deploy}(Y)
 $$
 
-**Concept Drift:** The fundamental relationship between inputs and outputs $P(Y|X)$ changes. This is the most challenging type of shift as it indicates the underlying phenomena being modeled have changed. In healthcare, concept drift occurs when treatment protocols change, new therapies become available, or the causal pathways linking risk factors to outcomes change. For example, the relationship between blood pressure and cardiovascular risk changed with the introduction of modern antihypertensive medications. Formally:
+**Concept Drift:** The fundamental relationship between inputs and outputs $P(Y\midX)$ changes. This is the most challenging type of shift as it indicates the underlying phenomena being modeled have changed. In healthcare, concept drift occurs when treatment protocols change, new therapies become available, or the causal pathways linking risk factors to outcomes change. For example, the relationship between blood pressure and cardiovascular risk changed with the introduction of modern antihypertensive medications. Formally:
 
 $$
-P_{train}(Y|X) \neq P_{deploy}(Y|X)
+P_{train}(Y\lvert X) \neq P_{deploy}(Y \rvertX)
 $$
 
 **Domain Shift:** More generally, the entire joint distribution $P(X, Y)$ changes, which may involve combinations of the above. Electronic health record systems often experience domain shift when transitioning from one documentation system to another, changing both the feature distributions and potentially the relationships between features and outcomes.

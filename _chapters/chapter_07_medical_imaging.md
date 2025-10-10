@@ -1895,8 +1895,8 @@ class FairnessAwareSegmentationLoss(nn.Module):
         """
         Compute Dice loss.
 
-        Dice coefficient is 2*|A ∩ B| / (|A| + |B|)
-        Dice loss is 1 - Dice coefficient
+        Dice coefficient is $2 \times \dfrac{\lvert A \cap B \rvert}{\lvert A \rvert + \lvert B \rvert}$
+        Dice loss is $1 -$ Dice coefficient
         """
         # Convert predictions to probabilities
         probs = F.softmax(predictions, dim=1)
@@ -2361,7 +2361,7 @@ class FairMultiTaskLoss(nn.Module):
         demographic_labels: torch.Tensor
     ) -> torch.Tensor:
         """
-        Enforce demographic parity: P(Ŷ=1|A=0) ≈ P(Ŷ=1|A=1)
+        Enforce demographic parity: $P(\hat{Y}=1 \mid A=0) \approx P(\hat{Y}=1 \mid A=1)$
 
         Penalizes difference in positive prediction rates across groups.
         """

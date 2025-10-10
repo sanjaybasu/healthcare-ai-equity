@@ -694,10 +694,10 @@ The theoretical foundation for SHAP values comes from Shapley values in cooperat
 Formally, for a model $f $ making prediction $ f(x)$ for instance $ x $ with features $ x = (x_1, ..., x_p)$, the SHAP value $\phi_i $ for feature $ i$ is defined as:
 
 $$
-\phi_i(f, x) = \sum_{S \subseteq F \setminus \{i\}} \frac{|S|!(|F| - |S| - 1)!}{|F|!} [f_x(S \cup \{i\}) - f_x(S)]
+\phi_i(f, x) = \sum_{S \subseteq F \setminus \{i\}} \frac{\lvert S \rvert!(\lvert F \rvert - \lvert S \rvert - 1)!}{\lvert F \rvert!} [f_x(S \cup \{i\}) - f_x(S)]
 $$
 
-where $F $ is the set of all features, $ S $ ranges over all subsets not containing feature $ i $, and $ f_x(S)$ represents the expected prediction when only features in $ S $ are known. The terms $|S|!(|F|-|S|-1)!/|F|!$ weight each subset according to how many orderings of features place feature $ i $ immediately after the features in $ S $. This ensures fair attribution that accounts for feature interactions and dependencies.
+where $F $ is the set of all features, $ S $ ranges over all subsets not containing feature $ i $, and $ f_x(S)$ represents the expected prediction when only features in $ S $ are known. The terms $\lvert S \rvert!(\lvert F \rvert-\lvert S \rvert-1)!/\lvert F \rvert!$ weight each subset according to how many orderings of features place feature $ i $ immediately after the features in $ S $. This ensures fair attribution that accounts for feature interactions and dependencies.
 
 Three key properties distinguish SHAP values from alternative attribution methods. Local accuracy requires that the sum of all feature attributions equals the difference between the prediction for the instance and the expected prediction over the reference distribution: $ f(x) - E[f(X)] = \sum_i \phi_i $. This ensures that attributions provide a complete explanation accounting for the full prediction. Missingness requires that features with the same value in the instance being explained and the reference distribution receive zero attribution. Consistency requires that if a model changes so a feature's marginal contribution increases or stays the same regardless of other features present, that feature's attribution cannot decrease. SHAP values uniquely satisfy all three properties simultaneously.
 

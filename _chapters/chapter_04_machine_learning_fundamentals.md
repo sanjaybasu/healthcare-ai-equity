@@ -1834,10 +1834,10 @@ From an equity perspective, random forests offer important advantages but also n
 A random forest consists of $T$ decision trees, each trained on a bootstrap sample of the training data with random feature subsampling at each split. For prediction, the forest aggregates predictions across all trees, typically using majority voting for classification or averaging for probability estimates:
 
 $$
-\hat{p}(y=1 | \mathbf{x}) = \frac{1}{T} \sum_{t=1}^T \hat{p}_t(y=1 | \mathbf{x})
+\hat{p}(y=1 \lvert \mathbf{x}) = \frac{1}{T} \sum_{t=1}^T \hat{p}_t(y=1 \rvert \mathbf{x})
 $$
 
-where $\hat{p}_t(y=1 | \mathbf{x})$ is the predicted probability from tree $t$.
+where $\hat{p}_t(y=1 \mid \mathbf{x})$ is the predicted probability from tree $t$.
 
 The bootstrap sampling creates training subsets that differ across trees, introducing diversity that improves generalization. However, if demographic groups are unevenly represented in the full training set, bootstrap samples will maintain or exacerbate this imbalance. Trees trained on samples with very few examples from minority groups may learn poor models for those groups, and aggregating many such trees still produces poor overall performance for underrepresented populations.
 
