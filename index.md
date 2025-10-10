@@ -3,8 +3,8 @@ layout: default
 title: Home
 ---
 
-# Healthcare AI for All Populations
-## A Comprehensive, Self-Updating Technical and Practical Textbook
+# Foundations of Healthcare AI Development for Underserved Populations
+## A Self-Updating Technical and Practical Text
 
 ### Sanjay Basu, MD, PhD
 
@@ -12,9 +12,9 @@ title: Home
 
 ## Overview
 
-This textbook provides rigorous technical foundations and practical implementation guidance for developing, validating, and deploying clinical AI systems that achieve robust performance across diverse patient populations. Written for healthcare data scientists, clinicial data-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building AI systems with validated generalizability across real-world clinical settings.
+This text provides technical foundations and practical implementation guidance for developing, validating, and deploying clinical AI systems that achieve robust performance across underserved patient populations. Written for healthcare data scientists, clinicial data-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building AI systems with validated generalizability across real-world clinical settings where patients often lack access to such technologies and their associated services and supports.
 
-**Why this matters:** Most healthcare AI systems demonstrate strong performance on training data but fail when deployed across heterogeneous patient populations, leading to unreliable predictions, safety concerns, and suboptimal clinical outcomes. This textbook treats population-stratified evaluation, bias detection, and robust generalization as fundamental requirements of clinical validity—not optional considerations.
+**Why this matters:** Most healthcare AI systems demonstrate strong performance on training data or among populations with privilege, but fail when deployed across patient populations who are typically disadvantaged by social needs and poor healthcare or technology access, leading to unreliable predictions, safety concerns, and suboptimal clinical outcomes. This textbook treats population-stratified evaluation, bias detection, and robust generalization as fundamental requirements of clinical validity.
 
 ---
 
@@ -220,7 +220,7 @@ Each method includes frank discussion of when it works well, when it fails, and 
 
 ### Primary Audience:
 - Healthcare data scientists building clinical AI systems
-- Physicians and clinical researchers transitioning to AI development
+- Clinician researchers transitioning to AI development
 - ML engineers entering healthcare with strong technical backgrounds
 - Regulatory professionals evaluating clinical AI applications
 - Implementation scientists deploying AI in clinical settings
@@ -276,11 +276,11 @@ If you use this textbook in your research, teaching, or implementation work, ple
 ```bibtex
 @book{basu2025healthcare_ai,
   author = {Basu, Sanjay},
-  title = {Healthcare AI for All Populations: Technical Foundations and Clinical Implementation},
+  title = {Foundations of Healthcare AI Development for Underserved Populations},
   year = {2025},
   publisher = {GitHub Pages},
   url = {https://sanjaybasu.github.io/healthcare-ai-foundations},
-  note = {A Comprehensive Guide for Physician Data Scientists}
+  note = {A Self-Updating Technical and Practical Text}
 }
 ```
 
