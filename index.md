@@ -3,8 +3,8 @@ layout: default
 title: Home
 ---
 
-# Foundations of Healthcare AI Development for Underserved Populations
-## A Self-Updating Technical and Practical Text
+# Foundations of Healthcare Data Science for Underserved Populations
+## A Self-Updating Technical and Practical Text from ML to AI
 
 #### Sanjay Basu, MD, PhD
 
