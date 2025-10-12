@@ -4,7 +4,7 @@ title: Home
 ---
 
 # Foundations of Healthcare Data Science for Underserved Populations
-## A Self-Updating Technical and Practical Text from ML to AI
+## A Self-Updating Technical and Practical Text
 
 #### Sanjay Basu, MD, PhD
 
