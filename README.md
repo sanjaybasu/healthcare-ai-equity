@@ -3,9 +3,8 @@ layout: default
 title: Home
 ---
 
-# Healthcare AI for All Populations: Technical Foundations and Clinical Implementation
-
-**A Comprehensive, Self-Updating Technical and Practical Textbook**
+# Foundations of Healthcare Data Science for Underserved Populations
+**A Self-Updating Technical and Practical Text**
 
 #### Sanjay Basu, MD, PhD
 
