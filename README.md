@@ -13,7 +13,7 @@ https://sanjaybasu.github.io/healthcare-ai-foundations/
 
 ## Overview
 
-This textbook provides rigorous technical foundations and practical implementation guidance for developing, validating, and deploying clinical ML, RL, and AI systems that achieve robust performance across diverse patient populations. Written for healthcare data scientists, clinician data-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building AI systems with validated generalizability across real-world clinical settings.
+This textbook provides rigorous technical foundations and practical implementation guidance for developing, validating, and deploying clinical ML and AI systems that achieve robust performance across diverse patient populations. Written for healthcare data scientists, clinician data-scientists, and ML practitioners entering healthcare, this resource addresses the critical challenge of building data science-driven systems with validated generalizability across real-world clinical settings.
 
 **Why this matters:** Most healthcare data science systems demonstrate strong performance on training data but fail when deployed across heterogeneous patient populations, leading to unreliable predictions, safety concerns, and suboptimal clinical outcomes. This textbook treats population-stratified evaluation, bias detection, and robust generalization as fundamental requirements of clinical validity—not optional considerations.
 
@@ -23,10 +23,10 @@ This textbook provides rigorous technical foundations and practical implementati
 
 This is a **living, open-source resource** designed for:
 
-- **Healthcare data scientists** building production ML/RL/AI systems
-- **Clinician data-scientists** transitioning into AI development
+- **Healthcare data scientists** building production ML/AI systems
+- **Clinician data-scientists** transitioning into ML/AI development
 - **ML practitioners** entering healthcare who need clinical context
-- **Regulatory professionals** evaluating clinical ML/RL/AI submissions
+- **Regulatory professionals** evaluating clinical ML/AI submissions
 - **Implementation scientists** deploying data science tools in real-world settings
 
 ### Each Chapter Includes:
