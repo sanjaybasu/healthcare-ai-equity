@@ -130,7 +130,7 @@ class GroundbreakingPaperFilter:
             score += 10.0
         
         # Citation count (30 points max)
-        citations = paper.get('citations', 0)
+        citations = paper.get('citations')
         if citations is not None:         
             if citations >= 100:
                 score += 40
