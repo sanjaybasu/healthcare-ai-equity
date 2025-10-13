@@ -131,16 +131,20 @@ class GroundbreakingPaperFilter:
         
         # Citation count (30 points max)
         citations = paper.get('citations', 0)
-        if citations >= 100:
-            score += 30.0
-        elif citations >= 50:
-            score += 25.0
-        elif citations >= 20:
-            score += 20.0
-        elif citations >= 10:
-            score += 15.0
-        elif citations >= 5:
-            score += 10.0
+        if citations is not None:         
+            if citations >= 100:
+                score += 40
+            elif citations >= 50:
+                score += 30
+            elif citations >= 20:
+                score += 20
+            elif citations >= 10:
+                score += 10
+            elif citations >= 5:
+                score += 5
+        else:
+            # For papers without citation data, give a base score
+            score += 5
         
         # Recency bonus (10 points max)
         try:
