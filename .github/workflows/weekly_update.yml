@@ -63,7 +63,7 @@ jobs:
           python scripts/assess_relevance.py \
             --input-dir data/literature \
             --chapters-dir _chapters \
-            --output-file data/relevant_papers.json
+            --output-file data/relevant_papers.json \
             --impact-threshold 55.0 \
             --threshold 0.75 \
             --min-citations 10 \
