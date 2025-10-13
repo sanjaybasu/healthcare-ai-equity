@@ -121,7 +121,7 @@ class GroundbreakingPaperFilter:
         score = 0.0
         
         # Journal tier (40 points max)
-        journal = 
+        journal = (paper.get('journal') or '').lower()
         if any(tier1 in journal for tier1 in self.TIER1_JOURNALS):
             score += 40.0
         elif any(tier2 in journal for tier2 in self.TIER2_JOURNALS):
@@ -130,7 +130,7 @@ class GroundbreakingPaperFilter:
             score += 10.0
         
         # Citation count (30 points max)
-        citations = paper.get('citations')
+        citations = paper.get('citations') or 0
         if citations is not None:         
             if citations >= 100:
                 score += 40
