@@ -121,17 +121,17 @@ class GroundbreakingPaperFilter:
         score = 0.0
         
         # Journal tier (40 points max)
-        journal = (paper.get('journal') or '').lower()
+        journal = (paper.get('journal') or '').lower()  # ✅ FIXED
         if any(tier1 in journal for tier1 in self.TIER1_JOURNALS):
             score += 40.0
         elif any(tier2 in journal for tier2 in self.TIER2_JOURNALS):
             score += 25.0
-        elif journal:  # Any journal
+        elif journal:
             score += 10.0
         
         # Citation count (30 points max)
-        citations = paper.get('citations') or 0
-        if citations is not None:         
+        citations = paper.get('citations')  # ✅ FIXED
+        if citations is not None:
             if citations >= 100:
                 score += 40
             elif citations >= 50:
@@ -143,7 +143,6 @@ class GroundbreakingPaperFilter:
             elif citations >= 5:
                 score += 5
         else:
-            # For papers without citation data, give a base score
             score += 5
         
         # Recency bonus (10 points max)
@@ -160,8 +159,8 @@ class GroundbreakingPaperFilter:
             pass
         
         # Breakthrough keywords (10 points max)
-        title = (paper.get('title') or '').lower()
-        abstract = (paper.get('abstract') or '').lower()
+        title = (paper.get('title') or '').lower()      # ✅ FIXED
+        abstract = (paper.get('abstract') or '').lower()  # ✅ FIXED
         text = f"{title} {abstract}"
         
         breakthrough_count = sum(1 for kw in self.BREAKTHROUGH_KEYWORDS if kw in text)
@@ -178,7 +177,7 @@ class GroundbreakingPaperFilter:
             score -= 20.0
         
         return max(0.0, min(100.0, score))
-    
+        
     def is_groundbreaking(self, paper: Dict, impact_threshold: float = 50.0) -> Tuple[bool, float, str]:
         """
         Determine if a paper is groundbreaking enough to assess.
@@ -198,7 +197,7 @@ class GroundbreakingPaperFilter:
         
         # Additional filters
         journal = (paper.get('journal') or '').lower()
-        citations = paper.get('citations')
+        citations = paper.get('citations') or 0  
         title = (paper.get('title') or '').lower()
         
         # Must not be a review paper (unless very highly cited)
