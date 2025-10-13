@@ -121,7 +121,7 @@ class GroundbreakingPaperFilter:
         score = 0.0
         
         # Journal tier (40 points max)
-        journal = paper.get('journal', '').lower()
+        journal = 
         if any(tier1 in journal for tier1 in self.TIER1_JOURNALS):
             score += 40.0
         elif any(tier2 in journal for tier2 in self.TIER2_JOURNALS):
@@ -160,8 +160,8 @@ class GroundbreakingPaperFilter:
             pass
         
         # Breakthrough keywords (10 points max)
-        title = paper.get('title', '').lower()
-        abstract = paper.get('abstract', '').lower()
+        title = (paper.get('title') or '').lower()
+        abstract = (paper.get('abstract') or '').lower()
         text = f"{title} {abstract}"
         
         breakthrough_count = sum(1 for kw in self.BREAKTHROUGH_KEYWORDS if kw in text)
@@ -197,9 +197,9 @@ class GroundbreakingPaperFilter:
             return False, impact_score, f"Impact score {impact_score:.1f} below threshold {impact_threshold}"
         
         # Additional filters
-        journal = paper.get('journal', '').lower()
-        citations = paper.get('citations', 0)
-        title = paper.get('title', '').lower()
+        journal = (paper.get('journal') or '').lower()
+        citations = paper.get('citations')
+        title = (paper.get('title') or '').lower()
         
         # Must not be a review paper (unless very highly cited)
         is_review = any(kw in title for kw in self.REVIEW_KEYWORDS)
@@ -588,7 +588,7 @@ Remember: Default to REJECTION unless this is truly a groundbreaking paper that 
             for paper_idx, (paper, impact_score) in enumerate(filtered_papers, 1):
                 try:
                     journal_info = f" [{paper.get('journal', 'N/A')}]" if paper.get('journal') else ""
-                    citation_info = f" ({paper.get('citations', 0)} citations)" if paper.get('citations') else ""
+                    citation_info = f" ({paper.get('citations')} citations)" if paper.get('citations') else ""
                     logger.info(
                         f"  [{paper_idx}/{len(filtered_papers)}] "
                         f"Impact:{impact_score:.1f} "
